@@ -66,9 +66,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allProfileSwitchesStmt, err = db.PrepareContext(ctx, allProfileSwitches); err != nil {
 		return nil, fmt.Errorf("error preparing query AllProfileSwitches: %w", err)
 	}
-	if q.allSettingsStmt, err = db.PrepareContext(ctx, allSettings); err != nil {
-		return nil, fmt.Errorf("error preparing query AllSettings: %w", err)
-	}
 	if q.allTempBasalsStmt, err = db.PrepareContext(ctx, allTempBasals); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempBasals: %w", err)
 	}
@@ -101,9 +98,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.countGeneralSettingsStmt, err = db.PrepareContext(ctx, countGeneralSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query CountGeneralSettings: %w", err)
-	}
-	if q.countSettingsStmt, err = db.PrepareContext(ctx, countSettings); err != nil {
-		return nil, fmt.Errorf("error preparing query CountSettings: %w", err)
 	}
 	if q.createActivityStmt, err = db.PrepareContext(ctx, createActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateActivity: %w", err)
@@ -179,9 +173,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteOldTempTargetsStmt, err = db.PrepareContext(ctx, deleteOldTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOldTempTargets: %w", err)
-	}
-	if q.deleteSettingsStmt, err = db.PrepareContext(ctx, deleteSettings); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteSettings: %w", err)
 	}
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
@@ -299,9 +290,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getProfileSwitchStmt, err = db.PrepareContext(ctx, getProfileSwitch); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfileSwitch: %w", err)
-	}
-	if q.getSettingsStmt, err = db.PrepareContext(ctx, getSettings); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSettings: %w", err)
 	}
 	if q.getSummaryPeriodStmt, err = db.PrepareContext(ctx, getSummaryPeriod); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSummaryPeriod: %w", err)
@@ -588,9 +576,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.upsertLoopSettingsStmt, err = db.PrepareContext(ctx, upsertLoopSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertLoopSettings: %w", err)
 	}
-	if q.upsertSettingsStmt, err = db.PrepareContext(ctx, upsertSettings); err != nil {
-		return nil, fmt.Errorf("error preparing query UpsertSettings: %w", err)
-	}
 	if q.upsertSummaryPeriodStmt, err = db.PrepareContext(ctx, upsertSummaryPeriod); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertSummaryPeriod: %w", err)
 	}
@@ -669,11 +654,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allProfileSwitchesStmt: %w", cerr)
 		}
 	}
-	if q.allSettingsStmt != nil {
-		if cerr := q.allSettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing allSettingsStmt: %w", cerr)
-		}
-	}
 	if q.allTempBasalsStmt != nil {
 		if cerr := q.allTempBasalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allTempBasalsStmt: %w", cerr)
@@ -727,11 +707,6 @@ func (q *Queries) Close() error {
 	if q.countGeneralSettingsStmt != nil {
 		if cerr := q.countGeneralSettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countGeneralSettingsStmt: %w", cerr)
-		}
-	}
-	if q.countSettingsStmt != nil {
-		if cerr := q.countSettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing countSettingsStmt: %w", cerr)
 		}
 	}
 	if q.createActivityStmt != nil {
@@ -857,11 +832,6 @@ func (q *Queries) Close() error {
 	if q.deleteOldTempTargetsStmt != nil {
 		if cerr := q.deleteOldTempTargetsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteOldTempTargetsStmt: %w", cerr)
-		}
-	}
-	if q.deleteSettingsStmt != nil {
-		if cerr := q.deleteSettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteSettingsStmt: %w", cerr)
 		}
 	}
 	if q.deleteSummaryPeriodsStmt != nil {
@@ -1057,11 +1027,6 @@ func (q *Queries) Close() error {
 	if q.getProfileSwitchStmt != nil {
 		if cerr := q.getProfileSwitchStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getProfileSwitchStmt: %w", cerr)
-		}
-	}
-	if q.getSettingsStmt != nil {
-		if cerr := q.getSettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSettingsStmt: %w", cerr)
 		}
 	}
 	if q.getSummaryPeriodStmt != nil {
@@ -1539,11 +1504,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing upsertLoopSettingsStmt: %w", cerr)
 		}
 	}
-	if q.upsertSettingsStmt != nil {
-		if cerr := q.upsertSettingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing upsertSettingsStmt: %w", cerr)
-		}
-	}
 	if q.upsertSummaryPeriodStmt != nil {
 		if cerr := q.upsertSummaryPeriodStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertSummaryPeriodStmt: %w", cerr)
@@ -1602,7 +1562,6 @@ type Queries struct {
 	allNotificationEventsStmt                   *sql.Stmt
 	allProfilePresetsStmt                       *sql.Stmt
 	allProfileSwitchesStmt                      *sql.Stmt
-	allSettingsStmt                             *sql.Stmt
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
 	clearDeviceReportStatusesStmt               *sql.Stmt
@@ -1614,7 +1573,6 @@ type Queries struct {
 	clearOldPumpsStmt                           *sql.Stmt
 	clearStaleSummariesStmt                     *sql.Stmt
 	countGeneralSettingsStmt                    *sql.Stmt
-	countSettingsStmt                           *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
 	createEventGroupStmt                        *sql.Stmt
@@ -1640,7 +1598,6 @@ type Queries struct {
 	deleteOldProfileSwitchesStmt                *sql.Stmt
 	deleteOldTempBasalsStmt                     *sql.Stmt
 	deleteOldTempTargetsStmt                    *sql.Stmt
-	deleteSettingsStmt                          *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
@@ -1680,7 +1637,6 @@ type Queries struct {
 	getProfilePresetStmt                        *sql.Stmt
 	getProfileStoreStmt                         *sql.Stmt
 	getProfileSwitchStmt                        *sql.Stmt
-	getSettingsStmt                             *sql.Stmt
 	getSummaryPeriodStmt                        *sql.Stmt
 	getTempBasalStmt                            *sql.Stmt
 	getTempTargetStmt                           *sql.Stmt
@@ -1776,7 +1732,6 @@ type Queries struct {
 	updateTempTargetStmt                        *sql.Stmt
 	upsertGeneralSettingStmt                    *sql.Stmt
 	upsertLoopSettingsStmt                      *sql.Stmt
-	upsertSettingsStmt                          *sql.Stmt
 	upsertSummaryPeriodStmt                     *sql.Stmt
 }
 
@@ -1798,7 +1753,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allNotificationEventsStmt:                   q.allNotificationEventsStmt,
 		allProfilePresetsStmt:                       q.allProfilePresetsStmt,
 		allProfileSwitchesStmt:                      q.allProfileSwitchesStmt,
-		allSettingsStmt:                             q.allSettingsStmt,
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
 		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,
@@ -1810,7 +1764,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
 		clearStaleSummariesStmt:                     q.clearStaleSummariesStmt,
 		countGeneralSettingsStmt:                    q.countGeneralSettingsStmt,
-		countSettingsStmt:                           q.countSettingsStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,
 		createEventGroupStmt:                        q.createEventGroupStmt,
@@ -1836,7 +1789,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteOldProfileSwitchesStmt:                q.deleteOldProfileSwitchesStmt,
 		deleteOldTempBasalsStmt:                     q.deleteOldTempBasalsStmt,
 		deleteOldTempTargetsStmt:                    q.deleteOldTempTargetsStmt,
-		deleteSettingsStmt:                          q.deleteSettingsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
@@ -1876,7 +1828,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfilePresetStmt:                        q.getProfilePresetStmt,
 		getProfileStoreStmt:                         q.getProfileStoreStmt,
 		getProfileSwitchStmt:                        q.getProfileSwitchStmt,
-		getSettingsStmt:                             q.getSettingsStmt,
 		getSummaryPeriodStmt:                        q.getSummaryPeriodStmt,
 		getTempBasalStmt:                            q.getTempBasalStmt,
 		getTempTargetStmt:                           q.getTempTargetStmt,
@@ -1972,7 +1923,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateTempTargetStmt:                        q.updateTempTargetStmt,
 		upsertGeneralSettingStmt:                    q.upsertGeneralSettingStmt,
 		upsertLoopSettingsStmt:                      q.upsertLoopSettingsStmt,
-		upsertSettingsStmt:                          q.upsertSettingsStmt,
 		upsertSummaryPeriodStmt:                     q.upsertSummaryPeriodStmt,
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
@@ -200,7 +200,12 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
-	err = db.SaveSiteSettings(ctx, siteContext.SiteDB.Queries(), siteContext.ControlDB.Queries, siteContext.SiteID, siteContext.IdentityModel.ID, identitySettingsMap, siteContext.IdentityModel.Name)
+	stored, err := identitySettingsMap.Stored()
+	if err != nil {
+		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
+	}
+	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{
+		ID: siteContext.IdentityModel.ID, SiteID: siteContext.IdentityModel.SiteID, SettingsJson: stored})
 	if err != nil {
 		if nsErr := nsutils.GetSQLTranslatedError(err); nsErr != nil {
 			return nil, nsErr

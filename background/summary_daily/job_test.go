@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"nighttroop.t1d.nz/background/onevent"
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -96,14 +95,10 @@ func TestBuildOpensASiteAgainAfterItsSettingsChange(t *testing.T) {
 	require.NoError(t, r.builder.Build(ctx, now))
 	require.Equal(t, 3, r.opened)
 
-	// A new timezone is a new yesterday, once its event has the site forgotten: the timezone is in the site's DB, which
-	// a run does not open to see whether it changed
-	require.NoError(t, db.SaveSiteSettings(ctx, r.site, r.control, r.siteID, 0, settings.Of(map[string]any{"timezone": "Pacific/Auckland"}), "test"))
+	// A new timezone is a new yesterday, even before its rebuild runs
+	require.NoError(t, r.control.UpdateSiteSettings(ctx, controldb.UpdateSiteSettingsParams{ID: r.siteID, SettingsJson: settings.StoredOf(map[string]any{"timezone": "Pacific/Auckland"})}))
 	require.NoError(t, r.builder.Build(ctx, now))
-	require.Equal(t, 3, r.opened)
-	require.NoError(t, r.builder.RebuildOnSettingsChange().Run(ctx, onevent.Fired{Name: events.SiteTimezoneChanged, SiteID: r.siteID}))
-	require.NoError(t, r.builder.Build(ctx, now))
-	require.Equal(t, 5, r.opened)
+	require.Equal(t, 4, r.opened)
 	require.True(t, r.built("2026-10-28"))
 }
 

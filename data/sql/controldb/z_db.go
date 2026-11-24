@@ -267,9 +267,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.searchSitesByLastWriteStmt, err = db.PrepareContext(ctx, searchSitesByLastWrite); err != nil {
 		return nil, fmt.Errorf("error preparing query SearchSitesByLastWrite: %w", err)
 	}
-	if q.setSiteAlarmsOnStmt, err = db.PrepareContext(ctx, setSiteAlarmsOn); err != nil {
-		return nil, fmt.Errorf("error preparing query SetSiteAlarmsOn: %w", err)
-	}
 	if q.sharedNightscoutHostsStmt, err = db.PrepareContext(ctx, sharedNightscoutHosts); err != nil {
 		return nil, fmt.Errorf("error preparing query SharedNightscoutHosts: %w", err)
 	}
@@ -333,8 +330,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteIdentityPasswordStmt, err = db.PrepareContext(ctx, updateSiteIdentityPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityPassword: %w", err)
 	}
+	if q.updateSiteIdentitySettingsStmt, err = db.PrepareContext(ctx, updateSiteIdentitySettings); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteIdentitySettings: %w", err)
+	}
 	if q.updateSiteIdentityTOTPStmt, err = db.PrepareContext(ctx, updateSiteIdentityTOTP); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityTOTP: %w", err)
+	}
+	if q.updateSiteSettingsStmt, err = db.PrepareContext(ctx, updateSiteSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteSettings: %w", err)
 	}
 	if q.updateSiteSummariesCheckedAtStmt, err = db.PrepareContext(ctx, updateSiteSummariesCheckedAt); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteSummariesCheckedAt: %w", err)
@@ -758,11 +761,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing searchSitesByLastWriteStmt: %w", cerr)
 		}
 	}
-	if q.setSiteAlarmsOnStmt != nil {
-		if cerr := q.setSiteAlarmsOnStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing setSiteAlarmsOnStmt: %w", cerr)
-		}
-	}
 	if q.sharedNightscoutHostsStmt != nil {
 		if cerr := q.sharedNightscoutHostsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing sharedNightscoutHostsStmt: %w", cerr)
@@ -868,9 +866,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteIdentityPasswordStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteIdentitySettingsStmt != nil {
+		if cerr := q.updateSiteIdentitySettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteIdentitySettingsStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteIdentityTOTPStmt != nil {
 		if cerr := q.updateSiteIdentityTOTPStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteIdentityTOTPStmt: %w", cerr)
+		}
+	}
+	if q.updateSiteSettingsStmt != nil {
+		if cerr := q.updateSiteSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteSettingsStmt: %w", cerr)
 		}
 	}
 	if q.updateSiteSummariesCheckedAtStmt != nil {
@@ -1013,7 +1021,6 @@ type Queries struct {
 	searchSitesStmt                         *sql.Stmt
 	searchSitesByDBSizeStmt                 *sql.Stmt
 	searchSitesByLastWriteStmt              *sql.Stmt
-	setSiteAlarmsOnStmt                     *sql.Stmt
 	sharedNightscoutHostsStmt               *sql.Stmt
 	siteExistsStmt                          *sql.Stmt
 	startConnectorBackfillStmt              *sql.Stmt
@@ -1035,7 +1042,9 @@ type Queries struct {
 	updateSiteIdentityEnabledStmt           *sql.Stmt
 	updateSiteIdentityPasskeyUsedStmt       *sql.Stmt
 	updateSiteIdentityPasswordStmt          *sql.Stmt
+	updateSiteIdentitySettingsStmt          *sql.Stmt
 	updateSiteIdentityTOTPStmt              *sql.Stmt
+	updateSiteSettingsStmt                  *sql.Stmt
 	updateSiteSummariesCheckedAtStmt        *sql.Stmt
 	updateSiteTableSizesStmt                *sql.Stmt
 	updateSitesBackupUploadedStmt           *sql.Stmt
@@ -1127,7 +1136,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		searchSitesStmt:                         q.searchSitesStmt,
 		searchSitesByDBSizeStmt:                 q.searchSitesByDBSizeStmt,
 		searchSitesByLastWriteStmt:              q.searchSitesByLastWriteStmt,
-		setSiteAlarmsOnStmt:                     q.setSiteAlarmsOnStmt,
 		sharedNightscoutHostsStmt:               q.sharedNightscoutHostsStmt,
 		siteExistsStmt:                          q.siteExistsStmt,
 		startConnectorBackfillStmt:              q.startConnectorBackfillStmt,
@@ -1149,7 +1157,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteIdentityEnabledStmt:           q.updateSiteIdentityEnabledStmt,
 		updateSiteIdentityPasskeyUsedStmt:       q.updateSiteIdentityPasskeyUsedStmt,
 		updateSiteIdentityPasswordStmt:          q.updateSiteIdentityPasswordStmt,
+		updateSiteIdentitySettingsStmt:          q.updateSiteIdentitySettingsStmt,
 		updateSiteIdentityTOTPStmt:              q.updateSiteIdentityTOTPStmt,
+		updateSiteSettingsStmt:                  q.updateSiteSettingsStmt,
 		updateSiteSummariesCheckedAtStmt:        q.updateSiteSummariesCheckedAtStmt,
 		updateSiteTableSizesStmt:                q.updateSiteTableSizesStmt,
 		updateSitesBackupUploadedStmt:           q.updateSitesBackupUploadedStmt,

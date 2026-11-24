@@ -95,7 +95,7 @@ type Site struct {
 	DisabledAt         *int64
 	ArchivedAt         *int64
 	DeletedAt          *int64
-	AlarmsOn           int64
+	SettingsJson       string
 }
 
 type SiteConnector struct {
@@ -154,6 +154,7 @@ type SiteIdentity struct {
 	Enabled               bool
 	CredentialsChangedAt  int64
 	NightscoutTokenDigest *string
+	SettingsJson          string
 }
 
 type SqliteSequence struct {

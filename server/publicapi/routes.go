@@ -7,9 +7,9 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-
 	"nighttroop.t1d.nz/clients/nighttroop"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/publicmodels"
 	"nighttroop.t1d.nz/server/assets/docs"
 	"nighttroop.t1d.nz/server/components/public_templ"
@@ -86,8 +86,11 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 		}
 
 		// The site starts in the time zone and language of the browser that created it, with its country's formats
-		browser := settings.BrowserSettings(r.FormValue("timezone"), r.FormValue("language"))
-		if err := db.SaveSiteSettings(r.Context(), siteCreateResult.SiteDB.Queries(), controlDB.Queries, siteCreateResult.SiteDB.Subdomain, 0, browser, "site"); err != nil {
+		stored, err := settings.BrowserSettings(r.FormValue("timezone"), r.FormValue("language")).Stored()
+		if err == nil {
+			err = controlDB.Queries.UpdateSiteSettings(r.Context(), controldb.UpdateSiteSettingsParams{ID: siteCreateResult.SiteDB.Subdomain, SettingsJson: stored})
+		}
+		if err != nil {
 			slog.ErrorContext(r.Context(), "Unable to set the new site's settings", "error", err)
 		}
 

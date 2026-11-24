@@ -34,8 +34,8 @@ func TestSummaryMinutesInSiteTimezone(t *testing.T) {
 		BasalRatesJson: new(string(basal)), OccurredAt: now.Add(-48 * time.Hour).UnixMilli(), CreatedByIdentityName: "loop"})
 	require.NoError(t, err)
 
-	siteContext := (&httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site"}, IdentityModel: &controldb.SiteIdentity{Name: "viewer"}}).
-		UseSettings(settings.Of(map[string]any{"timezone": "Pacific/Auckland"}), settings.Of(map[string]any{"timezone": "America/Los_Angeles"}))
+	siteContext := &httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site", SettingsJson: settings.StoredOf(map[string]any{"timezone": "Pacific/Auckland"})},
+		IdentityModel: &controldb.SiteIdentity{Name: "viewer", SettingsJson: settings.StoredOf(map[string]any{"timezone": "America/Los_Angeles"})}}
 	summary := &sitemodels.Summary{Since: now.Add(-10 * time.Minute).UnixMilli(), Units: new(consts.UnitsMGDL)}
 	require.Nil(t, addMinutes(ctx, q, summary, siteContext))
 

@@ -84,10 +84,9 @@ func TestMergeFieldsDefaultUnits(t *testing.T) {
 // mergeSite is a new site, with glucose in units, and the context of its admin's request
 func mergeSite(t *testing.T, units consts.Units) (*httputils.SiteContext, *sitedb.Queries) {
 	_, _, site := testutils.NewControlDBWithSite(t)
-	return (&httputils.SiteContext{SiteID: site.SiteDB.Subdomain, SiteDB: site.SiteDB,
-		SiteModel:     &controldb.Site{ID: site.SiteDB.Subdomain},
-		IdentityModel: &controldb.SiteIdentity{ID: 1, Name: "admin", Role: consts.IdentityRole("admin")}}).
-		UseSettings(settings.Of(map[string]any{"units": string(units)}), nil), site.SiteDB.Queries()
+	return &httputils.SiteContext{SiteID: site.SiteDB.Subdomain, SiteDB: site.SiteDB,
+		SiteModel:     &controldb.Site{ID: site.SiteDB.Subdomain, SettingsJson: settings.StoredOf(map[string]any{"units": units})},
+		IdentityModel: &controldb.SiteIdentity{ID: 1, Name: "admin", Role: consts.IdentityRole("admin")}}, site.SiteDB.Queries()
 }
 
 // decode is a JSON object as a map, as the API reads a body

@@ -116,7 +116,7 @@ func (q *Queries) CountSitesCreated(ctx context.Context, arg CountSitesCreatedPa
 const createSite = `-- name: CreateSite :one
 
 INSERT INTO sites (id, backup_key_hash)
-VALUES (?, ?) RETURNING id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on
+VALUES (?, ?) RETURNING id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json
 `
 
 type CreateSiteParams struct {
@@ -148,7 +148,7 @@ func (q *Queries) CreateSite(ctx context.Context, arg CreateSiteParams) (*Site, 
 		&i.DisabledAt,
 		&i.ArchivedAt,
 		&i.DeletedAt,
-		&i.AlarmsOn,
+		&i.SettingsJson,
 	)
 	return &i, err
 }
@@ -264,7 +264,7 @@ func (q *Queries) EnableSite(ctx context.Context, arg EnableSiteParams) (sql.Res
 }
 
 const getAllSites = `-- name: GetAllSites :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites
 `
 
 func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
@@ -294,7 +294,7 @@ func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -310,7 +310,7 @@ func (q *Queries) GetAllSites(ctx context.Context) ([]*Site, error) {
 }
 
 const getLiveAndDisabledSites = `-- name: GetLiveAndDisabledSites :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites WHERE state IN ('live', 'disabled')
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites WHERE state IN ('live', 'disabled')
 `
 
 func (q *Queries) GetLiveAndDisabledSites(ctx context.Context) ([]*Site, error) {
@@ -340,7 +340,7 @@ func (q *Queries) GetLiveAndDisabledSites(ctx context.Context) ([]*Site, error) 
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -356,7 +356,7 @@ func (q *Queries) GetLiveAndDisabledSites(ctx context.Context) ([]*Site, error) 
 }
 
 const getSite = `-- name: GetSite :one
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites WHERE id = ? AND state = 'live'
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites WHERE id = ? AND state = 'live'
 `
 
 type GetSiteParams struct {
@@ -384,7 +384,7 @@ func (q *Queries) GetSite(ctx context.Context, arg GetSiteParams) (*Site, error)
 		&i.DisabledAt,
 		&i.ArchivedAt,
 		&i.DeletedAt,
-		&i.AlarmsOn,
+		&i.SettingsJson,
 	)
 	return &i, err
 }
@@ -423,10 +423,17 @@ func (q *Queries) GetSiteDBSizeLimits(ctx context.Context) ([]*GetSiteDBSizeLimi
 }
 
 const getSiteIDsWithAlarms = `-- name: GetSiteIDsWithAlarms :many
-SELECT id FROM sites WHERE state = 'live' AND alarms_on
+SELECT id FROM sites WHERE state = 'live' AND (
+    json_extract(settings_json, '$.alarm_urgent_low_enabled') OR json_extract(settings_json, '$.alarm_low_enabled') OR json_extract(settings_json, '$.alarm_urgent_high_enabled') OR json_extract(settings_json, '$.alarm_high_enabled') OR json_extract(settings_json, '$.alarm_no_data_enabled') OR json_extract(settings_json, '$.alarm_device_battery_low_enabled')
+    OR id IN (
+        SELECT site_id FROM site_identities WHERE enabled AND (
+            json_extract(settings_json, '$.alarm_urgent_low_enabled') OR json_extract(settings_json, '$.alarm_low_enabled') OR json_extract(settings_json, '$.alarm_urgent_high_enabled') OR json_extract(settings_json, '$.alarm_high_enabled') OR json_extract(settings_json, '$.alarm_no_data_enabled') OR json_extract(settings_json, '$.alarm_device_battery_low_enabled')
+        )
+    )
+)
 `
 
-// The live sites with an alarm turned on, for the site or for one of its identities, which are checked periodically
+// The live sites with an alarm turned on, for the site or for one of its enabled identities, which are checked periodically
 func (q *Queries) GetSiteIDsWithAlarms(ctx context.Context) ([]string, error) {
 	rows, err := q.query(ctx, q.getSiteIDsWithAlarmsStmt, getSiteIDsWithAlarms)
 	if err != nil {
@@ -451,7 +458,7 @@ func (q *Queries) GetSiteIDsWithAlarms(ctx context.Context) ([]string, error) {
 }
 
 const getSiteInAnyState = `-- name: GetSiteInAnyState :one
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites WHERE id = ?
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites WHERE id = ?
 `
 
 type GetSiteInAnyStateParams struct {
@@ -479,13 +486,13 @@ func (q *Queries) GetSiteInAnyState(ctx context.Context, arg GetSiteInAnyStatePa
 		&i.DisabledAt,
 		&i.ArchivedAt,
 		&i.DeletedAt,
-		&i.AlarmsOn,
+		&i.SettingsJson,
 	)
 	return &i, err
 }
 
 const getSitesNotUploaded = `-- name: GetSitesNotUploaded :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY id
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites WHERE state IN ('live', 'disabled') AND backup_uploaded_at IS NULL ORDER BY id
 `
 
 // The live and disabled sites not uploaded yet, e.g. a new or restored site
@@ -516,7 +523,7 @@ func (q *Queries) GetSitesNotUploaded(ctx context.Context) ([]*Site, error) {
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -534,7 +541,7 @@ func (q *Queries) GetSitesNotUploaded(ctx context.Context) ([]*Site, error) {
 const getSitesToBackUp = `-- name: GetSitesToBackUp :many
 
 
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites
 WHERE state IN ('live', 'disabled') AND (
     (last_write_at IS NOT NULL AND (backed_up_at IS NULL OR (last_write_at + 600000 > backed_up_at
         AND backed_up_at < CAST(?1 AS INTEGER))))
@@ -583,7 +590,7 @@ func (q *Queries) GetSitesToBackUp(ctx context.Context, arg GetSitesToBackUpPara
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -599,7 +606,7 @@ func (q *Queries) GetSitesToBackUp(ctx context.Context, arg GetSitesToBackUpPara
 }
 
 const getSitesToDelete = `-- name: GetSitesToDelete :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites WHERE 
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites WHERE 
     state IN ('live', 'disabled') AND -- must be live or disabled
     last_write_at IS NULL AND -- must not have been written anything (this is important)
     (
@@ -647,7 +654,7 @@ func (q *Queries) GetSitesToDelete(ctx context.Context, arg GetSitesToDeletePara
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -706,7 +713,7 @@ func (q *Queries) RotateSiteBackupKey(ctx context.Context, arg RotateSiteBackupK
 }
 
 const searchArchivedSites = `-- name: SearchArchivedSites :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites
 WHERE state = 'archived'
 ORDER BY archived_at DESC, id
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
@@ -745,7 +752,7 @@ func (q *Queries) SearchArchivedSites(ctx context.Context, arg SearchArchivedSit
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -761,7 +768,7 @@ func (q *Queries) SearchArchivedSites(ctx context.Context, arg SearchArchivedSit
 }
 
 const searchSites = `-- name: SearchSites :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites
 ORDER BY created_at DESC, id
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
@@ -798,7 +805,7 @@ func (q *Queries) SearchSites(ctx context.Context, arg SearchSitesParams) ([]*Si
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -814,7 +821,7 @@ func (q *Queries) SearchSites(ctx context.Context, arg SearchSitesParams) ([]*Si
 }
 
 const searchSitesByDBSize = `-- name: SearchSitesByDBSize :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites
 ORDER BY estimated_db_size_kb IS NULL, estimated_db_size_kb DESC, created_at DESC, id
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
@@ -852,7 +859,7 @@ func (q *Queries) SearchSitesByDBSize(ctx context.Context, arg SearchSitesByDBSi
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -868,7 +875,7 @@ func (q *Queries) SearchSitesByDBSize(ctx context.Context, arg SearchSitesByDBSi
 }
 
 const searchSitesByLastWrite = `-- name: SearchSitesByLastWrite :many
-SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, alarms_on FROM sites
+SELECT id, backup_key_hash, created_at, max_db_size_kb_limit, estimated_db_size_kb, abuse_score, table_sizes_json, last_seen_at, last_write_at, summaries_checked_at, backed_up_at, backup_size_kb, backup_uploaded_at, state, disabled_at, archived_at, deleted_at, settings_json FROM sites
 ORDER BY COALESCE(last_write_at, created_at) ASC, id
 LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
 `
@@ -906,7 +913,7 @@ func (q *Queries) SearchSitesByLastWrite(ctx context.Context, arg SearchSitesByL
 			&i.DisabledAt,
 			&i.ArchivedAt,
 			&i.DeletedAt,
-			&i.AlarmsOn,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -919,20 +926,6 @@ func (q *Queries) SearchSitesByLastWrite(ctx context.Context, arg SearchSitesByL
 		return nil, err
 	}
 	return items, nil
-}
-
-const setSiteAlarmsOn = `-- name: SetSiteAlarmsOn :exec
-UPDATE sites SET alarms_on = ?1 WHERE id = ?2
-`
-
-type SetSiteAlarmsOnParams struct {
-	AlarmsOn int64
-	ID       string
-}
-
-func (q *Queries) SetSiteAlarmsOn(ctx context.Context, arg SetSiteAlarmsOnParams) error {
-	_, err := q.exec(ctx, q.setSiteAlarmsOnStmt, setSiteAlarmsOn, arg.AlarmsOn, arg.ID)
-	return err
 }
 
 const siteExists = `-- name: SiteExists :one

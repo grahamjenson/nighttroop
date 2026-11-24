@@ -192,7 +192,8 @@ CREATE TABLE site_identities (
     -- api-secret. It is the SHA256 of that SHA1, so it is not what is sent.
     nightscout_token_digest TEXT CHECK(length(nightscout_token_digest) = 64),
 
-    -- The identity's settings are a row of its site DB's general_settings (data/db/site_settings.go)
+    -- The identity's own settings, as the site's settings_json: one not set shows the site's, then the default
+    settings_json TEXT NOT NULL DEFAULT '{}' CHECK(length(settings_json) <= 4096 AND json_valid(settings_json)),
 
     -- Constraints
     UNIQUE(site_id, name)
@@ -232,10 +233,9 @@ CREATE TABLE sites (
     archived_at INTEGER,
     deleted_at INTEGER,
 
-    -- The site's settings are a row of its site DB's general_settings (data/db/site_settings.go). alarms_on is kept
-    -- from them when they are saved: whether the site or one of its identities has an alarm turned on, so the alarm
-    -- check finds the sites to check without opening every site's DB.
-    alarms_on INTEGER NOT NULL DEFAULT 0 CHECK(alarms_on IN (0, 1))
+    -- The site's own settings: a JSON object of each setting that is set, by its identifier (utils/settings). One not
+    -- set is not in it, so the default shows through. A new setting is a new key, not a new column.
+    settings_json TEXT NOT NULL DEFAULT '{}' CHECK(length(settings_json) <= 4096 AND json_valid(settings_json))
 
 ) STRICT;
 

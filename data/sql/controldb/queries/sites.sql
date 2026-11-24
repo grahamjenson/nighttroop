@@ -64,11 +64,15 @@ SELECT state, COUNT(*) AS count FROM sites GROUP BY state ORDER BY state;
 SELECT * FROM sites WHERE id = ?;
 
 -- name: GetSiteIDsWithAlarms :many
--- The live sites with an alarm turned on, for the site or for one of its identities, which are checked periodically
-SELECT id FROM sites WHERE state = 'live' AND alarms_on;
-
--- name: SetSiteAlarmsOn :exec
-UPDATE sites SET alarms_on = sqlc.arg('AlarmsOn') WHERE id = sqlc.arg('ID');
+-- The live sites with an alarm turned on, for the site or for one of its enabled identities, which are checked periodically
+SELECT id FROM sites WHERE state = 'live' AND (
+    json_extract(settings_json, '$.alarm_urgent_low_enabled') OR json_extract(settings_json, '$.alarm_low_enabled') OR json_extract(settings_json, '$.alarm_urgent_high_enabled') OR json_extract(settings_json, '$.alarm_high_enabled') OR json_extract(settings_json, '$.alarm_no_data_enabled') OR json_extract(settings_json, '$.alarm_device_battery_low_enabled')
+    OR id IN (
+        SELECT site_id FROM site_identities WHERE enabled AND (
+            json_extract(settings_json, '$.alarm_urgent_low_enabled') OR json_extract(settings_json, '$.alarm_low_enabled') OR json_extract(settings_json, '$.alarm_urgent_high_enabled') OR json_extract(settings_json, '$.alarm_high_enabled') OR json_extract(settings_json, '$.alarm_no_data_enabled') OR json_extract(settings_json, '$.alarm_device_battery_low_enabled')
+        )
+    )
+);
 
 -- name: GetLiveAndDisabledSites :many
 SELECT * FROM sites WHERE state IN ('live', 'disabled');

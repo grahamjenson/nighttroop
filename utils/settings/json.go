@@ -3,6 +3,7 @@ package settings
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
 // MaxJSONBytes is the most a level's settings take as stored. Every setting set, with the longest values each
@@ -25,9 +26,29 @@ func (m *SettingMap) JSON() ([]byte, error) {
 	return raw, err
 }
 
+// Stored is JSON as a column takes it, for a save's parameters
+func (m *SettingMap) Stored() (string, error) {
+	raw, err := m.JSON()
+	return string(raw), err
+}
+
+// StoredOf are the values as a column takes them, each by its identifier: a nil value, or one not valid, is left out
+func StoredOf(values map[string]any) string {
+	for name, value := range values {
+		if v := reflect.ValueOf(value); v.Kind() == reflect.Pointer {
+			delete(values, name)
+			if !v.IsNil() {
+				values[name] = v.Elem().Interface()
+			}
+		}
+	}
+	stored, _ := Of(values).Stored()
+	return stored
+}
+
 // FromJSON is the settings a stored row holds. Each value is parsed and validated as one sent to the API is, so a key
 // that is not a setting, a value of the wrong type or out of its range, or a row too long or not JSON, is left out:
-// a row is never trusted because it was stored, as a site's DB can be uploaded.
+// a row is never trusted because it was stored.
 func FromJSON(raw []byte, createdAt *int64, subject *string) *SettingMap {
 	var values map[string]any
 	if len(raw) > MaxJSONBytes || json.Unmarshal(raw, &values) != nil {

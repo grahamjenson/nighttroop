@@ -11,8 +11,6 @@ import (
 	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
-
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -122,9 +120,17 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 
 // setUnitsMGDL sets the identity's own units to mg/dL, for a client that needs them, keeping its other settings
 func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, identityID int64) error {
-	level := &settings.SettingMap{}
+	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
+	if err != nil {
+		return err
+	}
+	level := settings.OfIdentity(identity)
 	level.SetUnits(new(consts.UnitsMGDL))
-	return db.SaveSiteSettings(ctx, siteContext.SiteDB.Queries(), q, siteContext.SiteID, identityID, level, siteContext.IdentityModel.Name)
+	stored, err := level.Stored()
+	if err != nil {
+		return err
+	}
+	return q.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID, SettingsJson: stored})
 }
 
 func (s *IdentitiesCollection) CreateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
@@ -241,10 +247,6 @@ func (s *IdentitiesCollection) DeleteRow(ctx context.Context, collectionTx *site
 
 	if herr := checkCanRemoveIdentity(ctx, q, siteContext, model); herr != nil {
 		return herr
-	}
-	// The identity's settings go with it
-	if err := db.DeleteIdentitySettings(ctx, siteContext.SiteDB.Queries(), model.ID); err != nil {
-		return err
 	}
 	return q.DeleteSiteIdentity(ctx, sitemodels.IdentityToDelete(model, siteContext))
 }

@@ -5172,11 +5172,6 @@ func (m *DeleteGeneralSettingsBeforeParams) SetUpdatedAt(v int64) {
 }
 
 // GetKey returns the Key value.
-func (m DeleteSettingsParams) GetKey() string {
-	return m.Key
-}
-
-// GetKey returns the Key value.
 func (m GeneralSettingsBytesParams) GetKey() string {
 	return m.Key
 }
@@ -5209,11 +5204,6 @@ func (m UpsertGeneralSettingParams) GetCreatedByIdentityName() string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated UpsertGeneralSettingParams.
 func (m *UpsertGeneralSettingParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
-}
-
-// GetKey returns the Key value.
-func (m UpsertSettingsParams) GetKey() string {
-	return m.Key
 }
 
 // GetID returns the ID value.

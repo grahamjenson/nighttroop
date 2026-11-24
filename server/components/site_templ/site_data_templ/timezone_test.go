@@ -31,12 +31,8 @@ func TestFormatReadingDateInTheSettingsTimezone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, &controldb.Site{}, "site", "", 0, 0, "")
-			ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{})
-			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
-			site.SetTimezone(tt.site)
-			identity.SetTimezone(tt.identity)
-			httputils.GetSiteContext(ctx).UseSettings(site, identity)
+			ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, &controldb.Site{SettingsJson: settings.StoredOf(map[string]any{"timezone": tt.site})}, "site", "", 0, 0, "")
+			ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{SettingsJson: settings.StoredOf(map[string]any{"timezone": tt.identity})})
 			require.Equal(t, tt.want, formatReadingDate(ctx, tt.ms))
 		})
 	}

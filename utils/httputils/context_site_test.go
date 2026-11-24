@@ -39,7 +39,7 @@ func TestGetSettingsWithoutAnIdentityIsTheSites(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(&logged, nil)))
 	defer slog.SetDefault(previous)
 
-	site := (&SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh"}}).UseSettings(settings.Of(map[string]any{"units": "mg/dL"}), nil)
+	site := &SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh", SettingsJson: settings.StoredOf(map[string]any{"units": consts.UnitsMGDL})}}
 	require.Equal(t, consts.UnitsMGDL, *site.GetSettings().GetUnits())
 	require.NotContains(t, logged.String(), "ERROR")
 }

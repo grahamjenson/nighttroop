@@ -556,6 +556,26 @@ func (m UpsertPushRegistrationParams) GetApp() consts.PushApp {
 	return m.App
 }
 
+// GetID returns the ID value.
+func (m UpdateSiteIdentitySettingsParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteIdentitySettingsParams.
+func (m *UpdateSiteIdentitySettingsParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m UpdateSiteSettingsParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteSettingsParams.
+func (m *UpdateSiteSettingsParams) SetID(v string) {
+	m.ID = v
+}
+
 // GetType returns the Type value.
 func (m CreateConnectorParams) GetType() consts.ConnectorType {
 	return m.Type
@@ -799,16 +819,6 @@ func (m *SearchSitesByDBSizeParams) SetLimit(v int64) {
 // SetLimit sets the Limit value and returns the updated SearchSitesByLastWriteParams.
 func (m *SearchSitesByLastWriteParams) SetLimit(v int64) {
 	m.Limit = v
-}
-
-// GetID returns the ID value.
-func (m SetSiteAlarmsOnParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated SetSiteAlarmsOnParams.
-func (m *SetSiteAlarmsOnParams) SetID(v string) {
-	m.ID = v
 }
 
 // GetID returns the ID value.

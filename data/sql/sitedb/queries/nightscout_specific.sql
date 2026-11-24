@@ -9,7 +9,7 @@ SELECT
      CAST(COALESCE((SELECT updated_at FROM event_groups                               ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS event_group_updated_at,
      CAST(COALESCE((SELECT updated_at FROM food_presets                               ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS food_preset_updated_at,
      CAST(COALESCE((SELECT updated_at FROM profile_presets                            ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS profile_preset_updated_at,
-     CAST(COALESCE((SELECT updated_at FROM general_settings WHERE type != 'settings'  ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS general_setting_updated_at
+     CAST(COALESCE((SELECT updated_at FROM general_settings                           ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS general_setting_updated_at
 ;
 
 

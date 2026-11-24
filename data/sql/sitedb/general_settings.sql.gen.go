@@ -9,42 +9,8 @@ import (
 	"context"
 )
 
-const allSettings = `-- name: AllSettings :many
-SELECT key, value_json, updated_at FROM general_settings WHERE type = 'settings'
-`
-
-type AllSettingsRow struct {
-	Key       string
-	ValueJson string
-	UpdatedAt int64
-}
-
-// The site's settings and every identity's
-func (q *Queries) AllSettings(ctx context.Context) ([]*AllSettingsRow, error) {
-	rows, err := q.query(ctx, q.allSettingsStmt, allSettings)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*AllSettingsRow
-	for rows.Next() {
-		var i AllSettingsRow
-		if err := rows.Scan(&i.Key, &i.ValueJson, &i.UpdatedAt); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const countGeneralSettings = `-- name: CountGeneralSettings :one
-SELECT COUNT(*) FROM general_settings WHERE type != 'settings'
+SELECT COUNT(*) FROM general_settings
 `
 
 func (q *Queries) CountGeneralSettings(ctx context.Context) (int64, error) {
@@ -54,19 +20,8 @@ func (q *Queries) CountGeneralSettings(ctx context.Context) (int64, error) {
 	return count, err
 }
 
-const countSettings = `-- name: CountSettings :one
-SELECT COUNT(*) FROM general_settings WHERE type = 'settings'
-`
-
-func (q *Queries) CountSettings(ctx context.Context) (int64, error) {
-	row := q.queryRow(ctx, q.countSettingsStmt, countSettings)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const deleteGeneralSetting = `-- name: DeleteGeneralSetting :one
-DELETE FROM general_settings WHERE key = ? AND type != 'settings' RETURNING "key", type, value_json, created_by_identity_name, created_at, updated_at
+DELETE FROM general_settings WHERE key = ? RETURNING "key", type, value_json, created_by_identity_name, created_at, updated_at
 `
 
 type DeleteGeneralSettingParams struct {
@@ -101,22 +56,8 @@ func (q *Queries) DeleteGeneralSettingsBefore(ctx context.Context, arg DeleteGen
 	return err
 }
 
-const deleteSettings = `-- name: DeleteSettings :exec
-DELETE FROM general_settings WHERE key = ? AND type = 'settings'
-`
-
-type DeleteSettingsParams struct {
-	Key string
-}
-
-// An identity's settings go with the identity
-func (q *Queries) DeleteSettings(ctx context.Context, arg DeleteSettingsParams) error {
-	_, err := q.exec(ctx, q.deleteSettingsStmt, deleteSettings, arg.Key)
-	return err
-}
-
 const generalSettingsBytes = `-- name: GeneralSettingsBytes :one
-SELECT CAST(COALESCE(SUM(LENGTH(value_json)), 0) AS INTEGER) FROM general_settings WHERE key != ? AND type != 'settings'
+SELECT CAST(COALESCE(SUM(LENGTH(value_json)), 0) AS INTEGER) FROM general_settings WHERE key != ?
 `
 
 type GeneralSettingsBytesParams struct {
@@ -132,7 +73,7 @@ func (q *Queries) GeneralSettingsBytes(ctx context.Context, arg GeneralSettingsB
 }
 
 const getGeneralSetting = `-- name: GetGeneralSetting :one
-SELECT "key", type, value_json, created_by_identity_name, created_at, updated_at FROM general_settings WHERE key = ? AND type != 'settings'
+SELECT "key", type, value_json, created_by_identity_name, created_at, updated_at FROM general_settings WHERE key = ?
 `
 
 type GetGeneralSettingParams struct {
@@ -153,51 +94,8 @@ func (q *Queries) GetGeneralSetting(ctx context.Context, arg GetGeneralSettingPa
 	return &i, err
 }
 
-const getSettings = `-- name: GetSettings :many
-
-SELECT key, value_json, updated_at FROM general_settings
-WHERE key IN (?1, ?2) AND type = 'settings'
-`
-
-type GetSettingsParams struct {
-	SiteKey     string
-	IdentityKey string
-}
-
-type GetSettingsRow struct {
-	Key       string
-	ValueJson string
-	UpdatedAt int64
-}
-
-// Nighttroop's own settings, kept beside the documents above and never among them: every query above leaves out the
-// type 'settings'.
-// The site's settings and one identity's: two rows at most, each found by its primary key
-func (q *Queries) GetSettings(ctx context.Context, arg GetSettingsParams) ([]*GetSettingsRow, error) {
-	rows, err := q.query(ctx, q.getSettingsStmt, getSettings, arg.SiteKey, arg.IdentityKey)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []*GetSettingsRow
-	for rows.Next() {
-		var i GetSettingsRow
-		if err := rows.Scan(&i.Key, &i.ValueJson, &i.UpdatedAt); err != nil {
-			return nil, err
-		}
-		items = append(items, &i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const searchGeneralSettings = `-- name: SearchGeneralSettings :many
-SELECT "key", type, value_json, created_by_identity_name, created_at, updated_at FROM general_settings WHERE type != 'settings' AND updated_at >= ?1 ORDER BY updated_at DESC LIMIT CAST(?2 AS INTEGER)
+SELECT "key", type, value_json, created_by_identity_name, created_at, updated_at FROM general_settings WHERE updated_at >= ?1 ORDER BY updated_at DESC LIMIT CAST(?2 AS INTEGER)
 `
 
 type SearchGeneralSettingsParams struct {
@@ -268,23 +166,4 @@ func (q *Queries) UpsertGeneralSetting(ctx context.Context, arg UpsertGeneralSet
 		&i.UpdatedAt,
 	)
 	return &i, err
-}
-
-const upsertSettings = `-- name: UpsertSettings :exec
-INSERT INTO general_settings (key, type, value_json, created_by_identity_name) VALUES (?1, 'settings', ?2, ?3)
-ON CONFLICT(key) DO UPDATE SET
-    value_json = excluded.value_json,
-    updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE type = 'settings'
-`
-
-type UpsertSettingsParams struct {
-	Key       string
-	ValueJson string
-	By        string
-}
-
-func (q *Queries) UpsertSettings(ctx context.Context, arg UpsertSettingsParams) error {
-	_, err := q.exec(ctx, q.upsertSettingsStmt, upsertSettings, arg.Key, arg.ValueJson, arg.By)
-	return err
 }

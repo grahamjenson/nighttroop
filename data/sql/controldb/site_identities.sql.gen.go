@@ -15,7 +15,7 @@ import (
 const allSiteIdentities = `-- name: AllSiteIdentities :many
 
 
-SELECT id, site_id, name, password_hash, totp_secret_enc, role, client, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, nightscout_token_digest FROM site_identities WHERE site_id = CAST(?1 AS TEXT) ORDER BY created_at DESC, id DESC
+SELECT id, site_id, name, password_hash, totp_secret_enc, role, client, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, nightscout_token_digest, settings_json FROM site_identities WHERE site_id = CAST(?1 AS TEXT) ORDER BY created_at DESC, id DESC
 `
 
 type AllSiteIdentitiesParams struct {
@@ -52,6 +52,7 @@ func (q *Queries) AllSiteIdentities(ctx context.Context, arg AllSiteIdentitiesPa
 			&i.Enabled,
 			&i.CredentialsChangedAt,
 			&i.NightscoutTokenDigest,
+			&i.SettingsJson,
 		); err != nil {
 			return nil, err
 		}
@@ -224,7 +225,7 @@ func (q *Queries) DisableOtherSiteAdmins(ctx context.Context, arg DisableOtherSi
 }
 
 const getSiteIdentity = `-- name: GetSiteIdentity :one
-SELECT id, site_id, name, password_hash, totp_secret_enc, role, client, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, nightscout_token_digest FROM site_identities WHERE site_id = ?1 AND name = ?2 LIMIT 1
+SELECT id, site_id, name, password_hash, totp_secret_enc, role, client, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, nightscout_token_digest, settings_json FROM site_identities WHERE site_id = ?1 AND name = ?2 LIMIT 1
 `
 
 type GetSiteIdentityParams struct {
@@ -253,12 +254,13 @@ func (q *Queries) GetSiteIdentity(ctx context.Context, arg GetSiteIdentityParams
 		&i.Enabled,
 		&i.CredentialsChangedAt,
 		&i.NightscoutTokenDigest,
+		&i.SettingsJson,
 	)
 	return &i, err
 }
 
 const getSiteIdentityByID = `-- name: GetSiteIdentityByID :one
-SELECT id, site_id, name, password_hash, totp_secret_enc, role, client, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, nightscout_token_digest FROM site_identities WHERE site_id = ?1 AND id = ?2 LIMIT 1
+SELECT id, site_id, name, password_hash, totp_secret_enc, role, client, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, nightscout_token_digest, settings_json FROM site_identities WHERE site_id = ?1 AND id = ?2 LIMIT 1
 `
 
 type GetSiteIdentityByIDParams struct {
@@ -287,12 +289,13 @@ func (q *Queries) GetSiteIdentityByID(ctx context.Context, arg GetSiteIdentityBy
 		&i.Enabled,
 		&i.CredentialsChangedAt,
 		&i.NightscoutTokenDigest,
+		&i.SettingsJson,
 	)
 	return &i, err
 }
 
 const getSiteIdentityByTokenDigest = `-- name: GetSiteIdentityByTokenDigest :one
-SELECT id, site_id, name, password_hash, totp_secret_enc, role, client, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, nightscout_token_digest FROM site_identities WHERE site_id = ?1 AND nightscout_token_digest = ?2 LIMIT 1
+SELECT id, site_id, name, password_hash, totp_secret_enc, role, client, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, enabled, credentials_changed_at, nightscout_token_digest, settings_json FROM site_identities WHERE site_id = ?1 AND nightscout_token_digest = ?2 LIMIT 1
 `
 
 type GetSiteIdentityByTokenDigestParams struct {
@@ -322,6 +325,7 @@ func (q *Queries) GetSiteIdentityByTokenDigest(ctx context.Context, arg GetSiteI
 		&i.Enabled,
 		&i.CredentialsChangedAt,
 		&i.NightscoutTokenDigest,
+		&i.SettingsJson,
 	)
 	return &i, err
 }

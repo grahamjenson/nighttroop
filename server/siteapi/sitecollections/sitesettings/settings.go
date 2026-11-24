@@ -3,7 +3,6 @@ package sitesettings
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"math"
 	"slices"
 	"strconv"
@@ -14,8 +13,6 @@ import (
 	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
-
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
@@ -94,21 +91,12 @@ func (s *SettingsCollection) GetRoute() string {
 	return "identity"
 }
 
-func (s *SettingsCollection) level(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, identity *controldb.SiteIdentity) *settings.SettingMap {
+func (s *SettingsCollection) level(siteContext *httputils.SiteContext, identity *controldb.SiteIdentity) *settings.SettingMap {
 	if s.Site {
 		return siteContext.GetSettings().SiteSettingsMap
 	}
 	if s.Other {
-		// Read in the request's transaction, which holds the site DB's connection once it has written
-		level := &settings.SettingMap{}
-		q, err := collectionTx.Site()
-		if err == nil {
-			_, level, err = db.LoadSettings(ctx, q, identity.ID)
-		}
-		if err != nil {
-			slog.ErrorContext(ctx, "cannot read an identity's settings", "error", err)
-		}
-		return level
+		return settings.OfIdentity(identity)
 	}
 	return siteContext.GetSettings().IdentitySettingsMap
 }
@@ -147,7 +135,7 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 	if err != nil {
 		return nil, err
 	}
-	combined, level := siteContext.GetSettings(), s.level(ctx, collectionTx, siteContext, identity)
+	combined, level := siteContext.GetSettings(), s.level(siteContext, identity)
 	units := s.glucoseUnits(siteContext, level)
 	model := &sitemodels.Settings{Inherited: map[string]string{}}
 	if !s.Site {
@@ -238,7 +226,7 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 	if err != nil {
 		return nil, err
 	}
-	level := s.level(ctx, collectionTx, siteContext, identity)
+	level := s.level(siteContext, identity)
 	if err := s.setSent(siteContext, level, model); err != nil {
 		return nil, err
 	}
@@ -300,19 +288,18 @@ func (s *SettingsCollection) inEffect(siteContext *httputils.SiteContext, level 
 
 // save writes every setting of the level, so the ones not on the page keep their values
 func (s *SettingsCollection) save(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, identity *controldb.SiteIdentity, level *settings.SettingMap) error {
-	q, err := collectionTx.Site()
+	q, err := collectionTx.Control()
 	if err != nil {
 		return err
 	}
-	control, err := collectionTx.Control()
+	stored, err := level.Stored()
 	if err != nil {
 		return err
 	}
-	var identityID int64
-	if !s.Site {
-		identityID = identity.ID
+	if s.Site {
+		return q.UpdateSiteSettings(ctx, controldb.UpdateSiteSettingsParams{ID: siteContext.SiteModel.ID, SettingsJson: stored})
 	}
-	return db.SaveSiteSettings(ctx, q, control, siteContext.SiteID, identityID, level, siteContext.IdentityModel.Name)
+	return q.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID, SettingsJson: stored})
 }
 
 // logSiteChanges logs a new site timezone or week start day as an event, once saved, so the background jobs that

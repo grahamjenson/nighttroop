@@ -322,10 +322,7 @@ CREATE TABLE food_presets (
 
 CREATE TABLE general_settings (
     key TEXT PRIMARY KEY CHECK(length(key) <= 128),
-    -- The kind of document its key is, from the code's generalSettingType, or 'settings' for Nighttroop's own: the
-    -- site's settings (key nighttroop_site) and each identity's (nighttroop_identity_<id>), a JSON object of each
-    -- setting that is set by its identifier. The Nightscout API never reads or writes those rows.
-    type TEXT NOT NULL CHECK(length(type) <= 32),
+    type TEXT NOT NULL CHECK(length(type) <= 32), -- the kind of document its key is, from the code's generalSettingType
     value_json TEXT NOT NULL CHECK(length(value_json) <= 65536 AND json_valid(value_json)),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

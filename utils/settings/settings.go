@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
 )
 
@@ -23,9 +24,19 @@ func DefaultCombinedSettingsMap() *CombinedSettingsMap {
 	}
 }
 
+// OfSite are the site's own settings, from its row
+func OfSite(site *controldb.Site) *SettingMap {
+	return FromJSON([]byte(site.SettingsJson), &site.CreatedAt, ptr("site"))
+}
+
+// OfIdentity are the identity's own settings, from its row
+func OfIdentity(identity *controldb.SiteIdentity) *SettingMap {
+	return FromJSON([]byte(identity.SettingsJson), &identity.CreatedAt, ptr("identity"))
+}
+
 // NewCombinedSettingsMap are the identity's settings over the site's over the defaults
-func NewCombinedSettingsMap(site *SettingMap, identity *SettingMap) *CombinedSettingsMap {
-	return &CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: DefaultSettingsMap}
+func NewCombinedSettingsMap(site *controldb.Site, identity *controldb.SiteIdentity) *CombinedSettingsMap {
+	return &CombinedSettingsMap{SiteSettingsMap: OfSite(site), IdentitySettingsMap: OfIdentity(identity), DefaultSettingsMap: DefaultSettingsMap}
 }
 
 func (m *CombinedSettingsMap) GetSettingAnyTypeByName(identifier string) (*SettingAnyType, error) {

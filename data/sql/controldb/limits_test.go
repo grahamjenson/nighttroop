@@ -25,8 +25,7 @@ func TestControlDataLimits(t *testing.T) {
 	require.NoError(t, err)
 	// A site's and an identity's settings, a site's abuse score and a connector's sync are written by their updates, not
 	// checked here
-	settings := []string{"Timezone", "Language", "DateFormat", "TimeFormat", "WeekStartDay", "NumberFormat",
-		"AlarmDeviceBatteryLowDevicesJson"}
+	settings := []string{"SettingsJson"}
 	testutils.CheckColumnLimits(t, controldb.ColumnLimits, map[string]testutils.LimitRecipe{
 		"control_identities": testutils.Recipe(func(i int) controldb.CreateControlIdentityParams {
 			return controldb.CreateControlIdentityParams{Name: id(i), PasswordHash: "hash", TotpSecretEnc: "secret",

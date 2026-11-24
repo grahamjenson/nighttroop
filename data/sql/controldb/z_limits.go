@@ -130,6 +130,7 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 		"Enabled":               {Column: "enabled", Required: true},
 		"CredentialsChangedAt":  {Column: "credentials_changed_at", Required: true},
 		"NightscoutTokenDigest": {Column: "nightscout_token_digest", MinLength: 64, MaxLength: 64},
+		"SettingsJson":          {Column: "settings_json", Required: true, MaxLength: 4096},
 		"UNIQUE(siteId,":        {Column: "UNIQUE(site_id,"},
 	},
 	"sites": {
@@ -150,6 +151,6 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 		"DisabledAt":         {Column: "disabled_at"},
 		"ArchivedAt":         {Column: "archived_at"},
 		"DeletedAt":          {Column: "deleted_at"},
-		"AlarmsOn":           {Column: "alarms_on", Required: true},
+		"SettingsJson":       {Column: "settings_json", Required: true, MaxLength: 4096},
 	},
 }
