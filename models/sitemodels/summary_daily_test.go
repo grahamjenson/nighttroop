@@ -328,6 +328,21 @@ func TestSummaryBasal(t *testing.T) {
 	week := NewSummaryPeriod("week", "1970-01-01", "UTC", 0, 2, 2, []*sitedb.SummaryPeriod{
 		{Days: 1, TotalDailyDose: 40, TotalDailyBasal: 20, GlucoseMgdlJson: "[]"}, {Days: 1, TotalDailyDose: 30, TotalDailyBasal: 10, GlucoseMgdlJson: "[]"}})
 	require.Equal(t, []float64{35, 15}, []float64{week.TotalDailyDose, week.TotalDailyBasal})
+
+	// A dose of basal insulin, as long acting insulin injected, is basal of the daily dose too, not a bolus: with the
+	// pump's 1.5 U of basal, a 4 U bolus and 10 U of long acting insulin are a daily dose of 15.5 U, 11.5 U of it basal
+	yes, no := true, false
+	injected := NewSummaryDaily("1970-01-01", "UTC", hour, 2*hour, 2*hour, 70, 180, nil, []*sitedb.InsulinDose{
+		{OccurredAt: hour, Dose: 4, IsBasalInsulin: &no}, {OccurredAt: hour + 60_000, Dose: 10, IsBasalInsulin: &yes}}, nil, nil, hour, minutes)
+	require.Equal(t, []float64{15.5, 11.5}, []float64{injected.TotalDailyDose, injected.TotalDailyBasal})
+	// With no pump, the long acting insulin is all of the basal
+	mdi := NewSummaryDaily("1970-01-01", "UTC", hour, 2*hour, 2*hour, 70, 180, nil, []*sitedb.InsulinDose{
+		{OccurredAt: hour, Dose: 4}, {OccurredAt: hour + 60_000, Dose: 10, IsBasalInsulin: &yes}}, nil, nil, hour, nil)
+	require.Equal(t, []float64{14, 10}, []float64{mdi.TotalDailyDose, mdi.TotalDailyBasal})
+	// One given before the day is not in it
+	before := NewSummaryDaily("1970-01-01", "UTC", hour, 2*hour, 2*hour, 70, 180, nil, []*sitedb.InsulinDose{
+		{OccurredAt: hour - 1, Dose: 10, IsBasalInsulin: &yes}}, nil, nil, hour, nil)
+	require.Equal(t, []float64{0, 0}, []float64{before.TotalDailyDose, before.TotalDailyBasal})
 }
 
 // A day not yet over has a combo bolus's dose given at once and the share of its extended dose given by then

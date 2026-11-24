@@ -1207,6 +1207,10 @@ func InsulinDoseFromDB(source *sitedb.InsulinDose) *SiteInsulinDose {
 			xbool := *(*source).Automatic
 			sitemodelsSiteInsulinDose.Automatic = &xbool
 		}
+		if (*source).IsBasalInsulin != nil {
+			xbool2 := *(*source).IsBasalInsulin
+			sitemodelsSiteInsulinDose.IsBasalInsulin = &xbool2
+		}
 		sitemodelsSiteInsulinDose.Notes = StripTags((*source).Notes)
 		sitemodelsSiteInsulinDose.Reason = StripTags((*source).Reason)
 		if (*source).UtcOffsetMinutes != nil {

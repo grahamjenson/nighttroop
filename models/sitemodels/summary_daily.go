@@ -161,9 +161,14 @@ func (d summaryDay) addGlucoseSlots(readings []*glucose.Clean) {
 }
 
 // addInsulin sets the day's total daily dose: the doses' insulin in it given by until, so an extended dose counts as
-// it is given, and its basal, the basal in force each minute of minutes from minutesSince
+// it is given, and its basal, the basal in force each minute of minutes from minutesSince. A dose of basal insulin, as
+// the long acting insulin of someone on injections that AAPS and Juggluco send, is basal too, not a bolus.
 func (d summaryDay) addInsulin(doses []*sitedb.InsulinDose, until, minutesSince int64, minutes []SummaryMinute) {
 	for _, dose := range doses {
+		if dose.IsBasalInsulin != nil && *dose.IsBasalInsulin {
+			d.row.TotalDailyBasal += insulinWithin(dose, d.start, min(d.end, until))
+			continue
+		}
 		d.row.TotalDailyDose += insulinWithin(dose, d.start, min(d.end, until))
 	}
 	for i, m := range minutes {
