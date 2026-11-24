@@ -708,6 +708,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - On a phone, each treatment's detail is on a line of its own, under when it was and its name.
 - A suspended pump (`PUMP_SUSPEND`) shows in **Other treatments** as **Suspended**, "Pump suspended until it
   resumes". After the pump resumes, it shows "Pump suspended for" its minutes.
+- A temp target of no duration, as AAPS and T1D Carer send to cancel one, shows in **Other treatments** as
+  **Temp Target**, "Cancelled", not its range for 0 minutes.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
 - A dose of basal insulin, as long acting insulin injected, says "basal" after its units ("14 U basal"), in the table
   and on the graph.
