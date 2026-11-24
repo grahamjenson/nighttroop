@@ -196,6 +196,7 @@ site:
       none: "No temp targets or temp basals in this time."
       temp_target: "Temp Target"
       temp_target_detail: "{{.Low}}–{{.High}} {{.Units}} for {{.Minutes}} min"
+      temp_target_cancelled: "Cancelled"
       temp_basal: "Temp Basal"
       temp_basal_detail: "{{.Rate}} for {{.Minutes}} min"
       suspended: "Suspended"

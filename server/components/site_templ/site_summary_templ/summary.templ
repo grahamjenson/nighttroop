@@ -44,6 +44,11 @@ func otherTreatments(ctx context.Context, s *sitemodels.Summary) []treatment {
 	for _, t := range s.TempTargets {
 		detail := i18n.T(ctx, "site.summary.treatments.temp_target_detail", i18n.Data{"Low": display.Glucose(ctx, t.LowTarget, t.Units), "High": display.Glucose(ctx, t.HighTarget, t.Units),
 			"Units": display.Units(t.Units), "Minutes": t.DurationMinutes})
+		// A temp target of no duration cancels the one before, as AAPS's and T1D Carer's cancel send, and has no target
+		// of its own
+		if t.DurationMinutes == 0 {
+			detail = i18n.T(ctx, "site.summary.treatments.temp_target_cancelled")
+		}
 		list = append(list, treatment{t.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_target"), "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {

@@ -1,0 +1,28 @@
+INCLUDE steps/new_site_admin.steps
+
+// A reading, so the summary is shown and not the guide to setting it up, a temp target, and its cancel as T1D Carer
+// sends one through the Nightscout API: a temp target of no duration, with a range of its own
+HTTP
+NAME reading_for_summary
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 120, "date": {{ itime 2 }}, "device": "xDrip-DexcomG6"}]
+ASSERT_STATUS 200
+
+NAME temp_target
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Temporary Target", "duration": 60, "targetBottom": 140, "targetTop": 140, "reason": "Activity", "created_at": "{{ time 20 }}", "enteredBy": "T1D Carer"}]
+ASSERT_STATUS 200
+
+NAME cancel_temp_target
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Temporary Target", "duration": 0, "targetBottom": 72, "targetTop": 180, "created_at": "{{ time 1 }}", "enteredBy": "T1D Carer"}]
+ASSERT_STATUS 200
+BROWSE
+
+// The cancel says it cancelled the temp target, not a range for 0 minutes; the temp target before shows its range
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--treatments td >> text=Cancelled
+ASSERT_NOT_VISIBLE #site--summary--treatments >> text=for 0 min
+ASSERT_VISIBLE #site--summary--treatments td >> text=/for \d+ min/
+SCREENSHOT temp_target_cancelled
