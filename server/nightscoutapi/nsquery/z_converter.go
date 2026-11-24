@@ -158,6 +158,34 @@ func ActivitySearch(source Query) sitedb.SearchActivitiesParams {
 	sitedbSearchActivitiesParams.Limit = source.Limit
 	return sitedbSearchActivitiesParams
 }
+func ActivitySorted(source Query) sitedb.ActivitySortedIDsParams {
+	var sitedbActivitySortedIDsParams sitedb.ActivitySortedIDsParams
+	sitedbActivitySortedIDsParams.SortOrder = SortCode(source.SortOrder)
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbActivitySortedIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbActivitySortedIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbActivitySortedIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbActivitySortedIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbActivitySortedIDsParams.DateLT = &xint645
+	}
+	sitedbActivitySortedIDsParams.IncludeDeleted = source.IncludeDeleted
+	sitedbActivitySortedIDsParams.Skip = source.Skip
+	sitedbActivitySortedIDsParams.Limit = source.Limit
+	return sitedbActivitySortedIDsParams
+}
 func DeviceReportAll(source Query) sitedb.AllDeviceReportsParams {
 	var sitedbAllDeviceReportsParams sitedb.AllDeviceReportsParams
 	sitedbAllDeviceReportsParams.IncludeDeleted = source.IncludeDeleted
@@ -267,6 +295,34 @@ func DeviceReportSearch(source Query) sitedb.SearchDeviceReportsParams {
 	sitedbSearchDeviceReportsParams.Skip = source.Skip
 	sitedbSearchDeviceReportsParams.Limit = source.Limit
 	return sitedbSearchDeviceReportsParams
+}
+func DeviceReportSorted(source Query) sitedb.DeviceReportSortedIDsParams {
+	var sitedbDeviceReportSortedIDsParams sitedb.DeviceReportSortedIDsParams
+	sitedbDeviceReportSortedIDsParams.SortOrder = SortCode(source.SortOrder)
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbDeviceReportSortedIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbDeviceReportSortedIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbDeviceReportSortedIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbDeviceReportSortedIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbDeviceReportSortedIDsParams.DateLT = &xint645
+	}
+	sitedbDeviceReportSortedIDsParams.IncludeDeleted = source.IncludeDeleted
+	sitedbDeviceReportSortedIDsParams.Skip = source.Skip
+	sitedbDeviceReportSortedIDsParams.Limit = source.Limit
+	return sitedbDeviceReportSortedIDsParams
 }
 func EventGroupAll(source Query) sitedb.AllEventGroupsParams {
 	var sitedbAllEventGroupsParams sitedb.AllEventGroupsParams
@@ -504,6 +560,34 @@ func EventGroupSearch(source Query) sitedb.SearchEventGroupsParams {
 	sitedbSearchEventGroupsParams.Skip = source.Skip
 	sitedbSearchEventGroupsParams.Limit = source.Limit
 	return sitedbSearchEventGroupsParams
+}
+func EventGroupSorted(source Query) sitedb.EventGroupSortedIDsParams {
+	var sitedbEventGroupSortedIDsParams sitedb.EventGroupSortedIDsParams
+	sitedbEventGroupSortedIDsParams.SortOrder = SortCode(source.SortOrder)
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbEventGroupSortedIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbEventGroupSortedIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbEventGroupSortedIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbEventGroupSortedIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbEventGroupSortedIDsParams.DateLT = &xint645
+	}
+	sitedbEventGroupSortedIDsParams.IncludeDeleted = source.IncludeDeleted
+	sitedbEventGroupSortedIDsParams.Skip = source.Skip
+	sitedbEventGroupSortedIDsParams.Limit = source.Limit
+	return sitedbEventGroupSortedIDsParams
 }
 func FoodIntakeAll(source Query) sitedb.AllFoodIntakesParams {
 	var sitedbAllFoodIntakesParams sitedb.AllFoodIntakesParams
@@ -774,6 +858,33 @@ func FoodPresetSearch(source Query) sitedb.SearchFoodPresetsParams {
 	sitedbSearchFoodPresetsParams.Limit = source.Limit
 	return sitedbSearchFoodPresetsParams
 }
+func FoodPresetSorted(source Query) sitedb.FoodPresetSortedIDsParams {
+	var sitedbFoodPresetSortedIDsParams sitedb.FoodPresetSortedIDsParams
+	sitedbFoodPresetSortedIDsParams.SortOrder = SortCode(source.SortOrder)
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbFoodPresetSortedIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbFoodPresetSortedIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbFoodPresetSortedIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbFoodPresetSortedIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbFoodPresetSortedIDsParams.DateLT = &xint645
+	}
+	sitedbFoodPresetSortedIDsParams.Skip = source.Skip
+	sitedbFoodPresetSortedIDsParams.Limit = source.Limit
+	return sitedbFoodPresetSortedIDsParams
+}
 func GlucoseAll(source Query) sitedb.AllGlucoseReadingsParams {
 	var sitedbAllGlucoseReadingsParams sitedb.AllGlucoseReadingsParams
 	sitedbAllGlucoseReadingsParams.IncludeDeleted = source.IncludeDeleted
@@ -923,6 +1034,34 @@ func GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams {
 	sitedbSearchGlucoseReadingsParams.Limit = source.Limit
 	return sitedbSearchGlucoseReadingsParams
 }
+func GlucoseSorted(source Query) sitedb.GlucoseReadingSortedIDsParams {
+	var sitedbGlucoseReadingSortedIDsParams sitedb.GlucoseReadingSortedIDsParams
+	sitedbGlucoseReadingSortedIDsParams.SortOrder = SortCode(source.SortOrder)
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbGlucoseReadingSortedIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbGlucoseReadingSortedIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbGlucoseReadingSortedIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbGlucoseReadingSortedIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbGlucoseReadingSortedIDsParams.DateLT = &xint645
+	}
+	sitedbGlucoseReadingSortedIDsParams.IncludeDeleted = source.IncludeDeleted
+	sitedbGlucoseReadingSortedIDsParams.Skip = source.Skip
+	sitedbGlucoseReadingSortedIDsParams.Limit = source.Limit
+	return sitedbGlucoseReadingSortedIDsParams
+}
 func ProfilePresetsAll(source Query) sitedb.AllProfilePresetsParams {
 	var sitedbAllProfilePresetsParams sitedb.AllProfilePresetsParams
 	sitedbAllProfilePresetsParams.Skip = source.Skip
@@ -1032,6 +1171,33 @@ func ProfileStoreSearch(source Query) sitedb.SearchProfileStoresParams {
 	sitedbSearchProfileStoresParams.Skip = source.Skip
 	sitedbSearchProfileStoresParams.Limit = source.Limit
 	return sitedbSearchProfileStoresParams
+}
+func ProfileStoreSorted(source Query) sitedb.ProfileStoreSortedIDsParams {
+	var sitedbProfileStoreSortedIDsParams sitedb.ProfileStoreSortedIDsParams
+	sitedbProfileStoreSortedIDsParams.SortOrder = SortCode(source.SortOrder)
+	if source.DateGTE != nil {
+		xint64 := *source.DateGTE
+		sitedbProfileStoreSortedIDsParams.DateGTE = &xint64
+	}
+	if source.DateGT != nil {
+		xint642 := *source.DateGT
+		sitedbProfileStoreSortedIDsParams.DateGT = &xint642
+	}
+	if source.DateEQ != nil {
+		xint643 := *source.DateEQ
+		sitedbProfileStoreSortedIDsParams.DateEQ = &xint643
+	}
+	if source.DateLTE != nil {
+		xint644 := *source.DateLTE
+		sitedbProfileStoreSortedIDsParams.DateLTE = &xint644
+	}
+	if source.DateLT != nil {
+		xint645 := *source.DateLT
+		sitedbProfileStoreSortedIDsParams.DateLT = &xint645
+	}
+	sitedbProfileStoreSortedIDsParams.Skip = source.Skip
+	sitedbProfileStoreSortedIDsParams.Limit = source.Limit
+	return sitedbProfileStoreSortedIDsParams
 }
 func QueryValueToQuery(source QueryValues) Query {
 	var nsqueryQuery Query

@@ -1542,6 +1542,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - v1 or v3 `sort` on the date (e.g. `sort=date`, `sort=created_at`): oldest first, paged with `limit` and `skip`.
   AAPS pages forward from its newest date and gets every document.
+- `sort` or `sort$desc` on `srvModified` or `srvCreated`: in that order, oldest or newest first, paged with `limit` and
+  `skip` by it, so `sort$desc=srvModified&limit=1` is the last document changed, however old its date.
 - Other searches: newest first.
 - A filter on a field other than the date: a page has the matches of the page the dates alone give, still in order,
   and can have fewer than `limit`.

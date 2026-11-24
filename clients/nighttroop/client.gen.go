@@ -944,10 +944,10 @@ type NsV1SearchParams struct {
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 
-	// Sort A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first
+	// Sort A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. srvModified and srvCreated are sorted, and paged, by when each was last changed or created. Other fields are the newest first
 	Sort *NsSort `form:"sort,omitempty" json:"sort,omitempty"`
 
-	// SortDesc A field to sort by, descending
+	// SortDesc A field to sort by, descending: the date, srvModified or srvCreated, the newest first
 	SortDesc *NsSortDesc `form:"sort$desc,omitempty" json:"sort$desc,omitempty"`
 
 	// Fields Comma separated fields to return
@@ -995,10 +995,10 @@ type NsV3SearchParams struct {
 	// Skip How many to skip, at most 32000
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 
-	// Sort A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first
+	// Sort A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. srvModified and srvCreated are sorted, and paged, by when each was last changed or created. Other fields are the newest first
 	Sort *NsSort `form:"sort,omitempty" json:"sort,omitempty"`
 
-	// SortDesc A field to sort by, descending
+	// SortDesc A field to sort by, descending: the date, srvModified or srvCreated, the newest first
 	SortDesc *NsSortDesc `form:"sort$desc,omitempty" json:"sort$desc,omitempty"`
 
 	// Fields Comma separated fields to return
