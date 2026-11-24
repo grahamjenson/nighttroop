@@ -1,62 +1,62 @@
 INCLUDE steps/new_ns_site.steps
 
-// A site keeps at most 2 MiB of settings documents (see running_config.http), so a device cannot fill its DB with
-// them: 100 documents of 256 KiB would take it past its size limit, whose truncate deletes old readings
+// A site keeps at most 512 KiB of settings documents (see running_config.http), so a device cannot fill its DB with
+// them: 100 documents of 64 KiB would be 6 MiB, and its size limit's truncate deletes old readings but never these
 
-// 8 documents of 250,000 characters are kept
+// 8 documents of 62,000 characters are kept
 NAME put_large_1
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_1
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 201
 
 NAME put_large_2
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_2
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 201
 
 NAME put_large_3
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_3
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 201
 
 NAME put_large_4
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_4
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 201
 
 NAME put_large_5
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_5
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 201
 
 NAME put_large_6
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_6
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 201
 
 NAME put_large_7
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_7
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 201
 
 NAME put_large_8
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_8
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 201
 
-// One more takes them past 2 MiB, so it is refused
+// One more takes them past 512 KiB, so it is refused
 NAME put_past_total
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_9
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 400
 
 // As is one kept made larger
@@ -69,14 +69,14 @@ ASSERT_STATUS 201
 NAME patch_state_past_total
 PATCH http://{{ site }}/api/v3/settings/aaps-state
 H Authorization: Bearer {{ jwt }}
-B {"signed":"{{ repeat "x" 250000 }}"}
+B {"signed":"{{ repeat "x" 62000 }}"}
 ASSERT_STATUS 400
 
 // One kept is still replaced, and a small one still kept
 NAME put_large_again
 PUT http://{{ site }}/api/v3/settings/aaps_clientcontrol_large_1
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "y" 250000 }}"}
+B {"app":"AAPS","date":946684800001,"envelope":"{{ repeat "y" 62000 }}"}
 ASSERT_STATUS 200
 
 NAME put_small

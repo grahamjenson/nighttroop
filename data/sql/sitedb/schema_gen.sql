@@ -322,8 +322,8 @@ CREATE TABLE food_presets (
 
 CREATE TABLE general_settings (
     key TEXT PRIMARY KEY CHECK(length(key) <= 128),
-    type TEXT NOT NULL CHECK(type IN ('aaps', 'aaps_clientcontrol')),
-    value_json TEXT NOT NULL CHECK(length(value_json) <= 262144 AND json_valid(value_json)),
+    type TEXT NOT NULL CHECK(length(type) <= 32), -- the kind of document its key is, from the code's generalSettingType
+    value_json TEXT NOT NULL CHECK(length(value_json) <= 65536 AND json_valid(value_json)),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
