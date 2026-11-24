@@ -38,6 +38,9 @@ const (
 	ConnectorRecordsAdded Name = "connector_records_added"
 	// SiteTimezoneChanged is a site's own timezone changing, its Attributes the timezone it was and is
 	SiteTimezoneChanged Name = "site_timezone_changed"
+	// SettingsChanged is the site's settings or an identity's being saved with a change, its Attributes whose they
+	// are, who saved them and the names of the settings that changed
+	SettingsChanged Name = "settings_changed"
 	// SiteWeekStartChanged is a site's own week start day changing, its Attributes the day it was and is
 	SiteWeekStartChanged Name = "site_week_start_changed"
 	// SummariesRegenerationRequested is a site's admin asking for its summaries to be built again from its data
@@ -66,7 +69,7 @@ const (
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
 var Persisted = []Name{SiteCreated, SiteDisabled, SiteEnabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteDBMadeEmpty, SiteDBUploaded, SiteVersionRestored, SiteDBMissing, SitesBackedUp,
-	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, SiteDBDownloadedByControl, ResourceHigh, ResourceRecovered}
+	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SettingsChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, SiteDBDownloadedByControl, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from
 func PersistedNames() []string {

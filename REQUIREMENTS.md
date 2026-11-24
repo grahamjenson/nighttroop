@@ -325,6 +325,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - At most 100 keys of a reason are counted apart; the rest are `other`, so a sweep of every subdomain cannot grow
     the server's memory.
 - Logs, events and errors keep their `request_id` or `job_id`.
+- A save of the site's settings or of an identity's, with a change, is a "Settings changed" event: whose settings
+  (none for the site's own), who saved them, and the identifiers of the settings that changed. It has no values. A
+  save with no change is no event.
 - Logs, events and errors keep the identity of their request: `identity_id` for an identity of the site,
   `control_identity_id` for a control admin, and `identity_name` for its name. A row of a background job has none.
   - A sign in is an event of the identity that signs in.
@@ -1313,7 +1316,13 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### General settings
 
-- Units, time zone, language, date and time format, week start, number format, insulin and carb defaults.
+- Units, time zone, language, date and time format, week start, number format.
+- A save changes only the settings it sets:
+  - Two saves made at the same time keep the settings of each other.
+  - A setting that is not on the page keeps its value.
+- If a stored value is not valid after a change to Nighttroop, it is not used: the site's value, then the fallback,
+  shows. The logs say so once for each setting, without the value. The stored value is kept, and a save does not
+  delete it.
 - The language is typed. Under its box, the page says to type a language code, such as en or en-NZ, and that the
   pages are in English only for now.
 - Admins set site settings. Identities can override them.

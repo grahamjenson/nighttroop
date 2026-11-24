@@ -56,6 +56,7 @@ stored:
     connector_records_added: "Connector records added"
     site_timezone_changed: "Site timezone changed"
     site_week_start_changed: "Site week start changed"
+    settings_changed: "Settings changed"
     summaries_regeneration_requested: "Summaries regeneration requested"
     alarm_created: "Alarm created"
     alarm_snoozed: "Alarm snoozed"

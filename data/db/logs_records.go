@@ -159,6 +159,20 @@ func (l *LogsDB) SiteWeekStartChangedEvent(ctx context.Context, siteID string, b
 	l.event(ctx, siteID, events.SiteWeekStartChanged, SiteTimezoneChangedAttributes{By: by, From: from, To: to})
 }
 
+type SettingsChangedAttributes struct {
+	// IdentityName is whose settings changed, or none for the site's own
+	IdentityName string `json:"identity_name,omitempty"`
+	By           string `json:"by"`
+	// Settings are the identifiers of the settings that changed, not their values
+	Settings []string `json:"settings"`
+}
+
+// SettingsChangedEvent records the site's own settings, or with an identityName that identity's, being saved with
+// the named settings changed
+func (l *LogsDB) SettingsChangedEvent(ctx context.Context, siteID string, identityName string, by string, names []string) {
+	l.event(ctx, siteID, events.SettingsChanged, SettingsChangedAttributes{IdentityName: identityName, By: by, Settings: names})
+}
+
 // SummariesRegenerationRequestedEvent records a site's admin asking for its summaries to be built again
 func (l *LogsDB) SummariesRegenerationRequestedEvent(ctx context.Context, siteID string, by string) {
 	l.event(ctx, siteID, events.SummariesRegenerationRequested, SiteArchivedAttributes{By: by})

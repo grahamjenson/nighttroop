@@ -292,14 +292,22 @@ func (s *SettingsCollection) save(ctx context.Context, collectionTx *siteapiutil
 	if err != nil {
 		return err
 	}
-	stored, err := level.Stored()
-	if err != nil {
+	// Only what changed is written, so the settings not on the page, and a save made at the same time, are kept
+	stored, whose := siteContext.SiteModel.SettingsJson, ""
+	if !s.Site {
+		stored, whose = identity.SettingsJson, identity.Name
+	}
+	patch, names, err := level.Changes(stored)
+	if err != nil || len(names) == 0 {
 		return err
 	}
+	collectionTx.OnCommit(func() {
+		siteContext.ControlDB.Logs.SettingsChangedEvent(ctx, siteContext.SiteID, whose, siteContext.IdentityModel.Name, names)
+	})
 	if s.Site {
-		return q.UpdateSiteSettings(ctx, controldb.UpdateSiteSettingsParams{ID: siteContext.SiteModel.ID, SettingsJson: stored})
+		return q.PatchSiteSettings(ctx, controldb.PatchSiteSettingsParams{ID: siteContext.SiteModel.ID, Patch: patch})
 	}
-	return q.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID, SettingsJson: stored})
+	return q.PatchSiteIdentitySettings(ctx, controldb.PatchSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID, Patch: patch})
 }
 
 // logSiteChanges logs a new site timezone or week start day as an event, once saved, so the background jobs that

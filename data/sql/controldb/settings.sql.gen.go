@@ -9,6 +9,39 @@ import (
 	"context"
 )
 
+const patchSiteIdentitySettings = `-- name: PatchSiteIdentitySettings :exec
+UPDATE site_identities SET settings_json = json_patch(settings_json, CASE WHEN json_valid(?1) THEN CAST(?1 AS TEXT) ELSE '{}' END) WHERE id = ?2 AND site_id = ?3
+`
+
+type PatchSiteIdentitySettingsParams struct {
+	Patch  interface{}
+	ID     int64
+	SiteID string
+}
+
+func (q *Queries) PatchSiteIdentitySettings(ctx context.Context, arg PatchSiteIdentitySettingsParams) error {
+	_, err := q.exec(ctx, q.patchSiteIdentitySettingsStmt, patchSiteIdentitySettings, arg.Patch, arg.ID, arg.SiteID)
+	return err
+}
+
+const patchSiteSettings = `-- name: PatchSiteSettings :exec
+
+UPDATE sites SET settings_json = json_patch(settings_json, CASE WHEN json_valid(?1) THEN CAST(?1 AS TEXT) ELSE '{}' END) WHERE id = ?2
+`
+
+type PatchSiteSettingsParams struct {
+	Patch interface{}
+	ID    string
+}
+
+// A save from a page or the API changes only the settings it sets: Patch is a JSON merge patch, each changed setting
+// by its identifier and null for one cleared, so two saves at once keep each other's settings. A patch that is not
+// JSON changes nothing.
+func (q *Queries) PatchSiteSettings(ctx context.Context, arg PatchSiteSettingsParams) error {
+	_, err := q.exec(ctx, q.patchSiteSettingsStmt, patchSiteSettings, arg.Patch, arg.ID)
+	return err
+}
+
 const updateSiteIdentitySettings = `-- name: UpdateSiteIdentitySettings :exec
 UPDATE site_identities SET settings_json = ?1 WHERE id = ?2 AND site_id = ?3
 `

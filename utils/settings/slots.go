@@ -6,6 +6,8 @@ import "slices"
 type slot interface {
 	identifier() string
 	anyType() *SettingAnyType
+	// of is the slot's setting in another map
+	of(m *SettingMap) *SettingAnyType
 	parseValidate(value any, createdAt *int64, subject *string) error
 }
 
@@ -24,6 +26,10 @@ func (s settingSlot[T]) identifier() string {
 
 func (s settingSlot[T]) anyType() *SettingAnyType {
 	return (*s.setting).ToSettingAnyType()
+}
+
+func (s settingSlot[T]) of(m *SettingMap) *SettingAnyType {
+	return m.GetSettingAnyTypeByName(s.definition.Identifier)
 }
 
 // parseValidate keeps the value parsed and validated, or no setting if the value is nil or not valid

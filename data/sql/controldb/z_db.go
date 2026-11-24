@@ -225,6 +225,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.newestPushRegistrationForAppStmt, err = db.PrepareContext(ctx, newestPushRegistrationForApp); err != nil {
 		return nil, fmt.Errorf("error preparing query NewestPushRegistrationForApp: %w", err)
 	}
+	if q.patchSiteIdentitySettingsStmt, err = db.PrepareContext(ctx, patchSiteIdentitySettings); err != nil {
+		return nil, fmt.Errorf("error preparing query PatchSiteIdentitySettings: %w", err)
+	}
+	if q.patchSiteSettingsStmt, err = db.PrepareContext(ctx, patchSiteSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query PatchSiteSettings: %w", err)
+	}
 	if q.pushCredentialForStmt, err = db.PrepareContext(ctx, pushCredentialFor); err != nil {
 		return nil, fmt.Errorf("error preparing query PushCredentialFor: %w", err)
 	}
@@ -691,6 +697,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing newestPushRegistrationForAppStmt: %w", cerr)
 		}
 	}
+	if q.patchSiteIdentitySettingsStmt != nil {
+		if cerr := q.patchSiteIdentitySettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing patchSiteIdentitySettingsStmt: %w", cerr)
+		}
+	}
+	if q.patchSiteSettingsStmt != nil {
+		if cerr := q.patchSiteSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing patchSiteSettingsStmt: %w", cerr)
+		}
+	}
 	if q.pushCredentialForStmt != nil {
 		if cerr := q.pushCredentialForStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing pushCredentialForStmt: %w", cerr)
@@ -1007,6 +1023,8 @@ type Queries struct {
 	listControlPasskeysStmt                 *sql.Stmt
 	listSiteIdentityPasskeysStmt            *sql.Stmt
 	newestPushRegistrationForAppStmt        *sql.Stmt
+	patchSiteIdentitySettingsStmt           *sql.Stmt
+	patchSiteSettingsStmt                   *sql.Stmt
 	pushCredentialForStmt                   *sql.Stmt
 	recordPushStmt                          *sql.Stmt
 	resetSiteAdminCredentialsStmt           *sql.Stmt
@@ -1122,6 +1140,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
 		listSiteIdentityPasskeysStmt:            q.listSiteIdentityPasskeysStmt,
 		newestPushRegistrationForAppStmt:        q.newestPushRegistrationForAppStmt,
+		patchSiteIdentitySettingsStmt:           q.patchSiteIdentitySettingsStmt,
+		patchSiteSettingsStmt:                   q.patchSiteSettingsStmt,
 		pushCredentialForStmt:                   q.pushCredentialForStmt,
 		recordPushStmt:                          q.recordPushStmt,
 		resetSiteAdminCredentialsStmt:           q.resetSiteAdminCredentialsStmt,

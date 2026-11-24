@@ -167,24 +167,12 @@ func (m SettingMap) GetNumberFormat() *string {
 	return ptr(m.NumberFormat.Value)
 }
 
-// SetNumberFormat sets the NumberFormat value.
-func (m *SettingMap) SetNumberFormat(v *string) {
-	m.NumberFormat = NewSetting(NumberFormat, v, nil, nil)
-}
-
 // GetAlarmUrgentLowEnabled returns the AlarmUrgentLowEnabled value.
 func (m SettingMap) GetAlarmUrgentLowEnabled() *bool {
 	if m.AlarmUrgentLowEnabled == nil {
 		return nil
 	}
 	return ptr(m.AlarmUrgentLowEnabled.Value)
-}
-
-// SetAlarmUrgentLowEnabled sets the AlarmUrgentLowEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmUrgentLowEnabled(v *bool) {
-
-	m.AlarmUrgentLowEnabled = NewSetting(AlarmUrgentLowEnabled, v, nil, nil)
-
 }
 
 // GetRangeUrgentLowMgdl returns the RangeUrgentLowMgdl value.
@@ -195,26 +183,12 @@ func (m SettingMap) GetRangeUrgentLowMgdl() *int64 {
 	return ptr(m.RangeUrgentLowMgdl.Value)
 }
 
-// SetRangeUrgentLowMgdl sets the RangeUrgentLowMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetRangeUrgentLowMgdl(v *int64) {
-
-	m.RangeUrgentLowMgdl = NewSetting(RangeUrgentLowMgdl, v, nil, nil)
-
-}
-
 // GetAlarmLowEnabled returns the AlarmLowEnabled value.
 func (m SettingMap) GetAlarmLowEnabled() *bool {
 	if m.AlarmLowEnabled == nil {
 		return nil
 	}
 	return ptr(m.AlarmLowEnabled.Value)
-}
-
-// SetAlarmLowEnabled sets the AlarmLowEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmLowEnabled(v *bool) {
-
-	m.AlarmLowEnabled = NewSetting(AlarmLowEnabled, v, nil, nil)
-
 }
 
 // GetRangeLowMgdl returns the RangeLowMgdl value.
@@ -225,26 +199,12 @@ func (m SettingMap) GetRangeLowMgdl() *int64 {
 	return ptr(m.RangeLowMgdl.Value)
 }
 
-// SetRangeLowMgdl sets the RangeLowMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetRangeLowMgdl(v *int64) {
-
-	m.RangeLowMgdl = NewSetting(RangeLowMgdl, v, nil, nil)
-
-}
-
 // GetAlarmLowMinutes returns the AlarmLowMinutes value.
 func (m SettingMap) GetAlarmLowMinutes() *int64 {
 	if m.AlarmLowMinutes == nil {
 		return nil
 	}
 	return ptr(m.AlarmLowMinutes.Value)
-}
-
-// SetAlarmLowMinutes sets the AlarmLowMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmLowMinutes(v *int64) {
-
-	m.AlarmLowMinutes = NewSetting(AlarmLowMinutes, v, nil, nil)
-
 }
 
 // GetAlarmLowPredictionEnabled returns the AlarmLowPredictionEnabled value.
@@ -255,26 +215,12 @@ func (m SettingMap) GetAlarmLowPredictionEnabled() *bool {
 	return ptr(m.AlarmLowPredictionEnabled.Value)
 }
 
-// SetAlarmLowPredictionEnabled sets the AlarmLowPredictionEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmLowPredictionEnabled(v *bool) {
-
-	m.AlarmLowPredictionEnabled = NewSetting(AlarmLowPredictionEnabled, v, nil, nil)
-
-}
-
 // GetAlarmLowPredictionMinutes returns the AlarmLowPredictionMinutes value.
 func (m SettingMap) GetAlarmLowPredictionMinutes() *int64 {
 	if m.AlarmLowPredictionMinutes == nil {
 		return nil
 	}
 	return ptr(m.AlarmLowPredictionMinutes.Value)
-}
-
-// SetAlarmLowPredictionMinutes sets the AlarmLowPredictionMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmLowPredictionMinutes(v *int64) {
-
-	m.AlarmLowPredictionMinutes = NewSetting(AlarmLowPredictionMinutes, v, nil, nil)
-
 }
 
 // GetAlarmHighEnabled returns the AlarmHighEnabled value.
@@ -285,26 +231,12 @@ func (m SettingMap) GetAlarmHighEnabled() *bool {
 	return ptr(m.AlarmHighEnabled.Value)
 }
 
-// SetAlarmHighEnabled sets the AlarmHighEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmHighEnabled(v *bool) {
-
-	m.AlarmHighEnabled = NewSetting(AlarmHighEnabled, v, nil, nil)
-
-}
-
 // GetRangeHighMgdl returns the RangeHighMgdl value.
 func (m SettingMap) GetRangeHighMgdl() *int64 {
 	if m.RangeHighMgdl == nil {
 		return nil
 	}
 	return ptr(m.RangeHighMgdl.Value)
-}
-
-// SetRangeHighMgdl sets the RangeHighMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetRangeHighMgdl(v *int64) {
-
-	m.RangeHighMgdl = NewSetting(RangeHighMgdl, v, nil, nil)
-
 }
 
 // GetAlarmHighMinutes returns the AlarmHighMinutes value.
@@ -315,26 +247,12 @@ func (m SettingMap) GetAlarmHighMinutes() *int64 {
 	return ptr(m.AlarmHighMinutes.Value)
 }
 
-// SetAlarmHighMinutes sets the AlarmHighMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmHighMinutes(v *int64) {
-
-	m.AlarmHighMinutes = NewSetting(AlarmHighMinutes, v, nil, nil)
-
-}
-
 // GetAlarmUrgentHighEnabled returns the AlarmUrgentHighEnabled value.
 func (m SettingMap) GetAlarmUrgentHighEnabled() *bool {
 	if m.AlarmUrgentHighEnabled == nil {
 		return nil
 	}
 	return ptr(m.AlarmUrgentHighEnabled.Value)
-}
-
-// SetAlarmUrgentHighEnabled sets the AlarmUrgentHighEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmUrgentHighEnabled(v *bool) {
-
-	m.AlarmUrgentHighEnabled = NewSetting(AlarmUrgentHighEnabled, v, nil, nil)
-
 }
 
 // GetRangeUrgentHighMgdl returns the RangeUrgentHighMgdl value.
@@ -345,26 +263,12 @@ func (m SettingMap) GetRangeUrgentHighMgdl() *int64 {
 	return ptr(m.RangeUrgentHighMgdl.Value)
 }
 
-// SetRangeUrgentHighMgdl sets the RangeUrgentHighMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetRangeUrgentHighMgdl(v *int64) {
-
-	m.RangeUrgentHighMgdl = NewSetting(RangeUrgentHighMgdl, v, nil, nil)
-
-}
-
 // GetAlarmFastRiseEnabled returns the AlarmFastRiseEnabled value.
 func (m SettingMap) GetAlarmFastRiseEnabled() *bool {
 	if m.AlarmFastRiseEnabled == nil {
 		return nil
 	}
 	return ptr(m.AlarmFastRiseEnabled.Value)
-}
-
-// SetAlarmFastRiseEnabled sets the AlarmFastRiseEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmFastRiseEnabled(v *bool) {
-
-	m.AlarmFastRiseEnabled = NewSetting(AlarmFastRiseEnabled, v, nil, nil)
-
 }
 
 // GetAlarmFastRiseMgdl returns the AlarmFastRiseMgdl value.
@@ -375,26 +279,12 @@ func (m SettingMap) GetAlarmFastRiseMgdl() *int64 {
 	return ptr(m.AlarmFastRiseMgdl.Value)
 }
 
-// SetAlarmFastRiseMgdl sets the AlarmFastRiseMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmFastRiseMgdl(v *int64) {
-
-	m.AlarmFastRiseMgdl = NewSetting(AlarmFastRiseMgdl, v, nil, nil)
-
-}
-
 // GetAlarmFastRiseMinutes returns the AlarmFastRiseMinutes value.
 func (m SettingMap) GetAlarmFastRiseMinutes() *int64 {
 	if m.AlarmFastRiseMinutes == nil {
 		return nil
 	}
 	return ptr(m.AlarmFastRiseMinutes.Value)
-}
-
-// SetAlarmFastRiseMinutes sets the AlarmFastRiseMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmFastRiseMinutes(v *int64) {
-
-	m.AlarmFastRiseMinutes = NewSetting(AlarmFastRiseMinutes, v, nil, nil)
-
 }
 
 // GetAlarmFastDropEnabled returns the AlarmFastDropEnabled value.
@@ -405,26 +295,12 @@ func (m SettingMap) GetAlarmFastDropEnabled() *bool {
 	return ptr(m.AlarmFastDropEnabled.Value)
 }
 
-// SetAlarmFastDropEnabled sets the AlarmFastDropEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmFastDropEnabled(v *bool) {
-
-	m.AlarmFastDropEnabled = NewSetting(AlarmFastDropEnabled, v, nil, nil)
-
-}
-
 // GetAlarmFastDropMgdl returns the AlarmFastDropMgdl value.
 func (m SettingMap) GetAlarmFastDropMgdl() *int64 {
 	if m.AlarmFastDropMgdl == nil {
 		return nil
 	}
 	return ptr(m.AlarmFastDropMgdl.Value)
-}
-
-// SetAlarmFastDropMgdl sets the AlarmFastDropMgdl value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmFastDropMgdl(v *int64) {
-
-	m.AlarmFastDropMgdl = NewSetting(AlarmFastDropMgdl, v, nil, nil)
-
 }
 
 // GetAlarmFastDropMinutes returns the AlarmFastDropMinutes value.
@@ -435,26 +311,12 @@ func (m SettingMap) GetAlarmFastDropMinutes() *int64 {
 	return ptr(m.AlarmFastDropMinutes.Value)
 }
 
-// SetAlarmFastDropMinutes sets the AlarmFastDropMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmFastDropMinutes(v *int64) {
-
-	m.AlarmFastDropMinutes = NewSetting(AlarmFastDropMinutes, v, nil, nil)
-
-}
-
 // GetAlarmNoDataEnabled returns the AlarmNoDataEnabled value.
 func (m SettingMap) GetAlarmNoDataEnabled() *bool {
 	if m.AlarmNoDataEnabled == nil {
 		return nil
 	}
 	return ptr(m.AlarmNoDataEnabled.Value)
-}
-
-// SetAlarmNoDataEnabled sets the AlarmNoDataEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmNoDataEnabled(v *bool) {
-
-	m.AlarmNoDataEnabled = NewSetting(AlarmNoDataEnabled, v, nil, nil)
-
 }
 
 // GetAlarmNoDataMinutes returns the AlarmNoDataMinutes value.
@@ -465,26 +327,12 @@ func (m SettingMap) GetAlarmNoDataMinutes() *int64 {
 	return ptr(m.AlarmNoDataMinutes.Value)
 }
 
-// SetAlarmNoDataMinutes sets the AlarmNoDataMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmNoDataMinutes(v *int64) {
-
-	m.AlarmNoDataMinutes = NewSetting(AlarmNoDataMinutes, v, nil, nil)
-
-}
-
 // GetAlarmDeviceBatteryLowEnabled returns the AlarmDeviceBatteryLowEnabled value.
 func (m SettingMap) GetAlarmDeviceBatteryLowEnabled() *bool {
 	if m.AlarmDeviceBatteryLowEnabled == nil {
 		return nil
 	}
 	return ptr(m.AlarmDeviceBatteryLowEnabled.Value)
-}
-
-// SetAlarmDeviceBatteryLowEnabled sets the AlarmDeviceBatteryLowEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmDeviceBatteryLowEnabled(v *bool) {
-
-	m.AlarmDeviceBatteryLowEnabled = NewSetting(AlarmDeviceBatteryLowEnabled, v, nil, nil)
-
 }
 
 // GetAlarmDeviceBatteryLowPercent returns the AlarmDeviceBatteryLowPercent value.
@@ -495,26 +343,12 @@ func (m SettingMap) GetAlarmDeviceBatteryLowPercent() *int64 {
 	return ptr(m.AlarmDeviceBatteryLowPercent.Value)
 }
 
-// SetAlarmDeviceBatteryLowPercent sets the AlarmDeviceBatteryLowPercent value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmDeviceBatteryLowPercent(v *int64) {
-
-	m.AlarmDeviceBatteryLowPercent = NewSetting(AlarmDeviceBatteryLowPercent, v, nil, nil)
-
-}
-
 // GetAlarmDeviceBatteryLowMinutes returns the AlarmDeviceBatteryLowMinutes value.
 func (m SettingMap) GetAlarmDeviceBatteryLowMinutes() *int64 {
 	if m.AlarmDeviceBatteryLowMinutes == nil {
 		return nil
 	}
 	return ptr(m.AlarmDeviceBatteryLowMinutes.Value)
-}
-
-// SetAlarmDeviceBatteryLowMinutes sets the AlarmDeviceBatteryLowMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmDeviceBatteryLowMinutes(v *int64) {
-
-	m.AlarmDeviceBatteryLowMinutes = NewSetting(AlarmDeviceBatteryLowMinutes, v, nil, nil)
-
 }
 
 // GetAlarmDeviceBatteryLowDevicesJson returns the AlarmDeviceBatteryLowDevicesJson value.

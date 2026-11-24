@@ -557,6 +557,26 @@ func (m UpsertPushRegistrationParams) GetApp() consts.PushApp {
 }
 
 // GetID returns the ID value.
+func (m PatchSiteIdentitySettingsParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated PatchSiteIdentitySettingsParams.
+func (m *PatchSiteIdentitySettingsParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m PatchSiteSettingsParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated PatchSiteSettingsParams.
+func (m *PatchSiteSettingsParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m UpdateSiteIdentitySettingsParams) GetID() int64 {
 	return m.ID
 }

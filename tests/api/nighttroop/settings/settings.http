@@ -97,6 +97,40 @@ B {"units": ""}
 ASSERT_STATUS 200
 ASSERT_EQUALS "sunday" "@result.week_start_day"
 
+// Each save with a change is an event: whose settings, who saved them and the settings that changed, not their
+// values. The newest is the units cleared; a save that changes nothing is no event, so
+// the units cleared stays the newest.
+NAME login_admin
+POST http://{{ site }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .create_new_site.api_key }}", "totp": "123123"}
+ASSERT_STATUS 200
+SET admin_jwt {{ .login_admin.token }}
+
+NAME settings_changed_events
+GET http://{{ site }}/logs/events?type=settings_changed
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@result.items.0.attributes.identity_name"
+ASSERT_EQUALS "pwd_phone" "@result.items.0.attributes.by"
+ASSERT_LENGTH 1 "@result.items.0.attributes.settings"
+ASSERT_EQUALS "units" "@result.items.0.attributes.settings.0"
+
+NAME save_with_no_change
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"week_start_day": "sunday"}
+ASSERT_STATUS 200
+
+NAME no_new_event
+GET http://{{ site }}/logs/events?type=settings_changed
+H Authorization: Bearer {{ .admin_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "units" "@result.items.0.attributes.settings.0"
+
 NAME nightscout_sees_site_units_again
 GET http://{{ .ns_site }}/api/v3/settings/units
 H Authorization: Bearer {{ jwt }}
