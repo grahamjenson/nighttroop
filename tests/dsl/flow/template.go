@@ -19,21 +19,16 @@ func Render(input string, ctx map[string]any) (string, error) {
 	tmpl, err := template.New("req").
 		Option("missingkey=error").
 		Funcs(template.FuncMap{
-			"dig": func(path string) any {
-				dug := Dig(ctx, path)
-				switch dug.(type) {
+			// dig is the value at a path in what the steps before got, e.g. dig "created.result.items.0.id", and an error
+			// when nothing is there, as {{ .missing }} is, so a step never sends a made-up value that passes its asserts
+			"dig": func(path string) (any, error) {
+				switch dug := Dig(ctx, path).(type) {
 				case nil:
-					return "no_value"
-				case string:
-					return dug.(string)
+					return nil, fmt.Errorf("nothing at %s", path)
 				case float64:
-					return fmt.Sprintf("%.0f", dug.(float64))
-				case int:
-					return dug.(int)
-				case bool:
-					return dug.(bool)
+					return fmt.Sprintf("%.0f", dug), nil
 				default:
-					return dug
+					return dug, nil
 				}
 			},
 			"site": func() string {
@@ -147,6 +142,11 @@ func Render(input string, ctx map[string]any) (string, error) {
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, ctx); err != nil {
 		return "", err
+	}
+	// A value that is null, as {{ .created.note }} can be, is written as <no value>, which is no more a value than a
+	// missing one is
+	if strings.Contains(buf.String(), "<no value>") {
+		return "", fmt.Errorf("%s has a value that is null", input)
 	}
 
 	return buf.String(), nil

@@ -85,6 +85,27 @@
        disabling or deleting it) and a missing control DB starting a new server in setup
 
 
+1. Tests:
+    1. P3: `TestNS` in `tests/api` sets the limits its files need with `t.Setenv`, but the first test to run loads the
+       package's one config, so `go test -shuffle=2 ./tests/api`, or a test in a file named before
+       `nightscout_test.go`, fails 54 files with 429: set them in a `TestMain`, as `tests/bdd` does
+    1. P4: The tests back sites up into a `.dbs` folder beside each test package, kept from run to run (`tests/api`:
+       about 5 MB and 170 files a run): give the test config a data folder of the test's own
+    1. Steps of the test scripts (`tests/dsl/flow`) that pass when they cannot check, none of which hides a failure in
+       a test file now:
+        1. P3: `GOTO` ignores the error of an assert after it, so `ASSERT_HELD` with nothing held, or a `SCREENSHOT`
+           over its size limit, passes there: fail the step, as the other steps do
+        1. P3: `ASSERT_NEW_PAGE` and `ASSERT_NEW_URL` pass after a step that is not a click (`GOTO`,
+           `RUN_BACKGROUND_JOBS`), and asserts after `MIDDAY_TIMEZONE` are dropped: refuse both when the file is read
+        1. P4: `ASSERT_EQUALS ".a.id" "@result.id"` passes when neither value is there, as both are then null: refuse
+           an expected value that is looked up and not there
+        1. P4: `ASSERT_NOT_VISIBLE` and `ASSERT_COUNT` do not fill in `{{ }}`, so one with a value in its locator finds
+           nothing and can pass
+        1. P3: `ASSERT_TEXT_EQUALS` reads the text one time, so just after a click it can read the text from before
+           the page changed (`site/summary_phone.bdd:33` failed so one time on a busy machine): wait for the text,
+           as `ASSERT_VISIBLE` waits
+
+
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
     1. P3: Add push credentials and registrations to `clients/nighttroop/openapi.json` and its client
     1. P2: Push alarms to each identity's registered apps when one goes off, through `push.Send`
