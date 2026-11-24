@@ -30,6 +30,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.activityHistoryIDsStmt, err = db.PrepareContext(ctx, activityHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query ActivityHistoryIDs: %w", err)
 	}
+	if q.activitySortedIDsStmt, err = db.PrepareContext(ctx, activitySortedIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query ActivitySortedIDs: %w", err)
+	}
 	if q.activityTotalsStmt, err = db.PrepareContext(ctx, activityTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query ActivityTotals: %w", err)
 	}
@@ -186,6 +189,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deviceReportHistoryIDsStmt, err = db.PrepareContext(ctx, deviceReportHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportHistoryIDs: %w", err)
 	}
+	if q.deviceReportSortedIDsStmt, err = db.PrepareContext(ctx, deviceReportSortedIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query DeviceReportSortedIDs: %w", err)
+	}
 	if q.deviceReportTotalsStmt, err = db.PrepareContext(ctx, deviceReportTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportTotals: %w", err)
 	}
@@ -201,6 +207,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.eventGroupHistoryIDsStmt, err = db.PrepareContext(ctx, eventGroupHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query EventGroupHistoryIDs: %w", err)
 	}
+	if q.eventGroupSortedIDsStmt, err = db.PrepareContext(ctx, eventGroupSortedIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query EventGroupSortedIDs: %w", err)
+	}
 	if q.eventGroupTotalsStmt, err = db.PrepareContext(ctx, eventGroupTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query EventGroupTotals: %w", err)
 	}
@@ -215,6 +224,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.foodPresetHistoryIDsStmt, err = db.PrepareContext(ctx, foodPresetHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query FoodPresetHistoryIDs: %w", err)
+	}
+	if q.foodPresetSortedIDsStmt, err = db.PrepareContext(ctx, foodPresetSortedIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query FoodPresetSortedIDs: %w", err)
 	}
 	if q.foodPresetsNamedStmt, err = db.PrepareContext(ctx, foodPresetsNamed); err != nil {
 		return nil, fmt.Errorf("error preparing query FoodPresetsNamed: %w", err)
@@ -306,6 +318,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.glucoseReadingHistoryIDsStmt, err = db.PrepareContext(ctx, glucoseReadingHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query GlucoseReadingHistoryIDs: %w", err)
 	}
+	if q.glucoseReadingSortedIDsStmt, err = db.PrepareContext(ctx, glucoseReadingSortedIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query GlucoseReadingSortedIDs: %w", err)
+	}
 	if q.glucoseReadingTotalsStmt, err = db.PrepareContext(ctx, glucoseReadingTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query GlucoseReadingTotals: %w", err)
 	}
@@ -386,6 +401,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.profileStoreHistoryIDsStmt, err = db.PrepareContext(ctx, profileStoreHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query ProfileStoreHistoryIDs: %w", err)
+	}
+	if q.profileStoreSortedIDsStmt, err = db.PrepareContext(ctx, profileStoreSortedIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query ProfileStoreSortedIDs: %w", err)
 	}
 	if q.profileSwitchTotalsStmt, err = db.PrepareContext(ctx, profileSwitchTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query ProfileSwitchTotals: %w", err)
@@ -592,6 +610,11 @@ func (q *Queries) Close() error {
 	if q.activityHistoryIDsStmt != nil {
 		if cerr := q.activityHistoryIDsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing activityHistoryIDsStmt: %w", cerr)
+		}
+	}
+	if q.activitySortedIDsStmt != nil {
+		if cerr := q.activitySortedIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing activitySortedIDsStmt: %w", cerr)
 		}
 	}
 	if q.activityTotalsStmt != nil {
@@ -854,6 +877,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deviceReportHistoryIDsStmt: %w", cerr)
 		}
 	}
+	if q.deviceReportSortedIDsStmt != nil {
+		if cerr := q.deviceReportSortedIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deviceReportSortedIDsStmt: %w", cerr)
+		}
+	}
 	if q.deviceReportTotalsStmt != nil {
 		if cerr := q.deviceReportTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deviceReportTotalsStmt: %w", cerr)
@@ -879,6 +907,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing eventGroupHistoryIDsStmt: %w", cerr)
 		}
 	}
+	if q.eventGroupSortedIDsStmt != nil {
+		if cerr := q.eventGroupSortedIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing eventGroupSortedIDsStmt: %w", cerr)
+		}
+	}
 	if q.eventGroupTotalsStmt != nil {
 		if cerr := q.eventGroupTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing eventGroupTotalsStmt: %w", cerr)
@@ -902,6 +935,11 @@ func (q *Queries) Close() error {
 	if q.foodPresetHistoryIDsStmt != nil {
 		if cerr := q.foodPresetHistoryIDsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing foodPresetHistoryIDsStmt: %w", cerr)
+		}
+	}
+	if q.foodPresetSortedIDsStmt != nil {
+		if cerr := q.foodPresetSortedIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing foodPresetSortedIDsStmt: %w", cerr)
 		}
 	}
 	if q.foodPresetsNamedStmt != nil {
@@ -1054,6 +1092,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing glucoseReadingHistoryIDsStmt: %w", cerr)
 		}
 	}
+	if q.glucoseReadingSortedIDsStmt != nil {
+		if cerr := q.glucoseReadingSortedIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing glucoseReadingSortedIDsStmt: %w", cerr)
+		}
+	}
 	if q.glucoseReadingTotalsStmt != nil {
 		if cerr := q.glucoseReadingTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing glucoseReadingTotalsStmt: %w", cerr)
@@ -1187,6 +1230,11 @@ func (q *Queries) Close() error {
 	if q.profileStoreHistoryIDsStmt != nil {
 		if cerr := q.profileStoreHistoryIDsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing profileStoreHistoryIDsStmt: %w", cerr)
+		}
+	}
+	if q.profileStoreSortedIDsStmt != nil {
+		if cerr := q.profileStoreSortedIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing profileStoreSortedIDsStmt: %w", cerr)
 		}
 	}
 	if q.profileSwitchTotalsStmt != nil {
@@ -1550,6 +1598,7 @@ type Queries struct {
 	tx                                          *sql.Tx
 	activityAscendingIDsStmt                    *sql.Stmt
 	activityHistoryIDsStmt                      *sql.Stmt
+	activitySortedIDsStmt                       *sql.Stmt
 	activityTotalsStmt                          *sql.Stmt
 	alarmGlucoseReadingsStmt                    *sql.Stmt
 	allActivitiesStmt                           *sql.Stmt
@@ -1602,16 +1651,19 @@ type Queries struct {
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
 	deviceReportHistoryIDsStmt                  *sql.Stmt
+	deviceReportSortedIDsStmt                   *sql.Stmt
 	deviceReportTotalsStmt                      *sql.Stmt
 	deviceReportsForDeviceStmt                  *sql.Stmt
 	deviceReportsLoopBetweenStmt                *sql.Stmt
 	eventGroupAscendingIDsStmt                  *sql.Stmt
 	eventGroupHistoryIDsStmt                    *sql.Stmt
+	eventGroupSortedIDsStmt                     *sql.Stmt
 	eventGroupTotalsStmt                        *sql.Stmt
 	eventsToGroupStmt                           *sql.Stmt
 	foodIntakeTotalsStmt                        *sql.Stmt
 	foodPresetAscendingIDsStmt                  *sql.Stmt
 	foodPresetHistoryIDsStmt                    *sql.Stmt
+	foodPresetSortedIDsStmt                     *sql.Stmt
 	foodPresetsNamedStmt                        *sql.Stmt
 	generalSettingsBytesStmt                    *sql.Stmt
 	getActivityStmt                             *sql.Stmt
@@ -1642,6 +1694,7 @@ type Queries struct {
 	getTempTargetStmt                           *sql.Stmt
 	glucoseReadingAscendingIDsStmt              *sql.Stmt
 	glucoseReadingHistoryIDsStmt                *sql.Stmt
+	glucoseReadingSortedIDsStmt                 *sql.Stmt
 	glucoseReadingTotalsStmt                    *sql.Stmt
 	hardDeleteActivitiesByTypeStmt              *sql.Stmt
 	hardDeleteActivityStmt                      *sql.Stmt
@@ -1669,6 +1722,7 @@ type Queries struct {
 	oldestGlucoseReadingAtStmt                  *sql.Stmt
 	profileStoreAscendingIDsStmt                *sql.Stmt
 	profileStoreHistoryIDsStmt                  *sql.Stmt
+	profileStoreSortedIDsStmt                   *sql.Stmt
 	profileSwitchTotalsStmt                     *sql.Stmt
 	recentDeviceNamesStmt                       *sql.Stmt
 	regroupEventGroupStmt                       *sql.Stmt
@@ -1741,6 +1795,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tx:                                          tx,
 		activityAscendingIDsStmt:                    q.activityAscendingIDsStmt,
 		activityHistoryIDsStmt:                      q.activityHistoryIDsStmt,
+		activitySortedIDsStmt:                       q.activitySortedIDsStmt,
 		activityTotalsStmt:                          q.activityTotalsStmt,
 		alarmGlucoseReadingsStmt:                    q.alarmGlucoseReadingsStmt,
 		allActivitiesStmt:                           q.allActivitiesStmt,
@@ -1793,16 +1848,19 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
 		deviceReportHistoryIDsStmt:                  q.deviceReportHistoryIDsStmt,
+		deviceReportSortedIDsStmt:                   q.deviceReportSortedIDsStmt,
 		deviceReportTotalsStmt:                      q.deviceReportTotalsStmt,
 		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,
 		deviceReportsLoopBetweenStmt:                q.deviceReportsLoopBetweenStmt,
 		eventGroupAscendingIDsStmt:                  q.eventGroupAscendingIDsStmt,
 		eventGroupHistoryIDsStmt:                    q.eventGroupHistoryIDsStmt,
+		eventGroupSortedIDsStmt:                     q.eventGroupSortedIDsStmt,
 		eventGroupTotalsStmt:                        q.eventGroupTotalsStmt,
 		eventsToGroupStmt:                           q.eventsToGroupStmt,
 		foodIntakeTotalsStmt:                        q.foodIntakeTotalsStmt,
 		foodPresetAscendingIDsStmt:                  q.foodPresetAscendingIDsStmt,
 		foodPresetHistoryIDsStmt:                    q.foodPresetHistoryIDsStmt,
+		foodPresetSortedIDsStmt:                     q.foodPresetSortedIDsStmt,
 		foodPresetsNamedStmt:                        q.foodPresetsNamedStmt,
 		generalSettingsBytesStmt:                    q.generalSettingsBytesStmt,
 		getActivityStmt:                             q.getActivityStmt,
@@ -1833,6 +1891,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getTempTargetStmt:                           q.getTempTargetStmt,
 		glucoseReadingAscendingIDsStmt:              q.glucoseReadingAscendingIDsStmt,
 		glucoseReadingHistoryIDsStmt:                q.glucoseReadingHistoryIDsStmt,
+		glucoseReadingSortedIDsStmt:                 q.glucoseReadingSortedIDsStmt,
 		glucoseReadingTotalsStmt:                    q.glucoseReadingTotalsStmt,
 		hardDeleteActivitiesByTypeStmt:              q.hardDeleteActivitiesByTypeStmt,
 		hardDeleteActivityStmt:                      q.hardDeleteActivityStmt,
@@ -1860,6 +1919,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		oldestGlucoseReadingAtStmt:                  q.oldestGlucoseReadingAtStmt,
 		profileStoreAscendingIDsStmt:                q.profileStoreAscendingIDsStmt,
 		profileStoreHistoryIDsStmt:                  q.profileStoreHistoryIDsStmt,
+		profileStoreSortedIDsStmt:                   q.profileStoreSortedIDsStmt,
 		profileSwitchTotalsStmt:                     q.profileSwitchTotalsStmt,
 		recentDeviceNamesStmt:                       q.recentDeviceNamesStmt,
 		regroupEventGroupStmt:                       q.regroupEventGroupStmt,

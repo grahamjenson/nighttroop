@@ -148,6 +148,10 @@ func (c EntriesCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, 
 	return q.GlucoseReadingAscendingIDs(ctx, nsquery.GlucoseAscending(query))
 }
 
+func (c EntriesCollection) SortedIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.GlucoseReadingSortedIDs(ctx, nsquery.GlucoseSorted(query))
+}
+
 func (c EntriesCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
 	return q.GlucoseReadingHistoryIDs(ctx, sitedb.GlucoseReadingHistoryIDsParams{Since: since, Limit: limit})
 }

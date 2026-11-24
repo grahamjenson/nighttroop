@@ -1,0 +1,93 @@
+INCLUDE steps/new_ns_site.steps
+
+// A search sorted by srvModified or srvCreated is in that order, and pages by it, as a client after the latest changes
+// asks: three treatments, the oldest changed last, as AAPS cut a temp target after later ones were made
+NAME create_oldest
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Note", "created_at": "{{ time 30 }}", "notes": "oldest" }
+ASSERT_STATUS 201
+
+NAME create_middle
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Note", "created_at": "{{ time 20 }}", "notes": "middle" }
+ASSERT_STATUS 201
+
+NAME create_newest
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B { "eventType": "Note", "created_at": "{{ time 10 }}", "notes": "newest" }
+ASSERT_STATUS 201
+
+NAME change_oldest
+PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_oldest.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "notes": "oldest, changed" }
+ASSERT_STATUS 200
+
+// The last changed first, though it is the oldest by date
+NAME newest_changed_first
+GET http://{{ site }}/api/v3/treatments?sort$desc=srvModified&limit=3
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 3 "@result"
+ASSERT_EQUALS "oldest, changed" "@result.0.notes"
+ASSERT_EQUALS "newest" "@result.1.notes"
+ASSERT_EQUALS "middle" "@result.2.notes"
+
+// A limit pages by srvModified, not by date
+NAME last_changed_only
+GET http://{{ site }}/api/v3/treatments?sort$desc=srvModified&limit=1
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "oldest, changed" "@result.0.notes"
+
+NAME first_changed_first
+GET http://{{ site }}/api/v3/treatments?sort=srvModified&limit=3
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "middle" "@result.0.notes"
+ASSERT_EQUALS "oldest, changed" "@result.2.notes"
+
+// srvCreated is the order they were made in, the change aside
+NAME last_created_first
+GET http://{{ site }}/api/v3/treatments?sort$desc=srvCreated&limit=3
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "newest" "@result.0.notes"
+ASSERT_EQUALS "oldest, changed" "@result.2.notes"
+
+// By date, the newest first, as before
+NAME newest_by_date_first
+GET http://{{ site }}/api/v3/treatments?sort$desc=date&limit=3
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS "newest" "@result.0.notes"
+ASSERT_EQUALS "oldest, changed" "@result.2.notes"
+
+// The entries are sorted by srvModified too
+NAME create_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 120, "date": {{ itime 15 }} }
+ASSERT_STATUS 201
+
+NAME create_later_entry
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B { "type": "sgv", "sgv": 130, "date": {{ itime 5 }} }
+ASSERT_STATUS 201
+
+NAME change_entry
+PATCH http://{{ site }}/api/v3/entries/{{ dig "create_entry.identifier" }}
+H Authorization: Bearer {{ jwt }}
+B { "sgv": 125 }
+ASSERT_STATUS 200
+
+NAME entries_newest_changed_first
+GET http://{{ site }}/api/v3/entries?sort$desc=srvModified&limit=1
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 125 "@result.0.sgv"

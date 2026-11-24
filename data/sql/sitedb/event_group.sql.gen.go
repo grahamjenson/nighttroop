@@ -626,6 +626,62 @@ func (q *Queries) EventGroupHistoryIDs(ctx context.Context, arg EventGroupHistor
 	return items, nil
 }
 
+const eventGroupSortedIDs = `-- name: EventGroupSortedIDs :many
+SELECT id FROM (
+    SELECT id, CASE CAST(?1 AS INTEGER) WHEN 3 THEN updated_at WHEN -3 THEN -updated_at WHEN 2 THEN created_at ELSE -created_at END AS sort_key
+    FROM event_groups
+    WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?2 AS INTEGER), 0), COALESCE(CAST(?3 AS INTEGER) + 1, 0), COALESCE(CAST(?4 AS INTEGER), 0))
+        AND MIN(COALESCE(CAST(?5 AS INTEGER), 253402300799999), COALESCE(CAST(?6 AS INTEGER) - 1, 253402300799999), COALESCE(?4, 253402300799999))
+        AND (CAST(?7 AS BOOL) = TRUE OR deleted_at IS NULL)
+) ORDER BY sort_key, id LIMIT CAST(?9 AS INTEGER) OFFSET CAST(?8 AS INTEGER)
+`
+
+type EventGroupSortedIDsParams struct {
+	SortOrder      int64
+	DateGTE        *int64
+	DateGT         *int64
+	DateEQ         *int64
+	DateLTE        *int64
+	DateLT         *int64
+	IncludeDeleted bool
+	Skip           int64
+	Limit          int64
+}
+
+// The treatments in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or srvCreated
+func (q *Queries) EventGroupSortedIDs(ctx context.Context, arg EventGroupSortedIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.eventGroupSortedIDsStmt, eventGroupSortedIDs,
+		arg.SortOrder,
+		arg.DateGTE,
+		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
+		arg.DateLT,
+		arg.IncludeDeleted,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const eventGroupTotals = `-- name: EventGroupTotals :one
 SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
     CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at

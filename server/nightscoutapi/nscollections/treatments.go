@@ -251,6 +251,10 @@ func (c TreatmentCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context
 	return q.EventGroupAscendingIDs(ctx, nsquery.EventGroupAscending(query))
 }
 
+func (c TreatmentCollection) SortedIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.EventGroupSortedIDs(ctx, nsquery.EventGroupSorted(query))
+}
+
 func (c TreatmentCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
 	return q.EventGroupHistoryIDs(ctx, sitedb.EventGroupHistoryIDsParams{Since: since, Limit: limit})
 }

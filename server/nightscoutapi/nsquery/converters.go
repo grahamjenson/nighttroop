@@ -10,6 +10,7 @@ import (
 // goverter:converter
 // goverter:output:format function
 // goverter:output:file ./z_converter.go
+// goverter:extend SortCode
 type ToSearchParams interface {
 
 	// goverter:useZeroValueOnPointerInconsistency
@@ -35,6 +36,7 @@ type ToSearchParams interface {
 	GlucoseAll(source Query) sitedb.AllGlucoseReadingsParams
 	GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams
 	GlucoseAscending(source Query) sitedb.GlucoseReadingAscendingIDsParams
+	GlucoseSorted(source Query) sitedb.GlucoseReadingSortedIDsParams
 
 	//////
 	// Activities
@@ -44,6 +46,7 @@ type ToSearchParams interface {
 	ActivityAll(source Query) sitedb.AllActivitiesParams
 	ActivitySearch(source Query) sitedb.SearchActivitiesParams
 	ActivityAscending(source Query) sitedb.ActivityAscendingIDsParams
+	ActivitySorted(source Query) sitedb.ActivitySortedIDsParams
 
 	//////
 	// DEVICE REPORTS
@@ -52,6 +55,7 @@ type ToSearchParams interface {
 	DeviceReportAll(source Query) sitedb.AllDeviceReportsParams
 	DeviceReportSearch(source Query) sitedb.SearchDeviceReportsParams
 	DeviceReportAscending(source Query) sitedb.DeviceReportAscendingIDsParams
+	DeviceReportSorted(source Query) sitedb.DeviceReportSortedIDsParams
 
 	//////
 	// FoodPresets
@@ -60,6 +64,7 @@ type ToSearchParams interface {
 	FoodPresetAll(source Query) sitedb.AllFoodPresetsParams
 	FoodPresetSearch(source Query) sitedb.SearchFoodPresetsParams
 	FoodPresetAscending(source Query) sitedb.FoodPresetAscendingIDsParams
+	FoodPresetSorted(source Query) sitedb.FoodPresetSortedIDsParams
 	//////
 	// FoodIntake
 	//////
@@ -76,6 +81,7 @@ type ToSearchParams interface {
 	EventGroupAll(source Query) sitedb.AllEventGroupsParams
 	EventGroupSearch(source Query) sitedb.SearchEventGroupsParams
 	EventGroupAscending(source Query) sitedb.EventGroupAscendingIDsParams
+	EventGroupSorted(source Query) sitedb.EventGroupSortedIDsParams
 
 	///////
 	// Profiles Presets
@@ -84,6 +90,12 @@ type ToSearchParams interface {
 	ProfilePresetsAll(source Query) sitedb.AllProfilePresetsParams
 	ProfileStoreSearch(source Query) sitedb.SearchProfileStoresParams
 	ProfileStoreAscending(source Query) sitedb.ProfileStoreAscendingIDsParams
+	ProfileStoreSorted(source Query) sitedb.ProfileStoreSortedIDsParams
+}
+
+// SortCode is a sort's code for a query that sorts by it, as srvModified and srvCreated are sorted
+func SortCode(source *QuerySort) int64 {
+	return source.ToIntVal()
 }
 
 func QueryStringArrayToString(source *QueryStringArray) *string {

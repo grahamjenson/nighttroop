@@ -119,6 +119,10 @@ func (c DeviceStatusCollection) AscendingIDs(q *sitedb.Queries, ctx context.Cont
 	return q.DeviceReportAscendingIDs(ctx, nsquery.DeviceReportAscending(query))
 }
 
+func (c DeviceStatusCollection) SortedIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.DeviceReportSortedIDs(ctx, nsquery.DeviceReportSorted(query))
+}
+
 func (c DeviceStatusCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
 	return q.DeviceReportHistoryIDs(ctx, sitedb.DeviceReportHistoryIDsParams{Since: since, Limit: limit})
 }

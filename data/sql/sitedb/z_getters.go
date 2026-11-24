@@ -2596,6 +2596,11 @@ func (m *DeviceReportHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated DeviceReportSortedIDsParams.
+func (m *DeviceReportSortedIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetDevice returns the Device value.
 func (m DeviceReportTotalsParams) GetDevice() *string {
 	return m.Device
@@ -2723,6 +2728,11 @@ func (m *ActivityAscendingIDsParams) SetLimit(v int64) {
 
 // SetLimit sets the Limit value and returns the updated ActivityHistoryIDsParams.
 func (m *ActivityHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// SetLimit sets the Limit value and returns the updated ActivitySortedIDsParams.
+func (m *ActivitySortedIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
@@ -3346,6 +3356,11 @@ func (m *GlucoseReadingHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated GlucoseReadingSortedIDsParams.
+func (m *GlucoseReadingSortedIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m HardDeleteGlucoseReadingParams) GetID() string {
 	return m.ID
@@ -3618,6 +3633,11 @@ func (m *EventGroupAscendingIDsParams) SetLimit(v int64) {
 
 // SetLimit sets the Limit value and returns the updated EventGroupHistoryIDsParams.
 func (m *EventGroupHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// SetLimit sets the Limit value and returns the updated EventGroupSortedIDsParams.
+func (m *EventGroupSortedIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
@@ -5341,6 +5361,11 @@ func (m *FoodPresetHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated FoodPresetSortedIDsParams.
+func (m *FoodPresetSortedIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetName returns the Name value.
 func (m FoodPresetsNamedParams) GetName() string {
 	return m.Name
@@ -5583,6 +5608,11 @@ func (m *ProfileStoreAscendingIDsParams) SetLimit(v int64) {
 
 // SetLimit sets the Limit value and returns the updated ProfileStoreHistoryIDsParams.
 func (m *ProfileStoreHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// SetLimit sets the Limit value and returns the updated ProfileStoreSortedIDsParams.
+func (m *ProfileStoreSortedIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 

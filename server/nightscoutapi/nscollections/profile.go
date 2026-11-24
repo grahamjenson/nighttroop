@@ -136,6 +136,10 @@ func (c ProfileCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, 
 	return q.ProfileStoreAscendingIDs(ctx, nsquery.ProfileStoreAscending(query))
 }
 
+func (c ProfileCollection) SortedIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.ProfileStoreSortedIDs(ctx, nsquery.ProfileStoreSorted(query))
+}
+
 func (c ProfileCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
 	return q.ProfileStoreHistoryIDs(ctx, sitedb.ProfileStoreHistoryIDsParams{Since: since, Limit: limit})
 }
