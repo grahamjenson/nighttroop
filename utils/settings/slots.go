@@ -43,17 +43,6 @@ func (m *SettingMap) slots() []slot {
 		slotOf(TimeFormat, &m.TimeFormat),
 		slotOf(WeekStartDay, &m.WeekStartDay),
 		slotOf(NumberFormat, &m.NumberFormat),
-		slotOf(BolusDIAHours, &m.BolusDiaHours),
-		slotOf(BolusOnsetMinutes, &m.BolusOnsetMinutes),
-		slotOf(BolusPeakMinutes, &m.BolusPeakMinutes),
-		slotOf(BasalDIAHours, &m.BasalDiaHours),
-		slotOf(BasalOnsetMinutes, &m.BasalOnsetMinutes),
-		slotOf(BasalPeakMinutes, &m.BasalPeakMinutes),
-		slotOf(DefaultInsulinSensitivity, &m.DefaultInsulinSensitivity),
-		slotOf(DefaultCarbRatio, &m.DefaultCarbRatio),
-		slotOf(DefaultBasalRate, &m.DefaultBasalRate),
-		slotOf(CarbMaxAbsorptionHours, &m.CarbMaxAbsorptionHours),
-		slotOf(CarbMin5mImpact, &m.CarbMin5mImpact),
 		slotOf(AlarmUrgentLowEnabled, &m.AlarmUrgentLowEnabled),
 		slotOf(RangeUrgentLowMgdl, &m.RangeUrgentLowMgdl),
 		slotOf(AlarmLowEnabled, &m.AlarmLowEnabled),
@@ -78,9 +67,6 @@ func (m *SettingMap) slots() []slot {
 		slotOf(AlarmDeviceBatteryLowPercent, &m.AlarmDeviceBatteryLowPercent),
 		slotOf(AlarmDeviceBatteryLowMinutes, &m.AlarmDeviceBatteryLowMinutes),
 		slotOf(AlarmDeviceBatteryLowDevicesJson, &m.AlarmDeviceBatteryLowDevicesJson),
-		slotOf(AlarmLowReservoirEnabled, &m.AlarmLowReservoirEnabled),
-		slotOf(AlarmLowReservoirUnits, &m.AlarmLowReservoirUnits),
-		slotOf(NotificationsEnabled, &m.NotificationsEnabled),
 	}
 }
 

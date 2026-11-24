@@ -20,10 +20,6 @@ func TestConsistent(t *testing.T) {
 		{name: "the identity's low over the site's high", site: map[string]any{"range_high_mgdl": "120"}, identity: map[string]any{"range_low_mgdl": "130"}, want: "the low must be under the high"},
 		{name: "an urgent low over the default low", identity: map[string]any{"range_urgent_low_mgdl": "80"}, want: "the urgent low must be under the low"},
 		{name: "an urgent high under the default high", site: map[string]any{"range_urgent_high_mgdl": "150"}, want: "the high must be under the urgent high"},
-		{name: "bolus onset after its peak", identity: map[string]any{"bolus_onset_minutes": "90", "bolus_peak_minutes": "60"}, want: "bolus insulin must start acting before its peak"},
-		{name: "bolus peak after its duration", identity: map[string]any{"bolus_peak_minutes": "200", "bolus_dia_hours": "3"}, want: "bolus insulin must peak before it stops acting"},
-		{name: "basal onset after its peak", site: map[string]any{"basal_onset_minutes": "200"}, want: "basal insulin must start acting before its peak"},
-		{name: "basal peak after its duration", identity: map[string]any{"basal_dia_hours": "1", "basal_peak_minutes": "90"}, want: "basal insulin must peak before it stops acting"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

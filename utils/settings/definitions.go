@@ -172,28 +172,6 @@ var NumberFormat = &SettingDefinition[string]{
 	ValidateFunc: oneOf("number format", NumberFormats),
 }
 
-var BolusDIAHours = numberSetting("bolus_dia_hours", 6.0, 1.0, 10.0, ParseFloat)
-
-var BolusOnsetMinutes = numberSetting("bolus_onset_minutes", 20.0, 1.0, 120.0, ParseFloat)
-
-var BolusPeakMinutes = numberSetting("bolus_peak_minutes", 60.0, 1.0, 240.0, ParseFloat)
-
-var BasalDIAHours = numberSetting("basal_dia_hours", 24.0, 1.0, 170.0, ParseFloat)
-
-var BasalOnsetMinutes = numberSetting("basal_onset_minutes", 60.0, 1.0, 360.0, ParseFloat)
-
-var BasalPeakMinutes = numberSetting("basal_peak_minutes", 120.0, 1.0, 240.0, ParseFloat)
-
-var DefaultInsulinSensitivity = numberSetting("default_insulin_sensitivity", 10.0, 1.0, 100.0, ParseFloat)
-
-var DefaultCarbRatio = numberSetting("default_carb_ratio", 10.0, 1.0, 100.0, ParseFloat)
-
-var DefaultBasalRate = numberSetting("default_basal_rate", 1.0, 0.1, 10.0, ParseFloat)
-
-var CarbMaxAbsorptionHours = numberSetting("carb_max_absorption_hours", 6.0, 1.0, 24.0, ParseFloat)
-
-var CarbMin5mImpact = numberSetting("carb_min_5m_impact", 10.0, 1.0, 100.0, ParseFloat)
-
 var AlarmUrgentLowEnabled = onOffSetting("alarm_urgent_low_enabled")
 
 var RangeUrgentLowMgdl = numberSetting("range_urgent_low_mgdl", 56, 20, 100, ParseInt)
@@ -257,9 +235,3 @@ var AlarmDeviceBatteryLowDevicesJson = &SettingDefinition[types.DeviceNames]{
 	ValidateFunc: ValidDeviceNames,
 	ParseFunc:    ParseDeviceNames,
 }
-
-var AlarmLowReservoirEnabled = onOffSetting("alarm_low_reservoir_enabled")
-
-var AlarmLowReservoirUnits = numberSetting("alarm_low_reservoir_units", 25, 0, 200, ParseInt)
-
-var NotificationsEnabled = onOffSetting("notifications_enabled")

@@ -41,10 +41,6 @@ errors:
     urgent_low_under_low: "the urgent low must be under the low"
     low_under_high: "the low must be under the high"
     high_under_urgent_high: "the high must be under the urgent high"
-    bolus_onset: "bolus insulin must start acting before its peak"
-    bolus_peak: "bolus insulin must peak before it stops acting"
-    basal_onset: "basal insulin must start acting before its peak"
-    basal_peak: "basal insulin must peak before it stops acting"
   identities:
     totp_reset: "only an identity that signs in with TOTP can have it reset"
     device_role: "A {{.Client}} device must have the {{.Role}} role"

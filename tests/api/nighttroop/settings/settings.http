@@ -51,10 +51,10 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "mmol/L" "@result.inherited.units"
 
 // A setting that is not on the page, which must survive the page's updates
-NAME set_bolus_dia_through_nightscout
-PATCH http://{{ .ns_site }}/api/v3/settings/bolus_dia_hours
+NAME set_alarm_minutes_through_nightscout
+PATCH http://{{ .ns_site }}/api/v3/settings/alarm_low_minutes
 H Authorization: Bearer {{ jwt }}
-B {"value": 5}
+B {"value": 7}
 ASSERT_STATUS 200
 
 NAME update_identity_settings
@@ -83,10 +83,10 @@ ASSERT_STATUS 200
 ASSERT_EQUALS "mg/dL" "@result.value"
 
 NAME other_settings_kept
-GET http://{{ .ns_site }}/api/v3/settings/bolus_dia_hours
+GET http://{{ .ns_site }}/api/v3/settings/alarm_low_minutes
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
-ASSERT_EQUALS 5 "@result.value"
+ASSERT_EQUALS 7 "@result.value"
 
 // A setting not sent stays as it is, and an empty one goes back to following the site
 NAME clear_identity_units

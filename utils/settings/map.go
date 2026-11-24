@@ -13,17 +13,6 @@ type SettingMap struct {
 	TimeFormat                       *Setting[string]
 	WeekStartDay                     *Setting[string]
 	NumberFormat                     *Setting[string]
-	BolusDiaHours                    *Setting[float64]
-	BolusOnsetMinutes                *Setting[float64]
-	BolusPeakMinutes                 *Setting[float64]
-	BasalDiaHours                    *Setting[float64]
-	BasalOnsetMinutes                *Setting[float64]
-	BasalPeakMinutes                 *Setting[float64]
-	DefaultInsulinSensitivity        *Setting[float64]
-	DefaultCarbRatio                 *Setting[float64]
-	DefaultBasalRate                 *Setting[float64]
-	CarbMaxAbsorptionHours           *Setting[float64]
-	CarbMin5mImpact                  *Setting[float64]
 	AlarmUrgentLowEnabled            *Setting[bool]
 	RangeUrgentLowMgdl               *Setting[int64]
 	AlarmLowEnabled                  *Setting[bool]
@@ -48,9 +37,6 @@ type SettingMap struct {
 	AlarmDeviceBatteryLowPercent     *Setting[int64]
 	AlarmDeviceBatteryLowMinutes     *Setting[int64]
 	AlarmDeviceBatteryLowDevicesJson *Setting[types.DeviceNames]
-	AlarmLowReservoirEnabled         *Setting[bool]
-	AlarmLowReservoirUnits           *Setting[int64]
-	NotificationsEnabled             *Setting[bool]
 }
 
 var DefaultSettingsMap = &SettingMap{
@@ -61,17 +47,6 @@ var DefaultSettingsMap = &SettingMap{
 	TimeFormat:                       NewDefaultSetting(TimeFormat),
 	WeekStartDay:                     NewDefaultSetting(WeekStartDay),
 	NumberFormat:                     NewDefaultSetting(NumberFormat),
-	BolusDiaHours:                    NewDefaultSetting(BolusDIAHours),
-	BolusOnsetMinutes:                NewDefaultSetting(BolusOnsetMinutes),
-	BolusPeakMinutes:                 NewDefaultSetting(BolusPeakMinutes),
-	BasalDiaHours:                    NewDefaultSetting(BasalDIAHours),
-	BasalOnsetMinutes:                NewDefaultSetting(BasalOnsetMinutes),
-	BasalPeakMinutes:                 NewDefaultSetting(BasalPeakMinutes),
-	DefaultInsulinSensitivity:        NewDefaultSetting(DefaultInsulinSensitivity),
-	DefaultCarbRatio:                 NewDefaultSetting(DefaultCarbRatio),
-	DefaultBasalRate:                 NewDefaultSetting(DefaultBasalRate),
-	CarbMaxAbsorptionHours:           NewDefaultSetting(CarbMaxAbsorptionHours),
-	CarbMin5mImpact:                  NewDefaultSetting(CarbMin5mImpact),
 	AlarmUrgentLowEnabled:            NewDefaultSetting(AlarmUrgentLowEnabled),
 	RangeUrgentLowMgdl:               NewDefaultSetting(RangeUrgentLowMgdl),
 	AlarmLowEnabled:                  NewDefaultSetting(AlarmLowEnabled),
@@ -96,9 +71,6 @@ var DefaultSettingsMap = &SettingMap{
 	AlarmDeviceBatteryLowPercent:     NewDefaultSetting(AlarmDeviceBatteryLowPercent),
 	AlarmDeviceBatteryLowMinutes:     NewDefaultSetting(AlarmDeviceBatteryLowMinutes),
 	AlarmDeviceBatteryLowDevicesJson: NewDefaultSetting(AlarmDeviceBatteryLowDevicesJson),
-	AlarmLowReservoirEnabled:         NewDefaultSetting(AlarmLowReservoirEnabled),
-	AlarmLowReservoirUnits:           NewDefaultSetting(AlarmLowReservoirUnits),
-	NotificationsEnabled:             NewDefaultSetting(NotificationsEnabled),
 }
 
 // GetUnits returns the Units value.
@@ -198,169 +170,6 @@ func (m SettingMap) GetNumberFormat() *string {
 // SetNumberFormat sets the NumberFormat value.
 func (m *SettingMap) SetNumberFormat(v *string) {
 	m.NumberFormat = NewSetting(NumberFormat, v, nil, nil)
-}
-
-// GetBolusDiaHours returns the BolusDiaHours value.
-func (m SettingMap) GetBolusDiaHours() *float64 {
-	if m.BolusDiaHours == nil {
-		return nil
-	}
-	return ptr(m.BolusDiaHours.Value)
-}
-
-// SetBolusDiaHours sets the BolusDiaHours value and returns the updated SettingMap.
-func (m *SettingMap) SetBolusDiaHours(v *float64) {
-
-	m.BolusDiaHours = NewSetting(BolusDIAHours, v, nil, nil)
-
-}
-
-// GetBolusOnsetMinutes returns the BolusOnsetMinutes value.
-func (m SettingMap) GetBolusOnsetMinutes() *float64 {
-	if m.BolusOnsetMinutes == nil {
-		return nil
-	}
-	return ptr(m.BolusOnsetMinutes.Value)
-}
-
-// SetBolusOnsetMinutes sets the BolusOnsetMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetBolusOnsetMinutes(v *float64) {
-	m.BolusOnsetMinutes = NewSetting(BolusOnsetMinutes, v, nil, nil)
-}
-
-// GetBolusPeakMinutes returns the BolusPeakMinutes value.
-func (m SettingMap) GetBolusPeakMinutes() *float64 {
-	if m.BolusPeakMinutes == nil {
-		return nil
-	}
-	return ptr(m.BolusPeakMinutes.Value)
-}
-
-// SetBolusPeakMinutes sets the BolusPeakMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetBolusPeakMinutes(v *float64) {
-
-	m.BolusPeakMinutes = NewSetting(BolusPeakMinutes, v, nil, nil)
-
-}
-
-// GetBasalDiaHours returns the BasalDiaHours value.
-func (m SettingMap) GetBasalDiaHours() *float64 {
-	if m.BasalDiaHours == nil {
-		return nil
-	}
-	return ptr(m.BasalDiaHours.Value)
-}
-
-// SetBasalDiaHours sets the BasalDiaHours value and returns the updated SettingMap.
-func (m *SettingMap) SetBasalDiaHours(v *float64) {
-
-	m.BasalDiaHours = NewSetting(BasalDIAHours, v, nil, nil)
-
-}
-
-// GetBasalOnsetMinutes returns the BasalOnsetMinutes value.
-func (m SettingMap) GetBasalOnsetMinutes() *float64 {
-	if m.BasalOnsetMinutes == nil {
-		return nil
-	}
-	return ptr(m.BasalOnsetMinutes.Value)
-}
-
-// SetBasalOnsetMinutes sets the BasalOnsetMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetBasalOnsetMinutes(v *float64) {
-
-	m.BasalOnsetMinutes = NewSetting(BasalOnsetMinutes, v, nil, nil)
-
-}
-
-// GetBasalPeakMinutes returns the BasalPeakMinutes value.
-func (m SettingMap) GetBasalPeakMinutes() *float64 {
-	if m.BasalPeakMinutes == nil {
-		return nil
-	}
-	return ptr(m.BasalPeakMinutes.Value)
-}
-
-// SetBasalPeakMinutes sets the BasalPeakMinutes value and returns the updated SettingMap.
-func (m *SettingMap) SetBasalPeakMinutes(v *float64) {
-
-	m.BasalPeakMinutes = NewSetting(BasalPeakMinutes, v, nil, nil)
-
-}
-
-// GetDefaultInsulinSensitivity returns the DefaultInsulinSensitivity value.
-func (m SettingMap) GetDefaultInsulinSensitivity() *float64 {
-	if m.DefaultInsulinSensitivity == nil {
-		return nil
-	}
-	return ptr(m.DefaultInsulinSensitivity.Value)
-}
-
-// SetDefaultInsulinSensitivity sets the DefaultInsulinSensitivity value and returns the updated SettingMap.
-func (m *SettingMap) SetDefaultInsulinSensitivity(v *float64) {
-
-	m.DefaultInsulinSensitivity = NewSetting(DefaultInsulinSensitivity, v, nil, nil)
-
-}
-
-// GetDefaultCarbRatio returns the DefaultCarbRatio value.
-func (m SettingMap) GetDefaultCarbRatio() *float64 {
-	if m.DefaultCarbRatio == nil {
-		return nil
-	}
-	return ptr(m.DefaultCarbRatio.Value)
-}
-
-// SetDefaultCarbRatio sets the DefaultCarbRatio value and returns the updated SettingMap.
-func (m *SettingMap) SetDefaultCarbRatio(v *float64) {
-
-	m.DefaultCarbRatio = NewSetting(DefaultCarbRatio, v, nil, nil)
-
-}
-
-// GetDefaultBasalRate returns the DefaultBasalRate value.
-func (m SettingMap) GetDefaultBasalRate() *float64 {
-	if m.DefaultBasalRate == nil {
-		return nil
-	}
-	return ptr(m.DefaultBasalRate.Value)
-}
-
-// SetDefaultBasalRate sets the DefaultBasalRate value and returns the updated SettingMap.
-func (m *SettingMap) SetDefaultBasalRate(v *float64) {
-
-	m.DefaultBasalRate = NewSetting(DefaultBasalRate, v, nil, nil)
-
-}
-
-// GetCarbMaxAbsorptionHours returns the CarbMaxAbsorptionHours value.
-func (m SettingMap) GetCarbMaxAbsorptionHours() *float64 {
-	if m.CarbMaxAbsorptionHours == nil {
-		return nil
-	}
-	return ptr(m.CarbMaxAbsorptionHours.Value)
-}
-
-// SetCarbMaxAbsorptionHours sets the CarbMaxAbsorptionHours value and returns the updated SettingMap.
-func (m *SettingMap) SetCarbMaxAbsorptionHours(v *float64) {
-
-	m.CarbMaxAbsorptionHours = NewSetting(CarbMaxAbsorptionHours, v, nil, nil)
-
-}
-
-// GetCarbMin5mImpact returns the CarbMin5mImpact value.
-func (m SettingMap) GetCarbMin5mImpact() *float64 {
-	if m.CarbMin5mImpact == nil {
-		return nil
-	}
-	return ptr(m.CarbMin5mImpact.Value)
-}
-
-// SetCarbMin5mImpact sets the CarbMin5mImpact value and returns the updated SettingMap.
-func (m *SettingMap) SetCarbMin5mImpact(v *float64) {
-
-	m.CarbMin5mImpact = NewSetting(CarbMin5mImpact, v, nil, nil)
-
 }
 
 // GetAlarmUrgentLowEnabled returns the AlarmUrgentLowEnabled value.
@@ -720,52 +529,6 @@ func (m SettingMap) GetAlarmDeviceBatteryLowDevicesJson() *types.DeviceNames {
 func (m *SettingMap) SetAlarmDeviceBatteryLowDevicesJson(v *types.DeviceNames) {
 
 	m.AlarmDeviceBatteryLowDevicesJson = NewSetting(AlarmDeviceBatteryLowDevicesJson, v, nil, nil)
-
-}
-
-// GetAlarmLowReservoirEnabled returns the AlarmLowReservoirEnabled value.
-func (m SettingMap) GetAlarmLowReservoirEnabled() *bool {
-	if m.AlarmLowReservoirEnabled == nil {
-		return nil
-	}
-	return ptr(m.AlarmLowReservoirEnabled.Value)
-}
-
-// SetAlarmLowReservoirEnabled sets the AlarmLowReservoirEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmLowReservoirEnabled(v *bool) {
-
-	m.AlarmLowReservoirEnabled = NewSetting(AlarmLowReservoirEnabled, v, nil, nil)
-
-}
-
-// GetAlarmLowReservoirUnits returns the AlarmLowReservoirUnits value.
-func (m SettingMap) GetAlarmLowReservoirUnits() *int64 {
-	if m.AlarmLowReservoirUnits == nil {
-		return nil
-	}
-	return ptr(m.AlarmLowReservoirUnits.Value)
-
-}
-
-// SetAlarmLowReservoirUnits sets the AlarmLowReservoirUnits value and returns the updated SettingMap.
-func (m *SettingMap) SetAlarmLowReservoirUnits(v *int64) {
-
-	m.AlarmLowReservoirUnits = NewSetting(AlarmLowReservoirUnits, v, nil, nil)
-
-}
-
-// GetNotificationsEnabled returns the NotificationsEnabled value.
-func (m SettingMap) GetNotificationsEnabled() *bool {
-	if m.NotificationsEnabled == nil {
-		return nil
-	}
-	return ptr(m.NotificationsEnabled.Value)
-}
-
-// SetNotificationsEnabled sets the NotificationsEnabled value and returns the updated SettingMap.
-func (m *SettingMap) SetNotificationsEnabled(v *bool) {
-
-	m.NotificationsEnabled = NewSetting(NotificationsEnabled, v, nil, nil)
 
 }
 
