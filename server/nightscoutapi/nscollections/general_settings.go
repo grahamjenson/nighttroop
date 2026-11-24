@@ -23,11 +23,11 @@ const (
 	generalAAPS          = "aaps"
 	generalClientControl = "aaps_clientcontrol"
 	// maxGeneralSettings is the most a site keeps, maxGeneralSettingBytes the largest one's JSON, and
-	// maxGeneralSettingsBytes the most JSON of them all: the most documents at their largest would fill a site's DB
-	// past its size limit, whose truncate deletes old readings and treatments but never these
+	// maxGeneralSettingsBytes the most JSON of them all, so a device cannot fill a site's DB with them: its size
+	// limit's truncate deletes old readings and treatments but never these. A running config is a few KiB.
 	maxGeneralSettings      = 100
-	maxGeneralSettingBytes  = 256 * 1024
-	maxGeneralSettingsBytes = 2 * 1024 * 1024
+	maxGeneralSettingBytes  = 64 * 1024
+	maxGeneralSettingsBytes = 512 * 1024
 	// staleClientControl is how long a client control message is kept unchanged before a new one may take its place
 	staleClientControl = 7 * 24 * time.Hour
 )

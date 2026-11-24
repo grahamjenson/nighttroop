@@ -165,8 +165,8 @@ var columnLimits = map[string]map[string]ColumnLimit{
 	},
 	"general_settings": {
 		"Key":                   {Column: "key", Required: true, MaxLength: 128},
-		"Type":                  {Column: "type", Required: true},
-		"ValueJson":             {Column: "value_json", Required: true, MaxLength: 262144},
+		"Type":                  {Column: "type", Required: true, MaxLength: 32},
+		"ValueJson":             {Column: "value_json", Required: true, MaxLength: 65536},
 		"CreatedByIdentityName": {Column: "created_by_identity_name", Required: true, MaxLength: 32},
 		"CreatedAt":             {Column: "created_at", Required: true},
 		"UpdatedAt":             {Column: "updated_at", Required: true},
