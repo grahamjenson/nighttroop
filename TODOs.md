@@ -45,6 +45,8 @@
        the site's download limit
     1. P4: A site JWT sent to `/api/v2/authorization/request` or `/api/v1/status.json` gets a new JWT, so a TOTP
        user's session never has to end: decide if a JWT may renew itself, or cap its total life
+    1. P3: The Socket.IO sessions with no access are limited for each IP only (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`, 30),
+       so 10 IPs or IPv6 /64s can hold all 300 sessions of a site with no token: limit them for the site in total
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
        are right on real sites first, then act on them, each item its own PR:
         1. P2: Score a site's rate-limit refusals too: a count for each site that halves every hour, of refusals by the
