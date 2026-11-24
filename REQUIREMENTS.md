@@ -71,12 +71,17 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Password and TOTP
 
-- Sign in with username, password and TOTP code. Sign out.
+- Sign in with username, password and TOTP code.
+- Sign out.
 - Tab order: username, password, code (skips the show password button).
-- As on a site, the sixth code digit (typed or pasted) sends the sign in, if username and password are in. A code typed
-  first waits for Sign In. A wrong code is not sent again.
-- A failed sign in shows an error toast, "Wrong username, password or code. Codes change every 30 seconds, so use the newest
-  one." or too many sign in attempts. Inputs are invalid only from then to the next send, and have no placeholders.
+- As on a site, the sixth code digit (typed or pasted) sends the sign in, if username and password are in.
+  - A code typed first waits for Sign In.
+  - A wrong code is not sent again.
+- A failed sign in shows an error toast:
+  - "Wrong username, password or code. Codes change every 30 seconds, so use the newest one.";
+  - or too many sign in attempts.
+- Inputs are invalid only from a failed sign in to the next send.
+- Inputs have no placeholders.
 
 #### Passkeys
 
@@ -180,10 +185,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Site page
 
-- `/sites/{id}` opens on a click, laid out like a site's summary. Back returns to the sites. An API client gets the
-  site.
-- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, and disabled, archived or deleted times; Open
-  Site link (new tab) while live.
+- `/sites/{id}` opens on a click, laid out like a site's summary.
+  - Back returns to the sites.
+  - An API client gets the site.
+- Top:
+  - ID and state badge;
+  - Inactive and Over limit badges;
+  - abuse level badge with its score;
+  - created, and disabled, archived or deleted times;
+  - Open Site link (new tab) while live.
 - DB size:
   - measured on disk when the page opens, kept on the site's record;
   - large, against its limit, with a bar: amber from 80%, red with a warning icon over it;
@@ -197,14 +207,22 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - table sizes as last measured (at creation, by the 5-minute site measurement after a size change, at truncate), not
     read from the whole DB.
 - Tiles: last seen, last written to, identities (people and devices), time since last error.
-- Backup tiles: backup size in MB (`-` if no backup), time since the last backup copy, and time since the last upload
-  to S3. A time that did not occur is Never.
-- A Migration tile: the migration the site's DB is at of the latest (`3 of 3`). For a site unavailable as its migration
-  failed, the migration that failed (`2 failed, of 3`). For another unavailable site, Unknown.
-- Identities, and the latest 10 events and 10 errors (no site column). Each opens its details. A link shows all for
-  the site.
-- On a phone: no wider than the window, all identity actions tappable. Role, TOTP and last seen are a line under the
-  name. Actions stack.
+- Backup tiles:
+  - backup size in MB (`-` if no backup);
+  - time since the last backup copy;
+  - time since the last upload to S3;
+  - a time that did not occur is Never.
+- A Migration tile:
+  - the migration the site's DB is at of the latest (`3 of 3`);
+  - for a site unavailable as its migration failed, the migration that failed (`2 failed, of 3`);
+  - for another unavailable site, Unknown.
+- Identities, and the latest 10 events and 10 errors (no site column).
+  - Each opens its details.
+  - A link shows all for the site.
+- On a phone:
+  - no wider than the window;
+  - all identity actions tappable, and stacked;
+  - role, TOTP and last seen are a line under the name.
 
 #### Site actions
 
@@ -682,11 +700,13 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Phone layout and history
 
-- On a phone: hub links and search are icons, the search opening a box across the page. Each hub's tabs are one row
-  above the page that scrolls sideways, with the tab of the page shown in view. No page gets wider. The user menu is
-  unchanged.
-- Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns. Quick clicks show the
-  last one clicked.
+- On a phone:
+  - Hub links and search are icons. The search opens a box across the page.
+  - Each hub's tabs are one row above the page that scrolls sideways, with the tab of the page shown in view.
+  - No page gets wider.
+  - The user menu is unchanged.
+- Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns.
+- Quick clicks show the last one clicked.
 - A box that has focus keeps its value when the page changes, for example a date picked or a search sent with Enter.
 
 ### Summary
@@ -894,21 +914,27 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### TDD report
 
 - Says which days it covers, dated in the site's timezone.
-- ‹ and ›: the 30 days before and after. › disabled for the latest month, ‹ past one year ago. A last day after today,
-  or over one year before yesterday, is refused. Back and forward work.
+- ‹ and ›: the 30 days before and after.
+  - › is disabled for the latest month, ‹ past one year ago.
+  - A last day after today, or over one year before yesterday, is refused.
+  - Back and forward work.
 - Chart: a bar of each day's total daily dose, oldest first, on an axis of every day, a few pixels apart.
   - A dose's extended part counts in each day by the share of its minutes in that day. Today has only the part given until now.
   - Basal (gold) under boluses, with a legend.
   - No insulin: no bar, not counted.
   - Hover: date and basal or boluses in U.
   - Today's bar is paler, "so far" on its right and in its tooltip date.
-- Statistics: days before today with insulin, and their mean, lowest and highest daily dose. Today is left out (not
-  over). Says so when none have insulin.
-- Table under the bars: every day, newest first, basal, boluses and total in U, or "–" with no insulin. Today marked
-  "so far", with or without insulin.
-- Note under the bars: basal is estimated from the basal rate in force each minute (scheduled or temp basal); the rest
-  is boluses. A dose of basal insulin is basal too. With today in it: today (paler, so far) is left out of the days with insulin and their daily dose, lowest
-  and highest.
+- Statistics: days before today with insulin, and their mean, lowest and highest daily dose.
+  - Today is left out (not over).
+  - Says so when none have insulin.
+- Table under the bars: every day, newest first, basal, boluses and total in U.
+  - A day with no insulin shows "–".
+  - Today is marked "so far", with or without insulin.
+- Note under the bars:
+  - Basal is estimated from the basal rate in force each minute (scheduled or temp basal). The rest is boluses.
+  - A dose of basal insulin is basal too.
+  - With today in it: today (paler, so far) is left out of the days with insulin and their daily dose, lowest and
+    highest.
 
 #### Printable report
 
@@ -1369,15 +1395,25 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### Events, errors and logs
 
 - Admins see events (for example created, alarms, recoveries, credential changes), errors and logs of their site
-  only, filtered by type and searched. They do not see the backups of all sites.
+  only.
+  - They filter them by type, and search them.
+  - They do not see the backups of all sites.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
-- The events table has a **Details** column that says, when the event has them: the identity it was for, who did it
-  ("by admin") when that is another identity, the connector, the count of records, the reason, and the city and
-  country of a sign in. For example "mum · Wellington, NZ" or "dexcom · 12 records". Text too long for the column
-  is cut short, and shows whole on hover. A phone does not show the column; the event's details have the same.
-- The errors table has a **From** column: the identity, what it asked for, and its app (for example
-  "watch · GET /api/v1/entries · Nightguard"), or the connector. It is empty if the error does not say. Text too
-  long for the column is cut short, and shows whole on hover.
+- The events table has a **Details** column, for example "mum · Wellington, NZ" or "dexcom · 12 records". It says,
+  when the event has them:
+  - the identity it was for;
+  - who did it ("by admin") when that is another identity;
+  - the connector;
+  - the count of records;
+  - the reason;
+  - the city and country of a sign in.
+- Details text too long for the column is cut short, and shows whole on hover.
+- A phone does not show the Details column; the event's details have the same.
+- The errors table has a **From** column:
+  - the identity, what it asked for, and its app (for example "watch · GET /api/v1/entries · Nightguard"), or the
+    connector;
+  - empty if the error does not say.
+- From text too long for the column is cut short, and shows whole on hover.
 - An error's details say **What it means:** in plain words, above the details to debug it by:
   - a connector's sync failed: the Connectors page says what to do;
   - a backup failed: Nighttroop tries again;
@@ -2207,7 +2243,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
     restore failed). One not restored is also logged as an error, and stays unavailable.
 - The sites still unavailable are tried again after 1, 2, 4, 8, 16 and 32 minutes, each try logged the same way.
-  After the last, the admin is paged once, with the sites. Paging is not set up yet, so a page is logged as an error.
+  - After the last, the admin is paged once with a Call, with the sites.
 - A site DB that cannot be opened is moved aside while its backup is restored, and put back if the restored DB cannot
   be opened either.
 - If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
@@ -2234,9 +2270,11 @@ Before it backs up a site written to, at most every hour, the server truncates i
   - All other fields stay as sent, e.g. `name`, `timestamp`, `iob`, `cob`, `recommendedBolus`, `enacted`,
     `predicted.startDate`, and `suggested.bg`, `ISF`, `eventualBG`.
   - The status does not get a new `srvModified`.
-- Pump as sent: kept only on each device's newest status with one. A newer status without one does not change this.
-  The others keep their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`.
-  The Nightscout API returns them as `pump`.
+- Pump as sent: kept only on each device's newest status with one.
+  - A newer status without one does not change this.
+  - The others keep their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and
+    `bolusing`.
+  - The Nightscout API returns them as `pump`.
 - Statuses kept for each device: all of the last hour, then the newest in each 10 minutes to 1 week old, each 20
   minutes to 2 weeks, and each hour to 30 days.
   - The device's newest and deleted statuses are kept.
