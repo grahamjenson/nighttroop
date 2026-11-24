@@ -6,15 +6,25 @@ import "math"
 // truncates a site near its limit, so a DB far over it is likely bloated on purpose, to hurt the server and its backups.
 const AbuseSizeFactor = 3
 
+// WritesRefusedSizeFactor is how many times its size limit a site's DB can be before every write that adds to it is
+// refused, rather than slowed as past AbuseSizeFactor, so no site can fill the server's disk however long it writes
+const WritesRefusedSizeFactor = 4
+
 // FlaggedForAbuse is whether the site may be abused, so the server limits it harder. Each check of abuse is added here,
 // so all that limit an abused site use the same flag.
 func (s *Site) FlaggedForAbuse() bool {
-	return s.overAbuseSize()
+	return s.overSize(AbuseSizeFactor)
 }
 
-// overAbuseSize is whether the site's DB is over AbuseSizeFactor times its size limit, false if either is not known
-func (s *Site) overAbuseSize() bool {
-	return s.EstimatedDbSizeKb != nil && s.MaxDbSizeKbLimit != nil && *s.EstimatedDbSizeKb > AbuseSizeFactor*(*s.MaxDbSizeKbLimit)
+// WritesRefused is whether the site's DB is over WritesRefusedSizeFactor times its size limit, so a write that adds to
+// it is refused until it is truncated or its data deleted
+func (s *Site) WritesRefused() bool {
+	return s.overSize(WritesRefusedSizeFactor)
+}
+
+// overSize is whether the site's DB is over factor times its size limit, false if either is not known
+func (s *Site) overSize(factor int64) bool {
+	return s.EstimatedDbSizeKb != nil && s.MaxDbSizeKbLimit != nil && *s.EstimatedDbSizeKb > factor*(*s.MaxDbSizeKbLimit)
 }
 
 // AbuseLevel is how much a site may abuse the server, from its abuse score. It is only shown to control admins for now:

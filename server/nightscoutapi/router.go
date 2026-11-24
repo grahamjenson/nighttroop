@@ -44,6 +44,8 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 	r.Group(func(r chi.Router) {
 		r.Use(NightscoutAuthMiddleware(controlDB, config))
 		r.Use(httputils.SiteRateLimitMiddleware(config))
+		// Every write here is to the site's DB, so one that adds to it is refused while it is far over its storage
+		r.Use(httputils.RefuseWritesOverStorage)
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 		r.Use(httputils.CountRoutes(config.Usage, "nightscout"))
 

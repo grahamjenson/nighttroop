@@ -60,6 +60,10 @@ func (ws *Websocket) handleDBWrite(event string, args []json.RawMessage, auth *a
 	if allowed, _ := httputils.FlaggedSiteWritesWithinRateLimit(siteContext, 1); !allowed {
 		return ackResult(httputils.SiteOverStorageMessage)
 	}
+	// A write that adds to the site's DB is refused while it is far over its storage, as the REST API's are
+	if event != "dbRemove" && httputils.SiteWritesRefused(siteContext) {
+		return ackResult(httputils.SiteStorageFullMessage)
+	}
 	// Its socket is only checked every identityRecheck, so an identity revoked since then is refused here
 	if httputils.IdentityRevoked(ctx, ws.controlDB, siteContext.IdentityModel) {
 		return ackResult("Not authorized")

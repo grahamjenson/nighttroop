@@ -179,6 +179,12 @@ func (b *ConnectorJobManager) RunConnector(ctx context.Context, connectorJob Con
 		return nil
 	}
 
+	// Nothing is synced into a site far over its storage, as its own writes are refused, until it is made smaller
+	if httputils.SiteWritesRefused(&httputils.SiteContext{SiteModel: site.SiteModel, SiteDB: site.SiteDB}) {
+		slog.WarnContext(ctx, "A connector is not synced, as its site is far over its storage limit")
+		return nil
+	}
+
 	username, password, region, err := b.getUsernamePasswordRegion(connector)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error getting username, password, and region", "error", err)

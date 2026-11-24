@@ -96,3 +96,23 @@ func TestSiteFlaggedForAbuse(t *testing.T) {
 		})
 	}
 }
+
+// A site's writes that add to its DB are refused only once it is over 4 times its size limit, past where it is flagged
+func TestSiteWritesRefused(t *testing.T) {
+	for _, tt := range []struct {
+		name        string
+		size, limit *int64
+		want        bool
+	}{
+		{"no size", nil, kb(20480), false},
+		{"no limit", kb(1 << 30), nil, false},
+		{"flagged, over 3 times its limit", kb(3*20480 + 1), kb(20480), false},
+		{"exactly 4 times its limit", kb(4 * 20480), kb(20480), false},
+		{"over 4 times its limit", kb(4*20480 + 1), kb(20480), true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			site := &controldb.Site{EstimatedDbSizeKb: tt.size, MaxDbSizeKbLimit: tt.limit}
+			require.Equal(t, tt.want, site.WritesRefused())
+		})
+	}
+}

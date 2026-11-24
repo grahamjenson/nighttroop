@@ -2285,6 +2285,14 @@ harder:
   - Over it: 429, with `Retry-After` and the message `Too many writes: this site's data is far over its storage limit`.
   - Live updates: the write is refused with that message.
 - Reads of a flagged site, and sites that are not flagged, do not change.
+- Over 4 times its DB size limit (80 MB for a 20 MB limit), each write that adds to the site's DB is refused, however
+  many flagged writes it has left, by its DB size on disk then:
+  - The Nightscout API's writes, and the site's data and presets created or changed: 429, with `Retry-After: 3600`
+    (the hour truncation takes) and the message `This site's data is far over its storage limit, so nothing more is
+    stored until some is deleted or the site is truncated`.
+  - Live updates (`dbAdd`, `dbUpdate`, `dbUpdateUnset`): refused with that message.
+  - Its connectors' syncs and backfills store nothing.
+  - Deletes, Truncate, its settings, identities and sign in and out still work, so the site can be made smaller.
 - A request's IP is its TCP peer.
   - Behind a trusted proxy (`TRUSTED_PROXIES`): the hop before it in `X-Forwarded-For`, or on Fly.io `Fly-Client-IP`.
   - Any other peer that sets these headers keeps its own IP's limits.
