@@ -1147,6 +1147,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 Third party integrations, each syncing from one service: **Dexcom** and **LibreLinkUp** (each with its region),
 another **Nightscout** site, or the **virtual connector** (realistic test data).
 
+- A connector's region is checked when it is saved: Dexcom is `US` or `OUS`, LibreLinkUp is one of its known regions,
+  and the Nightscout and virtual connectors have none. Another region is refused (400) with the region sent.
+
 #### Connectors page help
 
 - The page says that a connector pulls glucose into Nighttroop from another service, and to add the one you use.
