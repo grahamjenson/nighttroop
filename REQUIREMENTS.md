@@ -990,6 +990,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Data kinds
 
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL).
+  - A reading is added as a CGM reading (`sgv`) or a meter reading (`mbg`). Another type, also `cal`, is refused (400).
   - Lows and highs: the summary's colours, and L or H. Screen readers read "Low" or "High".
   - Add: type (Meter or Sensor), trend as arrow and name (`↗ FortyFiveUp`), as in table and details.
   - Above page one: small graphs of the last 10 days, same scale, oldest first, each with the range shaded and time in

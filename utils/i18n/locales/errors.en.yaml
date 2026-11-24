@@ -16,6 +16,7 @@ errors:
     name_and_role: "Missing required field name and role"
     push_credential: "Missing required field name (at most 64 characters) and secret"
   data:
+    bad_reading_type: "Reading type '{{.Type}}' is not sgv or mbg."
     out_of_range: "{{.Field}} must be from {{.Min}} to {{.Max}}{{if .Units}} {{.Units}}{{end}}"
     more_than: "{{.Field}} must be more than {{.Min}} and at most {{.Max}}{{if .Units}} {{.Units}}{{end}}"
     too_long: "{{.Field}} must be at most {{.Max}} characters"

@@ -278,3 +278,12 @@ NAME created_reading_mmol_in_nightscout_as_mgdl
 GET http://{{ .ns_site }}/api/v1/entries?find[_id]={{ .create_reading_mmol.result.id }}&token={{ token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
+
+// A calibration is not a reading a person adds, though its column can hold the type
+NAME create_glucose_calibration_type
+POST http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"reading": 5.5, "reading_type": "cal"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "Reading type 'cal' is not sgv or mbg" "@message"

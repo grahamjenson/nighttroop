@@ -2,6 +2,7 @@ package sitedata
 
 import (
 	"context"
+	"slices"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 
@@ -11,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 )
 
 type GlucoseReadingsCollection struct{}
@@ -31,6 +33,10 @@ func (s *GlucoseReadingsCollection) GetRoute() string {
 // CREATE
 // ////
 func (s *GlucoseReadingsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteGlucoseReading) (*sitedb.GlucoseReading, error) {
+	// The column also takes cal, a calibration, which is not a reading a person adds
+	if !slices.Contains([]string{"", "sgv", "mbg"}, model.ReadingType) {
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.data.bad_reading_type", i18n.Data{"Type": model.ReadingType}))
+	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateGlucoseReading, sitemodels.GlucoseReadingToCreate(model, siteContext))
 }
 

@@ -11,7 +11,7 @@ CREATE TABLE glucose_readings (
     
     -- UNIT IS ALWAYS MG/DL BECAUSE IT IS HIGHER RESOLUTION
     mgdl REAL NOT NULL CHECK(mgdl > 0 AND mgdl <= 1000),
-    reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg')) DEFAULT 'sgv', -- sgv, mbg etc
+    reading_type TEXT NOT NULL CHECK(reading_type IN ('sgv', 'mbg', 'cal')) DEFAULT 'sgv', -- sgv, mbg, and cal, a calibration, which nothing stores yet
     units TEXT CHECK(units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L -- the reading is always store in mgdl, but the original unit CAN also be stored
     measurement_method TEXT CHECK(length(measurement_method) <= 32), -- cgm, meter, manual, etc
 
