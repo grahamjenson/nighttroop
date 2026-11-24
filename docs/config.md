@@ -147,6 +147,7 @@ AAPS, Trio) send.
 | `MEMORY_ALERT_PERCENT` | `60` | Memory used (of the container's limit, else the machine's) at or above which the control site is warned. |
 | `DISK_ALERT_PERCENT` | `60` | The same, for space used on the DBs' disk. |
 | `DISK_ALERT_FREE_GB` | `100` | Free GB on the DBs' disk at or above which the disk never warns, however full. |
+| `DISK_REFUSE_FREE_MB` | `256` | Free MB on the DBs' disk under which, at each check (every 30 seconds), no site is created and site writes that add data are refused, and the admin is paged (SMS). |
 | `CPU_PEGGED_ALERT_SECONDS` | `20` | How long the CPU is at 100% of every core before the control site is warned. |
 
 ### Paging with PagerDuty

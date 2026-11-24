@@ -482,6 +482,12 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The banner shows an alert until a check finds it back under, with memory used and disk free in bytes of their
   totals (for example, "Disk high: 12.0 GB free of 954.0 GB."), and CPU seconds at 100%.
 - Events: "Resource high" when over, "Resource recovered" when back under.
+- When a check finds less than `DISK_REFUSE_FREE_MB` (256 MB) free on the DBs' disk, until one finds more:
+  - The admin is paged (SMS) once, when it is first found.
+  - No site is created through `POST /site`: 507, `Full: the server's disk is nearly full`.
+  - Each site's writes that add data are refused, as for a site far over its storage limit, with the message
+    `The server's disk is nearly full, so nothing more is stored until its admin frees space`, and its connectors
+    store nothing. Deletes, Truncate, settings and sign in still work.
 - The last 3 days of checks are kept while the server runs, and reset at restart.
 - The usage page graphs the CPU, memory, goroutines and DB disk of each check. Hovering a graph shows the check nearest
   the pointer, and how long ago it was.

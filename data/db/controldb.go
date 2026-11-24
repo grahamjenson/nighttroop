@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -54,7 +55,16 @@ type ControlDB struct {
 	measured sync.Map
 	// replica replicates the control DB once Replicate starts it. Nil, as without S3 or in tests, replicates nothing.
 	replica *replica.Replica
+	// diskFull is whether the DBs' disk had less than DiskRefuseFreeMB free at the last check of the server's resources
+	diskFull atomic.Bool
 }
+
+// DiskFull is whether the DBs' disk was nearly full at the last check, so sites are not created and their writes that
+// add data are refused, as a full disk would stop every site
+func (db *ControlDB) DiskFull() bool { return db.diskFull.Load() }
+
+// SetDiskFull keeps whether the DBs' disk is nearly full, and is whether that changed
+func (db *ControlDB) SetDiskFull(full bool) bool { return db.diskFull.Swap(full) != full }
 
 // Replicate replicates the control DB to S3 with control, as it is written
 func (db *ControlDB) Replicate(ctx context.Context, control *replica.Replica) error {

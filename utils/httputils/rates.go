@@ -99,8 +99,11 @@ const SiteOverStorageMessage = "Too many writes: this site's data is far over it
 // refused, and how to write again
 const SiteStorageFullMessage = "This site's data is far over its storage limit, so nothing more is stored until some is deleted or the site is truncated"
 
-// siteStorageFullRetrySeconds is when a client refused as its site is over its storage is told to try again: the hour
-// the server takes to truncate a site over its limit
+// ServerDiskFullMessage says why a write is refused while the server's disk is nearly full
+const ServerDiskFullMessage = "The server's disk is nearly full, so nothing more is stored until its admin frees space"
+
+// siteStorageFullRetrySeconds is when a client refused as its site is over its storage, or the server's disk is
+// nearly full, is told to try again: the hour the server takes to truncate a site over its limit
 const siteStorageFullRetrySeconds = 3600
 
 // SiteFlaggedForAbuse is whether the request's site is flagged for abuse. It uses the DB's size now, not the size last
@@ -110,11 +113,16 @@ func SiteFlaggedForAbuse(siteContext *SiteContext) bool {
 	return site != nil && site.FlaggedForAbuse()
 }
 
-// SiteWritesRefused is whether a write that adds to the request's site's DB is refused, as the DB is now over
-// WritesRefusedSizeFactor times its size limit
-func SiteWritesRefused(siteContext *SiteContext) bool {
-	site := siteNow(siteContext)
-	return site != nil && site.WritesRefused()
+// SiteWriteRefused is why a write that adds to the request's site's DB is refused, or "" when it is not: the server's
+// disk is nearly full, or the DB is now over WritesRefusedSizeFactor times its size limit
+func SiteWriteRefused(siteContext *SiteContext) string {
+	if siteContext != nil && siteContext.ControlDB != nil && siteContext.ControlDB.DiskFull() {
+		return ServerDiskFullMessage
+	}
+	if site := siteNow(siteContext); site != nil && site.WritesRefused() {
+		return SiteStorageFullMessage
+	}
+	return ""
 }
 
 // siteNow is the request's site with its DB's size now, or nil
@@ -132,13 +140,18 @@ func siteNow(siteContext *SiteContext) *controldb.Site {
 }
 
 // RefuseWritesOverStorage refuses a write that adds to the site's DB, with when to try again, while the DB is over
-// WritesRefusedSizeFactor times its size limit. A delete, which makes it smaller, is let through.
+// WritesRefusedSizeFactor times its size limit or the server's disk is nearly full. A delete, which makes it smaller,
+// is let through.
 func RefuseWritesOverStorage(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodDelete && GetHTTPAction(r) == HTTPActionWrite && SiteWritesRefused(GetSiteContext(r.Context())) {
+		if r.Method == http.MethodDelete || GetHTTPAction(r) != HTTPActionWrite {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if refused := SiteWriteRefused(GetSiteContext(r.Context())); refused != "" {
 			writeTooManyRequests(w, siteStorageFullRetrySeconds)
-			_, _ = w.Write([]byte(SiteStorageFullMessage))
-			slog.InfoContext(r.Context(), "A write to a site far over its storage limit is refused")
+			_, _ = w.Write([]byte(refused))
+			slog.InfoContext(r.Context(), "A write that adds to a site's DB is refused", "why", refused)
 			return
 		}
 		next.ServeHTTP(w, r)
