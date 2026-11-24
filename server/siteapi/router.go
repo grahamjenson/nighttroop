@@ -89,12 +89,18 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// The site's collections, each at its route in its section: data, settings, presets or logs
 		for _, section := range httputils.SiteSections {
 			routes := store.Section(section)
+			// The data and presets are in the site's DB, so a write adding to them is refused while it is far over its
+			// storage. The settings and logs are in the control and logs DBs, so a site over it can still be managed.
+			writes := r.With()
+			if section == "data" || section == "presets" {
+				writes = r.With(httputils.RefuseWritesOverStorage)
+			}
 			r.Get("/"+section+"/{collection}", routes.Search)
 			r.Get("/"+section+"/{collection}/events", routes.Events)
 			r.Get("/"+section+"/{collection}/new", routes.New)
 			r.Get("/"+section+"/{collection}/{id}", routes.Get)
-			r.Post("/"+section+"/{collection}", routes.Create)
-			r.Post("/"+section+"/{collection}/{id}", routes.Update)
+			writes.Post("/"+section+"/{collection}", routes.Create)
+			writes.Post("/"+section+"/{collection}/{id}", routes.Update)
 			r.Delete("/"+section+"/{collection}/{id}", routes.Delete)
 		}
 

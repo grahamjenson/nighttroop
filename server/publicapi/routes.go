@@ -67,6 +67,16 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			return
 		}
 
+		// No site is created while the DBs' disk is nearly full, as a full disk stops every site
+		if controlDB.DiskFull() {
+			if httputils.GetAcceptType(r).API() {
+				apiutils.WriteJSON(w, http.StatusInsufficientStorage, map[string]string{"error": "Full: the server's disk is nearly full"})
+				return
+			}
+			http.Error(w, "Full: the server's disk is nearly full", http.StatusInsufficientStorage)
+			return
+		}
+
 		// MAX_SITES is a hard limit on the public creating sites, though not on a control admin
 		if controlDB.GetNSitesDBs() >= config.MaxSites {
 			if httputils.GetAcceptType(r).API() {

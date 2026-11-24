@@ -200,6 +200,32 @@ func TestNightscoutBackfillCopiesOlderDocuments(t *testing.T) {
 	require.Equal(t, int64(2), *s.LastBackfillRecords)
 }
 
+// A site far over its storage has nothing synced or backfilled into it, as its own writes are refused
+func TestNightscoutBackfillSkipsASiteOverItsStorage(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
+	enc := func(s string) *string {
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
+		require.NoError(t, err)
+		return &v
+	}
+	nightscout_client.TestDocuments = map[string][]any{
+		"entries": {map[string]any{"type": "sgv", "sgv": 140, "date": float64(time.Now().Add(-72 * time.Hour).UnixMilli())}},
+	}
+	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
+	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
+	model, err := q.GetSite(ctx, controldb.GetSiteParams{ID: siteID})
+	require.NoError(t, err)
+	require.NoError(t, q.UpdateSiteDBSize(ctx, controldb.UpdateSiteDBSizeParams{ID: siteID, EstimatedDbSizeKb: new(4**model.MaxDbSizeKbLimit + 1)}))
+
+	backfill, err := BackfillRange(ctx, site.SiteDB, typ, 7, time.UTC)
+	require.NoError(t, err)
+	require.NoError(t, SetupConnectorJobManager(cfg, controlDB).RunConnector(ctx, ConnectorJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
+	readings, err := site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, readings)
+}
+
 func TestOldestDate(t *testing.T) {
 	tests := []struct {
 		name   string

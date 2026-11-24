@@ -229,6 +229,9 @@ type ServerConfig struct {
 	DiskAlertPercent      int
 	DiskAlertFreeGB       int
 	CPUPeggedAlertSeconds int
+	// DiskRefuseFreeMB is the free MB on the DBs' disk under which sites are not created and site writes that add data
+	// are refused, as a full disk stops every site
+	DiskRefuseFreeMB int
 
 	// Backup Config
 	// SiteBackupIntervalInSeconds is how old a written site's backup is before it is backed up again
@@ -469,6 +472,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		MemoryAlertPercent:    configIntSelect(dotenv, "MEMORY_ALERT_PERCENT", 60),
 		DiskAlertPercent:      configIntSelect(dotenv, "DISK_ALERT_PERCENT", 60),
 		DiskAlertFreeGB:       configIntSelect(dotenv, "DISK_ALERT_FREE_GB", 100),
+		DiskRefuseFreeMB:      configIntSelect(dotenv, "DISK_REFUSE_FREE_MB", 256),
 		CPUPeggedAlertSeconds: configIntSelect(dotenv, "CPU_PEGGED_ALERT_SECONDS", 20),
 
 		// Backup Config
