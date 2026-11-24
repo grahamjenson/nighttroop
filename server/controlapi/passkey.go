@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+
 	"net/http"
+	"nighttroop.t1d.nz/utils/aslog"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -189,6 +191,7 @@ func POSTPasskeyLoginFinish(controlDB *db.ControlDB, cfg *config.ServerConfig) h
 			sitelogin.PasskeyError(w, r, http.StatusInternalServerError, i18n.T(r.Context(), "common.passkey.sign_in_failed"), err)
 			return
 		}
+		aslog.AddAttrs(r.Context(), slog.Int64("control_identity_id", user.identity.ID), slog.String("identity_name", user.identity.Name))
 		controlDB.Logs.SignedInEvent(r.Context(), "", user.identity.Name, from)
 		cfg.Security.SetControlLoginCookie(w, token, expiresAt)
 		slog.InfoContext(r.Context(), "Admin logged in with a passkey", "admin", user.identity.Name, "role", user.identity.Role)

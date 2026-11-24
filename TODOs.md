@@ -60,6 +60,8 @@
         1. P2: Delete a site's old records (truncate step 2) only while it is also over its size limit, as deleting does
            not help a site whose level comes from refusals or connectors
         1. P3: Record an event when a site's level changes, and sort the control sites list by abuse score
+        1. P3: Narrow a site's Events, Errors and Logs pages to one identity: the API takes `identity_id`, the pages
+           have no field for it, and Manage's **Its events** and **Its errors** still search by name
 
 ## Before Prod Deployment
 

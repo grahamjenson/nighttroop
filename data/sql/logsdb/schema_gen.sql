@@ -23,7 +23,10 @@ CREATE TABLE errors (
     attributes TEXT CHECK(length(attributes) <= 16384 AND json_valid(attributes)),
     request_id TEXT CHECK(length(request_id) <= 64),
     job_id TEXT CHECK(length(job_id) <= 32),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    identity_id INTEGER,
+    identity_name TEXT CHECK(length(identity_name) <= 64),
+    control_identity_id INTEGER
 ) STRICT;
 
 CREATE TABLE events (
@@ -34,7 +37,10 @@ CREATE TABLE events (
     started_at INTEGER NOT NULL,
     finished_at INTEGER CHECK(finished_at >= started_at),
     request_id TEXT CHECK(length(request_id) <= 64),
-    job_id TEXT CHECK(length(job_id) <= 32)
+    job_id TEXT CHECK(length(job_id) <= 32),
+    identity_id INTEGER,
+    identity_name TEXT CHECK(length(identity_name) <= 64),
+    control_identity_id INTEGER
 ) STRICT;
 
 CREATE TABLE logs (
@@ -45,6 +51,9 @@ CREATE TABLE logs (
     attributes TEXT CHECK(length(attributes) <= 262144 AND json_valid(attributes)),
     request_id TEXT CHECK(length(request_id) <= 64),
     job_id TEXT CHECK(length(job_id) <= 32),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    identity_id INTEGER,
+    identity_name TEXT CHECK(length(identity_name) <= 64),
+    control_identity_id INTEGER
 ) STRICT;
 

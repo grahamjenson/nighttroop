@@ -60,6 +60,9 @@ common:
     used: "{{.Percent}}% of its limit used"
     measured_by: "It is measured in the background, so check back soon."
   log_view:
+    identity: "Identity"
+    identity_id: "Identity ID"
+    control_identity_id: "Control admin ID"
     event: "Event"
     started: "Started"
     duration: "Duration"

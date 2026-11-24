@@ -75,6 +75,20 @@ SCREENSHOT event_request
 CLICK #site--event--details--close
 ASSERT_NOT_VISIBLE #site--event--details
 
+// An event shows the identity whose request it was for: the admin's sign in
+INPUT #site--events--filter--type signed_in
+CLICK #site--events--filter--submit
+ASSERT_NOT_VISIBLE #siteEventsTable >> text=Site created
+CLICK #siteEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--event--identity-id
+ASSERT_VISIBLE #site--event--details dd >> text=admin >> nth=0
+SCREENSHOT event_identity
+CLICK #site--event--details--close
+ASSERT_NOT_VISIBLE #site--event--details
+INPUT #site--events--filter--type site_created
+CLICK #site--events--filter--submit
+ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
+
 // Events can be searched too, ignoring case, keeping the type chosen
 INPUT #site--events--filter--search CREATED
 CLICK #site--events--filter--submit

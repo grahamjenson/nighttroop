@@ -30,5 +30,7 @@ func QueryValuesToQuery(source QueryValues) Query {
 	apiqueryQuery.SiteID = GetID(source.SiteID)
 	apiqueryQuery.RequestID = GetID(source.RequestID)
 	apiqueryQuery.JobID = GetID(source.JobID)
+	apiqueryQuery.IdentityID = GetInt64ID(source.IdentityID)
+	apiqueryQuery.ControlIdentityID = GetInt64ID(source.ControlIdentityID)
 	return apiqueryQuery
 }

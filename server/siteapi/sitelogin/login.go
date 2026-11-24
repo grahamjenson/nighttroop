@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+
 	"net/http"
+	"nighttroop.t1d.nz/utils/aslog"
 	"strings"
 	"time"
 
@@ -348,6 +350,8 @@ func recordSignIn(r *http.Request, identity *controldb.SiteIdentity) {
 		siteContext.ControlDB.Logs.SignInFailedEvent(r.Context(), siteContext.SiteID, from)
 		return
 	}
+	// The sign in is the identity's own event, though the request had no identity
+	aslog.AddAttrs(r.Context(), slog.Int64("identity_id", identity.ID), slog.String("identity_name", identity.Name))
 	siteContext.ControlDB.Logs.SignedInEvent(r.Context(), siteContext.SiteID, identity.Name, from)
 }
 

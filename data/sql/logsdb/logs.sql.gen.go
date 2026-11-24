@@ -11,7 +11,7 @@ import (
 )
 
 const getError = `-- name: GetError :one
-SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors WHERE id = ?1
+SELECT id, site_id, message, attributes, request_id, job_id, created_at, identity_id, identity_name, control_identity_id FROM errors WHERE id = ?1
 `
 
 type GetErrorParams struct {
@@ -29,12 +29,15 @@ func (q *Queries) GetError(ctx context.Context, arg GetErrorParams) (*Error, err
 		&i.RequestID,
 		&i.JobID,
 		&i.CreatedAt,
+		&i.IdentityID,
+		&i.IdentityName,
+		&i.ControlIdentityID,
 	)
 	return &i, err
 }
 
 const getEvent = `-- name: GetEvent :one
-SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events WHERE id = ?1
+SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id, identity_id, identity_name, control_identity_id FROM events WHERE id = ?1
 `
 
 type GetEventParams struct {
@@ -53,12 +56,15 @@ func (q *Queries) GetEvent(ctx context.Context, arg GetEventParams) (*Event, err
 		&i.FinishedAt,
 		&i.RequestID,
 		&i.JobID,
+		&i.IdentityID,
+		&i.IdentityName,
+		&i.ControlIdentityID,
 	)
 	return &i, err
 }
 
 const getLog = `-- name: GetLog :one
-SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs WHERE id = ?1
+SELECT id, site_id, level, message, attributes, request_id, job_id, created_at, identity_id, identity_name, control_identity_id FROM logs WHERE id = ?1
 `
 
 type GetLogParams struct {
@@ -77,12 +83,15 @@ func (q *Queries) GetLog(ctx context.Context, arg GetLogParams) (*Log, error) {
 		&i.RequestID,
 		&i.JobID,
 		&i.CreatedAt,
+		&i.IdentityID,
+		&i.IdentityName,
+		&i.ControlIdentityID,
 	)
 	return &i, err
 }
 
 const getSiteError = `-- name: GetSiteError :one
-SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors WHERE id = ?1 AND site_id = ?2
+SELECT id, site_id, message, attributes, request_id, job_id, created_at, identity_id, identity_name, control_identity_id FROM errors WHERE id = ?1 AND site_id = ?2
 `
 
 type GetSiteErrorParams struct {
@@ -101,12 +110,15 @@ func (q *Queries) GetSiteError(ctx context.Context, arg GetSiteErrorParams) (*Er
 		&i.RequestID,
 		&i.JobID,
 		&i.CreatedAt,
+		&i.IdentityID,
+		&i.IdentityName,
+		&i.ControlIdentityID,
 	)
 	return &i, err
 }
 
 const getSiteEvent = `-- name: GetSiteEvent :one
-SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events
+SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id, identity_id, identity_name, control_identity_id FROM events
 WHERE id = ?1 AND site_id = ?2
 `
 
@@ -127,12 +139,15 @@ func (q *Queries) GetSiteEvent(ctx context.Context, arg GetSiteEventParams) (*Ev
 		&i.FinishedAt,
 		&i.RequestID,
 		&i.JobID,
+		&i.IdentityID,
+		&i.IdentityName,
+		&i.ControlIdentityID,
 	)
 	return &i, err
 }
 
 const getSiteLog = `-- name: GetSiteLog :one
-SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs WHERE id = ?1 AND site_id = ?2
+SELECT id, site_id, level, message, attributes, request_id, job_id, created_at, identity_id, identity_name, control_identity_id FROM logs WHERE id = ?1 AND site_id = ?2
 `
 
 type GetSiteLogParams struct {
@@ -152,20 +167,26 @@ func (q *Queries) GetSiteLog(ctx context.Context, arg GetSiteLogParams) (*Log, e
 		&i.RequestID,
 		&i.JobID,
 		&i.CreatedAt,
+		&i.IdentityID,
+		&i.IdentityName,
+		&i.ControlIdentityID,
 	)
 	return &i, err
 }
 
 const insertError = `-- name: InsertError :exec
-INSERT INTO errors (site_id, message, attributes, request_id, job_id) VALUES (?, ?, ?, ?, ?)
+INSERT INTO errors (site_id, message, attributes, request_id, job_id, identity_id, identity_name, control_identity_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type InsertErrorParams struct {
-	SiteID     *string
-	Message    string
-	Attributes *string
-	RequestID  *string
-	JobID      *string
+	SiteID            *string
+	Message           string
+	Attributes        *string
+	RequestID         *string
+	JobID             *string
+	IdentityID        *int64
+	IdentityName      *string
+	ControlIdentityID *int64
 }
 
 func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error {
@@ -175,22 +196,28 @@ func (q *Queries) InsertError(ctx context.Context, arg InsertErrorParams) error 
 		arg.Attributes,
 		arg.RequestID,
 		arg.JobID,
+		arg.IdentityID,
+		arg.IdentityName,
+		arg.ControlIdentityID,
 	)
 	return err
 }
 
 const insertEvent = `-- name: InsertEvent :exec
-INSERT INTO events (site_id, name, attributes, started_at, finished_at, request_id, job_id) VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO events (site_id, name, attributes, started_at, finished_at, request_id, job_id, identity_id, identity_name, control_identity_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type InsertEventParams struct {
-	SiteID     *string
-	Name       string
-	Attributes *string
-	StartedAt  int64
-	FinishedAt *int64
-	RequestID  *string
-	JobID      *string
+	SiteID            *string
+	Name              string
+	Attributes        *string
+	StartedAt         int64
+	FinishedAt        *int64
+	RequestID         *string
+	JobID             *string
+	IdentityID        *int64
+	IdentityName      *string
+	ControlIdentityID *int64
 }
 
 func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error {
@@ -202,23 +229,29 @@ func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error 
 		arg.FinishedAt,
 		arg.RequestID,
 		arg.JobID,
+		arg.IdentityID,
+		arg.IdentityName,
+		arg.ControlIdentityID,
 	)
 	return err
 }
 
 const insertLog = `-- name: InsertLog :exec
 
-INSERT INTO logs (site_id, level, message, attributes, request_id, job_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO logs (site_id, level, message, attributes, request_id, job_id, created_at, identity_id, identity_name, control_identity_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type InsertLogParams struct {
-	SiteID     *string
-	Level      string
-	Message    string
-	Attributes *string
-	RequestID  *string
-	JobID      *string
-	CreatedAt  int64
+	SiteID            *string
+	Level             string
+	Message           string
+	Attributes        *string
+	RequestID         *string
+	JobID             *string
+	CreatedAt         int64
+	IdentityID        *int64
+	IdentityName      *string
+	ControlIdentityID *int64
 }
 
 // -----
@@ -233,12 +266,15 @@ func (q *Queries) InsertLog(ctx context.Context, arg InsertLogParams) error {
 		arg.RequestID,
 		arg.JobID,
 		arg.CreatedAt,
+		arg.IdentityID,
+		arg.IdentityName,
+		arg.ControlIdentityID,
 	)
 	return err
 }
 
 const recentConnectorErrors = `-- name: RecentConnectorErrors :many
-SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
+SELECT id, site_id, message, attributes, request_id, job_id, created_at, identity_id, identity_name, control_identity_id FROM errors
 WHERE site_id = CAST(?1 AS TEXT) AND json_extract(attributes, '$.kind') = 'connector' AND json_extract(attributes, '$.connector_type') = ?2
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER)
@@ -268,6 +304,9 @@ func (q *Queries) RecentConnectorErrors(ctx context.Context, arg RecentConnector
 			&i.RequestID,
 			&i.JobID,
 			&i.CreatedAt,
+			&i.IdentityID,
+			&i.IdentityName,
+			&i.ControlIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -283,7 +322,7 @@ func (q *Queries) RecentConnectorErrors(ctx context.Context, arg RecentConnector
 }
 
 const recentConnectorEvents = `-- name: RecentConnectorEvents :many
-SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events
+SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id, identity_id, identity_name, control_identity_id FROM events
 WHERE site_id = CAST(?1 AS TEXT) AND json_extract(attributes, '$.connector_type') = ?2
 ORDER BY id DESC
 LIMIT CAST(?3 AS INTEGER)
@@ -314,6 +353,9 @@ func (q *Queries) RecentConnectorEvents(ctx context.Context, arg RecentConnector
 			&i.FinishedAt,
 			&i.RequestID,
 			&i.JobID,
+			&i.IdentityID,
+			&i.IdentityName,
+			&i.ControlIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -329,24 +371,28 @@ func (q *Queries) RecentConnectorEvents(ctx context.Context, arg RecentConnector
 }
 
 const searchErrors = `-- name: SearchErrors :many
-SELECT id, site_id, message, attributes, request_id, job_id, created_at FROM errors
+SELECT id, site_id, message, attributes, request_id, job_id, created_at, identity_id, identity_name, control_identity_id FROM errors
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR json_extract(attributes, '$.kind') = ?2)
 AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(message), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
 AND (CAST(?4 AS TEXT) IS NULL OR request_id = ?4)
 AND (CAST(?5 AS TEXT) IS NULL OR job_id = ?5)
+AND (CAST(?6 AS INTEGER) IS NULL OR identity_id = ?6)
+AND (CAST(?7 AS INTEGER) IS NULL OR control_identity_id = ?7)
 ORDER BY id DESC
-LIMIT CAST(?7 AS INTEGER) OFFSET CAST(?6 AS INTEGER)
+LIMIT CAST(?9 AS INTEGER) OFFSET CAST(?8 AS INTEGER)
 `
 
 type SearchErrorsParams struct {
-	SiteID    *string
-	Type      *string
-	Search    *string
-	RequestID *string
-	JobID     *string
-	Skip      int64
-	Limit     int64
+	SiteID            *string
+	Type              *string
+	Search            *string
+	RequestID         *string
+	JobID             *string
+	IdentityID        *int64
+	ControlIdentityID *int64
+	Skip              int64
+	Limit             int64
 }
 
 // Newest first, filtered as SearchLogs is, and only those of the kind Type when it is set
@@ -357,6 +403,8 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 		arg.Search,
 		arg.RequestID,
 		arg.JobID,
+		arg.IdentityID,
+		arg.ControlIdentityID,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -375,6 +423,9 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 			&i.RequestID,
 			&i.JobID,
 			&i.CreatedAt,
+			&i.IdentityID,
+			&i.IdentityName,
+			&i.ControlIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -390,24 +441,28 @@ func (q *Queries) SearchErrors(ctx context.Context, arg SearchErrorsParams) ([]*
 }
 
 const searchEvents = `-- name: SearchEvents :many
-SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id FROM events
+SELECT id, site_id, name, attributes, started_at, finished_at, request_id, job_id, identity_id, identity_name, control_identity_id FROM events
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR name = ?2)
 AND (CAST(?3 AS TEXT) IS NULL OR instr(lower(name), lower(?3)) > 0 OR instr(lower(attributes), lower(?3)) > 0)
 AND (CAST(?4 AS TEXT) IS NULL OR request_id = ?4)
 AND (CAST(?5 AS TEXT) IS NULL OR job_id = ?5)
+AND (CAST(?6 AS INTEGER) IS NULL OR identity_id = ?6)
+AND (CAST(?7 AS INTEGER) IS NULL OR control_identity_id = ?7)
 ORDER BY id DESC
-LIMIT CAST(?7 AS INTEGER) OFFSET CAST(?6 AS INTEGER)
+LIMIT CAST(?9 AS INTEGER) OFFSET CAST(?8 AS INTEGER)
 `
 
 type SearchEventsParams struct {
-	SiteID    *string
-	Type      *string
-	Search    *string
-	RequestID *string
-	JobID     *string
-	Skip      int64
-	Limit     int64
+	SiteID            *string
+	Type              *string
+	Search            *string
+	RequestID         *string
+	JobID             *string
+	IdentityID        *int64
+	ControlIdentityID *int64
+	Skip              int64
+	Limit             int64
 }
 
 // Newest first, filtered as SearchLogs is, and only those named Type when it is set
@@ -418,6 +473,8 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 		arg.Search,
 		arg.RequestID,
 		arg.JobID,
+		arg.IdentityID,
+		arg.ControlIdentityID,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -437,6 +494,9 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 			&i.FinishedAt,
 			&i.RequestID,
 			&i.JobID,
+			&i.IdentityID,
+			&i.IdentityName,
+			&i.ControlIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -453,28 +513,33 @@ func (q *Queries) SearchEvents(ctx context.Context, arg SearchEventsParams) ([]*
 
 const searchLogs = `-- name: SearchLogs :many
 
-SELECT id, site_id, level, message, attributes, request_id, job_id, created_at FROM logs
+SELECT id, site_id, level, message, attributes, request_id, job_id, created_at, identity_id, identity_name, control_identity_id FROM logs
 WHERE (CAST(?1 AS TEXT) IS NULL OR site_id = ?1)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(message), lower(?2)) > 0 OR instr(lower(attributes), lower(?2)) > 0)
 AND (CAST(?3 AS TEXT) IS NULL OR request_id = ?3)
 AND (CAST(?4 AS TEXT) IS NULL OR job_id = ?4)
+AND (CAST(?5 AS INTEGER) IS NULL OR identity_id = ?5)
+AND (CAST(?6 AS INTEGER) IS NULL OR control_identity_id = ?6)
 ORDER BY id DESC
-LIMIT CAST(?6 AS INTEGER) OFFSET CAST(?5 AS INTEGER)
+LIMIT CAST(?8 AS INTEGER) OFFSET CAST(?7 AS INTEGER)
 `
 
 type SearchLogsParams struct {
-	SiteID    *string
-	Search    *string
-	RequestID *string
-	JobID     *string
-	Skip      int64
-	Limit     int64
+	SiteID            *string
+	Search            *string
+	RequestID         *string
+	JobID             *string
+	IdentityID        *int64
+	ControlIdentityID *int64
+	Skip              int64
+	Limit             int64
 }
 
 // -----
 // READ
 // ------
-// Newest first, only the site's, request's and job's when SiteID, RequestID and JobID are set, and only those with
+// Newest first, only the site's, request's, job's, identity's and control admin's when SiteID, RequestID, JobID,
+// IdentityID and ControlIdentityID are set, and only those with
 // Search in their text when it is set
 func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log, error) {
 	rows, err := q.query(ctx, q.searchLogsStmt, searchLogs,
@@ -482,6 +547,8 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 		arg.Search,
 		arg.RequestID,
 		arg.JobID,
+		arg.IdentityID,
+		arg.ControlIdentityID,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -501,6 +568,9 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 			&i.RequestID,
 			&i.JobID,
 			&i.CreatedAt,
+			&i.IdentityID,
+			&i.IdentityName,
+			&i.ControlIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -516,23 +586,25 @@ func (q *Queries) SearchLogs(ctx context.Context, arg SearchLogsParams) ([]*Log,
 }
 
 const searchSiteErrors = `-- name: SearchSiteErrors :many
-SELECT own.id, own.site_id, own.message, own.attributes, own.request_id, own.job_id, own.created_at FROM errors own
+SELECT own.id, own.site_id, own.message, own.attributes, own.request_id, own.job_id, own.created_at, own.identity_id, own.identity_name, own.control_identity_id FROM errors own
 WHERE own.site_id = CAST(?1 AS TEXT)
-AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL AND CAST(?3 AS TEXT) IS NULL THEN 0
+AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL AND CAST(?3 AS TEXT) IS NULL AND CAST(?4 AS INTEGER) IS NULL THEN 0
   ELSE COALESCE((SELECT newest.id FROM errors newest WHERE newest.site_id = CAST(?1 AS TEXT) ORDER BY newest.id DESC
   LIMIT 1 OFFSET 9999), 0) END
 AND (CAST(?3 AS TEXT) IS NULL OR json_extract(own.attributes, '$.kind') = ?3)
+AND (CAST(?4 AS INTEGER) IS NULL OR own.identity_id = ?4)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.message), lower(?2)) > 0 OR instr(lower(own.attributes), lower(?2)) > 0)
 ORDER BY own.id DESC
-LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
+LIMIT CAST(?6 AS INTEGER) OFFSET CAST(?5 AS INTEGER)
 `
 
 type SearchSiteErrorsParams struct {
-	SiteID string
-	Search *string
-	Type   *string
-	Skip   int64
-	Limit  int64
+	SiteID     string
+	Search     *string
+	Type       *string
+	IdentityID *int64
+	Skip       int64
+	Limit      int64
 }
 
 // Newest first, only those of the kind Type when it is set, and only those with Search in their text when it is set
@@ -541,6 +613,7 @@ func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsPara
 		arg.SiteID,
 		arg.Search,
 		arg.Type,
+		arg.IdentityID,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -559,6 +632,9 @@ func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsPara
 			&i.RequestID,
 			&i.JobID,
 			&i.CreatedAt,
+			&i.IdentityID,
+			&i.IdentityName,
+			&i.ControlIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -574,23 +650,25 @@ func (q *Queries) SearchSiteErrors(ctx context.Context, arg SearchSiteErrorsPara
 }
 
 const searchSiteEvents = `-- name: SearchSiteEvents :many
-SELECT own.id, own.site_id, own.name, own.attributes, own.started_at, own.finished_at, own.request_id, own.job_id FROM events own
+SELECT own.id, own.site_id, own.name, own.attributes, own.started_at, own.finished_at, own.request_id, own.job_id, own.identity_id, own.identity_name, own.control_identity_id FROM events own
 WHERE own.site_id = CAST(?1 AS TEXT)
-AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
+AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL AND CAST(?3 AS INTEGER) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM events newest
   WHERE newest.site_id = CAST(?1 AS TEXT) ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
-AND (CAST(?3 AS TEXT) IS NULL OR own.name = ?3)
+AND (CAST(?4 AS TEXT) IS NULL OR own.name = ?4)
+AND (CAST(?3 AS INTEGER) IS NULL OR own.identity_id = ?3)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.name), lower(?2)) > 0
   OR instr(lower(own.attributes), lower(?2)) > 0)
 ORDER BY own.id DESC
-LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
+LIMIT CAST(?6 AS INTEGER) OFFSET CAST(?5 AS INTEGER)
 `
 
 type SearchSiteEventsParams struct {
-	SiteID string
-	Search *string
-	Type   *string
-	Skip   int64
-	Limit  int64
+	SiteID     string
+	Search     *string
+	IdentityID *int64
+	Type       *string
+	Skip       int64
+	Limit      int64
 }
 
 // Newest first, the site's own events, which is all a site may see, only those named Type when it is set
@@ -598,6 +676,7 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 	rows, err := q.query(ctx, q.searchSiteEventsStmt, searchSiteEvents,
 		arg.SiteID,
 		arg.Search,
+		arg.IdentityID,
 		arg.Type,
 		arg.Skip,
 		arg.Limit,
@@ -618,6 +697,9 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 			&i.FinishedAt,
 			&i.RequestID,
 			&i.JobID,
+			&i.IdentityID,
+			&i.IdentityName,
+			&i.ControlIdentityID,
 		); err != nil {
 			return nil, err
 		}
@@ -634,26 +716,28 @@ func (q *Queries) SearchSiteEvents(ctx context.Context, arg SearchSiteEventsPara
 
 const searchSiteLogs = `-- name: SearchSiteLogs :many
 
-SELECT own.id, own.site_id, own.level, own.message, own.attributes, own.request_id, own.job_id, own.created_at FROM logs own
+SELECT own.id, own.site_id, own.level, own.message, own.attributes, own.request_id, own.job_id, own.created_at, own.identity_id, own.identity_name, own.control_identity_id FROM logs own
 WHERE own.site_id = CAST(?1 AS TEXT)
-AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM logs newest
+AND own.id >= CASE WHEN CAST(?2 AS TEXT) IS NULL AND CAST(?3 AS INTEGER) IS NULL THEN 0 ELSE COALESCE((SELECT newest.id FROM logs newest
   WHERE newest.site_id = CAST(?1 AS TEXT) ORDER BY newest.id DESC LIMIT 1 OFFSET 9999), 0) END
+AND (CAST(?3 AS INTEGER) IS NULL OR own.identity_id = ?3)
 AND (CAST(?2 AS TEXT) IS NULL OR instr(lower(own.message), lower(?2)) > 0 OR instr(lower(own.attributes), lower(?2)) > 0)
 ORDER BY own.id DESC
-LIMIT CAST(?4 AS INTEGER) OFFSET CAST(?3 AS INTEGER)
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type SearchSiteLogsParams struct {
-	SiteID string
-	Search *string
-	Skip   int64
-	Limit  int64
+	SiteID     string
+	Search     *string
+	IdentityID *int64
+	Skip       int64
+	Limit      int64
 }
 
 // The site's own rows, for its logs pages. SearchLogs and SearchErrors with SiteID set match the same rows, but
 // their optional SiteID keeps SQLite from using the (site_id, id) index, so they walk every site's rows.
 //
-// A search, or a filter that reads the attributes, looks through only the site's newest 10,000 rows: from the id of
+// A search, or a filter that reads the attributes or is by identity, looks through only the site's newest 10,000 rows: from the id of
 // its 10,000th newest, or every row when it has fewer. A site can fill a table with its own rows, as every request
 // logs one, and reading all of them would take a site's admin most of a second of CPU per search. Without a search
 // the (site_id, id) index pages through every row cheaply.
@@ -662,6 +746,7 @@ func (q *Queries) SearchSiteLogs(ctx context.Context, arg SearchSiteLogsParams) 
 	rows, err := q.query(ctx, q.searchSiteLogsStmt, searchSiteLogs,
 		arg.SiteID,
 		arg.Search,
+		arg.IdentityID,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -681,6 +766,9 @@ func (q *Queries) SearchSiteLogs(ctx context.Context, arg SearchSiteLogsParams) 
 			&i.RequestID,
 			&i.JobID,
 			&i.CreatedAt,
+			&i.IdentityID,
+			&i.IdentityName,
+			&i.ControlIdentityID,
 		); err != nil {
 			return nil, err
 		}

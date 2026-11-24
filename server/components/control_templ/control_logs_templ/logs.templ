@@ -37,19 +37,19 @@ func orServer(ctx context.Context, siteID *string) string {
 
 func eventRow(ctx context.Context) func(*controlmodels.Event) logview.Row {
 	return func(e *controlmodels.Event) logview.Row {
-		return logview.Row{ID: e.ID, Name: e.Name, About: orServer(ctx, e.SiteID), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+		return logview.Row{ID: e.ID, Name: e.Name, About: orServer(ctx, e.SiteID), At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, IdentityID: e.IdentityID, IdentityName: e.IdentityName, ControlIdentityID: e.ControlIdentityID, Attributes: e.Attributes}
 	}
 }
 
 func errorRow(ctx context.Context) func(*controlmodels.Error) logview.Row {
 	return func(e *controlmodels.Error) logview.Row {
-		return logview.Row{ID: e.ID, Message: e.Message, About: orServer(ctx, e.SiteID), At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+		return logview.Row{ID: e.ID, Message: e.Message, About: orServer(ctx, e.SiteID), At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, IdentityID: e.IdentityID, IdentityName: e.IdentityName, ControlIdentityID: e.ControlIdentityID, Attributes: e.Attributes}
 	}
 }
 
 func logRow(ctx context.Context) func(*controlmodels.Log) logview.Row {
 	return func(l *controlmodels.Log) logview.Row {
-		return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, About: orServer(ctx, l.SiteID), At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
+		return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, About: orServer(ctx, l.SiteID), At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, IdentityID: l.IdentityID, IdentityName: l.IdentityName, ControlIdentityID: l.ControlIdentityID, Attributes: l.Attributes}
 	}
 }
 
@@ -73,6 +73,8 @@ func ids(ctx context.Context, q *apiquery.Query) []filter.ID {
 		{Name: "site_id", Label: i18n.T(ctx, "control.logs.site_id"), Value: q.SiteID},
 		{Name: "request_id", Label: i18n.T(ctx, "control.logs.request_id"), Value: q.RequestID},
 		{Name: "job_id", Label: i18n.T(ctx, "control.logs.job_id"), Value: q.JobID},
+		{Name: "identity_id", Label: i18n.T(ctx, "common.log_view.identity_id"), Value: logview.IDText(q.IdentityID)},
+		{Name: "control_identity_id", Label: i18n.T(ctx, "common.log_view.control_identity_id"), Value: logview.IDText(q.ControlIdentityID)},
 	}
 }
 
