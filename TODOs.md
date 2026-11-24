@@ -21,6 +21,9 @@
        is one of those settings, so that failure is only printed
 1. e2e bakup_key testing. Control
 1. Performance testing (cost estimate for running full node)
+    1. P3: The summary's today so far reads every insulin dose of the week before it, to count those whose extended
+       part still runs: about 700 SMBs for a loop, a third of the time to read the summary (`BenchmarkSummary` in
+       `sitedata`). Read only the doses with an extended part from before the day (`buildSummaryDaily`)
 
 1. Accounts
     1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
