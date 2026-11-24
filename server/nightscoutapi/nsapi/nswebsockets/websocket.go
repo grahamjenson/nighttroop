@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -163,6 +164,8 @@ func (ws *Websocket) engineConfig() engineio.Config {
 		// One IP may hold only a few of the site's sessions until they are given access, leaving the rest to its followers
 		ClientKey:       func(r *http.Request) string { return config.IPKey(httputils.GetSiteContext(r.Context()).IPAddress) },
 		MaxUnauthorized: ws.config.SocketMaxUnauthPerIP,
+		// One identity may hold only half of the site's sessions, leaving the rest to its other identities
+		MaxPerHolder: max(1, ws.config.SocketMaxSessionsPerSite/2),
 	}
 }
 
@@ -278,6 +281,13 @@ func (ws *Websocket) identity(socket *socketio.Socket, token, secret string) (co
 		return ctx, nil
 	}
 	httputils.RecordAuthClient(r, identity)
+	// One identity, as a read only one whose token is out, may hold only its share of the site's sessions, so the site's
+	// other identities can still connect: a socket past it is disconnected unanswered, which refuses it
+	if !socket.Hold(strconv.FormatInt(identity.ID, 10)) {
+		aslog.Refuse(ctx, http.StatusTooManyRequests, "", "Websocket identity holds too many sessions")
+		socket.Disconnect()
+		return ctx, nil
+	}
 	ws.watchIdentity(socket, identity)
 	return httputils.SetIdentityModelInSiteContext(ctx, identity), nsIdentity
 }

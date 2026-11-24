@@ -39,6 +39,9 @@ type Config struct {
 	// are not yet authorized (see Session.Authorize), MaxSessions by default, so it cannot take every session.
 	ClientKey       func(*http.Request) string
 	MaxUnauthorized int
+	// MaxPerHolder is how many sessions one holder, as the identity they are authorized as (see Session.Hold), may have
+	// open, MaxSessions by default, so it cannot take every session.
+	MaxPerHolder int
 }
 
 func (c Config) withDefaults() Config {
@@ -56,6 +59,9 @@ func (c Config) withDefaults() Config {
 	}
 	if c.MaxUnauthorized <= 0 {
 		c.MaxUnauthorized = c.MaxSessions
+	}
+	if c.MaxPerHolder <= 0 {
+		c.MaxPerHolder = c.MaxSessions
 	}
 	if c.MaxBuffered <= 0 {
 		c.MaxBuffered = 1_000
@@ -304,6 +310,7 @@ type Session struct {
 	client  string // the Config's ClientKey of the handshake
 	// authorized is set once the session is authorized, so it no longer counts against its client
 	authorized atomic.Bool
+	holder     string // who holds the session (see Hold), under the server's mu
 
 	limiter  *rate.Limiter // paces the client's packets
 	handling sync.Mutex    // handles one packet at a time, even from a POST in flight as the session upgrades
@@ -354,6 +361,24 @@ func (s *Session) Request() *http.Request { return s.request }
 
 // Authorize marks the session as given access, so it no longer counts against its client's Config.MaxUnauthorized
 func (s *Session) Authorize() { s.authorized.Store(true) }
+
+// Hold makes holder, as the identity the session is authorized as, the one who holds it. It is false, and the session
+// is held as it was, when holder holds Config.MaxPerHolder other sessions already.
+func (s *Session) Hold(holder string) bool {
+	s.server.mu.Lock()
+	defer s.server.mu.Unlock()
+	held := 0
+	for _, session := range s.server.sessions {
+		if session != s && session.holder == holder {
+			held++
+		}
+	}
+	if held >= s.server.config.MaxPerHolder {
+		return false
+	}
+	s.holder = holder
+	return true
+}
 
 // OnMessage sets the handler for the client's messages; it runs in order, one at a time, so must not block
 func (s *Session) OnMessage(handler func(data string)) {

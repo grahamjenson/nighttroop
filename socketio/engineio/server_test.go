@@ -304,6 +304,35 @@ func TestMaxSessions(t *testing.T) {
 	}
 }
 
+// A holder, as an identity, holds at most MaxPerHolder of the server's sessions, so it cannot take every one
+func TestMaxPerHolder(t *testing.T) {
+	opened := make(chan *Session, 4)
+	server := NewServer(Config{MaxPerHolder: 2}, func(s *Session) { opened <- s })
+	ts := httptest.NewServer(server)
+	t.Cleanup(func() {
+		server.Close()
+		ts.Close()
+	})
+	var sessions []*Session
+	for range 4 {
+		handshake(t, ts.URL, "4")
+		sessions = append(sessions, <-opened)
+	}
+	require.True(t, sessions[0].Hold("reader"))
+	require.True(t, sessions[1].Hold("reader"))
+	require.False(t, sessions[2].Hold("reader"), "a third session is refused")
+	require.True(t, sessions[0].Hold("reader"), "a session its holder holds already is not counted again")
+	require.True(t, sessions[2].Hold("phone"), "another holder has its own sessions")
+	require.False(t, sessions[3].Hold("reader"))
+
+	// A session that closes, or passes to another holder, leaves its place to its holder's next
+	sessions[0].Close("test")
+	require.True(t, sessions[3].Hold("reader"))
+	require.True(t, sessions[1].Hold("phone"))
+	require.False(t, sessions[3].Hold("phone"), "a refused session is held as it was")
+	require.True(t, sessions[2].Hold("reader"))
+}
+
 // A client that does not poll is closed once the messages waiting for it are too many, or hold too many bytes
 func TestSlowClientIsClosedWhenItsBufferFills(t *testing.T) {
 	tests := []struct {

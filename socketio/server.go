@@ -170,6 +170,9 @@ func (s *Socket) Request() *http.Request { return s.conn.session.Request() }
 // Authorize marks the socket's session as given access, so it no longer counts against its client's unauthorized ones
 func (s *Socket) Authorize() { s.conn.session.Authorize() }
 
+// Hold makes holder the one who holds the socket's session, or is false when holder holds its most sessions already
+func (s *Socket) Hold(holder string) bool { return s.conn.session.Hold(holder) }
+
 // On sets the handler for an event from the client; handlers run in order, one at a time
 func (s *Socket) On(event string, handler EventHandler) {
 	s.mu.Lock()
