@@ -80,7 +80,7 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 		"UrlOrUsernameEnc":           {Column: "url_or_username_enc", MaxLength: 256},
 		"PasswordEnc":                {Column: "password_enc", MaxLength: 256},
 		"UrlHostMac":                 {Column: "url_host_mac", MaxLength: 128},
-		"Region":                     {Column: "region"},
+		"Region":                     {Column: "region", MaxLength: 16},
 		"CreatedAt":                  {Column: "created_at", Required: true},
 		"UpdatedAt":                  {Column: "updated_at", Required: true},
 		"Enabled":                    {Column: "enabled"},

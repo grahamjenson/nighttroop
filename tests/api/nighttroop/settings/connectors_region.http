@@ -1,0 +1,35 @@
+INCLUDE steps/new_site_admin.steps
+
+// A region is checked for its connector type in code, as the column takes any text: Dexcom is US or OUS
+NAME create_dexcom_sync_unknown_region
+POST http://{{ site }}/settings/connectors/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "valid-dexcom-user", "password": "dex-pass", "region": "EU", "enabled": true}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "Region 'EU' is not a known region" "@message"
+
+// A Nightscout connector has no region
+NAME create_nightscout_sync_with_region
+POST http://{{ site }}/settings/connectors/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "https://example.com", "password": "token-1234567890", "region": "US", "enabled": true}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "is not a known region" "@message"
+
+NAME create_dexcom_sync_outside_us
+POST http://{{ site }}/settings/connectors/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "valid-dexcom-user", "password": "dex-pass", "region": "OUS", "enabled": true}
+ASSERT_STATUS 200
+ASSERT_EQUALS "OUS" "@result.region"
+
+NAME update_dexcom_sync_unknown_region
+POST http://{{ site }}/settings/connectors/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"region": "GLOBAL"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "is not a known region" "@message"

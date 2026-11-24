@@ -106,7 +106,7 @@ CREATE TABLE site_connectors (
     url_host_mac TEXT CHECK(length(url_host_mac) <= 128), -- a MAC of a Nightscout URL's host, to find many sites syncing from one
 
     -- Specific Info
-    region TEXT CHECK(region IN ('US', 'OUS', 'GLOBAL', 'AE', 'AP', 'AU', 'CA', 'DE', 'EU', 'EU2', 'FR', 'JP', 'LA')), -- dexcom US or OUS, or a libre region in consts.LibreRegions
+    region TEXT CHECK(length(region) <= 16), -- dexcom US or OUS, or a libre region in consts.LibreRegions: checked in code, as the list grows
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

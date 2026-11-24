@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -88,9 +89,9 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 		if params.Region == nil || *params.Region == "" {
 			params.Region = new(consts.LibreRegionGlobal)
 		}
-		if err := libreRegionValidate(params.Region); err != nil {
-			return nil, err
-		}
+	}
+	if err := regionValidate(params.Type, params.Region); err != nil {
+		return nil, err
 	}
 
 	if params.PasswordEnc == nil || *params.PasswordEnc == "" {
@@ -149,10 +150,8 @@ func (s *ConnectorSettingsCollection) UpdateRow(ctx context.Context, collectionT
 		}
 	}
 
-	if params.Type == consts.ConnectorTypeLibre && params.Region != nil {
-		if err := libreRegionValidate(params.Region); err != nil {
-			return nil, err
-		}
+	if err := regionValidate(params.Type, params.Region); err != nil {
+		return nil, err
 	}
 
 	// A blank password, or the placeholder the form shows for the saved one, keeps the saved one
@@ -439,10 +438,21 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 	return new(normalizedUrl), nil
 }
 
-// libreRegionValidate refuses a region not in consts.LibreRegions, so a Libre connector only calls their hosts
-func libreRegionValidate(region *string) error {
-	if !consts.IsLibreRegion(*region) {
-		return apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_libre_region", i18n.Data{"Region": *region}))
+// regionValidate refuses a region its connector type does not have, as the column takes any text: a Libre connector
+// only calls the hosts of consts.LibreRegions, Dexcom is US or OUS, and the other types have no region
+func regionValidate(connectorType consts.ConnectorType, region *string) error {
+	if region == nil {
+		return nil
+	}
+	known := *region == ""
+	switch connectorType {
+	case consts.ConnectorTypeLibre:
+		known = consts.IsLibreRegion(*region)
+	case consts.ConnectorTypeDexcom:
+		known = known || slices.Contains(consts.DexcomRegions, *region)
+	}
+	if !known {
+		return apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_region", i18n.Data{"Region": *region}))
 	}
 	return nil
 }
