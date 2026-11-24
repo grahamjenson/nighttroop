@@ -570,11 +570,11 @@ CREATE TABLE profile_presets (
 -- sent it
 CREATE TABLE general_settings (
     key TEXT PRIMARY KEY CHECK(length(key) <= 128),
-    -- 'settings' is Nighttroop's own: the site's settings (key nighttroop_site) and each identity's
-    -- (nighttroop_identity_<id>), a JSON object of each setting that is set by its identifier. The Nightscout API
-    -- never reads or writes these rows.
-    type TEXT NOT NULL CHECK(type IN ('aaps', 'aaps_clientcontrol', 'settings')),
-    value_json TEXT NOT NULL CHECK(length(value_json) <= 262144 AND json_valid(value_json)),
+    -- The kind of document its key is, from the code's generalSettingType, or 'settings' for Nighttroop's own: the
+    -- site's settings (key nighttroop_site) and each identity's (nighttroop_identity_<id>), a JSON object of each
+    -- setting that is set by its identifier. The Nightscout API never reads or writes those rows.
+    type TEXT NOT NULL CHECK(length(type) <= 32),
+    value_json TEXT NOT NULL CHECK(length(value_json) <= 65536 AND json_valid(value_json)),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))

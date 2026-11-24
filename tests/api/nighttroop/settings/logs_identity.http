@@ -1,0 +1,114 @@
+INCLUDE steps/new_site_admin.steps
+
+// An event, error or log is tied to the identity whose request it was for, so a site's rows can be narrowed to one
+// identity's: here a phone sending a reading the site refuses
+NAME bad_entry
+POST http://{{ .ns_site }}/api/v1/entries?token={{ token }}
+B {"type": "sgv", "sgv": 5000, "date": {{ itime 0 }}}
+ASSERT_STATUS 400
+
+NAME errors
+GET http://{{ site }}/logs/errors
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "pwd_phone" "@result.items.0.identity_name"
+ASSERT_EXISTS "@result.items.0.identity_id"
+SET phone_id {{ dig "errors.result.items.0.identity_id" }}
+
+NAME errors_of_the_phone
+GET http://{{ site }}/logs/errors?identity_id={{ .phone_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+
+NAME errors_of_another_identity
+GET http://{{ site }}/logs/errors?identity_id=999999
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// The admin signing in is an event of the admin, and no event is the phone's
+NAME events
+GET http://{{ site }}/logs/events?type=signed_in
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "admin" "@result.items.0.identity_name"
+SET admin_id {{ dig "events.result.items.0.identity_id" }}
+
+NAME events_of_the_admin
+GET http://{{ site }}/logs/events?identity_id={{ .admin_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result.items"
+ASSERT_EQUALS "signed_in" "@result.items.0.name"
+
+NAME events_of_the_phone
+GET http://{{ site }}/logs/events?identity_id={{ .phone_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+// An ID that is not a number is no identity's, and a blank one, as a filter's form sends, is every identity's
+NAME not_an_identity_id
+GET http://{{ site }}/logs/events?identity_id=someone
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result.items"
+
+NAME blank_identity_id
+GET http://{{ site }}/logs/events?identity_id=
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result.items"
+
+// A control admin sees the identity of each row of every site, narrows to it, and to what a control admin did
+INCLUDE steps/control_login.steps
+
+NAME control_errors_of_the_phone
+GET http://control.localhost/errors?site_id={{ .create_new_site.site_subdomain }}&identity_id={{ .phone_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "pwd_phone" "@result.0.identity_name"
+
+NAME disable_site
+POST http://control.localhost/sites/{{ .create_new_site.site_subdomain }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"state": "disabled"}
+ASSERT_STATUS 200
+
+NAME control_events_of_the_site
+GET http://control.localhost/events?site_id={{ .create_new_site.site_subdomain }}&type=site_disabled
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EXISTS "@result.0.control_identity_id"
+ASSERT_EXISTS "@result.0.identity_name"
+SET control_id {{ dig "control_events_of_the_site.result.0.control_identity_id" }}
+
+NAME control_events_of_the_admin
+GET http://control.localhost/events?site_id={{ .create_new_site.site_subdomain }}&control_identity_id={{ .control_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS "site_disabled" "@result.0.name"
+
+NAME control_events_of_another_admin
+GET http://control.localhost/events?control_identity_id=999999
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"

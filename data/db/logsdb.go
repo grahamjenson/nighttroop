@@ -87,7 +87,8 @@ func (l *LogsDB) flush(buffer *aslog.Buffer) {
 	q := l.Queries.WithTx(tx)
 	for _, r := range records {
 		err = q.InsertLog(ctx, logsdb.InsertLogParams{SiteID: orNil(r.SiteID), Level: r.Level, Message: r.Message, Attributes: orNil(r.Attributes),
-			RequestID: orNil(r.RequestID), JobID: orNil(r.JobID), CreatedAt: r.Time.UnixMilli()})
+			RequestID: orNil(r.RequestID), JobID: orNil(r.JobID), CreatedAt: r.Time.UnixMilli(),
+			IdentityID: r.IdentityID, IdentityName: orNil(r.IdentityName), ControlIdentityID: r.ControlIdentityID})
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Cannot write logs to the logs db:", err)
 			return
@@ -114,9 +115,10 @@ func (l *LogsDB) Log(ctx context.Context, siteID *string, level LogLevel, messag
 	if len(attributes) > 0 {
 		attrs = attributes
 	}
-	requestID, jobID := aslog.IDs(ctx)
+	of := aslog.Of(ctx)
 	l.record("log", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(level), Message: truncate(message), Attributes: attributesJSON(attrs, maxAttributesLength),
-		RequestID: orNil(requestID), JobID: orNil(jobID), CreatedAt: time.Now().UnixMilli()}))
+		RequestID: orNil(of.RequestID), JobID: orNil(of.JobID),
+		IdentityID: of.IdentityID, IdentityName: orNil(of.IdentityName), ControlIdentityID: of.ControlIdentityID, CreatedAt: time.Now().UnixMilli()}))
 }
 
 // Capture records a request and its response, with their headers and bodies, as an info log with attributes of up
@@ -129,9 +131,10 @@ func (l *LogsDB) Capture(ctx context.Context, siteID *string, message string, at
 	if encoder.Encode(attributes) == nil && raw.Len() <= maxCaptureLength {
 		captured = strings.TrimSuffix(raw.String(), "\n")
 	}
-	requestID, jobID := aslog.IDs(ctx)
+	of := aslog.Of(ctx)
 	l.record("capture", l.Queries.InsertLog(ctx, logsdb.InsertLogParams{SiteID: siteID, Level: string(LogLevelInfo), Message: truncate(message),
-		Attributes: &captured, RequestID: orNil(requestID), JobID: orNil(jobID), CreatedAt: time.Now().UnixMilli()}))
+		Attributes: &captured, RequestID: orNil(of.RequestID), JobID: orNil(of.JobID),
+		IdentityID: of.IdentityID, IdentityName: orNil(of.IdentityName), ControlIdentityID: of.ControlIdentityID, CreatedAt: time.Now().UnixMilli()}))
 }
 
 // publish sends an event through the server's events, and keeps it in the events table when it is persisted
@@ -146,9 +149,10 @@ func (l *LogsDB) publish(ctx context.Context, event events.Event) {
 	if event.FinishedAt != nil {
 		finished = new(event.FinishedAt.UnixMilli())
 	}
-	requestID, jobID := aslog.IDs(ctx)
+	of := aslog.Of(ctx)
 	l.record("event", l.Queries.InsertEvent(ctx, logsdb.InsertEventParams{SiteID: orNil(event.SiteID), Name: string(event.Name), Attributes: attributesJSON(event.Attributes, maxAttributesLength), StartedAt: event.StartedAt.UnixMilli(), FinishedAt: finished,
-		RequestID: orNil(requestID), JobID: orNil(jobID)}))
+		RequestID: orNil(of.RequestID), JobID: orNil(of.JobID),
+		IdentityID: of.IdentityID, IdentityName: orNil(of.IdentityName), ControlIdentityID: of.ControlIdentityID}))
 }
 
 // event publishes an event about a site, or no one site when siteID is "", that happened now
@@ -172,9 +176,10 @@ func orNil(s string) *string {
 }
 
 func (l *LogsDB) error(ctx context.Context, siteID *string, err error, attributes any) {
-	requestID, jobID := aslog.IDs(ctx)
+	of := aslog.Of(ctx)
 	l.record("error", l.Queries.InsertError(ctx, logsdb.InsertErrorParams{SiteID: siteID, Message: truncate(err.Error()), Attributes: attributesJSON(attributes, maxErrorAttributesLength),
-		RequestID: orNil(requestID), JobID: orNil(jobID)}))
+		RequestID: orNil(of.RequestID), JobID: orNil(of.JobID),
+		IdentityID: of.IdentityID, IdentityName: orNil(of.IdentityName), ControlIdentityID: of.ControlIdentityID}))
 }
 
 // Trim deletes all but each table's newest maxRows rows

@@ -52,6 +52,9 @@ type Query struct {
 	SiteID    *string `json:"site_id,omitempty"`
 	RequestID *string `json:"request_id,omitempty"`
 	JobID     *string `json:"job_id,omitempty"`
+	// IdentityID and ControlIdentityID, when set, keep only the logs DB's rows of that site identity or control admin
+	IdentityID        *int64 `json:"identity_id,omitempty"`
+	ControlIdentityID *int64 `json:"control_identity_id,omitempty"`
 }
 
 // QueryValues are the query string values, before they are checked and mapped to a Query
@@ -66,6 +69,9 @@ type QueryValues struct {
 	SiteID    *string              `mapstructure:"site_id,omitempty" json:"site_id,omitempty"`
 	RequestID *string              `mapstructure:"request_id,omitempty" json:"request_id,omitempty"`
 	JobID     *string              `mapstructure:"job_id,omitempty" json:"job_id,omitempty"`
+
+	IdentityID        *string `mapstructure:"identity_id,omitempty" json:"identity_id,omitempty"`
+	ControlIdentityID *string `mapstructure:"control_identity_id,omitempty" json:"control_identity_id,omitempty"`
 
 	Before   *types.FlexibleInt64 `mapstructure:"before,omitempty" json:"before,omitempty"`
 	BeforeID *string              `mapstructure:"before_id,omitempty" json:"before_id,omitempty"`

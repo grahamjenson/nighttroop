@@ -8,6 +8,10 @@ type Log struct {
 	SiteID     *string         `json:"site_id"`
 	RequestID  *string         `json:"request_id"`
 	JobID      *string         `json:"job_id"`
+	// IdentityID is the site's identity it was for, ControlIdentityID the control admin, IdentityName whichever's name
+	IdentityID        *int64  `json:"identity_id"`
+	IdentityName      *string `json:"identity_name"`
+	ControlIdentityID *int64  `json:"control_identity_id"`
 	Level      string          `json:"level"`
 	Message    string          `json:"message"`
 	Attributes json.RawMessage `json:"attributes"`
@@ -20,6 +24,9 @@ type Event struct {
 	SiteID     *string         `json:"site_id"`
 	RequestID  *string         `json:"request_id"`
 	JobID      *string         `json:"job_id"`
+	IdentityID        *int64  `json:"identity_id"`
+	IdentityName      *string `json:"identity_name"`
+	ControlIdentityID *int64  `json:"control_identity_id"`
 	Name       string          `json:"name"`
 	Attributes json.RawMessage `json:"attributes"`
 	StartedAt  int64           `json:"started_at"`
@@ -32,6 +39,9 @@ type Error struct {
 	SiteID     *string         `json:"site_id"`
 	RequestID  *string         `json:"request_id"`
 	JobID      *string         `json:"job_id"`
+	IdentityID        *int64  `json:"identity_id"`
+	IdentityName      *string `json:"identity_name"`
+	ControlIdentityID *int64  `json:"control_identity_id"`
 	Message    string          `json:"message"`
 	Attributes json.RawMessage `json:"attributes"`
 	CreatedAt  int64           `json:"created_at"`

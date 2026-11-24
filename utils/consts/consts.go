@@ -110,6 +110,9 @@ const (
 	DexcomRegionOther DexcomRegion = "OTHER"
 )
 
+// DexcomRegions are the regions a Dexcom connector is saved with: its US host, or the one outside the US
+var DexcomRegions = []string{"US", "OUS"}
+
 func NewDexcomRegionFromString(s string) DexcomRegion {
 	switch s {
 	case "US":

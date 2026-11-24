@@ -302,8 +302,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - Events: every site's and the server's, newest first, with readable names, start time and duration. Filter by type,
   search ignores case.
-- Errors and logs have their own pages. Narrow all three to one site, request or job run by ID. Details link to
-  their request and job.
+- Errors and logs have their own pages. Narrow all three to one site, request, job run, site identity or control
+  admin by ID. Details link to their request, job, identity and control admin.
 - The logs table has fixed column widths. A long message is cut short, and shown whole on hover.
 - Each log's level is a coloured badge: grey for debug, blue for info, amber for warn, red for error.
 - On control, a button at the right of each log narrows the logs to its request, or else its job. The log's details
@@ -325,6 +325,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - At most 100 keys of a reason are counted apart; the rest are `other`, so a sweep of every subdomain cannot grow
     the server's memory.
 - Logs, events and errors keep their `request_id` or `job_id`.
+- Logs, events and errors keep the identity of their request: `identity_id` for an identity of the site,
+  `control_identity_id` for a control admin, and `identity_name` for its name. A row of a background job has none.
+  - A sign in is an event of the identity that signs in.
+  - The site API returns `identity_id` and `identity_name`. The control API returns `control_identity_id` too.
+  - `GET /logs/events`, `/logs/errors` and `/logs/logs` with `identity_id`: only the rows of that identity, from the
+    newest 10,000 rows of the site.
+  - The control `GET /events`, `/errors` and `/logs` take `identity_id` and `control_identity_id`.
+  - An ID that is not a number matches no row. A blank ID matches all rows.
+  - The details of an event, error or log show **Identity** (the name) and **Identity ID** or **Control admin ID**.
 - Logs waiting to be written are capped at 1 MB. Past that, they are dropped and the logs say how many.
 - Request logs and Sentry show `REDACTED` for the query's `token`, `secret` and Socket.IO `sid`.
 - The log of a request refused before its router (server busy, site unavailable, country not allowed) or of a
@@ -1150,6 +1159,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 Third party integrations, each syncing from one service: **Dexcom** and **LibreLinkUp** (each with its region),
 another **Nightscout** site, or the **virtual connector** (realistic test data).
 
+- A connector's region is checked when it is saved: Dexcom is `US` or `OUS`, LibreLinkUp is one of its known regions,
+  and the Nightscout and virtual connectors have none. Another region is refused (400) with the region sent.
+
 #### Connectors page help
 
 - The page says that a connector pulls glucose into Nighttroop from another service, and to add the one you use.
@@ -1612,8 +1624,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - All operations and `/storage` sockets work as for other documents. The settings' last modified is their last
     change.
 - Limits:
-  - Document over 256 KiB: refused.
-  - Document that takes the settings documents of the site over 2 MiB in total: refused.
+  - Document over 64 KiB: refused.
+  - Document that takes the settings documents of the site over 512 KiB in total: refused.
   - New document when the site has 100: refused.
   - Client control messages with no change for a week: deleted to make space.
   - Settings key: up to 128 characters, as its column (AAPS client control keys include the client UUID). Other

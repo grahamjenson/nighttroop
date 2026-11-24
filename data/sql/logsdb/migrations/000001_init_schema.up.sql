@@ -3,6 +3,8 @@
 -- Every slog log is kept in logs, written in batches. A log's attributes can be up to 256 KB, so a staging server
 -- capturing requests (CAPTURE_REQUESTS) keeps each one's headers and bodies in one log; every other log keeps its
 -- attributes within 4 KB, as the code limits them.
+-- Each row has who its request was for: the site's identity (identity_id) or the control admin (control_identity_id),
+-- and the name of whichever. A background job's rows have none.
 
 CREATE TABLE logs (
     id INTEGER PRIMARY KEY,
@@ -12,7 +14,10 @@ CREATE TABLE logs (
     attributes TEXT CHECK(length(attributes) <= 262144 AND json_valid(attributes)),
     request_id TEXT CHECK(length(request_id) <= 64),
     job_id TEXT CHECK(length(job_id) <= 32),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    identity_id INTEGER,
+    identity_name TEXT CHECK(length(identity_name) <= 64),
+    control_identity_id INTEGER
 ) STRICT;
 
 CREATE INDEX logs_site ON logs (site_id, id);
@@ -29,7 +34,10 @@ CREATE TABLE events (
     started_at INTEGER NOT NULL,
     finished_at INTEGER CHECK(finished_at >= started_at),
     request_id TEXT CHECK(length(request_id) <= 64),
-    job_id TEXT CHECK(length(job_id) <= 32)
+    job_id TEXT CHECK(length(job_id) <= 32),
+    identity_id INTEGER,
+    identity_name TEXT CHECK(length(identity_name) <= 64),
+    control_identity_id INTEGER
 ) STRICT;
 
 CREATE INDEX events_site ON events (site_id, id);
@@ -43,7 +51,10 @@ CREATE TABLE errors (
     attributes TEXT CHECK(length(attributes) <= 16384 AND json_valid(attributes)),
     request_id TEXT CHECK(length(request_id) <= 64),
     job_id TEXT CHECK(length(job_id) <= 32),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    identity_id INTEGER,
+    identity_name TEXT CHECK(length(identity_name) <= 64),
+    control_identity_id INTEGER
 ) STRICT;
 
 CREATE INDEX errors_site ON errors (site_id, id);
