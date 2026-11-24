@@ -81,18 +81,18 @@ func BenchmarkSettingsFromJSON(b *testing.B) {
 	}
 }
 
-// testdata/released.json has every setting a release has stored, with a value it accepted. A setting renamed or
+// released_settings.json has every setting a release has stored, with a value it accepted. A setting renamed or
 // removed, or a value no longer accepted, fails here, as a stored row with it would be left out and the person given
 // the default with no word. To change one on purpose, read the old name or value where FromJSON reads a row, then
 // change the file. A new setting is added to the file with its release.
 func TestEveryReleasedSettingIsStillRead(t *testing.T) {
-	released, err := os.ReadFile("testdata/released.json")
+	released, err := os.ReadFile("released_settings.json")
 	require.NoError(t, err)
 	read, err := FromJSON(released, nil, nil).JSON()
 	require.NoError(t, err)
 	assert.JSONEq(t, string(released), string(read), "a released setting is not read as it was stored")
 	for _, name := range allSettingNames {
-		assert.Contains(t, string(released), `"`+name+`"`, "add the new setting to testdata/released.json")
+		assert.Contains(t, string(released), `"`+name+`"`, "add the new setting to released_settings.json")
 	}
 }
 
