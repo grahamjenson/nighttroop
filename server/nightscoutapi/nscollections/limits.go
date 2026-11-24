@@ -41,6 +41,15 @@ var columnRequired = map[string]bool{
 	"treatments.profile_switches.original_timeshift_ms": true, "activity.activities.heart_rate": true,
 }
 
+// A profile's or a profile switch's schedule over its limit refuses it, as one kept without its basal rates, or its
+// targets, reads as a profile with none: its day would total no basal
+func init() {
+	for _, schedule := range []string{"basal_rates_json", "carb_ratios_json", "insulin_sensitivities_json", "targets_low_json", "targets_high_json"} {
+		columnRequired["profile.profile_presets."+schedule] = true
+		columnRequired["treatments.profile_switches."+schedule] = true
+	}
+}
+
 const (
 	// maxWrongTypes is the most fields of a document left out for their type before it is refused
 	maxWrongTypes = 16

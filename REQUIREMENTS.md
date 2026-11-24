@@ -1074,6 +1074,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     `insulin must be between -500 and 500 (was 8882.5)`, `sgv must be a number (was "high")`).
   - Not as their column: a treatment's `glucose` is left out. A treatment's `carbs`, a temp basal's `percent`, a
     profile switch's `timeshift` and an activity's heart rate are refused.
+  - A profile's or a profile switch's schedule (basal, carb ratio, sensitivity, low target, high target) can be 8,192
+    characters as stored. A schedule with 48 entries, one each half hour, is kept whole.
+  - A schedule over 8,192 characters: the profile or the profile switch is refused (400), with the schedule's name.
   - Text is kept whole, not cut to 64 characters. Only notes are cut, at 1024 characters.
 
 #### Add modal

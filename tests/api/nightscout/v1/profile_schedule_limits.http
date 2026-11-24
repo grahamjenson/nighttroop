@@ -1,0 +1,44 @@
+# A profile's schedules are kept whole. Loop and Trio let a basal schedule change each half hour, 48 times a day, which
+# is about 2,500 characters as Nightscout writes it. It was left out, with the rest of the profile kept, when a
+# schedule could be 2,048 characters. A schedule over the limit now, 8,192 characters, refuses the profile, as a profile
+# kept without its basal rates reads as one with none.
+
+INCLUDE steps/new_ns_site.steps
+
+NAME half_hourly_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 10 }}", "units": "mg/dL", "enteredBy": "Loop",
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC",
+        "basal": [{{ repeat "{\"time\": \"00:00\", \"timeAsSeconds\": 0, \"value\": 0.85}," 47 }}{"time": "23:30", "timeAsSeconds": 84600, "value": 0.9}],
+        "sens": [{{ repeat "{\"time\": \"00:00\", \"timeAsSeconds\": 0, \"value\": 40}," 47 }}{"time": "23:30", "timeAsSeconds": 84600, "value": 45}],
+        "carbratio": [{{ repeat "{\"time\": \"00:00\", \"timeAsSeconds\": 0, \"value\": 10}," 47 }}{"time": "23:30", "timeAsSeconds": 84600, "value": 12}],
+        "target_low": [{{ repeat "{\"time\": \"00:00\", \"timeAsSeconds\": 0, \"value\": 100}," 47 }}{"time": "23:30", "timeAsSeconds": 84600, "value": 105}],
+        "target_high": [{{ repeat "{\"time\": \"00:00\", \"timeAsSeconds\": 0, \"value\": 110}," 47 }}{"time": "23:30", "timeAsSeconds": 84600, "value": 115}]}}}
+ASSERT_STATUS 200
+ASSERT_LENGTH 48 "@0.store.Default.basal"
+
+NAME half_hourly_profile_back
+GET http://{{ site }}/api/v1/profile/current?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 48 "@store.Default.basal"
+ASSERT_EQUALS 0.9 "@store.Default.basal.47.value"
+ASSERT_LENGTH 48 "@store.Default.sens"
+ASSERT_LENGTH 48 "@store.Default.carbratio"
+ASSERT_LENGTH 48 "@store.Default.target_low"
+ASSERT_LENGTH 48 "@store.Default.target_high"
+
+# A schedule far longer than any pump's is refused, saying which, and the profile before it is still the current one
+NAME too_long_profile
+POST http://{{ site }}/api/v1/profile?token={{ token }}
+B {"defaultProfile": "Default", "startDate": "{{ time 5 }}", "units": "mg/dL", "enteredBy": "Loop",
+    "store": {"Default": {"dia": 6, "units": "mg/dL", "timezone": "UTC",
+        "basal": [{{ repeat "{\"time\": \"00:00\", \"timeAsSeconds\": 0, \"value\": 0.85}," 199 }}{"time": "23:30", "timeAsSeconds": 84600, "value": 0.9}],
+        "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 40}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}],
+        "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 110}]}}}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "basal" "@message"
+
+NAME still_the_first
+GET http://{{ site }}/api/v1/profile/current?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 48 "@store.Default.basal"
