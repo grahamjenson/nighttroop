@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+
 	"net/http"
+	"nighttroop.t1d.nz/utils/aslog"
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
@@ -108,6 +110,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 			loginFailed(w, r, http.StatusUnauthorized, wrongLogin, fmt.Errorf("invalid credentials: %w", err))
 			return
 		}
+		aslog.AddAttrs(r.Context(), slog.Int64("control_identity_id", admin.ID), slog.String("identity_name", admin.Name))
 		controlDB.Logs.SignedInEvent(r.Context(), "", admin.Name, from)
 
 		tokenString, expiresAt, err := config.Security.GenerateControlJWTToken(admin.Name, string(admin.Role))

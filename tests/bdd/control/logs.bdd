@@ -116,6 +116,19 @@ ASSERT_VISIBLE #control--events--filter--clear
 ASSERT_VISIBLE #controlEventsTable td >> text=Site created
 SCREENSHOT events_by_request
 
+// An event's details name the control admin whose request it was for, and link to the events of that admin
+CLICK #control--events--filter--clear
+INPUT #control--events--filter--type signed_in
+CLICK #control--events--filter--submit
+ASSERT_NOT_VISIBLE #controlEventsTable >> text=Site created
+CLICK #controlEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #control--event--control-identity-id
+SCREENSHOT event_admin
+CLICK #control--event--control-identity-id
+ASSERT_VISIBLE #control--events--filter--control-identity-id:not([value=""])
+ASSERT_VISIBLE #controlEventsTable td >> text=Signed in >> nth=0
+SCREENSHOT events_by_admin
+
 // Logs can be narrowed to a request too, by its ID, as well as to a site or background job run. Which logs are
 // this server's is not known, as every test server copies its logs from the one buffer.
 CLICK #control--menu

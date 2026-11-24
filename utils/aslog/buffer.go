@@ -14,7 +14,8 @@ import (
 // TestOutput is where a test server writes its logs: stdout, unless the tests keep them to show with a failing test
 var TestOutput io.Writer = os.Stdout
 
-// Record is a log held to be written to the logs DB, with its site, request and job taken out of its attributes
+// Record is a log held to be written to the logs DB, with its site, request, job and identity taken out of its
+// attributes
 type Record struct {
 	Time       time.Time
 	Level      string
@@ -23,6 +24,13 @@ type Record struct {
 	SiteID     string
 	RequestID  string
 	JobID      string
+	Who
+}
+
+// Who is the identity a record was for: the site's (IdentityID) or a control admin (ControlIdentityID), and its name
+type Who struct {
+	IdentityID, ControlIdentityID *int64
+	IdentityName                  string
 }
 
 // The most of a record kept, and of all records held at once: the logs DB's writes keep up with far less, so more is
@@ -126,9 +134,21 @@ func (h BufferHandler) Handle(_ context.Context, r slog.Record) error {
 	return nil
 }
 
-// setID sets the record's site, request or job from an attribute of that key, saying whether it was one
+// setID sets the record's site, request, job or identity from an attribute of that key, saying whether it was one
 func (r *Record) setID(attr slog.Attr) bool {
+	id := func() *int64 {
+		if attr.Value.Kind() != slog.KindInt64 {
+			return nil
+		}
+		return new(attr.Value.Int64())
+	}
 	switch attr.Key {
+	case "identity_id":
+		r.IdentityID = id()
+	case "control_identity_id":
+		r.ControlIdentityID = id()
+	case "identity_name":
+		r.IdentityName = truncate(attr.Value.String(), 64)
 	case "site_id":
 		r.SiteID = truncate(attr.Value.String(), 32)
 	case "request_id":
@@ -185,9 +205,15 @@ func truncate(s string, n int) string {
 
 // IDs are the request and background job run ctx logs, "" for none
 func IDs(ctx context.Context) (requestID, jobID string) {
+	record := Of(ctx)
+	return record.RequestID, record.JobID
+}
+
+// Of is a record with the site, request, job and identity ctx logs, and nothing else
+func Of(ctx context.Context) Record {
 	var record Record
 	for _, attr := range attrsOf(ctx) {
 		record.setID(attr)
 	}
-	return record.RequestID, record.JobID
+	return record
 }

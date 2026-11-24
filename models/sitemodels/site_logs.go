@@ -16,6 +16,9 @@ type SiteLog struct {
 	// RequestID and JobID are the request or background job run it was for, to find it by
 	RequestID *string `json:"request_id"`
 	JobID     *string `json:"job_id"`
+	// IdentityID and IdentityName are the identity whose request it was for, to find it by
+	IdentityID   *int64  `json:"identity_id"`
+	IdentityName *string `json:"identity_name"`
 }
 
 // SiteEvent is something that happened to the site, from when it started until it finished when it took time
@@ -28,6 +31,8 @@ type SiteEvent struct {
 	// RequestID and JobID are the request or background job run it was for, to find it by
 	RequestID *string `json:"request_id"`
 	JobID     *string `json:"job_id"`
+	IdentityID   *int64  `json:"identity_id"`
+	IdentityName *string `json:"identity_name"`
 }
 
 // SiteError is something that failed for the site
@@ -39,21 +44,23 @@ type SiteError struct {
 	// RequestID and JobID are the request or background job run it was for, to find it by
 	RequestID *string `json:"request_id"`
 	JobID     *string `json:"job_id"`
+	IdentityID   *int64  `json:"identity_id"`
+	IdentityName *string `json:"identity_name"`
 }
 
 func SiteLogFromDB(row *logsdb.Log) *SiteLog {
 	return &SiteLog{ID: row.ID, Level: row.Level, Message: row.Message, Attributes: attributesJSON(row.Attributes), CreatedAt: row.CreatedAt,
-		RequestID: row.RequestID, JobID: row.JobID}
+		RequestID: row.RequestID, JobID: row.JobID, IdentityID: row.IdentityID, IdentityName: row.IdentityName}
 }
 
 func SiteEventFromDB(row *logsdb.Event) *SiteEvent {
 	return &SiteEvent{ID: row.ID, Name: row.Name, Attributes: attributesJSON(row.Attributes), StartedAt: row.StartedAt, FinishedAt: row.FinishedAt,
-		RequestID: row.RequestID, JobID: row.JobID}
+		RequestID: row.RequestID, JobID: row.JobID, IdentityID: row.IdentityID, IdentityName: row.IdentityName}
 }
 
 func SiteErrorFromDB(row *logsdb.Error) *SiteError {
 	return &SiteError{ID: row.ID, Message: row.Message, Attributes: attributesJSON(row.Attributes), CreatedAt: row.CreatedAt,
-		RequestID: row.RequestID, JobID: row.JobID}
+		RequestID: row.RequestID, JobID: row.JobID, IdentityID: row.IdentityID, IdentityName: row.IdentityName}
 }
 
 // attributesJSON is a row's attributes as JSON, or null when it has none

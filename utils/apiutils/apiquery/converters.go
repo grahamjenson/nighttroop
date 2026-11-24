@@ -1,6 +1,9 @@
 package apiquery
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 //go:generate go tool goverter gen .
 
@@ -17,6 +20,8 @@ type QueryConverter interface {
 	// goverter:map RequestID | GetID
 	// goverter:map BeforeID | GetID
 	// goverter:map JobID | GetID
+	// goverter:map IdentityID | GetInt64ID
+	// goverter:map ControlIdentityID | GetInt64ID
 	QueryValuesToQuery(source QueryValues) Query
 }
 
@@ -66,6 +71,19 @@ func GetSearch(source QueryValues) *string {
 		search = search[:MaxSearchLength]
 	}
 	return &search
+}
+
+// GetInt64ID leaves a blank ID unset, which is every row, as a filter's form sends each of its IDs. One that is not a
+// number is -1, which is no row's.
+func GetInt64ID(id *string) *int64 {
+	if id == nil || strings.TrimSpace(*id) == "" {
+		return nil
+	}
+	n, err := strconv.ParseInt(strings.TrimSpace(*id), 10, 64)
+	if err != nil {
+		return new(int64(-1))
+	}
+	return &n
 }
 
 // GetID leaves a blank ID unset, which is every row, and cuts a long one to MaxSearchLength, longer than any ID

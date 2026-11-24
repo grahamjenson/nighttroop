@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,6 +52,17 @@ type Row struct {
 	RequestID  *string
 	JobID      *string
 	Attributes json.RawMessage
+	// IdentityID is the site's identity the row was for, ControlIdentityID the control admin, IdentityName its name
+	IdentityID, ControlIdentityID *int64
+	IdentityName                  *string
+}
+
+// IDText is a numbered ID as the text a filter and a link take, nil for none
+func IDText(id *int64) *string {
+	if id == nil {
+		return nil
+	}
+	return new(strconv.FormatInt(*id, 10))
 }
 
 // Rows are each item as a Row
@@ -198,6 +210,11 @@ templ details(v View, kind string, row Row) {
 		{ children... }
 		@idDetail(v, kind, i18n.T(ctx, "common.log_view.request"), "request_id", row.RequestID)
 		@idDetail(v, kind, i18n.T(ctx, "common.log_view.job"), "job_id", row.JobID)
+		if row.IdentityName != nil {
+			@modal.Detail(i18n.T(ctx, "common.log_view.identity"), *row.IdentityName)
+		}
+		@idDetail(v, kind, i18n.T(ctx, "common.log_view.identity_id"), "identity_id", IDText(row.IdentityID))
+		@idDetail(v, kind, i18n.T(ctx, "common.log_view.control_identity_id"), "control_identity_id", IDText(row.ControlIdentityID))
 	</dl>
 	@AttributesDetail(v.Prefix+"--"+kind+"--attributes", row.Attributes)
 }
