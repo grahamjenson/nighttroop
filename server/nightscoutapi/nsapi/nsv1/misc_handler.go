@@ -71,7 +71,7 @@ func StatusJSON(store nsutils.Store) http.HandlerFunc {
 func Status(ctx context.Context) map[string]any {
 	units := "mg/dl"
 	siteContext := httputils.GetSiteContext(ctx)
-	if siteContext != nil && *new(siteContext.GetOwnSettings().Units) == consts.UnitsMMOLL {
+	if siteContext != nil && *new(siteContext.GetOwnSettings().GetUnits()) == consts.UnitsMMOLL {
 		units = "mmol"
 	}
 	status := map[string]any{

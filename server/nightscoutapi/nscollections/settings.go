@@ -188,19 +188,18 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 	if !settings.IsSetting(identifier) {
 		return nil, nsutils.ErrNotFound
 	}
-	settingsMap := siteContext.GetOwnSettings()
-	identitySettingsMap := settingsMap.IdentityLevel
-
-	err := identitySettingsMap.Set(identifier, value)
+	// A copy, so the request's own settings change only once the change is saved
+	changed := *siteContext.GetOwnSettings()
+	err := changed.Identity.Set(identifier, value)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to set setting in identity settings map", "error", err, "collection", "settings")
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
-	if err := settingsMap.Rebuild().Consistent(); err != nil {
+	if err := changed.Consistent(); err != nil {
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
-	stored, err := identitySettingsMap.JSON()
+	stored, err := changed.Identity.JSON()
 	if err != nil {
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
@@ -214,5 +213,7 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 		return nil, nsutils.ErrInternal
 	}
 
-	return identitySettingsMap.Setting(identifier), nil
+	// The request's own settings follow what was saved
+	siteContext.GetOwnSettings().Identity = changed.Identity
+	return changed.Own(&changed.Identity, identifier), nil
 }

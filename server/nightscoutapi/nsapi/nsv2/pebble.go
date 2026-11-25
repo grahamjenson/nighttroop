@@ -45,7 +45,7 @@ func Pebble() func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 			count = 1
 		}
 		count = min(count, maxPebbleReadings)
-		units := *new(siteContext.GetOwnSettings().Units)
+		units := *new(siteContext.GetOwnSettings().GetUnits())
 		if asked := r.URL.Query().Get("units"); asked != "" {
 			units = consts.UnitsMGDL
 			if strings.HasPrefix(strings.ToLower(asked), "mmol") {

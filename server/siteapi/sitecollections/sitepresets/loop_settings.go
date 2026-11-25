@@ -55,7 +55,7 @@ func (s *LoopSettingsCollection) GetRow(ctx context.Context, collectionTx *sitea
 func (s *LoopSettingsCollection) fromDB(row *sitedb.LoopSetting, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
 	model := sitemodels.LoopSettingsFromDB(row)
 	model.Settings = sitemodels.WithoutDeviceToken(model.Settings)
-	model.Units = new(siteContext.GetSettings().Units)
+	model.Units = new(siteContext.GetSettings().GetUnits())
 	return model
 }
 

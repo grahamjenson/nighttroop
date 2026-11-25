@@ -37,8 +37,7 @@ func TestBrowserSettings(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := BrowserSettings(tt.timezone, tt.language)
-			got := want{own[string](m, "timezone"), own[string](m, "language"), own[string](m, "date_format"), own[string](m, "time_format"),
-				own[string](m, "week_start_day"), own[consts.Units](m, "units")}
+			got := want{m.Timezone, m.Language, m.DateFormat, m.TimeFormat, m.WeekStartDay, m.Units}
 			require.Equal(t, tt.want, got)
 			// Every format set is one the settings accept
 			if got.date != nil {
@@ -48,13 +47,4 @@ func TestBrowserSettings(t *testing.T) {
 			}
 		})
 	}
-}
-
-// own is a level's own value of a setting, or nil when it has not set one
-func own[T any](l *Level, name string) *T {
-	value, ok := l.Get(name)
-	if !ok {
-		return nil
-	}
-	return new(value.(T))
 }

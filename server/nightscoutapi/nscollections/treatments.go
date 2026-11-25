@@ -366,7 +366,7 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	treatment := nightscoutmodels.EventGroupToTreatment(source.EventGroup)
 	// Every treatment says the units its glucose is in, as the API's, so a client does not read a temp target's or a
 	// therapy event's glucose in the site's units, as Nightscout's careportal sends units with every treatment
-	treatment.Units = new(siteContext.GetSettings().Units)
+	treatment.Units = new(siteContext.GetSettings().GetUnits())
 	for _, event := range treatmentEvents {
 		event.addToTreatment(source, siteContext, treatment)
 	}

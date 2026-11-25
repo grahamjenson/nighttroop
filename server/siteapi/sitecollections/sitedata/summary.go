@@ -112,11 +112,11 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	}
 	since := time.Now().Add(-time.Duration(hours) * time.Hour).UnixMilli()
 	summary := &sitemodels.Summary{Hours: hours, Since: since, Units: sitemodels.ContextUnits(siteContext)}
-	settings := siteContext.GetSettings()
-	summary.RangeLow = summary.Units.FromMGDL(float64(settings.Range.LowMgdl))
-	summary.RangeHigh = summary.Units.FromMGDL(float64(settings.Range.HighMgdl))
-	summary.RangeUrgentLow = summary.Units.FromMGDL(float64(settings.Range.UrgentLowMgdl))
-	summary.RangeUrgentHigh = summary.Units.FromMGDL(float64(settings.Range.UrgentHighMgdl))
+	glucose := siteContext.GetSettings().GetRange()
+	summary.RangeLow = summary.Units.FromMGDL(float64(glucose.LowMgdl))
+	summary.RangeHigh = summary.Units.FromMGDL(float64(glucose.HighMgdl))
+	summary.RangeUrgentLow = summary.Units.FromMGDL(float64(glucose.UrgentLowMgdl))
+	summary.RangeUrgentHigh = summary.Units.FromMGDL(float64(glucose.UrgentHighMgdl))
 	// A false IncludeDeleted leaves out deleted rows in these searches
 	excludeDeleted := false
 

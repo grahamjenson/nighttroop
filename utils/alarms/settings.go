@@ -3,7 +3,7 @@ package alarms
 import "nighttroop.t1d.nz/utils/settings"
 
 // FromSettings is the alarms turned on in the settings in effect for an identity, in the order they are checked
-func FromSettings(v settings.Values) []Alarm {
+func FromSettings(v settings.SettingsValues) []Alarm {
 	on, glucose := v.Alarms, v.Range
 	var alarms []Alarm
 	if on.UrgentLow.Enabled {

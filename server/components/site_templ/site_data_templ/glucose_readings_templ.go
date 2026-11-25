@@ -85,7 +85,7 @@ var GlucoseColours = map[string]GlucoseColour{
 // RangeBounds are the range settings, low and high, in the settings' units, for this and other pages' graphs
 func RangeBounds(ctx context.Context) (float64, float64) {
 	settings, units := httputils.GetSiteContext(ctx).GetSettings(), glucoseUnits(ctx)
-	return units.FromMGDL(float64(settings.Range.LowMgdl)), units.FromMGDL(float64(settings.Range.HighMgdl))
+	return units.FromMGDL(float64(settings.GetRange().LowMgdl)), units.FromMGDL(float64(settings.GetRange().HighMgdl))
 }
 
 // glucoseRange is "Low" or "High" for a reading, in the settings' units, below or above the range settings

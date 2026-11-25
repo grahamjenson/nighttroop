@@ -96,7 +96,7 @@ func TestBuildOpensASiteAgainAfterItsSettingsChange(t *testing.T) {
 	require.Equal(t, 3, r.opened)
 
 	// A new timezone is a new yesterday, even before its rebuild runs
-	require.NoError(t, r.control.UpdateSiteSettings(ctx, controldb.UpdateSiteSettingsParams{ID: r.siteID, SettingsJson: settings.StoredOf(map[string]any{"timezone": "Pacific/Auckland"})}))
+	require.NoError(t, r.control.UpdateSiteSettings(ctx, controldb.UpdateSiteSettingsParams{ID: r.siteID, SettingsJson: settings.StoredOf(settings.Settings{Timezone: new("Pacific/Auckland")})}))
 	require.NoError(t, r.builder.Build(ctx, now))
 	require.Equal(t, 4, r.opened)
 	require.True(t, r.built("2026-10-28"))

@@ -18,8 +18,8 @@ func viewedFrom(siteTimezone, viewerTimezone string) context.Context {
 	var action httputils.HTTPAction
 	var accept httputils.AcceptType
 	var content httputils.ContentType
-	ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, &controldb.Site{ID: "site", SettingsJson: settings.StoredOf(map[string]any{"timezone": siteTimezone})}, "site", "", action, accept, content)
-	return httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Name: "viewer", SettingsJson: settings.StoredOf(map[string]any{"timezone": viewerTimezone})})
+	ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, &controldb.Site{ID: "site", SettingsJson: settings.StoredOf(settings.Settings{Timezone: new(siteTimezone)})}, "site", "", action, accept, content)
+	return httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Name: "viewer", SettingsJson: settings.StoredOf(settings.Settings{Timezone: new(viewerTimezone)})})
 }
 
 // A report's days are the site's, as its summaries are built from midnight in the site's timezone, whatever the

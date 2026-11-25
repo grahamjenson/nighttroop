@@ -45,7 +45,7 @@ func (d fieldsDocument) JSON(_ bool, only []string) json.RawMessage {
 
 // mmolSite is a site whose settings write glucose in mmol/L
 func mmolSite() *httputils.SiteContext {
-	return &httputils.SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh", SettingsJson: settings.StoredOf(map[string]any{"units": consts.UnitsMMOLL})}}
+	return &httputils.SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh", SettingsJson: settings.StoredOf(settings.Settings{Units: new(consts.UnitsMMOLL)})}}
 }
 
 // dayOfEntries are a day of CGM readings, five minutes apart, as documents

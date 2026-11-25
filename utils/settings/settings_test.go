@@ -28,12 +28,12 @@ func TestCombinedSettingsUnits(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			combined := settings.FromLevels(levelOf("units", test.site), levelOf("units", test.identity))
+			combined := &settings.ContextSettings{DefaultSettings: settings.DefaultValues(),
+				Site: settings.Settings{Units: test.site}, Identity: settings.Settings{Units: test.identity}}
 
-			require.Equal(t, test.want, combined.Units)
-			// The site's own are the site's, whatever the identity's
-			require.Equal(t, *cmp.Or(test.site, &mmol), combined.Site.Units)
-			require.Equal(t, mmol, combined.Default.Units)
+			require.Equal(t, test.want, combined.GetUnits())
+			require.Equal(t, test.want, combined.Values().Units)
+			require.Equal(t, mmol, combined.DefaultSettings.Units)
 			// The same order as looking a setting up by name
 			byName, err := combined.Get("units")
 			require.NoError(t, err)
@@ -58,9 +58,12 @@ func TestCombinedSettingsTimezone(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			combined := settings.FromLevels(levelOf("timezone", test.site), levelOf("timezone", test.identity))
+			combined := &settings.ContextSettings{DefaultSettings: settings.DefaultValues(),
+				Site: settings.Settings{Timezone: test.site}, Identity: settings.Settings{Timezone: test.identity}}
 
 			require.Equal(t, test.want, combined.Location().String())
+			// The site's own is the site's, whatever the identity's
+			require.Equal(t, *cmp.Or(test.site, new("UTC")), combined.GetSiteTimezone())
 		})
 	}
 }
@@ -103,9 +106,9 @@ func TestFastRiseAndDropMinutes(t *testing.T) {
 
 // Times and dates are shown in the identity's format, then the site's, then the default, each as its Go layout
 func TestCombinedSettingsLayouts(t *testing.T) {
-	layoutOf := map[string]func(settings.Values) string{
-		"time_format": settings.Values.TimeLayout,
-		"date_format": settings.Values.DateLayout,
+	layoutOf := map[string]func(*settings.ContextSettings) string{
+		"time_format": (*settings.ContextSettings).TimeLayout,
+		"date_format": (*settings.ContextSettings).DateLayout,
 	}
 	tests := []struct {
 		setting        string
@@ -127,13 +130,13 @@ func TestCombinedSettingsLayouts(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.setting+"/"+test.site+"_"+test.identity, func(t *testing.T) {
-			site, identity := settings.NewLevel(nil), settings.NewLevel(nil)
-			for level, format := range map[*settings.Level]string{site: test.site, identity: test.identity} {
+			combined := &settings.ContextSettings{DefaultSettings: settings.DefaultValues()}
+			for level, format := range map[*settings.Settings]string{&combined.Site: test.site, &combined.Identity: test.identity} {
 				if format != "" {
 					require.NoError(t, level.Set(test.setting, format))
 				}
 			}
-			require.Equal(t, test.layout, layoutOf[test.setting](settings.FromLevels(site, identity).Values))
+			require.Equal(t, test.layout, layoutOf[test.setting](combined))
 		})
 	}
 }
@@ -169,15 +172,7 @@ func TestLoadLocation(t *testing.T) {
 // as every time the API gives, not in seconds, which reads as January 1970
 func TestCreatedAtIsMilliseconds(t *testing.T) {
 	before := time.Now().Add(-time.Hour).UnixMilli()
-	for _, setting := range settings.FromLevels(nil, nil).All() {
+	for _, setting := range (&settings.ContextSettings{DefaultSettings: settings.DefaultValues()}).All() {
 		require.Greater(t, setting.CreatedAt, before, setting.Identifier)
 	}
-}
-
-// levelOf is a level with one setting set, or none for nil
-func levelOf[T any](name string, value *T) *settings.Level {
-	if value == nil {
-		return settings.NewLevel(nil)
-	}
-	return settings.NewLevel(map[string]any{name: *value})
 }
