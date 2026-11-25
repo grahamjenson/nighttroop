@@ -40,7 +40,7 @@ func TestGetSettingsWithoutAnIdentityIsTheSites(t *testing.T) {
 	defer slog.SetDefault(previous)
 
 	site := &SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh", SettingsJson: settings.StoredOf(settings.Settings{Units: new(consts.UnitsMGDL)})}}
-	require.Equal(t, consts.UnitsMGDL, *new(site.GetSettings().GetUnits()))
+	require.Equal(t, consts.UnitsMGDL, site.GetSettings().GetUnits())
 	require.NotContains(t, logged.String(), "ERROR")
 }
 
