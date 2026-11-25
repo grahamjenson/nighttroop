@@ -1,0 +1,141 @@
+package control_banners_templ
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/field"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
+)
+
+// levelLabels are the ids of each level's label
+var levelLabels = map[string]string{"info": "control.banners.level_info", "warning": "control.banners.level_warning"}
+
+// Banners is every site banner, newest first: a message sites show at the top of their pages until it expires. An
+// admin adds one, for every site or the sites listed, and deletes one.
+templ Banners(banners []*controlmodels.SiteBanner) {
+	<div id="control--banners" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page(i18n.T(ctx, "control.banners.title")) {
+			{ i18n.T(ctx, "control.banners.intro", i18n.Data{"Max": controlmodels.MaxSiteBanners, "Days": controlmodels.MaxSiteBannerDays}) }
+		}
+		@table.Table(table.Props{ID: "control--banners--table"}) {
+			@table.Header() {
+				@table.Row() {
+					@table.Head() {
+						{ i18n.T(ctx, "control.banners.message") }
+					}
+					@table.Head() {
+						{ i18n.T(ctx, "control.banners.level") }
+					}
+					@table.Head() {
+						{ i18n.T(ctx, "control.banners.sites") }
+					}
+					@table.Head() {
+						{ i18n.T(ctx, "control.banners.expires") }
+					}
+					@table.Head() {
+						<span class="sr-only">{ i18n.T(ctx, "control.banners.actions") }</span>
+					}
+				}
+			}
+			@table.Body() {
+				for _, banner := range banners {
+					@Row(banner)
+				}
+			}
+		}
+		if httputils.IsControlAdmin(ctx) {
+			@addForm()
+		}
+	</div>
+}
+
+// Row is one banner, with a button an admin deletes it by
+templ Row(banner *controlmodels.SiteBanner) {
+	@table.Row(table.RowProps{ID: fmt.Sprintf("control--banner--%d", banner.ID)}) {
+		@table.Cell(table.CellProps{Class: "whitespace-normal break-words"}) {
+			{ banner.Message }
+		}
+		@table.Cell() {
+			{ i18n.T(ctx, levelLabels[banner.Level]) }
+		}
+		@table.Cell(table.CellProps{Class: "whitespace-normal break-words"}) {
+			if len(banner.SiteIDs) == 0 {
+				{ i18n.T(ctx, "control.banners.every_site") }
+			} else {
+				{ strings.Join(banner.SiteIDs, ", ") }
+			}
+		}
+		@table.Cell() {
+			<span title={ display.DateTime(&banner.ExpiresAt) }>{ display.RoundedIn(ctx, banner.ExpiresAt, time.Now()) }</span>
+		}
+		@table.Cell(table.CellProps{Class: "text-right"}) {
+			if httputils.IsControlAdmin(ctx) {
+				@button.Button(button.Props{ID: fmt.Sprintf("control--banner--%d--delete", banner.ID), Variant: button.VariantOutline, Size: button.SizeSm,
+					Attributes: templ.Attributes{"hx-delete": fmt.Sprintf("/banners/%d", banner.ID), "hx-target": "closest tr", "hx-swap": "delete",
+						"hx-confirm": i18n.T(ctx, "control.banners.delete_confirm"),
+						"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend"}}) {
+					{ i18n.T(ctx, "control.banners.delete") }
+				}
+			}
+		}
+	}
+}
+
+// addForm adds a banner: its message, how it is shown, the sites it is for, and how many days it lasts
+templ addForm() {
+	<form
+		id="control--banners--add"
+		class="flex flex-wrap items-end justify-end gap-2"
+		hx-on::after:request="if (ctx.response.status < 400) this.reset()"
+		hx-post="/banners"
+		hx-target="#control--banners--table tbody"
+		hx-swap="afterbegin"
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		@field.Field("control--banners--add--message", i18n.T(ctx, "control.banners.message"), "w-full") {
+			@input.Input(input.Props{ID: "control--banners--add--message", Name: "message", Required: true,
+				Attributes: templ.Attributes{"maxlength": fmt.Sprint(controlmodels.SiteBannerMessageLimit.MaxLength), "autocomplete": "off"}})
+		}
+		@field.Field("control--banners--add--sites", i18n.T(ctx, "control.banners.sites_label"), "min-w-64 flex-1") {
+			@input.Input(input.Props{ID: "control--banners--add--sites", Name: "sites", Attributes: templ.Attributes{"autocomplete": "off"}})
+		}
+		@field.Field("control--banners--add--level", i18n.T(ctx, "control.banners.level"), "w-36") {
+			<select id="control--banners--add--level" name="level" class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm">
+				for _, level := range controlmodels.SiteBannerLevels {
+					<option value={ level }>{ i18n.T(ctx, levelLabels[level]) }</option>
+				}
+			</select>
+		}
+		@field.Field("control--banners--add--days", i18n.T(ctx, "control.banners.days"), "w-28") {
+			@input.Input(input.Props{ID: "control--banners--add--days", Name: "days", Type: input.TypeNumber, Required: true, Value: "7",
+				Attributes: templ.Attributes{"min": "1", "max": fmt.Sprint(controlmodels.MaxSiteBannerDays)}})
+		}
+		@button.Button(button.Props{ID: "control--banners--add--submit", Type: button.TypeSubmit}) {
+			@icon.Plus()
+			{ i18n.T(ctx, "control.banners.add") }
+		}
+	</form>
+}
+
+// Added is the new banner's row, and that it was added
+templ Added(banner *controlmodels.SiteBanner) {
+	@Row(banner)
+	@successtoast.OOB(i18n.T(ctx, "control.banners.added"))
+}
+
+// Deleted takes the banner's row away, and says it was deleted
+templ Deleted() {
+	@successtoast.OOB(i18n.T(ctx, "control.banners.deleted"))
+}

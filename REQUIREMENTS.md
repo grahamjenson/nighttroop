@@ -447,6 +447,19 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - At the top of the usage page, a control admin has two buttons, Profiles (pprof) and Runtime stats (vars). Each opens
   its page in a new tab. A read only admin does not see them.
 
+### Site banners
+
+- Site Banners (user menu) lists every banner, newest first: its message, how it is shown, its sites and when it
+  expires. A banner is a message for sites to show at the top of their pages until it expires.
+- An admin adds a banner: a message, **Information** or **Warning**, the IDs of its sites, and its days.
+  - With no site IDs, the banner is for every site.
+  - Site IDs have commas or spaces between. A site ID given two times is kept one time.
+  - Refused (400), with why: no message or one over 500 characters, a level that is not one of the two, days not
+    from 1 to 90, more than 100 sites, a site ID that is not shaped as one, or a 21st banner.
+- An admin deletes a banner, after a confirmation. A banner that is not there is 404.
+- A read-only admin sees the list, with no form and no Delete.
+- A job deletes the banners that are past the time they expire at, each 10 minutes.
+
 ### Rate limits
 
 - Shows the limits in groups. Each group has a card with a title and one line that says what it protects:

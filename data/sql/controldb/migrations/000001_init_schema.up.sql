@@ -285,3 +285,17 @@ CREATE TABLE server_settings (
 ) STRICT;
 
 INSERT INTO server_settings (id) VALUES (1);
+
+-- SITE BANNERS
+-- A message a control admin shows at the top of sites' pages until it expires: on every site, or on those listed.
+-- A scheduled job deletes the ones that have expired.
+CREATE TABLE site_banners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message TEXT NOT NULL CHECK(length(message) <= 500),
+    level TEXT NOT NULL CHECK(length(level) <= 16), -- how it is shown, from the code's list: info or warning
+    -- The IDs of the sites it is shown on, as a JSON list. An empty list is every site.
+    site_ids_json TEXT NOT NULL DEFAULT '[]' CHECK(length(site_ids_json) <= 4096 AND json_valid(site_ids_json)),
+    expires_at INTEGER NOT NULL CHECK(expires_at BETWEEN 0 AND 253402300799999),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+) STRICT;

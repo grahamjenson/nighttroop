@@ -34,6 +34,9 @@ func TestControlDataLimits(t *testing.T) {
 		"passkeys": testutils.Recipe(func(i int) controldb.CreateControlPasskeyParams {
 			return controldb.CreateControlPasskeyParams{ControlIdentityID: admin.ID, CredentialID: id(i), CredentialJson: "{}"}
 		}, q.CreateControlPasskey),
+		"site_banners": testutils.Recipe(func(i int) controldb.CreateSiteBannerParams {
+			return controldb.CreateSiteBannerParams{Message: id(i), Level: "info", SiteIdsJson: "[]", ExpiresAt: 1, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateSiteBanner)),
 		"push_credentials": testutils.Recipe(func(i int) controldb.CreatePushCredentialParams {
 			return controldb.CreatePushCredentialParams{Name: id(i), Provider: "apns", TeamOrProjectID: "team",
 				AppsJson: `["loop"]`, CreatedByIdentityName: by}

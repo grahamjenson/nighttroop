@@ -27,6 +27,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allControlIdentitiesStmt, err = db.PrepareContext(ctx, allControlIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllControlIdentities: %w", err)
 	}
+	if q.allSiteBannersStmt, err = db.PrepareContext(ctx, allSiteBanners); err != nil {
+		return nil, fmt.Errorf("error preparing query AllSiteBanners: %w", err)
+	}
 	if q.allSiteIdentitiesStmt, err = db.PrepareContext(ctx, allSiteIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllSiteIdentities: %w", err)
 	}
@@ -47,6 +50,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.countPushRegistrationsStmt, err = db.PrepareContext(ctx, countPushRegistrations); err != nil {
 		return nil, fmt.Errorf("error preparing query CountPushRegistrations: %w", err)
+	}
+	if q.countSiteBannersStmt, err = db.PrepareContext(ctx, countSiteBanners); err != nil {
+		return nil, fmt.Errorf("error preparing query CountSiteBanners: %w", err)
 	}
 	if q.countSiteIdentitiesStmt, err = db.PrepareContext(ctx, countSiteIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query CountSiteIdentities: %w", err)
@@ -72,6 +78,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createSiteStmt, err = db.PrepareContext(ctx, createSite); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSite: %w", err)
 	}
+	if q.createSiteBannerStmt, err = db.PrepareContext(ctx, createSiteBanner); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateSiteBanner: %w", err)
+	}
 	if q.createSiteIdentityStmt, err = db.PrepareContext(ctx, createSiteIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSiteIdentity: %w", err)
 	}
@@ -93,6 +102,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteControlPasskeyStmt, err = db.PrepareContext(ctx, deleteControlPasskey); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteControlPasskey: %w", err)
 	}
+	if q.deleteExpiredSiteBannersStmt, err = db.PrepareContext(ctx, deleteExpiredSiteBanners); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteExpiredSiteBanners: %w", err)
+	}
 	if q.deletePushCredentialStmt, err = db.PrepareContext(ctx, deletePushCredential); err != nil {
 		return nil, fmt.Errorf("error preparing query DeletePushCredential: %w", err)
 	}
@@ -104,6 +116,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteSiteAdminPasskeysStmt, err = db.PrepareContext(ctx, deleteSiteAdminPasskeys); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSiteAdminPasskeys: %w", err)
+	}
+	if q.deleteSiteBannerStmt, err = db.PrepareContext(ctx, deleteSiteBanner); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSiteBanner: %w", err)
 	}
 	if q.deleteSiteIdentityStmt, err = db.PrepareContext(ctx, deleteSiteIdentity); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSiteIdentity: %w", err)
@@ -361,6 +376,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing allControlIdentitiesStmt: %w", cerr)
 		}
 	}
+	if q.allSiteBannersStmt != nil {
+		if cerr := q.allSiteBannersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing allSiteBannersStmt: %w", cerr)
+		}
+	}
 	if q.allSiteIdentitiesStmt != nil {
 		if cerr := q.allSiteIdentitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allSiteIdentitiesStmt: %w", cerr)
@@ -394,6 +414,11 @@ func (q *Queries) Close() error {
 	if q.countPushRegistrationsStmt != nil {
 		if cerr := q.countPushRegistrationsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countPushRegistrationsStmt: %w", cerr)
+		}
+	}
+	if q.countSiteBannersStmt != nil {
+		if cerr := q.countSiteBannersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countSiteBannersStmt: %w", cerr)
 		}
 	}
 	if q.countSiteIdentitiesStmt != nil {
@@ -436,6 +461,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createSiteStmt: %w", cerr)
 		}
 	}
+	if q.createSiteBannerStmt != nil {
+		if cerr := q.createSiteBannerStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createSiteBannerStmt: %w", cerr)
+		}
+	}
 	if q.createSiteIdentityStmt != nil {
 		if cerr := q.createSiteIdentityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createSiteIdentityStmt: %w", cerr)
@@ -471,6 +501,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteControlPasskeyStmt: %w", cerr)
 		}
 	}
+	if q.deleteExpiredSiteBannersStmt != nil {
+		if cerr := q.deleteExpiredSiteBannersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteExpiredSiteBannersStmt: %w", cerr)
+		}
+	}
 	if q.deletePushCredentialStmt != nil {
 		if cerr := q.deletePushCredentialStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deletePushCredentialStmt: %w", cerr)
@@ -489,6 +524,11 @@ func (q *Queries) Close() error {
 	if q.deleteSiteAdminPasskeysStmt != nil {
 		if cerr := q.deleteSiteAdminPasskeysStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSiteAdminPasskeysStmt: %w", cerr)
+		}
+	}
+	if q.deleteSiteBannerStmt != nil {
+		if cerr := q.deleteSiteBannerStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSiteBannerStmt: %w", cerr)
 		}
 	}
 	if q.deleteSiteIdentityStmt != nil {
@@ -941,6 +981,7 @@ type Queries struct {
 	db                                      DBTX
 	tx                                      *sql.Tx
 	allControlIdentitiesStmt                *sql.Stmt
+	allSiteBannersStmt                      *sql.Stmt
 	allSiteIdentitiesStmt                   *sql.Stmt
 	archiveSitesStmt                        *sql.Stmt
 	countActiveIdentitiesStmt               *sql.Stmt
@@ -948,6 +989,7 @@ type Queries struct {
 	countControlAdminsStmt                  *sql.Stmt
 	countPushCredentialsStmt                *sql.Stmt
 	countPushRegistrationsStmt              *sql.Stmt
+	countSiteBannersStmt                    *sql.Stmt
 	countSiteIdentitiesStmt                 *sql.Stmt
 	countSitesByStateStmt                   *sql.Stmt
 	countSitesCreatedStmt                   *sql.Stmt
@@ -956,6 +998,7 @@ type Queries struct {
 	createControlPasskeyStmt                *sql.Stmt
 	createPushCredentialStmt                *sql.Stmt
 	createSiteStmt                          *sql.Stmt
+	createSiteBannerStmt                    *sql.Stmt
 	createSiteIdentityStmt                  *sql.Stmt
 	createSiteIdentityPasskeyStmt           *sql.Stmt
 	deleteAllSiteIdentitiesStmt             *sql.Stmt
@@ -963,10 +1006,12 @@ type Queries struct {
 	deleteControlIdentityStmt               *sql.Stmt
 	deleteControlIdentityPasskeysStmt       *sql.Stmt
 	deleteControlPasskeyStmt                *sql.Stmt
+	deleteExpiredSiteBannersStmt            *sql.Stmt
 	deletePushCredentialStmt                *sql.Stmt
 	deletePushRegistrationStmt              *sql.Stmt
 	deletePushRegistrationByTokenHashStmt   *sql.Stmt
 	deleteSiteAdminPasskeysStmt             *sql.Stmt
+	deleteSiteBannerStmt                    *sql.Stmt
 	deleteSiteIdentityStmt                  *sql.Stmt
 	deleteSiteIdentityNamedNotAdminStmt     *sql.Stmt
 	deleteSiteIdentityPasskeyStmt           *sql.Stmt
@@ -1056,6 +1101,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:                                      tx,
 		tx:                                      tx,
 		allControlIdentitiesStmt:                q.allControlIdentitiesStmt,
+		allSiteBannersStmt:                      q.allSiteBannersStmt,
 		allSiteIdentitiesStmt:                   q.allSiteIdentitiesStmt,
 		archiveSitesStmt:                        q.archiveSitesStmt,
 		countActiveIdentitiesStmt:               q.countActiveIdentitiesStmt,
@@ -1063,6 +1109,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		countControlAdminsStmt:                  q.countControlAdminsStmt,
 		countPushCredentialsStmt:                q.countPushCredentialsStmt,
 		countPushRegistrationsStmt:              q.countPushRegistrationsStmt,
+		countSiteBannersStmt:                    q.countSiteBannersStmt,
 		countSiteIdentitiesStmt:                 q.countSiteIdentitiesStmt,
 		countSitesByStateStmt:                   q.countSitesByStateStmt,
 		countSitesCreatedStmt:                   q.countSitesCreatedStmt,
@@ -1071,6 +1118,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createControlPasskeyStmt:                q.createControlPasskeyStmt,
 		createPushCredentialStmt:                q.createPushCredentialStmt,
 		createSiteStmt:                          q.createSiteStmt,
+		createSiteBannerStmt:                    q.createSiteBannerStmt,
 		createSiteIdentityStmt:                  q.createSiteIdentityStmt,
 		createSiteIdentityPasskeyStmt:           q.createSiteIdentityPasskeyStmt,
 		deleteAllSiteIdentitiesStmt:             q.deleteAllSiteIdentitiesStmt,
@@ -1078,10 +1126,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteControlIdentityStmt:               q.deleteControlIdentityStmt,
 		deleteControlIdentityPasskeysStmt:       q.deleteControlIdentityPasskeysStmt,
 		deleteControlPasskeyStmt:                q.deleteControlPasskeyStmt,
+		deleteExpiredSiteBannersStmt:            q.deleteExpiredSiteBannersStmt,
 		deletePushCredentialStmt:                q.deletePushCredentialStmt,
 		deletePushRegistrationStmt:              q.deletePushRegistrationStmt,
 		deletePushRegistrationByTokenHashStmt:   q.deletePushRegistrationByTokenHashStmt,
 		deleteSiteAdminPasskeysStmt:             q.deleteSiteAdminPasskeysStmt,
+		deleteSiteBannerStmt:                    q.deleteSiteBannerStmt,
 		deleteSiteIdentityStmt:                  q.deleteSiteIdentityStmt,
 		deleteSiteIdentityNamedNotAdminStmt:     q.deleteSiteIdentityNamedNotAdminStmt,
 		deleteSiteIdentityPasskeyStmt:           q.deleteSiteIdentityPasskeyStmt,
