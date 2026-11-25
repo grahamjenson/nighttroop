@@ -1568,8 +1568,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Filters
 
-- Unknown field or operator: an empty list. v1 `find[...]` (e.g. `find[notes]=x`), v3 `field$operator` (e.g.
-  `notes$eq=x`).
+- Unknown field or operator: an empty list.
+  - v1: `find[...]` (e.g. `find[notes]=x`).
+  - v3: `field$operator` (e.g. `notes$eq=x`).
 - Other query parameters (e.g. xDrip+'s `rr` or `raw`) are ignored. A document is always returned as stored, not as
   the JSON sent.
 - A v1 `find[_id]` that finds nothing (e.g. a deleted treatment): an empty list, not 404.
@@ -1656,11 +1657,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - In a profile history, the last profile store is the newest changed.
 - A delete moves the document's `srvModified` and the v3 lastModified forward, so a history since a sync has later
   deletes.
-- A v3 delete of a document that is already deleted returns 200 and changes nothing. AAPS deletes a treatment again
-  after a follower deletes it. A v1 delete of it counts 0. A delete of an unknown document returns 404.
-- A v3 read of a deleted entry, treatment or device status returns 410 with only `status` and `message`, as in
-  Nightscout. A v1 read of it returns 404. A read of a document deleted permanently, or of an unknown document,
-  returns 404.
+- A delete of a document that is already deleted:
+  - v3 returns 200 and changes nothing. AAPS deletes a treatment again after a follower deletes it.
+  - v1 counts 0.
+- A delete of an unknown document returns 404.
+- A read of a deleted entry, treatment or device status:
+  - v3 returns 410 with only `status` and `message`, as in Nightscout.
+  - v1 returns 404.
+- A read of a document deleted permanently, or of an unknown document, returns 404.
 - A treatment or reading created with `isValid` false (AAPS uploads one it deleted while offline) stays deleted:
   - A v3 read returns 410. A search does not find it.
   - History has it with `isValid` false.
@@ -1700,8 +1704,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - A profile is the exception: its targets are stored in mg/dL, but it comes back in the units it was uploaded in, as
   Nightscout gives it back. Apps that import it, such as Trio, take its units from it.
 - Input: in the units sent with it.
-  - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value. A low of 30 or less
-    stays low (e.g. 28), and 39 (a sensor's LOW) is kept as sent. Dexcom's error codes (1 to 12) are not kept.
+  - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value.
+    - A low of 30 or less stays low (e.g. 28).
+    - 39 (a sensor's LOW) is kept as sent.
+    - Dexcom's error codes (1 to 12) are not kept.
   - Other glucose with no `units`: guessed from the value.
 - A profile in mmol/L comes back in mmol/L in each glucose field, with the values as sent:
   - `units`, `sens`, `target_low`, `target_high`.
@@ -1831,9 +1837,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Loop finds its own treatments by `syncIdentifier`, though an Omnipod dose's `_id` is a hash.
 - LoopFollow shows an `automatic` bolus as an SMB, and leaves it out of its bolus stats.
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
-- `extendedEmulated` (the Combo Bolus an AAPS Temp Basal gives, a JSON object): kept and returned as sent. AAPS reads
-  a Temp Basal with `extendedEmulated` as its extended bolus. Its insulin is the temp basal's, so it is not counted
-  again. Over 4096 characters: left out, and the rest of the treatment kept.
+- `extendedEmulated` (the Combo Bolus an AAPS Temp Basal gives, a JSON object): kept and returned as sent.
+  - AAPS reads a Temp Basal with `extendedEmulated` as its extended bolus.
+  - Its insulin is the temp basal's, so it is not counted again.
+  - Over 4096 characters: left out, and the rest of the treatment kept.
 - `bolusCalculatorResult` (AAPS Bolus Wizard calculation, JSON text): kept exactly as sent. Not JSON, or over 4096
   characters: left out, and the rest of the treatment kept.
 - A treatment's `glucose`, `glucoseType` and `units` are kept on each type that can have a glucose (see Event groups),
@@ -1845,7 +1852,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - `sgv` for a CGM reading, `mbg` for a meter reading, never both.
 - `direction`: a Nightscout name (e.g. `Flat`, `RATE OUT OF RANGE`), from any letter case or an arrow (`↗`, `↓↓`).
-  Unknown: `NOT COMPUTABLE`. Empty: left out.
+  - Unknown: `NOT COMPUTABLE`.
+  - Empty: left out.
 - `trend`: Nightscout's number for the direction (`NONE` 0, `DoubleUp` 1 ... `DoubleDown` 7, `NOT COMPUTABLE` 8,
   `RATE OUT OF RANGE` 9).
   - Only the trend is stored. The `direction` given back is made from it.
@@ -1913,16 +1921,20 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Sent with no `duration`: the `duration` is the nearest minute.
 - A treatment with a duration always has both `duration` and `durationInMilliseconds`, the missing one calculated.
 - A `duration` with a fraction (e.g. a Loop bolus `1.6666666666666667`, or a suspend) is kept to the ms.
-- API v1 `duration`: whole minutes, the nearest to `durationInMilliseconds` (e.g. a Loop bolus of 1.6667 minutes
-  reads 2, an AAPS temp target ended at 120750 ms reads 2). A bolus or temp basal of under a minute, also under half
-  a minute (e.g. 12000 ms), reads 1, not 0: followers read a 0 minute temp basal as cancelled. Trio and xDrip4iOS read
-  `duration` as a whole number and drop the page with a fraction.
+- API v1 `duration`: whole minutes, the nearest to `durationInMilliseconds`.
+  - A Loop bolus of 1.6667 minutes reads 2. An AAPS temp target ended at 120750 ms reads 2.
+  - A bolus or temp basal of under a minute, also under half a minute (e.g. 12000 ms), reads 1, not 0. Followers read
+    a 0 minute temp basal as cancelled.
+  - Trio and xDrip4iOS read `duration` as a whole number and drop the page with a fraction.
 - Exception, for a device added for Loop only: API v1 `duration` is the minutes of `durationInMilliseconds`, with their
-  fraction (e.g. 1.6666666666666667, 0.2), as Loop sends and reads them. No other client gets this (see
-  `nsutils.ClientOverrides`). API v3 and the Socket.IO broadcasts stay in whole minutes.
-- API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds` (AAPS drops a
-  treatment, or a page, with a fractional `duration`). A duration of under a minute is 1, not 0: readers take 0 as a
-  cancelled temp basal, or an indefinite `Temporary Override`. AAPS reads `durationInMilliseconds` first.
+  fraction (e.g. 1.6666666666666667, 0.2), as Loop sends and reads them.
+  - No other client gets this (see `nsutils.ClientOverrides`).
+  - API v3 and the Socket.IO broadcasts stay in whole minutes.
+- API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds`.
+  - AAPS drops a treatment, or a page, with a fractional `duration`.
+  - A duration of under a minute is 1, not 0. Readers take 0 as a cancelled temp basal, or an indefinite
+    `Temporary Override`.
+  - AAPS reads `durationInMilliseconds` first.
 
 #### Temp basals
 
@@ -1947,8 +1959,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Indefinite override: lasts a week. Has `durationType` `indefinite` while the override as sent is kept.
 - Also indefinite, not ended as it starts: `indefinite` with a `duration` of 0, or a `Temporary Override` of 0
   minutes (the careportal sends one until cancelled).
-- An override with a duration of under a minute (e.g. Loop's `0.28` when it is ended after 17 seconds) has ended. It
-  is not indefinite. Its exact time is in `durationInMilliseconds`.
+- An override with a duration of under a minute (e.g. Loop's `0.28` when it is ended after 17 seconds) has ended.
+  - It is not indefinite.
+  - Its exact time is in `durationInMilliseconds`.
 - A `Temporary Target` of 0 minutes cancels the running one.
 
 #### Profile switches
@@ -2393,8 +2406,10 @@ harder:
 | Abusive  | 0.6 to < 0.8 |
 | Blocked  | 0.8 or more  |
 
-- Control admins see each site's level and score on the sites list and the site page. Grey: Good and Fair. Amber:
-  Over use. Red: Abusive and Blocked.
+- Control admins see each site's level and score on the sites list and the site page.
+  - Grey: Good and Fair.
+  - Amber: Over use.
+  - Red: Abusive and Blocked.
 - The server does not treat a site differently by its level yet. The [abuse flag](#abuse-flag) and the
   [truncation of a site far over its size limit](#truncation-of-a-site-far-over-its-size-limit) still use the DB size.
 
