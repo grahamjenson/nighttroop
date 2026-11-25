@@ -33,6 +33,7 @@ import (
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
+	"nighttroop.t1d.nz/utils/thin"
 )
 
 type ControlDB struct {
@@ -628,6 +629,14 @@ const truncateLooksBack = 24 * time.Hour
 // deviceReportsKeptFor is how long a device report is kept at all
 const deviceReportsKeptFor = 30 * 24 * time.Hour
 
+// ThinParams are ThinOldDeviceReports's, for the reports written since since, at now, both in ms, with utils/thin's
+// ages and buckets, which a backfill keeps to as well
+func ThinParams(since, now int64) sitedb.ThinOldDeviceReportsParams {
+	return sitedb.ThinOldDeviceReportsParams{Since: since, Now: now, KeepAllMs: thin.KeepAll.Milliseconds(),
+		WeekMs: thin.Week.Milliseconds(), FortnightMs: thin.Fortnight.Milliseconds(), SmallMs: thin.Small.Milliseconds(),
+		MediumMs: thin.Medium.Milliseconds(), LargeMs: thin.Large.Milliseconds()}
+}
+
 // truncateSite clears the predictions from each device's loop statuses over a day old, keeps its pump as sent only on
 // its newest report with one, thins its reports from before the last hour to fewer the older they are, and deletes
 // those over 30 days old, looking at those written since since, 0 for all of them
@@ -639,7 +648,7 @@ func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 	if err := site.Queries().ClearOldPumps(ctx, sitedb.ClearOldPumpsParams{Since: since}); err != nil {
 		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
 	}
-	if err := site.Queries().ThinOldDeviceReports(ctx, sitedb.ThinOldDeviceReportsParams{Since: since, Now: now.UnixMilli()}); err != nil {
+	if err := site.Queries().ThinOldDeviceReports(ctx, ThinParams(since, now.UnixMilli())); err != nil {
 		return fmt.Errorf("cannot thin the device reports of site %s: %w", site.Subdomain, err)
 	}
 	before := now.Add(-deviceReportsKeptFor).UnixMilli()

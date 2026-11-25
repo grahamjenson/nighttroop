@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/utils/thin"
 )
 
 // A backfill fetches a connector's records from before the site's oldest glucose reading. A source has one queued
@@ -155,10 +156,10 @@ func (b *ConnectorJobManager) backfill(jobInfo *ConnectorJobInfo, backfill Backf
 	return err
 }
 
-// statusThinner keeps, of the device statuses a backfill reads newest first, only those the site's truncation keeps
-// (ThinOldDeviceReports): all from the last hour, then each device's newest in every 10 minutes until a week old, in
-// every 20 minutes until two weeks old and in every hour after. So a backfill does not write, then clear the loop
-// status of, the statuses the next truncation deletes: most of the 288 a day each device uploads.
+// statusThinner keeps, of the device statuses a backfill reads newest first, only those the site's truncation keeps,
+// by utils/thin's rule: all from the last hour, then each device's newest in each of its buckets. So a backfill does
+// not write, then clear the loop status of, the statuses the next truncation deletes: most of the 288 a day each
+// device uploads.
 type statusThinner struct {
 	now  int64
 	kept map[statusBucket]bool
@@ -178,17 +179,12 @@ func newStatusThinner(now time.Time) *statusThinner {
 // kept, as truncation will thin it.
 func (t *statusThinner) keep(doc map[string]any) bool {
 	date, ok := doc["date"].(float64)
-	if !ok || t.now-int64(date) < time.Hour.Milliseconds() {
+	size := thin.Bucket(int64(date), t.now)
+	if !ok || size == 0 {
 		return true
 	}
-	size := 10 * time.Minute
-	if age := time.Duration(t.now-int64(date)) * time.Millisecond; age > 14*24*time.Hour {
-		size = time.Hour
-	} else if age > 7*24*time.Hour {
-		size = 20 * time.Minute
-	}
 	device, _ := doc["device"].(string)
-	bucket := statusBucket{device: device, number: int64(date) / size.Milliseconds(), size: size.Milliseconds()}
+	bucket := statusBucket{device: device, number: int64(date) / size, size: size}
 	if t.kept[bucket] {
 		return false
 	}
