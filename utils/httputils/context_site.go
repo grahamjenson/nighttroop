@@ -147,7 +147,7 @@ func (sc *SiteContext) GetOwnSettings() *settings.ContextSettings {
 
 // GetSiteTimezone is the site's own timezone, or UTC, whatever the identity's
 func (sc *SiteContext) GetSiteTimezone() *time.Location {
-	return settings.SettingsValues{Timezone: sc.GetOwnSettings().GetSiteTimezone()}.Location()
+	return sc.GetOwnSettings().SiteLocation()
 }
 
 // GetSiteWeekStartDay is the site's own week start day, monday or sunday, whatever the identity's

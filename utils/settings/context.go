@@ -2,6 +2,7 @@ package settings
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -89,16 +90,20 @@ func (c *ContextSettings) GetAlarmNoDataMinutes() int64 {
 
 // Location is the timezone times are shown in, or UTC if it cannot be loaded
 func (c *ContextSettings) Location() *time.Location {
-	return SettingsValues{Timezone: c.GetTimezone()}.Location()
+	return locationOrUTC(c.GetTimezone())
 }
 
-// DateLayout and TimeLayout are the Go layouts of the date and time formats
+// DateLayout is the Go layout of the date format, e.g. 02/01/2006 for DD/MM/YYYY
 func (c *ContextSettings) DateLayout() string {
-	return SettingsValues{DateFormat: c.GetDateFormat()}.DateLayout()
+	return strings.NewReplacer("YYYY", "2006", "MM", "01", "DD", "02").Replace(c.GetDateFormat())
 }
 
+// timeLayouts are the Go layouts of the time formats, e.g. 03:04 PM for hh:mm a
+var timeLayouts = strings.NewReplacer("HH", "15", "hh", "03", "mm", "04", "ss", "05", "a", "PM")
+
+// TimeLayout is the Go layout of the time format, e.g. 03:04 PM for hh:mm a
 func (c *ContextSettings) TimeLayout() string {
-	return SettingsValues{TimeFormat: c.GetTimeFormat()}.TimeLayout()
+	return timeLayouts.Replace(c.GetTimeFormat())
 }
 
 // The site's own settings over the defaults, whoever is signed in: for what is the site's, such as the timezone its
@@ -106,6 +111,11 @@ func (c *ContextSettings) TimeLayout() string {
 
 func (c *ContextSettings) GetSiteTimezone() string {
 	return first(c.DefaultSettings.Timezone, c.Site.Timezone)
+}
+
+// SiteLocation is the site's own timezone, or UTC if it cannot be loaded
+func (c *ContextSettings) SiteLocation() *time.Location {
+	return locationOrUTC(c.GetSiteTimezone())
 }
 
 func (c *ContextSettings) GetSiteWeekStartDay() string {

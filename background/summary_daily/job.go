@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 // Builder builds each live site's yesterday, remembering what it last built for each, so a site's DB is only opened
@@ -164,9 +165,9 @@ func (b *Builder) Build(ctx context.Context, now time.Time) error {
 
 // yesterdayOf is the site's yesterday from its own settings, which are in the control DB, so its DB is not opened
 func yesterdayOf(site *controldb.Site, now time.Time) built {
-	settings := &httputils.SiteContext{SiteID: site.ID, SiteModel: site}
-	location := settings.GetSiteTimezone()
-	return built{date: sitedata.LocalDate(now, location, -1), timezone: location.String(), weekStart: settings.GetSiteWeekStartDay()}
+	own := settings.NewContextSettings(site, nil)
+	location := own.SiteLocation()
+	return built{date: sitedata.LocalDate(now, location, -1), timezone: location.String(), weekStart: own.GetSiteWeekStartDay()}
 }
 
 func (b *Builder) isBuilt(siteID string, yesterday built) bool {
@@ -308,7 +309,7 @@ func (b *Builder) rebuildStaleSite(ctx context.Context, site *controldb.Site, no
 // staleDays are the times, before today, of the site's days marked stale in its DB, and of its data written since it
 // was last checked, or, if never checked, since restartSince before began
 func staleDays(ctx context.Context, q *sitedb.Queries, site *controldb.Site, now, began time.Time) ([]time.Time, error) {
-	today := sitedata.PeriodStart("day", now, (&httputils.SiteContext{SiteID: site.ID, SiteModel: site}).GetSiteTimezone(), "monday")
+	today := sitedata.PeriodStart("day", now, settings.NewContextSettings(site, nil).SiteLocation(), "monday")
 	since := began.Add(-restartSince).UnixMilli()
 	if site.SummariesCheckedAt != nil {
 		since = *site.SummariesCheckedAt - sitedata.SummariesCheckedOverlap.Milliseconds()

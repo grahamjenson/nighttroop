@@ -17,14 +17,6 @@ type SettingDefinition[T any] struct {
 	ParseFunc    func(any) (T, error)
 }
 
-func (s *SettingDefinition[T]) GetIdentifier() string {
-	return s.Identifier
-}
-
-func (s *SettingDefinition[T]) Parse(value any) (any, error) {
-	return s.ParseFunc(value)
-}
-
 func (s *SettingDefinition[T]) ParseValidate(value any) (*T, error) {
 	v, err := s.ParseFunc(value)
 	if err != nil {

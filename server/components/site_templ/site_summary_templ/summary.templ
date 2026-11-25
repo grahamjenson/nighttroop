@@ -252,12 +252,10 @@ templ summaryContent(summary *sitemodels.Summary) {
 }
 
 // staleAfterMinutes is how old the latest reading can be before the summary says there is none: the no data alarm's
-// minutes, from the settings in effect, or 15 without them
+// minutes, from the settings in effect, or 15 without a site
 func staleAfterMinutes(ctx context.Context) int64 {
 	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
-		if minutes := new(siteContext.GetSettings().GetAlarmNoDataMinutes()); minutes != nil {
-			return *minutes
-		}
+		return siteContext.GetSettings().GetAlarmNoDataMinutes()
 	}
 	return 15
 }

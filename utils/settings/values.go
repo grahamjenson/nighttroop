@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"strings"
 	"sync"
 	"time"
 
@@ -87,28 +86,6 @@ type NotificationsValues struct {
 	Enabled bool
 }
 
-// Location is the timezone times are shown in, or UTC if it cannot be loaded
-func (v SettingsValues) Location() *time.Location {
-	location, err := LoadLocation(v.Timezone)
-	if err != nil {
-		return time.UTC
-	}
-	return location
-}
-
-// DateLayout is the Go layout of the date format, e.g. 02/01/2006 for DD/MM/YYYY
-func (v SettingsValues) DateLayout() string {
-	return strings.NewReplacer("YYYY", "2006", "MM", "01", "DD", "02").Replace(v.DateFormat)
-}
-
-// timeLayouts are the Go layouts of the time formats, e.g. 03:04 PM for hh:mm a
-var timeLayouts = strings.NewReplacer("HH", "15", "hh", "03", "mm", "04", "ss", "05", "a", "PM")
-
-// TimeLayout is the Go layout of the time format, e.g. 03:04 PM for hh:mm a
-func (v SettingsValues) TimeLayout() string {
-	return timeLayouts.Replace(v.TimeFormat)
-}
-
 // locations are the timezones loaded, by name, as a page shows many times in one
 var locations sync.Map
 
@@ -124,4 +101,13 @@ func LoadLocation(name string) (*time.Location, error) {
 	}
 	locations.Store(name, location)
 	return location, nil
+}
+
+// locationOrUTC is the named timezone, or UTC if it cannot be loaded
+func locationOrUTC(name string) *time.Location {
+	location, err := LoadLocation(name)
+	if err != nil {
+		return time.UTC
+	}
+	return location
 }
