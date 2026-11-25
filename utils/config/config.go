@@ -119,6 +119,13 @@ type ServerConfig struct {
 	PagerDutyRoutingKey string
 	PagerDutyEventsURL  string
 
+	// ResendAPIKey is the API key of the Resend account emails are sent with, ResendFrom who they are from, an
+	// address of a domain verified in it, and ResendAPIURL where they are sent. Without the key and the address no
+	// email is sent, and a site cannot give one.
+	ResendAPIKey string
+	ResendFrom   string
+	ResendAPIURL string
+
 	// Deployment names this server among those running Nighttroop, e.g. one of several staging servers, as Sentry's
 	// environment its errors are reported under
 	Deployment string
@@ -390,6 +397,11 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		// pagerduty
 		PagerDutyRoutingKey: configStringSelect(dotenv, "PAGERDUTY_ROUTING_KEY", ""),
 		PagerDutyEventsURL:  configStringSelect(dotenv, "PAGERDUTY_EVENTS_URL", "https://events.pagerduty.com/v2/enqueue"),
+
+		// email
+		ResendAPIKey: configStringSelect(dotenv, "RESEND_API_KEY", ""),
+		ResendFrom:   configStringSelect(dotenv, "RESEND_FROM", ""),
+		ResendAPIURL: configStringSelect(dotenv, "RESEND_API_URL", "https://api.resend.com/emails"),
 		Deployment:          configStringSelect(dotenv, "DEPLOYMENT", "development"),
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", supportEmail),
@@ -904,4 +916,9 @@ func MergeMaps(a, b map[string]string) map[string]string {
 	}
 
 	return result
+}
+
+// EmailWorking is whether emails can be sent: RESEND_API_KEY and RESEND_FROM are both set
+func (c *ServerConfig) EmailWorking() bool {
+	return c.ResendAPIKey != "" && c.ResendFrom != ""
 }
