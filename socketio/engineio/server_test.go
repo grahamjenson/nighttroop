@@ -304,6 +304,53 @@ func TestMaxSessions(t *testing.T) {
 	}
 }
 
+// With ReplaceUnauthorized a full server closes its oldest session not yet authorized to open a new one, over polling
+// or a websocket, so sessions that never authorize cannot keep a client out. One with every session authorized
+// refuses a new one.
+func TestFullServerReplacesItsOldestUnauthorizedSession(t *testing.T) {
+	tests := []struct {
+		transport string
+		open      func(url string) (*Client, error)
+	}{
+		{"polling", func(url string) (*Client, error) { return Dial(context.Background(), url, V4, nil, nil) }},
+		{"websocket", func(url string) (*Client, error) { return DialOverWebSocket(context.Background(), url, V4, nil) }},
+	}
+	for _, test := range tests {
+		t.Run(test.transport, func(t *testing.T) {
+			opened := make(chan *Session, 4)
+			server := NewServer(Config{MaxSessions: 2, ReplaceUnauthorized: true}, func(s *Session) { opened <- s })
+			ts := httptest.NewServer(server)
+			t.Cleanup(func() {
+				server.Close()
+				ts.Close()
+			})
+			open := func() *Session {
+				client, err := test.open(ts.URL)
+				require.NoError(t, err)
+				t.Cleanup(func() { client.Close() })
+				return <-opened
+			}
+			oldest, authorized := open(), open()
+			authorized.Authorize()
+			closed := make(chan string, 1)
+			oldest.OnClose(func(reason string) { closed <- reason })
+
+			newer := open()
+			require.Equal(t, "replaced by a newer session", <-closed)
+			require.Equal(t, 2, server.Count(), "the server has no more sessions than its most")
+			select {
+			case <-authorized.Done():
+				t.Fatal("an authorized session was closed for a newer one")
+			default:
+			}
+
+			newer.Authorize()
+			_, err := test.open(ts.URL)
+			require.ErrorContains(t, err, "429", "every session is authorized, so none is closed for a new one")
+		})
+	}
+}
+
 // A holder, as an identity, holds at most MaxPerHolder of the server's sessions, so it cannot take every one
 func TestMaxPerHolder(t *testing.T) {
 	opened := make(chan *Session, 4)

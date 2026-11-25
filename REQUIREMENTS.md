@@ -2082,6 +2082,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   write, or a `/storage` or `/alarm` `subscribe` that succeeds.
 - One IP (an IPv6 /64): maximum 30 of a site's live sessions with no access (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`). The
   next gets 429.
+- A site with all its live sessions open (`SOCKET_MAX_SESSIONS_PER_SITE`):
+  - If one or more have no access, the oldest of them closes and the new session opens. Many IPs with no token
+    cannot keep a follower out.
+  - A session with access never closes for a new one.
+  - If every session has access, the next gets 429.
 - One identity: maximum half of a site's live sessions (`SOCKET_MAX_SESSIONS_PER_SITE`), 150 by default. On the
   next, its `authorize` or `subscribe` is disconnected with no answer, and the connection closes a second later.
   - The site's other identities can connect to the other half.
