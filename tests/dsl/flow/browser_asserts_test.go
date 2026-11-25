@@ -47,6 +47,32 @@ func TestVisibleAssertsWaitForThePage(t *testing.T) {
 	}
 }
 
+// The heading and the input keep their first text until half a second after the page loads, as an element does until
+// the HTMX swap after a click changes it
+const changingTextPage = `<html><body><h1 id="title">Loading</h1><input id="typed" value="attribute">
+<script>setTimeout(() => { document.getElementById("title").innerText = "Nighttroop"
+	document.getElementById("typed").value = "shown" }, 500)</script>
+</body></html>`
+
+// ASSERT_TEXT_EQUALS waits for the text it expects, and does not fail on the text from before the page changed
+func TestTextEqualsWaitsForTheText(t *testing.T) {
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+
+	for _, assert := range []*AssertTextEquals{{Locator: "#title", Text: "Nighttroop"}, {Locator: "#typed", Text: "shown"}} {
+		t.Run(assert.Locator, func(t *testing.T) {
+			page, err := browser.NewPage()
+			require.NoError(t, err)
+			require.NoError(t, page.SetContent(changingTextPage))
+			require.NoError(t, assert.Execute(t, map[string]any{}, page, nil))
+		})
+	}
+}
+
 // The page moves to /next half a second after it loads, as one does after a click goes to the next page
 const movingPage = `<html><body><script>
 setTimeout(() => { history.pushState({}, '', '/next') }, 500)

@@ -117,9 +117,6 @@
            an expected value that is looked up and not there
         1. P4: `ASSERT_NOT_VISIBLE` and `ASSERT_COUNT` do not fill in `{{ }}`, so one with a value in its locator finds
            nothing and can pass
-        1. P3: `ASSERT_TEXT_EQUALS` reads the text one time, so just after a click it can read the text from before
-           the page changed (`site/summary_phone.bdd:33` failed so one time on a busy machine): wait for the text,
-           as `ASSERT_VISIBLE` waits
 
 
 1. Push notifications (the control DB's `push_credentials` and `push_registrations`):
