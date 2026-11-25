@@ -357,14 +357,12 @@ type AssertTextEquals struct {
 	TestLine int
 }
 
+// textPoll is how often ASSERT_TEXT_EQUALS reads its element's text again while it waits for the expected one
+const textPoll = 50 * time.Millisecond
+
+// Execute reads the element's text until it is the expected one or visibleWait passes, as just after a click the
+// element can still show its text from before the page changed
 func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	html, err := page.Content()
-	if err != nil {
-		return err
-	}
-
-	prettyOutput := PrettifyHTML(html)
-
 	// The text can be a template, e.g. {{ date -1 }}
 	expected, err := Render(r.Text, ctx)
 	if err != nil {
@@ -372,20 +370,43 @@ func (r *AssertTextEquals) Execute(t *testing.T, ctx map[string]any, page playwr
 	}
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
-		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyOutput)
+		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, prettyPage(page))
 	}
-	innerText, err := locator.InnerText(playwright.LocatorInnerTextOptions{Timeout: readWait})
-	// An input's text is the value it shows, which can differ from its value attribute
-	if tag, tagErr := locator.Evaluate("element => element.tagName", nil, playwright.LocatorEvaluateOptions{Timeout: readWait}); err == nil && tagErr == nil && tag == "INPUT" {
-		innerText, err = locator.InputValue(playwright.LocatorInputValueOptions{Timeout: readWait})
+	deadline := time.Now().Add(visibleWait * time.Millisecond)
+	innerText, err := shownText(locator)
+	for (err != nil || innerText != expected) && time.Now().Before(deadline) {
+		time.Sleep(textPoll)
+		innerText, err = shownText(locator)
 	}
 	if err != nil {
-		t.Fatalf("\n\n%s\n failed to get inner text for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyOutput)
+		t.Fatalf("\n\n%s\n failed to get inner text for locator: %v, error: %v\n\n%s\n\n", r.ToErrorLine(), r.Locator, err, prettyPage(page))
 	}
 	if innerText != expected {
-		t.Fatalf("\n\n%s\n pageContains failed: expected %v at %v found %v: \n\n%s\n\n", r.ToErrorLine(), expected, r.Locator, innerText, prettyOutput)
+		t.Fatalf("\n\n%s\n pageContains failed: expected %v at %v found %v: \n\n%s\n\n", r.ToErrorLine(), expected, r.Locator, innerText, prettyPage(page))
 	}
 	return nil
+}
+
+// shownText is the text the element shows: its inner text, or for an input its value, which can differ from its value
+// attribute
+func shownText(locator playwright.Locator) (string, error) {
+	innerText, err := locator.InnerText(playwright.LocatorInnerTextOptions{Timeout: readWait})
+	if err != nil {
+		return "", err
+	}
+	if tag, tagErr := locator.Evaluate("element => element.tagName", nil, playwright.LocatorEvaluateOptions{Timeout: readWait}); tagErr == nil && tag == "INPUT" {
+		return locator.InputValue(playwright.LocatorInputValueOptions{Timeout: readWait})
+	}
+	return innerText, nil
+}
+
+// prettyPage is the page's HTML as a failed assert found it, or why it could not be read
+func prettyPage(page playwright.Page) string {
+	html, err := page.Content()
+	if err != nil {
+		return err.Error()
+	}
+	return PrettifyHTML(html)
 }
 
 func (r *AssertTextEquals) ToErrorLine() string {
