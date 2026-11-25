@@ -66,12 +66,10 @@ SELECT * FROM sites WHERE id = ?;
 -- name: GetSiteIDsWithAlarms :many
 -- The live sites with an alarm turned on, for the site or for one of its enabled identities, which are checked periodically
 SELECT id FROM sites WHERE state = 'live' AND (
-    alarm_urgent_low_enabled OR alarm_low_enabled OR alarm_urgent_high_enabled OR alarm_high_enabled OR alarm_no_data_enabled
-        OR alarm_device_battery_low_enabled
+    json_extract(settings_json, '$.alarms.urgent_low.enabled') OR json_extract(settings_json, '$.alarms.low.enabled') OR json_extract(settings_json, '$.alarms.urgent_high.enabled') OR json_extract(settings_json, '$.alarms.high.enabled') OR json_extract(settings_json, '$.alarms.no_data.enabled') OR json_extract(settings_json, '$.alarms.device_battery_low.enabled')
     OR id IN (
         SELECT site_id FROM site_identities WHERE enabled AND (
-            alarm_urgent_low_enabled OR alarm_low_enabled OR alarm_urgent_high_enabled OR alarm_high_enabled OR alarm_no_data_enabled
-        OR alarm_device_battery_low_enabled
+            json_extract(settings_json, '$.alarms.urgent_low.enabled') OR json_extract(settings_json, '$.alarms.low.enabled') OR json_extract(settings_json, '$.alarms.urgent_high.enabled') OR json_extract(settings_json, '$.alarms.high.enabled') OR json_extract(settings_json, '$.alarms.no_data.enabled') OR json_extract(settings_json, '$.alarms.device_battery_low.enabled')
         )
     )
 );

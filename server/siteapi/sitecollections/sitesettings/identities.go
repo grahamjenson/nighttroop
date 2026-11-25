@@ -124,13 +124,13 @@ func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httput
 	if err != nil {
 		return err
 	}
-	level := settings.NewSettingsMap(identity, &identity.CreatedAt, new("identity"))
-	if err := level.SetSettingByName("units", string(consts.UnitsMGDL), nil, new("identity")); err != nil {
+	own := settings.SettingsFromJSON(identity.SettingsJson)
+	own.Units = new(consts.UnitsMGDL)
+	stored, err := own.JSON()
+	if err != nil {
 		return err
 	}
-	params := &controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID}
-	settings.SetSettings(params, level)
-	return q.UpdateSiteIdentitySettings(ctx, *params)
+	return q.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID, SettingsJson: stored})
 }
 
 func (s *IdentitiesCollection) CreateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {

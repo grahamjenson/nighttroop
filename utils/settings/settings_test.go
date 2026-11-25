@@ -1,6 +1,7 @@
 package settings_test
 
 import (
+	"cmp"
 	"strings"
 	"testing"
 	"time"
@@ -27,18 +28,14 @@ func TestCombinedSettingsUnits(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
-			site.SetUnits(test.site)
-			identity.SetUnits(test.identity)
-			combined := &settings.CombinedSettingsMap{
-				SiteSettingsMap:     site,
-				IdentitySettingsMap: identity,
-				DefaultSettingsMap:  settings.DefaultSettingsMap,
-			}
+			combined := &settings.ContextSettings{DefaultSettings: settings.DefaultValues(),
+				Site: settings.Settings{Units: test.site}, Identity: settings.Settings{Units: test.identity}}
 
-			require.Equal(t, test.want, *combined.GetUnits())
+			require.Equal(t, test.want, combined.GetUnits())
+			require.Equal(t, test.want, combined.Values().Units)
+			require.Equal(t, mmol, combined.DefaultSettings.Units)
 			// The same order as looking a setting up by name
-			byName, err := combined.GetSettingAnyTypeByName("units")
+			byName, err := combined.Get("units")
 			require.NoError(t, err)
 			require.Equal(t, test.want, byName.Value)
 		})
@@ -61,16 +58,12 @@ func TestCombinedSettingsTimezone(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
-			site.SetTimezone(test.site)
-			identity.SetTimezone(test.identity)
-			combined := &settings.CombinedSettingsMap{
-				SiteSettingsMap:     site,
-				IdentitySettingsMap: identity,
-				DefaultSettingsMap:  settings.DefaultSettingsMap,
-			}
+			combined := &settings.ContextSettings{DefaultSettings: settings.DefaultValues(),
+				Site: settings.Settings{Timezone: test.site}, Identity: settings.Settings{Timezone: test.identity}}
 
 			require.Equal(t, test.want, combined.Location().String())
+			// The site's own is the site's, whatever the identity's
+			require.Equal(t, *cmp.Or(test.site, new("UTC")), combined.GetSiteTimezone())
 		})
 	}
 }
@@ -113,9 +106,9 @@ func TestFastRiseAndDropMinutes(t *testing.T) {
 
 // Times and dates are shown in the identity's format, then the site's, then the default, each as its Go layout
 func TestCombinedSettingsLayouts(t *testing.T) {
-	layoutOf := map[string]func(*settings.CombinedSettingsMap) string{
-		"time_format": (*settings.CombinedSettingsMap).TimeLayout,
-		"date_format": (*settings.CombinedSettingsMap).DateLayout,
+	layoutOf := map[string]func(*settings.ContextSettings) string{
+		"time_format": (*settings.ContextSettings).TimeLayout,
+		"date_format": (*settings.ContextSettings).DateLayout,
 	}
 	tests := []struct {
 		setting        string
@@ -137,13 +130,12 @@ func TestCombinedSettingsLayouts(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.setting+"/"+test.site+"_"+test.identity, func(t *testing.T) {
-			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
-			for level, format := range map[*settings.SettingMap]string{site: test.site, identity: test.identity} {
+			combined := &settings.ContextSettings{DefaultSettings: settings.DefaultValues()}
+			for level, format := range map[*settings.Settings]string{&combined.Site: test.site, &combined.Identity: test.identity} {
 				if format != "" {
-					require.NoError(t, level.SetSettingByName(test.setting, format, nil, nil))
+					require.NoError(t, level.Set(test.setting, format))
 				}
 			}
-			combined := &settings.CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: settings.DefaultSettingsMap}
 			require.Equal(t, test.layout, layoutOf[test.setting](combined))
 		})
 	}
@@ -180,11 +172,7 @@ func TestLoadLocation(t *testing.T) {
 // as every time the API gives, not in seconds, which reads as January 1970
 func TestCreatedAtIsMilliseconds(t *testing.T) {
 	before := time.Now().Add(-time.Hour).UnixMilli()
-	for _, setting := range settings.DefaultCombinedSettingsMap().GetAllSettingAnyTypes() {
+	for _, setting := range (&settings.ContextSettings{DefaultSettings: settings.DefaultValues()}).All() {
 		require.Greater(t, setting.CreatedAt, before, setting.Identifier)
 	}
-
-	set := &settings.SettingMap{}
-	require.NoError(t, set.SetSettingByName("units", "mg/dL", nil, nil))
-	require.Greater(t, set.Units.CreatedAt, before)
 }

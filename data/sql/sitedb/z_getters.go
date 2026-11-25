@@ -791,11 +791,6 @@ func (m GlucoseReading) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetDelta returns the Delta value.
 func (m GlucoseReading) GetDelta() *float64 {
 	return m.Delta
@@ -919,11 +914,6 @@ func (m *GlucoseReadingsVw) SetReadingType(v *string) {
 // GetUnits returns the Units value.
 func (m GlucoseReadingsVw) GetUnits() *consts.Units {
 	return m.Units
-}
-
-// SetUnits sets the Units value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetUnits(v *consts.Units) {
-	m.Units = v
 }
 
 // GetDelta returns the Delta value.
@@ -1556,19 +1546,9 @@ func (m ProfilePreset) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m ProfilePreset) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -1696,19 +1676,9 @@ func (m ProfileSwitch) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m ProfileSwitch) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -1866,19 +1836,9 @@ func (m ProfileSwitchesVw) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m ProfileSwitchesVw) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -2014,11 +1974,6 @@ func (m SummaryPeriod) GetDate() string {
 // GetTimezone returns the Timezone value.
 func (m SummaryPeriod) GetTimezone() string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated SummaryPeriod.
-func (m *SummaryPeriod) SetTimezone(v string) {
-	m.Timezone = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -3261,11 +3216,6 @@ func (m CreateGlucoseReadingParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetDelta returns the Delta value.
 func (m CreateGlucoseReadingParams) GetDelta() *float64 {
 	return m.Delta
@@ -3404,11 +3354,6 @@ func (m *RewriteGlucoseReadingParams) SetReadingType(v string) {
 // GetUnits returns the Units value.
 func (m RewriteGlucoseReadingParams) GetUnits() *consts.Units {
 	return m.Units
-}
-
-// SetUnits sets the Units value and returns the updated RewriteGlucoseReadingParams.
-func (m *RewriteGlucoseReadingParams) SetUnits(v *consts.Units) {
-	m.Units = v
 }
 
 // GetDelta returns the Delta value.
@@ -4336,19 +4281,9 @@ func (m CreateProfileSwitchParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m CreateProfileSwitchParams) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetIcfgJson returns the IcfgJson value.
@@ -4496,19 +4431,9 @@ func (m RewriteProfileSwitchParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated RewriteProfileSwitchParams.
-func (m *RewriteProfileSwitchParams) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m RewriteProfileSwitchParams) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated RewriteProfileSwitchParams.
-func (m *RewriteProfileSwitchParams) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetIcfgJson returns the IcfgJson value.
@@ -5496,19 +5421,9 @@ func (m CreateProfilePresetParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated CreateProfilePresetParams.
-func (m *CreateProfilePresetParams) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m CreateProfilePresetParams) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated CreateProfilePresetParams.
-func (m *CreateProfilePresetParams) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -5674,10 +5589,5 @@ func (m UpsertSummaryPeriodParams) GetDate() string {
 // GetTimezone returns the Timezone value.
 func (m UpsertSummaryPeriodParams) GetTimezone() string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated UpsertSummaryPeriodParams.
-func (m *UpsertSummaryPeriodParams) SetTimezone(v string) {
-	m.Timezone = v
 }
 

@@ -115,6 +115,39 @@ The words the pages, toasts, errors and docs use for one thing (UI text is in `u
 - Searches page with `limit` and `skip` (at most 1000), newest first, and leave out soft-deleted rows. Deletes from the site are soft deletes.
 
 
+## Settings
+
+A site's own settings and an identity's own settings are each one JSON column, `settings_json`. `utils/settings` has
+three types:
+
+- `Settings` (`settings.go`): what the site or an identity has set, as its column holds it. Every field is a pointer,
+  and nil is "not set".
+- `SettingsValues` (`values.go`): the same fields with no pointers. The defaults are one.
+- `ContextSettings` (`context.go`): what a request has, from `siteContext.GetSettings()`. It has `DefaultSettings`,
+  `Identity` and `Site`.
+
+Read a setting with a getter of `ContextSettings`, e.g. `GetUnits()`. A getter is the identity's value, then the site's,
+then the default, so it never returns nil. `Values()` is every setting that way. `GetSite...()` is the site's own.
+Change one with `Set(name, value)` on `Identity` or `Site`, or a setter such as `SetIdentityUnits`.
+
+Rows of every release are read into `Settings`, so it only grows.
+
+- To add a setting: add its definition, the same field to `Settings` (a pointer, with its JSON name) and to
+  `SettingsValues`, its line in `allSettings` in `fields.go`, and its line at the end of
+  `utils/settings/settings_schema.txt`. Add a getter to `ContextSettings` when code reads it. Do not change `Version`.
+- Never rename, remove, move or retype a field of `Settings`, change its JSON name, or give it to another setting. A
+  stored row would be read as not set, and the person given the default with no word.
+- Never change or delete a line of `settings_schema.txt`, never change `settings_v1.json`, and never change the
+  checksums in `TestWhatVersion1StoredIsNotEdited`. If a test in `utils/settings/json_test.go` fails, or the server
+  does not start with "settings: no field at", put the struct back.
+- A setting that is no longer used keeps its field. Stop reading it; do not delete it.
+- To change what a stored value means: add a field for the new meaning and keep reading the old one. Only if that
+  cannot work, add 1 to `Version`, read each older version as it was written, and add a `settings_v<N>.json` with its
+  own test. Ask before doing this.
+- In a test, make a row's settings from the struct: `settings.StoredOf(settings.Settings{Timezone: new("UTC")})`.
+- Do not add a settings column. Do not query one setting with `json_extract` unless a background job must find sites
+  by it without reading each row, as `GetSiteIDsWithAlarms` does.
+
 ## Issue and PR Guidelines
 
 - All PRs should be against the main branch. No stacked PRs. Break it up into non-conflicting independent changes, or leave conflicting and we can resolve later.

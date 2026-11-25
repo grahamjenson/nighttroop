@@ -37,7 +37,7 @@ func TestBrowserSettings(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := BrowserSettings(tt.timezone, tt.language)
-			got := want{m.GetTimezone(), m.GetLanguage(), m.GetDateFormat(), m.GetTimeFormat(), m.GetWeekStartDay(), m.GetUnits()}
+			got := want{m.Timezone, m.Language, m.DateFormat, m.TimeFormat, m.WeekStartDay, m.Units}
 			require.Equal(t, tt.want, got)
 			// Every format set is one the settings accept
 			if got.date != nil {

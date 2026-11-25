@@ -5,17 +5,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 // TestCheckLimits checks a site API write is refused for a value its column, narrowed by its override, does not take,
 // saying the JSON field and what it takes, with glucose in the settings' units
 func TestCheckLimits(t *testing.T) {
-	mgdl := &httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site", Units: new(consts.UnitsMGDL)}}
-	mmol := &httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site", Units: new(consts.UnitsMMOLL)}}
+	mgdl := &httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site", SettingsJson: settings.StoredOf(settings.Settings{Units: new(consts.UnitsMGDL)})}}
+	mmol := &httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site", SettingsJson: settings.StoredOf(settings.Settings{Units: new(consts.UnitsMMOLL)})}}
 	tests := []struct {
 		name        string
 		collection  string

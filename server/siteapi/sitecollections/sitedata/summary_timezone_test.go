@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -32,8 +34,8 @@ func TestSummaryMinutesInSiteTimezone(t *testing.T) {
 		BasalRatesJson: new(string(basal)), OccurredAt: now.Add(-48 * time.Hour).UnixMilli(), CreatedByIdentityName: "loop"})
 	require.NoError(t, err)
 
-	siteContext := &httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site", Timezone: new("Pacific/Auckland")},
-		IdentityModel: &controldb.SiteIdentity{Name: "viewer", Timezone: new("America/Los_Angeles")}}
+	siteContext := &httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site", SettingsJson: settings.StoredOf(settings.Settings{Timezone: new("Pacific/Auckland")})},
+		IdentityModel: &controldb.SiteIdentity{Name: "viewer", SettingsJson: settings.StoredOf(settings.Settings{Timezone: new("America/Los_Angeles")})}}
 	summary := &sitemodels.Summary{Since: now.Add(-10 * time.Minute).UnixMilli(), Units: new(consts.UnitsMGDL)}
 	require.Nil(t, addMinutes(ctx, q, summary, siteContext))
 

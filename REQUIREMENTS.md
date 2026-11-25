@@ -1361,6 +1361,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - The language is typed. Under its box, the page says to type a language code, such as en or en-NZ, and that the
   pages are in English only for now.
 - Admins set site settings. Identities can override them.
+- The settings of the site and of each identity are stored as one versioned document each. A stored value that is
+  out of its range, or of the wrong type, is not used: the site's value, then the fallback, shows. The other
+  settings of the document are used.
 - An admin sees two columns, on General and on Alarms. Under its title, **Site** says "For everyone on this site"
   and **Yours** says "For you only".
 - Each column has its own Save button:
