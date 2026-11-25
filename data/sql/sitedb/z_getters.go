@@ -3871,6 +3871,11 @@ func (m *HardDeleteInsulinDoseParams) SetID(v string) {
 	m.ID = v
 }
 
+// SetLimit sets the Limit value and returns the updated InsulinDosesExtendedIntoParams.
+func (m *InsulinDosesExtendedIntoParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m RewriteInsulinDoseParams) GetID() string {
 	return m.ID

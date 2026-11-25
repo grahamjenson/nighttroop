@@ -348,11 +348,17 @@ func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *http
 	if err != nil {
 		return nil, err
 	}
-	// From a week before, the longest a dose's extended part runs, so one started then gives the day its share
-	doses, err := q.SearchInsulinDoses(ctx, sitedb.SearchInsulinDosesParams{DateGTE: new(start - extendedLookback.Milliseconds()), DateLT: &upTo, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+	doses, err := q.SearchInsulinDoses(ctx, sitedb.SearchInsulinDosesParams{DateGTE: &start, DateLT: &upTo, IncludeDeleted: &excludeDeleted, Limit: maxRows})
 	if err != nil {
 		return nil, err
 	}
+	// From a week before, the longest a dose's extended part runs, only those still running into the day, which gives
+	// it their share, so a loop's week of SMBs is not read for them
+	extended, err := q.InsulinDosesExtendedInto(ctx, sitedb.InsulinDosesExtendedIntoParams{Since: start - extendedLookback.Milliseconds(), At: start, Limit: maxRows})
+	if err != nil {
+		return nil, err
+	}
+	doses = append(doses, extended...)
 	food, err := q.SearchFoodIntakes(ctx, sitedb.SearchFoodIntakesParams{DateGTE: &start, DateLT: &upTo, IncludeDeleted: &excludeDeleted, Limit: maxRows})
 	if err != nil {
 		return nil, err
