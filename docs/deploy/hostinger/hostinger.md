@@ -436,9 +436,10 @@ Find the cause in `docker compose logs nighttroop`:
 
 - **Still starting after a while:** a first start on a new VPS restores from S3. More data takes longer. Wait a few
   minutes.
-- **`Site DB is missing, so the site is not opened`:** a live site's database is missing, and its batch's S3 backup
-  did not restore it. The server does not start (`live sites' DBs are missing and were not restored:` names them). Put
-  the file back (for example, from `./backups`), then restart.
+- **`Site DB is missing, so the site is unavailable`:** a live site's database is missing. The server starts without
+  it, and restores it from its latest S3 backup in the background.
+  - If the restore fails, the server tries again for about an hour, then pages the admin.
+  - The control site's banner names the site. Its page offers fixes, for example Upload DB from `./backups`.
 
 ### Everyone seems to share one IP address
 
