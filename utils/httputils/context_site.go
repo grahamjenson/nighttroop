@@ -165,7 +165,7 @@ func (sc *SiteContext) getSiteSettings() *settings.CombinedSettingsMap {
 		sc.siteSettings = &settings.CombinedSettingsMap{SiteSettingsMap: &settings.SettingMap{}, IdentitySettingsMap: &settings.SettingMap{},
 			DefaultSettingsMap: settings.DefaultSettingsMap}
 		if sc.SiteModel != nil {
-			sc.siteSettings.SiteSettingsMap = settings.NewSettingsMap(sc.SiteModel, &sc.SiteModel.CreatedAt, new("site"))
+			sc.siteSettings.SiteSettingsMap = settings.OfSite(sc.SiteModel)
 		}
 	}
 	return sc.siteSettings

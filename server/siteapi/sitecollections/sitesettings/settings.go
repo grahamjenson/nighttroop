@@ -96,7 +96,7 @@ func (s *SettingsCollection) level(siteContext *httputils.SiteContext, identity 
 		return siteContext.GetSettings().SiteSettingsMap
 	}
 	if s.Other {
-		return settings.NewSettingsMap(identity, &identity.CreatedAt, new("identity"))
+		return settings.OfIdentity(identity)
 	}
 	return siteContext.GetSettings().IdentitySettingsMap
 }
@@ -292,14 +292,14 @@ func (s *SettingsCollection) save(ctx context.Context, collectionTx *siteapiutil
 	if err != nil {
 		return err
 	}
-	if s.Site {
-		params := &controldb.UpdateSitesSettingsParams{ID: siteContext.SiteModel.ID}
-		settings.SetSettings(params, level)
-		return q.UpdateSitesSettings(ctx, *params)
+	stored, err := level.Stored()
+	if err != nil {
+		return err
 	}
-	params := &controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID}
-	settings.SetSettings(params, level)
-	return q.UpdateSiteIdentitySettings(ctx, *params)
+	if s.Site {
+		return q.UpdateSiteSettings(ctx, controldb.UpdateSiteSettingsParams{ID: siteContext.SiteModel.ID, SettingsJson: stored})
+	}
+	return q.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID, SettingsJson: stored})
 }
 
 // logSiteChanges logs a new site timezone or week start day as an event, once saved, so the background jobs that

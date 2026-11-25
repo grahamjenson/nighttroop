@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -83,7 +85,7 @@ func TestMergeFieldsDefaultUnits(t *testing.T) {
 func mergeSite(t *testing.T, units consts.Units) (*httputils.SiteContext, *sitedb.Queries) {
 	_, _, site := testutils.NewControlDBWithSite(t)
 	return &httputils.SiteContext{SiteID: site.SiteDB.Subdomain, SiteDB: site.SiteDB,
-		SiteModel:     &controldb.Site{ID: site.SiteDB.Subdomain, Units: &units},
+		SiteModel:     &controldb.Site{ID: site.SiteDB.Subdomain, SettingsJson: settings.StoredOf(map[string]any{"units": units})},
 		IdentityModel: &controldb.SiteIdentity{ID: 1, Name: "admin", Role: consts.IdentityRole("admin")}}, site.SiteDB.Queries()
 }
 

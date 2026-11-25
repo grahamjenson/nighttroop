@@ -115,6 +115,24 @@ The words the pages, toasts, errors and docs use for one thing (UI text is in `u
 - Searches page with `limit` and `skip` (at most 1000), newest first, and leave out soft-deleted rows. Deletes from the site are soft deletes.
 
 
+## Settings
+
+A site's own settings and an identity's own settings are each one JSON column, `settings_json`, read into the `Stored`
+struct in `utils/settings/stored.go`. Rows of every release are read into that struct, so it only grows.
+
+- To add a setting: add a field to `Stored` (or to one of its structs, or a new struct for a new group), its line in
+  `fields()`, and its line at the end of `utils/settings/stored_schema.txt`. Do not change `StoredVersion`.
+- Never rename, remove, move or retype a field of `Stored`, change its JSON name, or give it to another setting. A
+  stored row would be read as not set, and the person given the default with no word.
+- Never change or delete a line of `stored_schema.txt`, never change `stored_v1.json`, and never change the checksums
+  in `TestWhatVersion1StoredIsNotEdited`. If a test in `utils/settings/json_test.go` fails, put the struct back.
+- A setting that is no longer used keeps its field. Stop reading it; do not delete it.
+- To change what a stored value means: add a field for the new meaning and keep reading the old one. Only if that
+  cannot work, add 1 to `StoredVersion`, read each older version as it was written, and add a `stored_v<N>.json`
+  with its own test. Ask before doing this.
+- Do not add a settings column. Do not query one setting with `json_extract` unless a background job must find sites
+  by it without reading each row, as `GetSiteIDsWithAlarms` does.
+
 ## Issue and PR Guidelines
 
 - All PRs should be against the main branch. No stacked PRs. Break it up into non-conflicting independent changes, or leave conflicting and we can resolve later.

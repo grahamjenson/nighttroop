@@ -101,59 +101,6 @@ var DefaultSettingsMap = &SettingMap{
 	NotificationsEnabled:             NewDefaultSetting(NotificationsEnabled),
 }
 
-// New Setting Does not validate Check
-func NewSettingsMap(g SettingsGetter, createdAt *int64, subject *string) *SettingMap {
-	s := &SettingMap{
-		Units:                            NewSetting(Units, g.GetUnits(), createdAt, subject),
-		Timezone:                         NewSetting(Timezone, g.GetTimezone(), createdAt, subject),
-		Language:                         NewSetting(Language, g.GetLanguage(), createdAt, subject),
-		DateFormat:                       NewSetting(DateFormat, g.GetDateFormat(), createdAt, subject),
-		TimeFormat:                       NewSetting(TimeFormat, g.GetTimeFormat(), createdAt, subject),
-		WeekStartDay:                     NewSetting(WeekStartDay, g.GetWeekStartDay(), createdAt, subject),
-		NumberFormat:                     NewSetting(NumberFormat, g.GetNumberFormat(), createdAt, subject),
-		BolusDiaHours:                    NewSetting(BolusDIAHours, g.GetBolusDiaHours(), createdAt, subject),
-		BolusOnsetMinutes:                NewSetting(BolusOnsetMinutes, g.GetBolusOnsetMinutes(), createdAt, subject),
-		BolusPeakMinutes:                 NewSetting(BolusPeakMinutes, g.GetBolusPeakMinutes(), createdAt, subject),
-		BasalDiaHours:                    NewSetting(BasalDIAHours, g.GetBasalDiaHours(), createdAt, subject),
-		BasalOnsetMinutes:                NewSetting(BasalOnsetMinutes, g.GetBasalOnsetMinutes(), createdAt, subject),
-		BasalPeakMinutes:                 NewSetting(BasalPeakMinutes, g.GetBasalPeakMinutes(), createdAt, subject),
-		DefaultInsulinSensitivity:        NewSetting(DefaultInsulinSensitivity, g.GetDefaultInsulinSensitivity(), createdAt, subject),
-		DefaultCarbRatio:                 NewSetting(DefaultCarbRatio, g.GetDefaultCarbRatio(), createdAt, subject),
-		DefaultBasalRate:                 NewSetting(DefaultBasalRate, g.GetDefaultBasalRate(), createdAt, subject),
-		CarbMaxAbsorptionHours:           NewSetting(CarbMaxAbsorptionHours, g.GetCarbMaxAbsorptionHours(), createdAt, subject),
-		CarbMin5mImpact:                  NewSetting(CarbMin5mImpact, g.GetCarbMin5mImpact(), createdAt, subject),
-		AlarmUrgentLowEnabled:            NewSetting(AlarmUrgentLowEnabled, g.GetAlarmUrgentLowEnabled(), createdAt, subject),
-		RangeUrgentLowMgdl:               NewSetting(RangeUrgentLowMgdl, g.GetRangeUrgentLowMgdl(), createdAt, subject),
-		AlarmLowEnabled:                  NewSetting(AlarmLowEnabled, g.GetAlarmLowEnabled(), createdAt, subject),
-		RangeLowMgdl:                     NewSetting(RangeLowMgdl, g.GetRangeLowMgdl(), createdAt, subject),
-		AlarmLowMinutes:                  NewSetting(AlarmLowMinutes, g.GetAlarmLowMinutes(), createdAt, subject),
-		AlarmLowPredictionEnabled:        NewSetting(AlarmLowPredictionEnabled, g.GetAlarmLowPredictionEnabled(), createdAt, subject),
-		AlarmLowPredictionMinutes:        NewSetting(AlarmLowPredictionMinutes, g.GetAlarmLowPredictionMinutes(), createdAt, subject),
-		AlarmHighEnabled:                 NewSetting(AlarmHighEnabled, g.GetAlarmHighEnabled(), createdAt, subject),
-		RangeHighMgdl:                    NewSetting(RangeHighMgdl, g.GetRangeHighMgdl(), createdAt, subject),
-		AlarmHighMinutes:                 NewSetting(AlarmHighMinutes, g.GetAlarmHighMinutes(), createdAt, subject),
-		AlarmUrgentHighEnabled:           NewSetting(AlarmUrgentHighEnabled, g.GetAlarmUrgentHighEnabled(), createdAt, subject),
-		RangeUrgentHighMgdl:              NewSetting(RangeUrgentHighMgdl, g.GetRangeUrgentHighMgdl(), createdAt, subject),
-		AlarmFastRiseEnabled:             NewSetting(AlarmFastRiseEnabled, g.GetAlarmFastRiseEnabled(), createdAt, subject),
-		AlarmFastRiseMgdl:                NewSetting(AlarmFastRiseMgdl, g.GetAlarmFastRiseMgdl(), createdAt, subject),
-		AlarmFastRiseMinutes:             NewSetting(AlarmFastRiseMinutes, g.GetAlarmFastRiseMinutes(), createdAt, subject),
-		AlarmFastDropEnabled:             NewSetting(AlarmFastDropEnabled, g.GetAlarmFastDropEnabled(), createdAt, subject),
-		AlarmFastDropMgdl:                NewSetting(AlarmFastDropMgdl, g.GetAlarmFastDropMgdl(), createdAt, subject),
-		AlarmFastDropMinutes:             NewSetting(AlarmFastDropMinutes, g.GetAlarmFastDropMinutes(), createdAt, subject),
-		AlarmNoDataEnabled:               NewSetting(AlarmNoDataEnabled, g.GetAlarmNoDataEnabled(), createdAt, subject),
-		AlarmNoDataMinutes:               NewSetting(AlarmNoDataMinutes, g.GetAlarmNoDataMinutes(), createdAt, subject),
-		AlarmDeviceBatteryLowEnabled:     NewSetting(AlarmDeviceBatteryLowEnabled, g.GetAlarmDeviceBatteryLowEnabled(), createdAt, subject),
-		AlarmDeviceBatteryLowPercent:     NewSetting(AlarmDeviceBatteryLowPercent, g.GetAlarmDeviceBatteryLowPercent(), createdAt, subject),
-		AlarmDeviceBatteryLowMinutes:     NewSetting(AlarmDeviceBatteryLowMinutes, g.GetAlarmDeviceBatteryLowMinutes(), createdAt, subject),
-		AlarmDeviceBatteryLowDevicesJson: NewSetting(AlarmDeviceBatteryLowDevicesJson, g.GetAlarmDeviceBatteryLowDevicesJson(), createdAt, subject),
-		AlarmLowReservoirEnabled:         NewSetting(AlarmLowReservoirEnabled, g.GetAlarmLowReservoirEnabled(), createdAt, subject),
-		AlarmLowReservoirUnits:           NewSetting(AlarmLowReservoirUnits, g.GetAlarmLowReservoirUnits(), createdAt, subject),
-		NotificationsEnabled:             NewSetting(NotificationsEnabled, g.GetNotificationsEnabled(), createdAt, subject),
-	}
-
-	return s
-}
-
 // GetUnits returns the Units value.
 func (m SettingMap) GetUnits() *consts.Units {
 	if m.Units == nil {
@@ -820,10 +767,6 @@ func (m *SettingMap) SetNotificationsEnabled(v *bool) {
 
 	m.NotificationsEnabled = NewSetting(NotificationsEnabled, v, nil, nil)
 
-}
-
-func (m SettingMap) GetSettingByName(name string) any {
-	return GetSettingByName(name, m)
 }
 
 func (m SettingMap) GetSettingAnyTypeByName(name string) *SettingAnyType {

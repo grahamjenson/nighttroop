@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 // viewedFrom is a context of a site in one timezone, viewed by an identity whose own settings are in another
@@ -16,8 +18,8 @@ func viewedFrom(siteTimezone, viewerTimezone string) context.Context {
 	var action httputils.HTTPAction
 	var accept httputils.AcceptType
 	var content httputils.ContentType
-	ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, &controldb.Site{ID: "site", Timezone: &siteTimezone}, "site", "", action, accept, content)
-	return httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Name: "viewer", Timezone: &viewerTimezone})
+	ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, &controldb.Site{ID: "site", SettingsJson: settings.StoredOf(map[string]any{"timezone": siteTimezone})}, "site", "", action, accept, content)
+	return httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Name: "viewer", SettingsJson: settings.StoredOf(map[string]any{"timezone": viewerTimezone})})
 }
 
 // A report's days are the site's, as its summaries are built from midnight in the site's timezone, whatever the

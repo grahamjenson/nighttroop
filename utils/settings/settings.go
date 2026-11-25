@@ -24,12 +24,19 @@ func DefaultCombinedSettingsMap() *CombinedSettingsMap {
 	}
 }
 
+// OfSite are the site's own settings, from its row
+func OfSite(site *controldb.Site) *SettingMap {
+	return FromJSON([]byte(site.SettingsJson), &site.CreatedAt, ptr("site"))
+}
+
+// OfIdentity are the identity's own settings, from its row
+func OfIdentity(identity *controldb.SiteIdentity) *SettingMap {
+	return FromJSON([]byte(identity.SettingsJson), &identity.CreatedAt, ptr("identity"))
+}
+
+// NewCombinedSettingsMap are the identity's settings over the site's over the defaults
 func NewCombinedSettingsMap(site *controldb.Site, identity *controldb.SiteIdentity) *CombinedSettingsMap {
-	return &CombinedSettingsMap{
-		SiteSettingsMap:     NewSettingsMap(site, &site.CreatedAt, ptr("site")),
-		IdentitySettingsMap: NewSettingsMap(identity, &identity.CreatedAt, ptr("identity")),
-		DefaultSettingsMap:  DefaultSettingsMap,
-	}
+	return &CombinedSettingsMap{SiteSettingsMap: OfSite(site), IdentitySettingsMap: OfIdentity(identity), DefaultSettingsMap: DefaultSettingsMap}
 }
 
 func (m *CombinedSettingsMap) GetSettingAnyTypeByName(identifier string) (*SettingAnyType, error) {

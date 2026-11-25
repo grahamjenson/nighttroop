@@ -200,13 +200,12 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
-	params := &controldb.UpdateSiteIdentitySettingsParams{
-		ID:     siteContext.IdentityModel.ID,
-		SiteID: siteContext.IdentityModel.SiteID,
+	stored, err := identitySettingsMap.Stored()
+	if err != nil {
+		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
-	settings.SetSettings(params, identitySettingsMap)
-
-	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, *params)
+	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{
+		ID: siteContext.IdentityModel.ID, SiteID: siteContext.IdentityModel.SiteID, SettingsJson: stored})
 	if err != nil {
 		if nsErr := nsutils.GetSQLTranslatedError(err); nsErr != nil {
 			return nil, nsErr

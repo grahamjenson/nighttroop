@@ -96,9 +96,11 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 		}
 
 		// The site starts in the time zone and language of the browser that created it, with its country's formats
-		params := &controldb.UpdateSitesSettingsParams{ID: siteCreateResult.SiteDB.Subdomain}
-		settings.SetSettings(params, settings.BrowserSettings(r.FormValue("timezone"), r.FormValue("language")))
-		if err := controlDB.Queries.UpdateSitesSettings(r.Context(), *params); err != nil {
+		stored, err := settings.BrowserSettings(r.FormValue("timezone"), r.FormValue("language")).Stored()
+		if err == nil {
+			err = controlDB.Queries.UpdateSiteSettings(r.Context(), controldb.UpdateSiteSettingsParams{ID: siteCreateResult.SiteDB.Subdomain, SettingsJson: stored})
+		}
+		if err != nil {
 			slog.ErrorContext(r.Context(), "Unable to set the new site's settings", "error", err)
 		}
 

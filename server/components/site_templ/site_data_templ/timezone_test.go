@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 // TestFormatReadingDateInTheSettingsTimezone checks times are shown in the identity's timezone, then the site's
@@ -29,8 +31,8 @@ func TestFormatReadingDateInTheSettingsTimezone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, &controldb.Site{Timezone: tt.site}, "site", "", 0, 0, "")
-			ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Timezone: tt.identity})
+			ctx := httputils.CreateSiteContext(context.Background(), nil, nil, nil, &controldb.Site{SettingsJson: settings.StoredOf(map[string]any{"timezone": tt.site})}, "site", "", 0, 0, "")
+			ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{SettingsJson: settings.StoredOf(map[string]any{"timezone": tt.identity})})
 			require.Equal(t, tt.want, formatReadingDate(ctx, tt.ms))
 		})
 	}

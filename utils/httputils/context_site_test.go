@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 // Settings asked for before the identity is known are logged as an error without the site's or identity's secrets,
@@ -37,7 +39,7 @@ func TestGetSettingsWithoutAnIdentityIsTheSites(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(&logged, nil)))
 	defer slog.SetDefault(previous)
 
-	site := &SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh", Units: new(consts.UnitsMGDL)}}
+	site := &SiteContext{SiteID: "abcdefgh", SiteModel: &controldb.Site{ID: "abcdefgh", SettingsJson: settings.StoredOf(map[string]any{"units": consts.UnitsMGDL})}}
 	require.Equal(t, consts.UnitsMGDL, *site.GetSettings().GetUnits())
 	require.NotContains(t, logged.String(), "ERROR")
 }
