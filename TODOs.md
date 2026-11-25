@@ -91,7 +91,6 @@
        `404 page not found`: show the site's Not found page there too, as it shows for `/data/nope`
     1. P4: The number boxes of the add and details forms have no `inputmode`, so a phone opens its full keyboard for
        a dose or carbs: open the number keys, but for a box that takes a negative value
-    1. P4: The banner of a snoozed alarm says "Snoozed: Urgent high" and not until when: say the time it ends
 
 1. Migrations (from the audit of what happens when one fails):
     1. P1: Decide the deploy tools from the gaps in `docs/deploy.md`, which lists each way a deploy can fail and what
