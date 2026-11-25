@@ -2179,7 +2179,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - Each site DB goes to S3 by itself. S3 keeps old versions for a retention period.
 - A site written to since its last backup is backed up once that backup is an hour old
-  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26), and when the server stops.
+  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every minute (or each interval, if it is shorter), and when the server
+  stops.
 - With S3, the control DB is replicated by Litestream, with its defaults, as it is written: its writes are in S3 within
   about a second, at `<host>/litestream/control`. Its last writes are sent when the server stops.
   - Over HTTPS, S3 encrypts the replica with SSE-C, with a key made from the MAC key set. Production and staging

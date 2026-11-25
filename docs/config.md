@@ -107,7 +107,7 @@ AAPS, Trio) send.
 | `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on at startup. |
 | `S3_ACCESS_KEY` | `minioadmin` (docker-compose MinIO) | The access key ID. |
 | `S3_SECRET_KEY` | `minioadmin` (docker-compose MinIO) | The secret key. |
-| `SITE_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How old a written site's backup is before it is backed up again. Each tick (the interval / 26) deletes the sites never used, then truncates and backs up those sites. |
+| `SITE_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How old a written site's backup is before it is backed up again. Each minute (or each interval, if it is shorter), the job deletes the sites never used, then truncates and backs up the sites that are due. |
 | `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a file of the control DB's replica after Litestream replaces or deletes it. |
 | `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site backup or archive. |
 

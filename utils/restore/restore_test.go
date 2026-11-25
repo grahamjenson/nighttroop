@@ -165,14 +165,14 @@ func TestRemoveStagingRemovesOnlyStagingFolders(t *testing.T) {
 		require.NoError(t, os.WriteFile(path, []byte("x"), 0o600))
 		return path
 	}
-	batch := sitedb.GetSitesFolder("a", cfg)
-	backupBatch := filepath.Dir(sitedb.GetBackupPath("abcdef", cfg))
+	letterFolder := sitedb.GetSitesFolder("a", cfg)
+	backupFolder := filepath.Dir(sitedb.GetBackupPath("abcdef", cfg))
 
 	// Made as the download and the archive make them, so the names are theirs
 	staging := []string{}
 	for dir, pattern := range map[string]string{
-		filepath.Dir(batch): "." + filepath.Base(batch) + "-restore-",
-		backupBatch:         ".archive-*",
+		filepath.Dir(letterFolder): "." + filepath.Base(letterFolder) + "-restore-",
+		backupFolder:               ".archive-*",
 	} {
 		require.NoError(t, os.MkdirAll(dir, 0o755))
 		folder, err := os.MkdirTemp(dir, pattern)
@@ -185,8 +185,8 @@ func TestRemoveStagingRemovesOnlyStagingFolders(t *testing.T) {
 		write(sitedb.GetPath("abcdef", cfg)),
 		write(sitedb.GetBackupPath("abcdef", cfg)),
 		write(filepath.Join(cfg.DataDir, ".env")),
-		write(filepath.Join(filepath.Dir(batch), ".a-restore")),
-		write(filepath.Join(backupBatch, ".archived", "abcdef.sqlite")),
+		write(filepath.Join(filepath.Dir(letterFolder), ".a-restore")),
+		write(filepath.Join(backupFolder, ".archived", "abcdef.sqlite")),
 	}
 
 	restore.RemoveStaging(cfg)

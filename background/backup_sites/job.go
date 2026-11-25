@@ -27,7 +27,7 @@ type BackupSiteJobManager struct {
 	// Interval is how old a written site's backup is before it is backed up again
 	Interval time.Duration
 	// MaxSitesEachTick is the most sites one tick backs up, so a burst of writes to many sites is backed up over a few
-	// ticks rather than copying thousands of DBs at once
+	// ticks rather than copying thousands of DBs at once: with a tick each minute, 30,000 sites an hour
 	MaxSitesEachTick int64
 }
 
@@ -43,14 +43,21 @@ func SetupBackupSiteJob(controlDB *db.ControlDB, config *config.ServerConfig, s3
 	}
 }
 
-// ticksEachInterval is how many times the site job runs in an interval, so a site is backed up soon after it is due
-const ticksEachInterval = 26
+// checkEvery is how often the site job looks for sites due a backup, so a site is backed up at most a minute after its
+// backup is an interval old, whatever the interval
+const checkEvery = time.Minute
 
-// SetupCron runs the site job every tick, the interval / 26. A tick deletes the sites never used, backs up the sites
-// not uploaded yet, then truncates and backs up those written since their last backup an interval ago. Each runs after
-// the one before, so a site is never truncated while its backup is copied.
+// tick is how often the site job runs: every checkEvery, or every interval when that is shorter, as in tests, and at
+// most every second
+func tick(interval time.Duration) time.Duration {
+	return max(time.Second, min(interval, checkEvery))
+}
+
+// SetupCron runs the site job every tick. A tick deletes the sites never used, backs up the sites not uploaded yet,
+// then truncates and backs up those written since their last backup an interval ago. Each runs after the one before,
+// so a site is never truncated while its backup is copied.
 func (b *BackupSiteJobManager) SetupCron(c cron.CronScheduler) {
-	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", max(1, int(b.Interval.Seconds())/ticksEachInterval)), func(ctx context.Context) error {
+	c.AddFunc("BackupSiteJob", fmt.Sprintf("@every %ds", int(tick(b.Interval).Seconds())), func(ctx context.Context) error {
 		if err := b.DeleteUnusedSites(ctx); err != nil {
 			slog.ErrorContext(ctx, "Error deleting unused sites", "error", err)
 		}
