@@ -2,167 +2,106 @@ package settings
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
-	"nighttroop.t1d.nz/utils/consts"
 )
 
-type CombinedSettingsMap struct {
-	SiteSettingsMap     *SettingMap
-	IdentitySettingsMap *SettingMap
-	DefaultSettingsMap  *SettingMap
+// Settings are the settings of a request, or of a site for a background job: every setting with its value, at each
+// level, built once from the site's row and the identity's.
+type Settings struct {
+	// Default is every setting at its default
+	Default Values
+	// Site is the site's own settings over the defaults: what is the site's whoever is signed in, such as the
+	// timezone its days are in
+	Site Values
+	// Values are the settings in effect: the identity's own over the site's over the defaults. Without an identity
+	// they are the site's.
+	Values
+
+	// SiteLevel and IdentityLevel are what the site and the identity have each set of their own. After one is
+	// changed, Rebuild makes Site and Values follow.
+	SiteLevel, IdentityLevel *Level
 }
 
-func DefaultCombinedSettingsMap() *CombinedSettingsMap {
-	return &CombinedSettingsMap{
-		SiteSettingsMap:     DefaultSettingsMap,
-		IdentitySettingsMap: DefaultSettingsMap,
-		DefaultSettingsMap:  DefaultSettingsMap,
+// SettingAnyType is one setting as the APIs give it: its value in effect, and the level it is from
+type SettingAnyType struct {
+	Identifier string
+	TypeString string
+	Value      any
+	CreatedAt  int64
+	Subject    string
+}
+
+// started is when the defaults are from, as each setting has a time
+var started = time.Now().UnixMilli()
+
+// New are the settings of a site, and of an identity of it or nil for the site alone
+func New(site *controldb.Site, identity *controldb.SiteIdentity) *Settings {
+	siteLevel, identityLevel := &Level{Subject: "site", own: map[string]any{}}, &Level{Subject: "identity", own: map[string]any{}}
+	if site != nil {
+		siteLevel = LevelFromJSON(site.SettingsJson, "site", site.CreatedAt)
 	}
-}
-
-// OfSite are the site's own settings, from its row
-func OfSite(site *controldb.Site) *SettingMap {
-	return FromJSON([]byte(site.SettingsJson), &site.CreatedAt, ptr("site"))
-}
-
-// OfIdentity are the identity's own settings, from its row
-func OfIdentity(identity *controldb.SiteIdentity) *SettingMap {
-	return FromJSON([]byte(identity.SettingsJson), &identity.CreatedAt, ptr("identity"))
-}
-
-// NewCombinedSettingsMap are the identity's settings over the site's over the defaults
-func NewCombinedSettingsMap(site *controldb.Site, identity *controldb.SiteIdentity) *CombinedSettingsMap {
-	return &CombinedSettingsMap{SiteSettingsMap: OfSite(site), IdentitySettingsMap: OfIdentity(identity), DefaultSettingsMap: DefaultSettingsMap}
-}
-
-func (m *CombinedSettingsMap) GetSettingAnyTypeByName(identifier string) (*SettingAnyType, error) {
-	setting := first(
-		m.IdentitySettingsMap.GetSettingAnyTypeByName(identifier),
-		m.SiteSettingsMap.GetSettingAnyTypeByName(identifier),
-		m.DefaultSettingsMap.GetSettingAnyTypeByName(identifier),
-	)
-
-	if setting != nil {
-		return setting, nil
+	if identity != nil {
+		identityLevel = LevelFromJSON(identity.SettingsJson, "identity", identity.CreatedAt)
 	}
-
-	return nil, fmt.Errorf("setting with identifier %s not found", identifier)
+	return FromLevels(siteLevel, identityLevel)
 }
 
-func (m *CombinedSettingsMap) GetAllSettingAnyTypes() []*SettingAnyType {
-	allSettings := make([]*SettingAnyType, 0)
+// FromLevels are the settings with what the site and the identity have each set, nil for nothing
+func FromLevels(site, identity *Level) *Settings {
+	s := &Settings{SiteLevel: site, IdentityLevel: identity}
+	if s.SiteLevel == nil {
+		s.SiteLevel = &Level{Subject: "site", own: map[string]any{}}
+	}
+	if s.IdentityLevel == nil {
+		s.IdentityLevel = &Level{Subject: "identity", own: map[string]any{}}
+	}
+	return s.Rebuild()
+}
 
-	for _, name := range allSettingNames {
-		setting, err := m.GetSettingAnyTypeByName(name)
-		if err == nil && setting != nil {
-			allSettings = append(allSettings, setting)
+// Rebuild makes Site and Values follow the levels, after a level is changed
+func (s *Settings) Rebuild() *Settings {
+	s.Default = DefaultValues()
+	s.Site = DefaultValues()
+	s.SiteLevel.applyTo(&s.Site)
+	s.Values = s.Site
+	// A list is the level's own, not shared with the site's
+	s.Values.Alarms.DeviceBatteryLow.Devices = append(s.Values.Alarms.DeviceBatteryLow.Devices[:0:0], s.Site.Alarms.DeviceBatteryLow.Devices...)
+	s.IdentityLevel.applyTo(&s.Values)
+	return s
+}
+
+// Get is a setting in effect by its identifier, with the level it is from: the identity's, then the site's, then
+// the default
+func (s *Settings) Get(identifier string) (*SettingAnyType, error) {
+	f, ok := byName[identifier]
+	if !ok {
+		return nil, fmt.Errorf("setting with identifier %s not found", identifier)
+	}
+	setting := &SettingAnyType{Identifier: identifier, TypeString: f.typeString, Value: f.fallback, CreatedAt: started, Subject: "default"}
+	for _, level := range []*Level{s.SiteLevel, s.IdentityLevel} {
+		if value, ok := level.Get(identifier); ok {
+			setting.Value, setting.CreatedAt, setting.Subject = value, level.At, level.Subject
 		}
 	}
-
-	return allSettings
+	return setting, nil
 }
 
-// GetUnits checks the identity first, like every other setting, so a user's own units win over the site's
-func (m *CombinedSettingsMap) GetUnits() *consts.Units {
-	return first(
-		m.IdentitySettingsMap.GetUnits(),
-		m.SiteSettingsMap.GetUnits(),
-		m.DefaultSettingsMap.GetUnits(),
-	)
-}
-
-// GetRangeLowMgdl is the low of the range in mg/dL, the identity's, then the site's, then the default, whether or not its alarm is on
-func (m *CombinedSettingsMap) GetRangeLowMgdl() *int64 {
-	return first(m.IdentitySettingsMap.GetRangeLowMgdl(), m.SiteSettingsMap.GetRangeLowMgdl(), m.DefaultSettingsMap.GetRangeLowMgdl())
-}
-
-// GetRangeHighMgdl is the high of the range in mg/dL, the identity's, then the site's, then the default, whether or not its alarm is on
-func (m *CombinedSettingsMap) GetRangeHighMgdl() *int64 {
-	return first(m.IdentitySettingsMap.GetRangeHighMgdl(), m.SiteSettingsMap.GetRangeHighMgdl(), m.DefaultSettingsMap.GetRangeHighMgdl())
-}
-
-// GetRangeUrgentLowMgdl is the urgent low in mg/dL, the identity's, then the site's, then the default, whether or not its alarm is on
-func (m *CombinedSettingsMap) GetRangeUrgentLowMgdl() *int64 {
-	return first(m.IdentitySettingsMap.GetRangeUrgentLowMgdl(), m.SiteSettingsMap.GetRangeUrgentLowMgdl(), m.DefaultSettingsMap.GetRangeUrgentLowMgdl())
-}
-
-// GetRangeUrgentHighMgdl is the urgent high in mg/dL, the identity's, then the site's, then the default, whether or not its alarm is on
-func (m *CombinedSettingsMap) GetRangeUrgentHighMgdl() *int64 {
-	return first(m.IdentitySettingsMap.GetRangeUrgentHighMgdl(), m.SiteSettingsMap.GetRangeUrgentHighMgdl(), m.DefaultSettingsMap.GetRangeUrgentHighMgdl())
-}
-
-// GetAlarmNoDataMinutes is how long without a reading is no data, the identity's, then the site's, then the default,
-// whether or not its alarm is on
-func (m *CombinedSettingsMap) GetAlarmNoDataMinutes() *int64 {
-	return first(m.IdentitySettingsMap.GetAlarmNoDataMinutes(), m.SiteSettingsMap.GetAlarmNoDataMinutes(), m.DefaultSettingsMap.GetAlarmNoDataMinutes())
-}
-
-// GetTimezone is the identity's timezone, then the site's, then the default UTC
-func (m *CombinedSettingsMap) GetTimezone() *string {
-	return first(
-		m.IdentitySettingsMap.GetTimezone(),
-		m.SiteSettingsMap.GetTimezone(),
-		m.DefaultSettingsMap.GetTimezone(),
-	)
-}
-
-// GetLanguage is the identity's language, then the site's, then the default
-func (m *CombinedSettingsMap) GetLanguage() *string {
-	return first(m.IdentitySettingsMap.GetLanguage(), m.SiteSettingsMap.GetLanguage(), m.DefaultSettingsMap.GetLanguage())
-}
-
-// DateLayout is the Go layout of the date format, the identity's, then the site's, then the default, e.g. 02/01/2006
-// for DD/MM/YYYY
-func (m *CombinedSettingsMap) DateLayout() string {
-	format := first(m.IdentitySettingsMap.GetDateFormat(), m.SiteSettingsMap.GetDateFormat(), m.DefaultSettingsMap.GetDateFormat())
-	if format == nil {
-		return time.DateOnly
+// All is every setting in effect, in the order the settings are listed
+func (s *Settings) All() []*SettingAnyType {
+	all := make([]*SettingAnyType, 0, len(names))
+	for _, name := range names {
+		if setting, err := s.Get(name); err == nil {
+			all = append(all, setting)
+		}
 	}
-	return strings.NewReplacer("YYYY", "2006", "MM", "01", "DD", "02").Replace(*format)
-}
-
-// timeLayouts are the Go layouts of the time formats, e.g. 03:04 PM for hh:mm a
-var timeLayouts = strings.NewReplacer("HH", "15", "hh", "03", "mm", "04", "ss", "05", "a", "PM")
-
-// TimeLayout is the Go layout of the time format, the identity's, then the site's, then the default, e.g. 03:04 PM
-// for hh:mm a
-func (m *CombinedSettingsMap) TimeLayout() string {
-	format := first(m.IdentitySettingsMap.GetTimeFormat(), m.SiteSettingsMap.GetTimeFormat(), m.DefaultSettingsMap.GetTimeFormat())
-	if format == nil {
-		return time.TimeOnly
-	}
-	return timeLayouts.Replace(*format)
-}
-
-// GetWeekStartDay is the identity's week start day, then the site's, then the default monday
-func (m *CombinedSettingsMap) GetWeekStartDay() *string {
-	return first(m.IdentitySettingsMap.GetWeekStartDay(), m.SiteSettingsMap.GetWeekStartDay(), m.DefaultSettingsMap.GetWeekStartDay())
-}
-
-// GetNumberFormat is the identity's number format, then the site's, then the default 1,234.5
-func (m *CombinedSettingsMap) GetNumberFormat() *string {
-	return first(m.IdentitySettingsMap.GetNumberFormat(), m.SiteSettingsMap.GetNumberFormat(), m.DefaultSettingsMap.GetNumberFormat())
+	return all
 }
 
 // locations are the timezones loaded, by name, as a page shows many times in one
 var locations sync.Map
-
-// Location is the timezone times are shown in, or UTC if it cannot be loaded
-func (m *CombinedSettingsMap) Location() *time.Location {
-	name := m.GetTimezone()
-	if name == nil {
-		return time.UTC
-	}
-	location, err := LoadLocation(*name)
-	if err != nil {
-		return time.UTC
-	}
-	return location
-}
 
 // LoadLocation is the named timezone, loaded once and then kept, as time.LoadLocation reads its zone file each time.
 // Only a timezone that loads is kept, so there are at most as many as the zone database has.

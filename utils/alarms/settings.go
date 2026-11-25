@@ -2,53 +2,39 @@ package alarms
 
 import "nighttroop.t1d.nz/utils/settings"
 
-// FromSettings is the alarms turned on in an identity's settings, each setting the identity's, then the site's, then
-// the default
-func FromSettings(m *settings.CombinedSettingsMap) []Alarm {
-	mgdl := func(get func(settings.SettingMap) *int64) float64 { return float64(resolve(m, get)) }
+// FromSettings is the alarms turned on in the settings in effect for an identity, in the order they are checked
+func FromSettings(v settings.Values) []Alarm {
+	on, glucose := v.Alarms, v.Range
 	var alarms []Alarm
-	if resolve(m, settings.SettingMap.GetAlarmUrgentLowEnabled) {
-		alarms = append(alarms, UrgentLowAlarm{Mgdl: mgdl(settings.SettingMap.GetRangeUrgentLowMgdl)})
+	if on.UrgentLow.Enabled {
+		alarms = append(alarms, UrgentLowAlarm{Mgdl: float64(glucose.UrgentLowMgdl)})
 	}
-	if resolve(m, settings.SettingMap.GetAlarmLowEnabled) {
-		alarms = append(alarms, LowAlarm{Mgdl: mgdl(settings.SettingMap.GetRangeLowMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmLowMinutes)})
+	if on.Low.Enabled {
+		alarms = append(alarms, LowAlarm{Mgdl: float64(glucose.LowMgdl), Minutes: on.Low.Minutes})
 	}
-	if resolve(m, settings.SettingMap.GetAlarmLowPredictionEnabled) {
-		alarms = append(alarms, PredictedLowAlarm{Mgdl: mgdl(settings.SettingMap.GetRangeLowMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmLowPredictionMinutes)})
+	if on.LowPrediction.Enabled {
+		alarms = append(alarms, PredictedLowAlarm{Mgdl: float64(glucose.LowMgdl), Minutes: on.LowPrediction.Minutes})
 	}
-	if resolve(m, settings.SettingMap.GetAlarmUrgentHighEnabled) {
-		alarms = append(alarms, UrgentHighAlarm{Mgdl: mgdl(settings.SettingMap.GetRangeUrgentHighMgdl)})
+	if on.UrgentHigh.Enabled {
+		alarms = append(alarms, UrgentHighAlarm{Mgdl: float64(glucose.UrgentHighMgdl)})
 	}
-	if resolve(m, settings.SettingMap.GetAlarmHighEnabled) {
-		alarms = append(alarms, HighAlarm{Mgdl: mgdl(settings.SettingMap.GetRangeHighMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmHighMinutes)})
+	if on.High.Enabled {
+		alarms = append(alarms, HighAlarm{Mgdl: float64(glucose.HighMgdl), Minutes: on.High.Minutes})
 	}
-	if resolve(m, settings.SettingMap.GetAlarmFastRiseEnabled) {
-		alarms = append(alarms, FastRiseAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmFastRiseMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmFastRiseMinutes)})
+	if on.FastRise.Enabled {
+		alarms = append(alarms, FastRiseAlarm{Mgdl: float64(on.FastRise.Mgdl), Minutes: on.FastRise.Minutes})
 	}
-	if resolve(m, settings.SettingMap.GetAlarmFastDropEnabled) {
-		alarms = append(alarms, FastDropAlarm{Mgdl: mgdl(settings.SettingMap.GetAlarmFastDropMgdl), Minutes: resolve(m, settings.SettingMap.GetAlarmFastDropMinutes)})
+	if on.FastDrop.Enabled {
+		alarms = append(alarms, FastDropAlarm{Mgdl: float64(on.FastDrop.Mgdl), Minutes: on.FastDrop.Minutes})
 	}
-	if resolve(m, settings.SettingMap.GetAlarmNoDataEnabled) {
-		alarms = append(alarms, NoDataAlarm{Minutes: resolve(m, settings.SettingMap.GetAlarmNoDataMinutes)})
+	if on.NoData.Enabled {
+		alarms = append(alarms, NoDataAlarm{Minutes: on.NoData.Minutes})
 	}
 	// With no devices listed there is nothing for it to check
-	devices := resolve(m, settings.SettingMap.GetAlarmDeviceBatteryLowDevicesJson)
-	if resolve(m, settings.SettingMap.GetAlarmDeviceBatteryLowEnabled) && len(devices) > 0 {
-		alarms = append(alarms, DeviceBatteryAlarm{Percent: float64(resolve(m, settings.SettingMap.GetAlarmDeviceBatteryLowPercent)),
-			Minutes: resolve(m, settings.SettingMap.GetAlarmDeviceBatteryLowMinutes), Devices: devices})
+	if battery := on.DeviceBatteryLow; battery.Enabled && len(battery.Devices) > 0 {
+		alarms = append(alarms, DeviceBatteryAlarm{Percent: float64(battery.Percent), Minutes: battery.Minutes, Devices: battery.Devices})
 	}
 	return alarms
-}
-
-// resolve is a setting's value from the first of the identity's, the site's and the default settings that has it
-func resolve[T any](m *settings.CombinedSettingsMap, get func(settings.SettingMap) *T) T {
-	for _, level := range []*settings.SettingMap{m.IdentitySettingsMap, m.SiteSettingsMap, m.DefaultSettingsMap} {
-		if value := get(*level); value != nil {
-			return *value
-		}
-	}
-	var zero T
-	return zero
 }
 
 // Checked is what a check found for an identity, which the checker sends as an alarm event when it notifies or the

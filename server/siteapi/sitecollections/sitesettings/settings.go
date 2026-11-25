@@ -91,24 +91,24 @@ func (s *SettingsCollection) GetRoute() string {
 	return "identity"
 }
 
-func (s *SettingsCollection) level(siteContext *httputils.SiteContext, identity *controldb.SiteIdentity) *settings.SettingMap {
+func (s *SettingsCollection) level(siteContext *httputils.SiteContext, identity *controldb.SiteIdentity) *settings.Level {
 	if s.Site {
-		return siteContext.GetSettings().SiteSettingsMap
+		return siteContext.GetOwnSettings().SiteLevel
 	}
 	if s.Other {
-		return settings.OfIdentity(identity)
+		return settings.LevelFromJSON(identity.SettingsJson, "identity", identity.CreatedAt)
 	}
-	return siteContext.GetSettings().IdentitySettingsMap
+	return siteContext.GetOwnSettings().IdentityLevel
 }
 
 // glucoseUnits are the units a glucose setting is shown and typed in, as its label says: another identity's are in its
 // own units, or the site's it follows, and the site's and the signed in identity's own are in the signed in identity's
-func (s *SettingsCollection) glucoseUnits(siteContext *httputils.SiteContext, level *settings.SettingMap) *consts.Units {
+func (s *SettingsCollection) glucoseUnits(siteContext *httputils.SiteContext, level *settings.Level) *consts.Units {
 	combined := siteContext.GetSettings()
 	if s.Other {
-		return (&settings.CombinedSettingsMap{SiteSettingsMap: combined.SiteSettingsMap, IdentitySettingsMap: level, DefaultSettingsMap: combined.DefaultSettingsMap}).GetUnits()
+		return new(settings.FromLevels(combined.SiteLevel, level).Units)
 	}
-	return combined.GetUnits()
+	return new(combined.Units)
 }
 
 // identity is whose settings these are: the one with the ID, of the signed in site, for Other, or the one signed in
@@ -145,15 +145,18 @@ func (s *SettingsCollection) GetRow(ctx context.Context, collectionTx *siteapiut
 		model.IdentityID, model.IdentityName = &identity.ID, &identity.Name
 	}
 	fields := model.Fields()
+	// What the level inherits: the defaults for the site's, and the site's over the defaults for an identity's
+	below := settings.FromLevels(nil, nil)
+	if !s.Site {
+		below = settings.FromLevels(combined.SiteLevel, nil)
+	}
 	for _, name := range settingNames {
-		if setting := level.GetSettingAnyTypeByName(settingID(name)); setting != nil {
+		if setting := level.Setting(settingID(name)); setting != nil {
 			*fields[name] = new(showSetting(setting, units))
 		}
-		inherited := combined.DefaultSettingsMap.GetSettingAnyTypeByName(settingID(name))
-		if site := combined.SiteSettingsMap.GetSettingAnyTypeByName(settingID(name)); !s.Site && site != nil {
-			inherited = site
+		if inherited, err := below.Get(settingID(name)); err == nil {
+			model.Inherited[name] = showSetting(inherited, units)
 		}
-		model.Inherited[name] = showSetting(inherited, units)
 	}
 
 	// An admin's settings page shows the site's settings beside their own
@@ -239,15 +242,13 @@ func (s *SettingsCollection) UpdateRow(ctx context.Context, collectionTx *siteap
 		return nil, err
 	}
 	s.logSiteChanges(ctx, collectionTx, siteContext, inEffect)
+	// The request's settings follow the level changed, for the settings it answers with
+	siteContext.GetOwnSettings().Rebuild()
 	return s.GetRow(ctx, collectionTx, id, siteContext)
 }
 
 // setSent sets the level's settings to the values the model has, clearing those sent empty
-func (s *SettingsCollection) setSent(siteContext *httputils.SiteContext, level *settings.SettingMap, model *sitemodels.Settings) error {
-	subject := new("identity")
-	if s.Site {
-		subject = new("site")
-	}
+func (s *SettingsCollection) setSent(siteContext *httputils.SiteContext, level *settings.Level, model *sitemodels.Settings) error {
 	// Units before any change sent, as the glucose sent was typed in those the page showed
 	sent, units := model.Fields(), s.glucoseUnits(siteContext, level)
 	for _, name := range settingNames {
@@ -266,7 +267,7 @@ func (s *SettingsCollection) setSent(siteContext *httputils.SiteContext, level *
 			}
 			value = int64(math.Round(units.ToMGDL(glucose)))
 		}
-		if err := level.SetSettingByName(settingID(name), value, nil, subject); err != nil {
+		if err := level.Set(settingID(name), value); err != nil {
 			return apiutils.ErrBadBodyWithHint(err)
 		}
 	}
@@ -275,24 +276,20 @@ func (s *SettingsCollection) setSent(siteContext *httputils.SiteContext, level *
 
 // inEffect are the settings in effect with the level's: the identity's over the site's, or the site's over the
 // defaults for everyone else
-func (s *SettingsCollection) inEffect(siteContext *httputils.SiteContext, level *settings.SettingMap) *settings.CombinedSettingsMap {
-	inEffect := siteContext.GetSettings()
+func (s *SettingsCollection) inEffect(siteContext *httputils.SiteContext, level *settings.Level) *settings.Settings {
 	if s.Site {
-		inEffect = &settings.CombinedSettingsMap{SiteSettingsMap: level, IdentitySettingsMap: &settings.SettingMap{}, DefaultSettingsMap: settings.DefaultSettingsMap}
+		return settings.FromLevels(level, nil)
 	}
-	if s.Other {
-		inEffect = &settings.CombinedSettingsMap{SiteSettingsMap: inEffect.SiteSettingsMap, IdentitySettingsMap: level, DefaultSettingsMap: settings.DefaultSettingsMap}
-	}
-	return inEffect
+	return settings.FromLevels(siteContext.GetOwnSettings().SiteLevel, level)
 }
 
 // save writes every setting of the level, so the ones not on the page keep their values
-func (s *SettingsCollection) save(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, identity *controldb.SiteIdentity, level *settings.SettingMap) error {
+func (s *SettingsCollection) save(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, identity *controldb.SiteIdentity, level *settings.Level) error {
 	q, err := collectionTx.Control()
 	if err != nil {
 		return err
 	}
-	stored, err := level.Stored()
+	stored, err := level.JSON()
 	if err != nil {
 		return err
 	}
@@ -304,7 +301,7 @@ func (s *SettingsCollection) save(ctx context.Context, collectionTx *siteapiutil
 
 // logSiteChanges logs a new site timezone or week start day as an event, once saved, so the background jobs that
 // follow it, such as the site's days, see it
-func (s *SettingsCollection) logSiteChanges(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, inEffect *settings.CombinedSettingsMap) {
+func (s *SettingsCollection) logSiteChanges(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, inEffect *settings.Settings) {
 	if !s.Site {
 		return
 	}
@@ -313,7 +310,7 @@ func (s *SettingsCollection) logSiteChanges(ctx context.Context, collectionTx *s
 			siteContext.ControlDB.Logs.SiteTimezoneChangedEvent(ctx, siteContext.SiteID, siteContext.IdentityModel.Name, was, now)
 		})
 	}
-	if was, now := siteContext.GetSiteWeekStartDay(), *inEffect.GetWeekStartDay(); now != was {
+	if was, now := siteContext.GetSiteWeekStartDay(), inEffect.WeekStartDay; now != was {
 		collectionTx.OnCommit(func() {
 			siteContext.ControlDB.Logs.SiteWeekStartChangedEvent(ctx, siteContext.SiteID, siteContext.IdentityModel.Name, was, now)
 		})

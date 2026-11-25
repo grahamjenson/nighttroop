@@ -533,7 +533,7 @@ func StringOrNil(value string) *string {
 // ContextUnits are the units glucose is shown and typed in, from the identity's, site's or default settings
 // goverter:context siteContext
 func ContextUnits(siteContext *httputils.SiteContext) *consts.Units {
-	return siteContext.GetSettings().GetUnits()
+	return new(siteContext.GetSettings().Units)
 }
 
 // goverter:context siteContext

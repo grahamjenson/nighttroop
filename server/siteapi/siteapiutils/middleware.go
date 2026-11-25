@@ -1,7 +1,6 @@
 package siteapiutils
 
 import (
-	"cmp"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -33,8 +32,8 @@ func JWTAuthMiddleware(controlDB *db.ControlDB, cfg *config.ServerConfig) func(h
 				ctx = httputils.SetIdentityModelInSiteContext(ctx, identity)
 				// Text is in the language of the identity's settings, or the site's, and numbers in its number format
 				own := httputils.GetSiteContext(ctx).GetOwnSettings()
-				ctx = i18n.WithLanguages(ctx, *cmp.Or(own.GetLanguage(), new("")), r.Header.Get("Accept-Language"))
-				ctx = display.WithNumberFormat(ctx, *cmp.Or(own.GetNumberFormat(), new("")))
+				ctx = i18n.WithLanguages(ctx, own.Language, r.Header.Get("Accept-Language"))
+				ctx = display.WithNumberFormat(ctx, own.NumberFormat)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}

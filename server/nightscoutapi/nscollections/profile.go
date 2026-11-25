@@ -175,7 +175,7 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 			break
 		}
 	}
-	settingsUnits := siteContext.GetSettings().GetUnits()
+	settingsUnits := new(siteContext.GetSettings().Units)
 	// A profile comes back in the units it was uploaded in, as Nightscout gives it back, though its targets are kept in
 	// mg/dL: an app importing it, as Trio does, takes its units from it. One uploaded without units is in the settings'.
 	unitsOf := func(p *sitedb.ProfilePreset) *consts.Units { return cmp.Or(p.Units, settingsUnits) }

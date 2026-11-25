@@ -3,7 +3,6 @@ package settings
 import (
 	"fmt"
 	"slices"
-	"time"
 
 	"golang.org/x/text/language"
 	"nighttroop.t1d.nz/data/types"
@@ -79,7 +78,8 @@ var Timezone = &SettingDefinition[string]{
 		if value == "" {
 			return fmt.Errorf("timezone cannot be empty")
 		}
-		_, err := time.LoadLocation(value)
+		// Loaded once and then kept, as a request's settings validate the timezone of each level
+		_, err := LoadLocation(value)
 		if err != nil {
 			return fmt.Errorf("invalid timezone: %v - must be a valid IANA timezone", value)
 		}

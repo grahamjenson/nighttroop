@@ -73,7 +73,7 @@ func TestFromSettings(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, FromSettings(settings.NewCombinedSettingsMap(&tt.site, &tt.identity)))
+			require.Equal(t, tt.want, FromSettings(settings.New(&tt.site, &tt.identity).Values))
 		})
 	}
 }

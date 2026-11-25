@@ -15,25 +15,25 @@ import (
 	"nighttroop.t1d.nz/data/types"
 )
 
-// stored_schema.txt is every field of Stored: its place in the JSON, its type and its setting. It only gains lines.
+// values_schema.txt is every field of Values: its place in the JSON, its type and its setting. It only gains lines.
 //
-//go:embed stored_schema.txt
-var storedSchema string
+//go:embed values_schema.txt
+var valuesSchema string
 
-// stored_v1.json is a row as version 1 stored it, with every setting of that version set
+// values_v1.json is a row as version 1 stored it, with every setting of that version set
 //
-//go:embed stored_v1.json
-var storedV1 string
+//go:embed values_v1.json
+var valuesV1 string
 
-// schema is each field of Stored as a line: its JSON path, its Go type and the setting kept in it, in the order
+// schema is each field of Values as a line: its JSON path, its Go type and the setting kept in it, in the order
 // they are declared
 func schema() []string {
-	s := &Stored{}
+	v := &Values{}
 	settingAt := map[any]string{}
-	for _, field := range s.fields() {
-		settingAt[field.at] = field.identifier
+	for _, f := range v.fields() {
+		settingAt[f.at] = f.identifier
 	}
-	return schemaOf(reflect.ValueOf(s).Elem(), "", settingAt)
+	return schemaOf(reflect.ValueOf(v).Elem(), "", settingAt)
 }
 
 func schemaOf(v reflect.Value, path string, settingAt map[any]string) []string {
@@ -51,138 +51,171 @@ func schemaOf(v reflect.Value, path string, settingAt map[any]string) []string {
 	return lines
 }
 
-// Rows of every release are read into Stored, so a field is never renamed, removed, moved, given another type or
-// given to another setting:
-// its row would be read as not set, and the person given the default with no word. A new field is fine, and is
-// added to stored_schema.txt in the same change. Never change or delete a line of that file to make this pass.
-func TestStoredOnlyGrows(t *testing.T) {
+// Rows of every release are read by the JSON names of Values, so a field is never renamed, removed, moved, given
+// another type or given to another setting: its row would be read as not set, and the person given the default with
+// no word. A new field is fine, and is added to values_schema.txt in the same change. Never change or delete a line
+// of that file to make this pass.
+func TestValuesOnlyGrow(t *testing.T) {
 	now := schema()
-	released := strings.Split(strings.TrimSpace(storedSchema), "\n")
+	released := strings.Split(strings.TrimSpace(valuesSchema), "\n")
 	for _, line := range released {
-		assert.Contains(t, now, line, "a released field of Stored was renamed, removed, moved or retyped: put it back as it was")
+		assert.Contains(t, now, line, "a released field of Values was renamed, removed, moved or retyped: put it back as it was")
 	}
 	for _, line := range now {
-		assert.Contains(t, released, line, "a new field of Stored: add this line to the end of stored_schema.txt")
+		assert.Contains(t, released, line, "a new field of Values: add this line to the end of values_schema.txt")
 	}
-	assert.Equal(t, len(released), len(slices.Compact(slices.Sorted(slices.Values(released)))), "a line is in stored_schema.txt twice")
+	assert.Equal(t, len(released), len(slices.Compact(slices.Sorted(slices.Values(released)))), "a line is in values_schema.txt twice")
 }
 
 // A row a release stored is read whole by every later one: each setting it has is read with the value it had, and
 // written back the same. To change what a stored value means, add a version and read version 1 as before; never
-// change stored_v1.json.
-func TestAStoredRowOfVersion1IsStillRead(t *testing.T) {
-	read := FromJSON([]byte(storedV1), nil, nil)
-	again, err := read.JSON()
+// change values_v1.json.
+func TestARowOfVersion1IsStillRead(t *testing.T) {
+	level := LevelFromJSON(valuesV1, "site", 0)
+	again, err := level.JSON()
 	require.NoError(t, err)
-	assert.JSONEq(t, storedV1, string(again))
-	assert.Equal(t, "Pacific/Auckland", *read.GetTimezone())
-	assert.Equal(t, int64(80), *read.GetRangeLowMgdl())
-	assert.Equal(t, types.DeviceNames{"openaps://pixel", "SugarPixel"}, *read.GetAlarmDeviceBatteryLowDevicesJson())
+	assert.JSONEq(t, valuesV1, again)
+
+	// And is the values it says, as the struct it is read into
+	v := FromLevels(level, nil).Values
+	var stored Values
+	require.NoError(t, json.Unmarshal([]byte(valuesV1), &stored))
+	assert.Equal(t, stored, v)
+	assert.Equal(t, "Pacific/Auckland", v.Timezone)
+	assert.Equal(t, int64(80), v.Range.LowMgdl)
+	assert.Equal(t, int64(10), v.Alarms.Low.Minutes)
+	assert.Equal(t, int64(20), v.Alarms.FastRise.Minutes)
+	assert.Equal(t, types.DeviceNames{"openaps://pixel", "SugarPixel"}, v.Alarms.DeviceBatteryLow.Devices)
 }
 
-// Every setting has one place in Stored, and every place is a setting, so none is lost when saved
-func TestEverySettingIsStored(t *testing.T) {
-	var stored []string
-	for _, field := range (&Stored{}).fields() {
-		stored = append(stored, field.identifier)
+// Every setting has one place in Values, and every place is a setting, so none is lost when saved, and with no
+// level every one is at its default
+func TestEverySettingHasItsField(t *testing.T) {
+	assert.Len(t, schema(), len(names)+1, "a field of Values that is no setting's, but for version")
+	assert.Len(t, slices.Compact(slices.Sorted(slices.Values(names))), len(names), "a setting is in two fields")
+	for _, line := range schema()[1:] {
+		assert.Len(t, strings.Fields(line), 3, "a field with no setting: "+line)
 	}
-	assert.ElementsMatch(t, allSettingNames, stored)
-	assert.Len(t, schema(), len(stored)+1, "a field of Stored that is no setting's, but for version")
 
-	// With every setting set, the defaults, nothing is lost and the version is written
-	raw, err := DefaultSettingsMap.JSON()
-	require.NoError(t, err)
-	var written Stored
-	require.NoError(t, json.Unmarshal(raw, &written))
-	assert.Equal(t, StoredVersion, written.Version)
-	for _, field := range written.fields() {
-		assert.NotNil(t, field.get(), field.identifier)
+	defaults := FromLevels(nil, nil)
+	assert.Equal(t, DefaultValues(), defaults.Values)
+	assert.Equal(t, Version, defaults.Version)
+	assert.Equal(t, "UTC", defaults.Timezone)
+	assert.Equal(t, int64(72), defaults.Range.LowMgdl)
+	assert.False(t, defaults.Alarms.Low.Enabled)
+	for _, setting := range defaults.All() {
+		assert.Equal(t, "default", setting.Subject, setting.Identifier)
 	}
-	again, err := FromJSON(raw, nil, nil).JSON()
-	require.NoError(t, err)
-	assert.JSONEq(t, string(raw), string(again))
 }
 
-// A level with only some settings set stores only those, so the level below shows through for the rest
-func TestStoredLeavesOutWhatIsNotSet(t *testing.T) {
-	m := Of(map[string]any{"timezone": "Pacific/Auckland", "alarm_low_enabled": true})
-	raw, err := m.JSON()
+// A level stores only what it has set, so the level below shows through for the rest, and a setting turned off is
+// stored as off, not left out
+func TestALevelStoresOnlyWhatItSets(t *testing.T) {
+	site := NewLevel(map[string]any{"timezone": "Pacific/Auckland", "alarm_low_enabled": true, "range_low_mgdl": 80})
+	identity := NewLevel(map[string]any{"alarm_low_enabled": false})
+	stored, err := site.JSON()
 	require.NoError(t, err)
-	assert.JSONEq(t, `{"version":1,"timezone":"Pacific/Auckland","alarms":{"low":{"enabled":true}}}`, string(raw))
-	read := FromJSON(raw, nil, nil)
-	assert.Equal(t, "Pacific/Auckland", *read.GetTimezone())
-	assert.Nil(t, read.GetUnits())
+	assert.JSONEq(t, `{"version":1,"timezone":"Pacific/Auckland","range":{"low_mgdl":80},"alarms":{"low":{"enabled":true}}}`, stored)
+	stored, err = identity.JSON()
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"version":1,"alarms":{"low":{"enabled":false}}}`, stored)
 
-	// A row with nothing set, as a new site's and a new identity's, has no settings
-	raw, err = FromJSON([]byte(`{}`), nil, nil).JSON()
+	s := FromLevels(LevelFromJSON(must(site.JSON()), "site", 1), LevelFromJSON(stored, "identity", 2))
+	assert.True(t, s.Site.Alarms.Low.Enabled, "the site's own")
+	assert.False(t, s.Alarms.Low.Enabled, "the identity turned it off for itself")
+	assert.Equal(t, int64(80), s.Range.LowMgdl, "the site's, as the identity has not set one")
+	assert.Equal(t, int64(72), s.Default.Range.LowMgdl)
+	assert.Equal(t, "mmol/L", string(s.Units), "the default, as neither has set one")
+	low, err := s.Get("alarm_low_enabled")
 	require.NoError(t, err)
-	assert.JSONEq(t, `{"version":1}`, string(raw))
+	assert.Equal(t, "identity", low.Subject)
+	timezone, err := s.Get("timezone")
+	require.NoError(t, err)
+	assert.Equal(t, "site", timezone.Subject)
+
+	// A row with nothing set, as a new site's and a new identity's, has no settings of its own
+	stored, err = LevelFromJSON(`{}`, "site", 0).JSON()
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"version":1}`, stored)
 }
 
-// A stored row is not trusted: a value out of its range or not one of its options is left out and the rest kept, a
-// key that is not a field is not read, and a row that is not a Stored or is too long has no settings
-func TestStoredIsValidatedWhenRead(t *testing.T) {
-	raw, err := FromJSON([]byte(`{"version":1,"timezone":"Pacific/Auckland","units":"stone","range":{"low_mgdl":5000},"is_admin":true}`), nil, nil).JSON()
-	require.NoError(t, err)
-	assert.JSONEq(t, `{"version":1,"timezone":"Pacific/Auckland"}`, string(raw))
+// A change to a level shows once the settings are rebuilt, and a setting cleared goes back to the level below
+func TestRebuildFollowsALevel(t *testing.T) {
+	s := FromLevels(NewLevel(map[string]any{"units": "mg/dL"}), nil)
+	require.NoError(t, s.IdentityLevel.Set("units", "mmol/L"))
+	assert.Equal(t, "mg/dL", string(s.Units), "not until rebuilt")
+	assert.Equal(t, "mmol/L", string(s.Rebuild().Units))
+	require.NoError(t, s.IdentityLevel.Set("units", nil))
+	assert.Equal(t, "mg/dL", string(s.Rebuild().Units))
+}
 
-	raw, err = FromJSON([]byte(`{"timezone":"Pacific/Auckland","range":{"low_mgdl":"low","high_mgdl":200},"alarms":[1]}`), nil, nil).JSON()
+// A stored row is not trusted: a value out of its range, not one of its options or of the wrong type is left out and
+// the rest kept, a key that is not a field is not read, and a row that is not JSON or is too long has no settings
+func TestARowIsValidatedWhenRead(t *testing.T) {
+	stored, err := LevelFromJSON(`{"version":1,"timezone":"Pacific/Auckland","units":"stone","range":{"low_mgdl":5000,"high_mgdl":"high","urgent_high_mgdl":300},"alarms":[1],"is_admin":true}`, "site", 0).JSON()
 	require.NoError(t, err)
-	assert.JSONEq(t, `{"version":1,"timezone":"Pacific/Auckland","range":{"high_mgdl":200}}`, string(raw), "a field of another type")
+	assert.JSONEq(t, `{"version":1,"timezone":"Pacific/Auckland","range":{"urgent_high_mgdl":300}}`, stored)
 
 	for name, row := range map[string]string{"not JSON": `{"timezone":`, "not an object": `["timezone"]`, "empty": ``,
 		"too long": `{"timezone":"Pacific/Auckland","pad":"` + strings.Repeat("x", MaxJSONBytes) + `"}`} {
-		raw, err := FromJSON([]byte(row), nil, nil).JSON()
+		stored, err := LevelFromJSON(row, "site", 0).JSON()
 		require.NoError(t, err, name)
-		assert.JSONEq(t, `{"version":1}`, string(raw), name)
+		assert.JSONEq(t, `{"version":1}`, stored, name)
 	}
 }
 
 // Every setting set, each as long as it may be, fits its column with room to spare, so the column's limit is never
 // what refuses a setting
-func TestStoredFitsItsColumn(t *testing.T) {
-	m := FromJSON(must(DefaultSettingsMap.JSON()), nil, nil)
-	devices := make(types.DeviceNames, maxDeviceNames)
+func TestALevelFitsItsColumn(t *testing.T) {
+	level := LevelFromJSON(valuesV1, "site", 0)
+	devices := make([]any, maxDeviceNames)
 	for i := range devices {
 		devices[i] = strings.Repeat(string(rune('a'+i)), maxDeviceName)
 	}
-	m.SetAlarmDeviceBatteryLowDevicesJson(&devices)
-	raw, err := m.JSON()
+	require.NoError(t, level.Set("alarm_device_battery_low_devices", devices))
+	stored, err := level.JSON()
 	require.NoError(t, err)
-	assert.Less(t, len(raw), MaxJSONBytes/2, fmt.Sprint(len(raw)))
+	assert.Less(t, len(stored), MaxJSONBytes/2, fmt.Sprint(len(stored)))
 }
 
-func must(raw []byte, err error) []byte {
+func must(stored string, err error) string {
 	if err != nil {
 		panic(err)
 	}
-	return raw
+	return stored
 }
 
-// BenchmarkSettingsFromJSON is reading one level with every setting set
-// Run with go test -run XXX -bench SettingsFromJSON ./utils/settings
-func BenchmarkSettingsFromJSON(b *testing.B) {
-	stored := must(DefaultSettingsMap.JSON())
-	for b.Loop() {
-		if FromJSON(stored, nil, nil).GetTimezone() == nil {
-			b.Fatal("settings not read")
-		}
+// BenchmarkSettingsNew is building a request's settings from a site's row and an identity's, which a request does
+// once: as most are, a site with a few settings and an identity with one, and at most, each with every setting
+// Run with go test -run XXX -bench SettingsNew ./utils/settings
+func BenchmarkSettingsNew(b *testing.B) {
+	site := must(NewLevel(map[string]any{"timezone": "Pacific/Auckland", "language": "en-NZ", "units": "mmol/L", "date_format": "DD/MM/YYYY",
+		"time_format": "hh:mm a", "week_start_day": "monday", "alarm_low_enabled": true}).JSON())
+	identity := must(NewLevel(map[string]any{"units": "mg/dL"}).JSON())
+	for name, rows := range map[string][2]string{"usual": {site, identity}, "every setting": {valuesV1, valuesV1}} {
+		b.Run(name, func(b *testing.B) {
+			for b.Loop() {
+				if FromLevels(LevelFromJSON(rows[0], "site", 0), LevelFromJSON(rows[1], "identity", 0)).Timezone != "Pacific/Auckland" {
+					b.Fatal("settings not read")
+				}
+			}
+		})
 	}
 }
 
-// What version 1 stored is fixed: its example row, and the fields it had, the first lines of stored_schema.txt. A
+// What version 1 stored is fixed: its example row, and the fields it had, the first lines of values_schema.txt. A
 // change to either fails here, so they cannot be edited to make the tests above pass. Fields added since version 1 are
 // lines after these.
 const (
 	version1Fields = 46
 	version1Row    = "24e599c57f23cfb83101ccad88cbcf8c881823e6439260fd69fbdb292cab3906"
-	version1Schema = "598d16ffd4a7deb172eeb844040419c948ad6057f4fc41299a53724692883663"
+	version1Schema = "8adf68fd3195f357237ad5b017d5674ac165f0f8cacdabaea1bac300d9441681"
 )
 
 func TestWhatVersion1StoredIsNotEdited(t *testing.T) {
-	assert.Equal(t, version1Row, fmt.Sprintf("%x", sha256.Sum256([]byte(storedV1))), "stored_v1.json was changed: put it back")
-	lines := strings.SplitAfter(storedSchema, "\n")
+	assert.Equal(t, version1Row, fmt.Sprintf("%x", sha256.Sum256([]byte(valuesV1))), "values_v1.json was changed: put it back")
+	lines := strings.SplitAfter(valuesSchema, "\n")
 	require.GreaterOrEqual(t, len(lines), version1Fields)
 	assert.Equal(t, version1Schema, fmt.Sprintf("%x", sha256.Sum256([]byte(strings.Join(lines[:version1Fields], "")))),
-		"a line of stored_schema.txt that version 1 had was changed: put it back")
+		"a line of values_schema.txt that version 1 had was changed: put it back")
 }

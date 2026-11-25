@@ -1,6 +1,7 @@
 package settings_test
 
 import (
+	"cmp"
 	"strings"
 	"testing"
 	"time"
@@ -27,18 +28,14 @@ func TestCombinedSettingsUnits(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
-			site.SetUnits(test.site)
-			identity.SetUnits(test.identity)
-			combined := &settings.CombinedSettingsMap{
-				SiteSettingsMap:     site,
-				IdentitySettingsMap: identity,
-				DefaultSettingsMap:  settings.DefaultSettingsMap,
-			}
+			combined := settings.FromLevels(levelOf("units", test.site), levelOf("units", test.identity))
 
-			require.Equal(t, test.want, *combined.GetUnits())
+			require.Equal(t, test.want, combined.Units)
+			// The site's own are the site's, whatever the identity's
+			require.Equal(t, *cmp.Or(test.site, &mmol), combined.Site.Units)
+			require.Equal(t, mmol, combined.Default.Units)
 			// The same order as looking a setting up by name
-			byName, err := combined.GetSettingAnyTypeByName("units")
+			byName, err := combined.Get("units")
 			require.NoError(t, err)
 			require.Equal(t, test.want, byName.Value)
 		})
@@ -61,14 +58,7 @@ func TestCombinedSettingsTimezone(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
-			site.SetTimezone(test.site)
-			identity.SetTimezone(test.identity)
-			combined := &settings.CombinedSettingsMap{
-				SiteSettingsMap:     site,
-				IdentitySettingsMap: identity,
-				DefaultSettingsMap:  settings.DefaultSettingsMap,
-			}
+			combined := settings.FromLevels(levelOf("timezone", test.site), levelOf("timezone", test.identity))
 
 			require.Equal(t, test.want, combined.Location().String())
 		})
@@ -113,9 +103,9 @@ func TestFastRiseAndDropMinutes(t *testing.T) {
 
 // Times and dates are shown in the identity's format, then the site's, then the default, each as its Go layout
 func TestCombinedSettingsLayouts(t *testing.T) {
-	layoutOf := map[string]func(*settings.CombinedSettingsMap) string{
-		"time_format": (*settings.CombinedSettingsMap).TimeLayout,
-		"date_format": (*settings.CombinedSettingsMap).DateLayout,
+	layoutOf := map[string]func(settings.Values) string{
+		"time_format": settings.Values.TimeLayout,
+		"date_format": settings.Values.DateLayout,
 	}
 	tests := []struct {
 		setting        string
@@ -137,14 +127,13 @@ func TestCombinedSettingsLayouts(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.setting+"/"+test.site+"_"+test.identity, func(t *testing.T) {
-			site, identity := &settings.SettingMap{}, &settings.SettingMap{}
-			for level, format := range map[*settings.SettingMap]string{site: test.site, identity: test.identity} {
+			site, identity := settings.NewLevel(nil), settings.NewLevel(nil)
+			for level, format := range map[*settings.Level]string{site: test.site, identity: test.identity} {
 				if format != "" {
-					require.NoError(t, level.SetSettingByName(test.setting, format, nil, nil))
+					require.NoError(t, level.Set(test.setting, format))
 				}
 			}
-			combined := &settings.CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: settings.DefaultSettingsMap}
-			require.Equal(t, test.layout, layoutOf[test.setting](combined))
+			require.Equal(t, test.layout, layoutOf[test.setting](settings.FromLevels(site, identity).Values))
 		})
 	}
 }
@@ -180,11 +169,15 @@ func TestLoadLocation(t *testing.T) {
 // as every time the API gives, not in seconds, which reads as January 1970
 func TestCreatedAtIsMilliseconds(t *testing.T) {
 	before := time.Now().Add(-time.Hour).UnixMilli()
-	for _, setting := range settings.DefaultCombinedSettingsMap().GetAllSettingAnyTypes() {
+	for _, setting := range settings.FromLevels(nil, nil).All() {
 		require.Greater(t, setting.CreatedAt, before, setting.Identifier)
 	}
+}
 
-	set := &settings.SettingMap{}
-	require.NoError(t, set.SetSettingByName("units", "mg/dL", nil, nil))
-	require.Greater(t, set.Units.CreatedAt, before)
+// levelOf is a level with one setting set, or none for nil
+func levelOf[T any](name string, value *T) *settings.Level {
+	if value == nil {
+		return settings.NewLevel(nil)
+	}
+	return settings.NewLevel(map[string]any{name: *value})
 }

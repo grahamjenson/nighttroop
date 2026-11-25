@@ -117,19 +117,31 @@ The words the pages, toasts, errors and docs use for one thing (UI text is in `u
 
 ## Settings
 
-A site's own settings and an identity's own settings are each one JSON column, `settings_json`, read into the `Stored`
-struct in `utils/settings/stored.go`. Rows of every release are read into that struct, so it only grows.
+A site's own settings and an identity's own settings are each one JSON column, `settings_json`. `utils/settings` has
+three types:
 
-- To add a setting: add a field to `Stored` (or to one of its structs, or a new struct for a new group), its line in
-  `fields()`, and its line at the end of `utils/settings/stored_schema.txt`. Do not change `StoredVersion`.
-- Never rename, remove, move or retype a field of `Stored`, change its JSON name, or give it to another setting. A
+- `Values` (`values.go`): every setting with its value, as plain types and no pointers, e.g. `Values.Range.LowMgdl`.
+  Its JSON is what a column holds, with only the settings that level has set.
+- `Level`: what one level, the site or an identity, has set of its own.
+- `Settings`: what a request has, from `siteContext.GetSettings()`. `Settings.Default`, `Settings.Site` (the site's own
+  over the defaults) and the embedded `Values` in effect (the identity's over the site's over the defaults).
+
+Read a setting from the struct: `siteContext.GetSettings().Timezone`, or `.Site.Timezone` for the site's own. Do not
+add a getter for one setting.
+
+Rows of every release are read by the JSON names of `Values`, so it only grows.
+
+- To add a setting: add its definition, a field to `Values` (or to one of its structs, or a new struct for a new
+  group), its line in `fields()`, and its line at the end of `utils/settings/values_schema.txt`. Do not change
+  `Version`.
+- Never rename, remove, move or retype a field of `Values`, change its JSON name, or give it to another setting. A
   stored row would be read as not set, and the person given the default with no word.
-- Never change or delete a line of `stored_schema.txt`, never change `stored_v1.json`, and never change the checksums
+- Never change or delete a line of `values_schema.txt`, never change `values_v1.json`, and never change the checksums
   in `TestWhatVersion1StoredIsNotEdited`. If a test in `utils/settings/json_test.go` fails, put the struct back.
 - A setting that is no longer used keeps its field. Stop reading it; do not delete it.
 - To change what a stored value means: add a field for the new meaning and keep reading the old one. Only if that
-  cannot work, add 1 to `StoredVersion`, read each older version as it was written, and add a `stored_v<N>.json`
-  with its own test. Ask before doing this.
+  cannot work, add 1 to `Version`, read each older version as it was written, and add a `values_v<N>.json` with its
+  own test. Ask before doing this.
 - Do not add a settings column. Do not query one setting with `json_extract` unless a background job must find sites
   by it without reading each row, as `GetSiteIDsWithAlarms` does.
 

@@ -35,13 +35,12 @@ type SiteContext struct {
 	AcceptType  AcceptType
 	ContentType ContentType
 
-	settings *settings.CombinedSettingsMap
-	// siteSettings are the site's own settings over the defaults, without the identity's
-	siteSettings *settings.CombinedSettingsMap
+	// settings are the site's settings and the identity's, built once from their rows
+	settings *settings.Settings
 	// mgdl is whether glucose is always in mg/dL, whatever the identity's or site's units, and mgdlSettings the
 	// settings in effect with them
 	mgdl         bool
-	mgdlSettings *settings.CombinedSettingsMap
+	mgdlSettings *settings.Settings
 }
 
 // SetMgdlUnits makes glucose read and written in the context always mg/dL, whatever the identity's or site's units,
@@ -118,73 +117,48 @@ func SetIdentityModelInSiteContext(ctx context.Context, identityModel *controldb
 // SETTINGS
 // /////
 
-func (sc *SiteContext) GetSettings() *settings.CombinedSettingsMap {
+// GetSettings are the request's settings: Values in effect, the identity's over the site's over the defaults, and
+// Site, the site's own whoever is signed in. Where glucose is always mg/dL, the units in effect are mg/dL.
+func (sc *SiteContext) GetSettings() *settings.Settings {
 	if !sc.mgdl {
-		return sc.settingsInEffect()
+		return sc.GetOwnSettings()
 	}
 	if sc.mgdlSettings == nil {
-		inEffect := sc.settingsInEffect()
-		identity := *inEffect.IdentitySettingsMap
-		identity.SetUnits(new(consts.UnitsMGDL))
-		sc.mgdlSettings = &settings.CombinedSettingsMap{SiteSettingsMap: inEffect.SiteSettingsMap, IdentitySettingsMap: &identity,
-			DefaultSettingsMap: inEffect.DefaultSettingsMap}
+		mgdl := *sc.GetOwnSettings()
+		mgdl.Units = consts.UnitsMGDL
+		sc.mgdlSettings = &mgdl
 	}
 	return sc.mgdlSettings
 }
 
 // GetOwnSettings are the settings as the identity and site have them, their own units even where glucose is always
-// mg/dL: for showing glucose in those units, and for reading and writing the settings themselves
-func (sc *SiteContext) GetOwnSettings() *settings.CombinedSettingsMap {
-	return sc.settingsInEffect()
-}
-
-// settingsInEffect are the identity's settings over the site's over the defaults, or the site's without an identity
-func (sc *SiteContext) settingsInEffect() *settings.CombinedSettingsMap {
-	// Without a signed in identity, such as for a live update sent to a site's sockets, the site's own settings are in
-	// effect, rather than the defaults
-	if sc.SiteModel != nil && sc.IdentityModel == nil {
-		return sc.getSiteSettings()
-	}
-	if sc.SiteModel == nil || sc.IdentityModel == nil {
-		// Whether each is known, not the models, which hold the backup key's hash and the identity's secrets
-		slog.Error("settings unavailable site or identity model is nil", "site_id", sc.SiteID, "has_site", sc.SiteModel != nil, "has_identity", sc.IdentityModel != nil)
-		return settings.DefaultCombinedSettingsMap()
-	}
-
+// mg/dL: for showing glucose in those units, and for reading and writing the settings themselves. Without a signed in
+// identity, such as for a live update sent to a site's sockets, the site's own settings are in effect.
+func (sc *SiteContext) GetOwnSettings() *settings.Settings {
 	if sc.settings == nil {
-		sc.settings = settings.NewCombinedSettingsMap(sc.SiteModel, sc.IdentityModel)
-	}
-
-	return sc.settings
-}
-
-// getSiteSettings is the site's own settings over the defaults, whatever the identity's, for what is the site's
-// rather than any one identity's, such as its days
-func (sc *SiteContext) getSiteSettings() *settings.CombinedSettingsMap {
-	if sc.siteSettings == nil {
-		sc.siteSettings = &settings.CombinedSettingsMap{SiteSettingsMap: &settings.SettingMap{}, IdentitySettingsMap: &settings.SettingMap{},
-			DefaultSettingsMap: settings.DefaultSettingsMap}
-		if sc.SiteModel != nil {
-			sc.siteSettings.SiteSettingsMap = settings.OfSite(sc.SiteModel)
+		if sc.SiteModel == nil {
+			// Whether each is known, not the models, which hold the backup key's hash and the identity's secrets
+			slog.Error("settings unavailable, as the site is not known, so the defaults are used", "site_id", sc.SiteID, "has_identity", sc.IdentityModel != nil)
 		}
+		sc.settings = settings.New(sc.SiteModel, sc.IdentityModel)
 	}
-	return sc.siteSettings
+	return sc.settings
 }
 
 // GetSiteTimezone is the site's own timezone, or UTC, whatever the identity's
 func (sc *SiteContext) GetSiteTimezone() *time.Location {
-	return sc.getSiteSettings().Location()
+	return sc.GetOwnSettings().Site.Location()
 }
 
 // GetSiteWeekStartDay is the site's own week start day, monday or sunday, whatever the identity's
 func (sc *SiteContext) GetSiteWeekStartDay() string {
-	return *sc.getSiteSettings().GetWeekStartDay()
+	return sc.GetOwnSettings().Site.WeekStartDay
 }
 
 // GetSiteRangeMgdl is the site's own glucose range, low and high in mg/dL, whatever the identity's
 func (sc *SiteContext) GetSiteRangeMgdl() (low, high int64) {
-	site := sc.getSiteSettings()
-	return *site.GetRangeLowMgdl(), *site.GetRangeHighMgdl()
+	site := sc.GetOwnSettings().Site.Range
+	return site.LowMgdl, site.HighMgdl
 }
 
 // GetSiteIdentity is the enabled identity with the name and role on the site of the request, refusing one for another site

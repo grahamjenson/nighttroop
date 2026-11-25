@@ -5,88 +5,11 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"time"
 
 	"nighttroop.t1d.nz/data/types"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/i18n"
 )
-
-type SettingAnyType struct {
-	Identifier string
-	TypeString string
-	Value      any
-	CreatedAt  int64
-	Subject    string
-}
-
-type Setting[T any] struct {
-	definition *SettingDefinition[T]
-	Value      T
-	CreatedAt  int64
-	Subject    string
-}
-
-func (s *Setting[T]) ToSettingAnyType() *SettingAnyType {
-	if s == nil {
-		return nil
-	}
-	return &SettingAnyType{
-		Identifier: s.definition.Identifier,
-		TypeString: s.definition.TypeString,
-		Value:      s.Value,
-		CreatedAt:  s.CreatedAt,
-		Subject:    s.Subject,
-	}
-}
-
-func NewSetting[T any](definition *SettingDefinition[T], value *T, createdAt *int64, subject *string) *Setting[T] {
-	// Setting value to nil is just deleting the setting
-	if value == nil {
-		return nil
-	}
-
-	if createdAt == nil {
-		now := time.Now().UnixMilli()
-		createdAt = &now
-	}
-
-	if subject == nil {
-		subject = ptr("default")
-	}
-
-	setting := &Setting[T]{
-		definition: definition,
-		Value:      *value,
-		CreatedAt:  *createdAt,
-		Subject:    *subject,
-	}
-
-	return setting
-}
-
-func NewDefaultSetting[T any](definition *SettingDefinition[T]) *Setting[T] {
-
-	setting := &Setting[T]{
-		definition: definition,
-		Value:      definition.Default,
-		CreatedAt:  time.Now().UnixMilli(),
-		Subject:    "default",
-	}
-
-	return setting
-}
-
-func NewSettingAndParseValidate[T any](definition *SettingDefinition[T], value any, createdAt *int64, subject *string) (*Setting[T], error) {
-	if value == nil {
-		return nil, nil
-	}
-	parsedValue, err := definition.ParseValidate(value)
-	if err != nil {
-		return nil, err
-	}
-	return NewSetting(definition, parsedValue, createdAt, subject), nil
-}
 
 // //
 // Parsers

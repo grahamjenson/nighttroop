@@ -20,13 +20,13 @@ var orders = []struct {
 
 // Consistent is whether the settings in effect, each the identity's, the site's or the default, make sense
 // together, e.g. a low alarm under the high alarm
-func (m *CombinedSettingsMap) Consistent() error {
+func (s *Settings) Consistent() error {
 	for _, order := range orders {
-		under, err := m.GetSettingAnyTypeByName(order.under)
+		under, err := s.Get(order.under)
 		if err != nil {
 			return err
 		}
-		over, err := m.GetSettingAnyTypeByName(order.over)
+		over, err := s.Get(order.over)
 		if err != nil {
 			return err
 		}

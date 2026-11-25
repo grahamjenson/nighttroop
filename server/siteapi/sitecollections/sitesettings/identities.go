@@ -124,9 +124,9 @@ func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httput
 	if err != nil {
 		return err
 	}
-	level := settings.OfIdentity(identity)
-	level.SetUnits(new(consts.UnitsMGDL))
-	stored, err := level.Stored()
+	level := settings.LevelFromJSON(identity.SettingsJson, "identity", identity.CreatedAt)
+	_ = level.Set(settings.Units.Identifier, consts.UnitsMGDL)
+	stored, err := level.JSON()
 	if err != nil {
 		return err
 	}

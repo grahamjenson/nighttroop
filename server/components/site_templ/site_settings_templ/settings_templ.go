@@ -128,7 +128,7 @@ func columnUnits(ctx context.Context, column settingsColumn) string {
 		}
 		return column.Model.Inherited["units"]
 	}
-	return settingValue(httputils.GetSiteContext(ctx).GetSettings().GetUnits().Stringp())
+	return settingValue(new(httputils.GetSiteContext(ctx).GetSettings().Units).Stringp())
 }
 
 // optionLabels are the messages of the week's days, named as days are, and of an alarm's On or Off

@@ -574,7 +574,7 @@ func summaryContent(summary *sitemodels.Summary) templ.Component {
 // minutes, from the settings in effect, or 15 without them
 func staleAfterMinutes(ctx context.Context) int64 {
 	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
-		if minutes := siteContext.GetSettings().GetAlarmNoDataMinutes(); minutes != nil {
+		if minutes := new(siteContext.GetSettings().Alarms.NoData.Minutes); minutes != nil {
 			return *minutes
 		}
 	}
