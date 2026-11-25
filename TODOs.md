@@ -21,9 +21,9 @@
        is one of those settings, so that failure is only printed
 1. P2: e2e backup_key testing. Control
 1. Performance testing (cost estimate for running full node)
-    1. P3: The summary's today so far reads every insulin dose of the week before it, to count those whose extended
-       part still runs: about 700 SMBs for a loop, a third of the time to read the summary (`BenchmarkSummary` in
-       `sitedata`). Read only the doses with an extended part from before the day (`buildSummaryDaily`)
+    1. P3: Each read of the summary builds its today so far again, from all of today's glucose readings, doses, food
+       and device statuses: about 40% of what a read allocates for a loop's site (`BenchmarkSummary` in `sitedata`),
+       most of it the readings. Keep a site's today so far between reads, until a write to the site changes it
 
 1. Accounts
     1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark

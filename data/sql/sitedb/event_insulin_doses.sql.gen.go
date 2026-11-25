@@ -257,6 +257,71 @@ func (q *Queries) InsulinDoseTotals(ctx context.Context) (*InsulinDoseTotalsRow,
 	return &i, err
 }
 
+const insulinDosesExtendedInto = `-- name: InsulinDosesExtendedInto :many
+SELECT id, dose, dose_type, extended_dose, extended_duration_ms, automatic, is_basal_insulin, insulin_type, unabsorbed, icfg_json, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM insulin_doses
+WHERE occurred_at BETWEEN CAST(?1 AS INTEGER) AND CAST(?2 AS INTEGER) - 1
+    AND extended_dose > 0
+    AND occurred_at + extended_duration_ms > CAST(?2 AS INTEGER)
+    AND deleted_at IS NULL
+ORDER BY occurred_at DESC
+LIMIT CAST(?3 AS INTEGER)
+`
+
+type InsulinDosesExtendedIntoParams struct {
+	Since int64
+	At    int64
+	Limit int64
+}
+
+// The insulin doses from Since whose extended part still runs at At, newest first, as a day's summary counts the
+// share of one that started before it. A loop's week of SMBs has none, so none of them is read into the server.
+func (q *Queries) InsulinDosesExtendedInto(ctx context.Context, arg InsulinDosesExtendedIntoParams) ([]*InsulinDose, error) {
+	rows, err := q.query(ctx, q.insulinDosesExtendedIntoStmt, insulinDosesExtendedInto, arg.Since, arg.At, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*InsulinDose
+	for rows.Next() {
+		var i InsulinDose
+		if err := rows.Scan(
+			&i.ID,
+			&i.Dose,
+			&i.DoseType,
+			&i.ExtendedDose,
+			&i.ExtendedDurationMs,
+			&i.Automatic,
+			&i.IsBasalInsulin,
+			&i.InsulinType,
+			&i.Unabsorbed,
+			&i.IcfgJson,
+			&i.Notes,
+			&i.Reason,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const rewriteInsulinDose = `-- name: RewriteInsulinDose :one
 
 UPDATE insulin_doses SET

@@ -88,6 +88,17 @@ WHERE
 ORDER BY occurred_at DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
+-- name: InsulinDosesExtendedInto :many
+-- The insulin doses from Since whose extended part still runs at At, newest first, as a day's summary counts the
+-- share of one that started before it. A loop's week of SMBs has none, so none of them is read into the server.
+SELECT * FROM insulin_doses
+WHERE occurred_at BETWEEN CAST(sqlc.arg('Since') AS INTEGER) AND CAST(sqlc.arg('At') AS INTEGER) - 1
+    AND extended_dose > 0
+    AND occurred_at + extended_duration_ms > CAST(sqlc.arg('At') AS INTEGER)
+    AND deleted_at IS NULL
+ORDER BY occurred_at DESC
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 --------
 -- UPDATE
 --------

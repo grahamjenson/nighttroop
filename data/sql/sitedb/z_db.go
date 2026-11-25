@@ -387,6 +387,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.insulinDoseTotalsStmt, err = db.PrepareContext(ctx, insulinDoseTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query InsulinDoseTotals: %w", err)
 	}
+	if q.insulinDosesExtendedIntoStmt, err = db.PrepareContext(ctx, insulinDosesExtendedInto); err != nil {
+		return nil, fmt.Errorf("error preparing query InsulinDosesExtendedInto: %w", err)
+	}
 	if q.lastModifiedCollectionsStmt, err = db.PrepareContext(ctx, lastModifiedCollections); err != nil {
 		return nil, fmt.Errorf("error preparing query LastModifiedCollections: %w", err)
 	}
@@ -1210,6 +1213,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing insulinDoseTotalsStmt: %w", cerr)
 		}
 	}
+	if q.insulinDosesExtendedIntoStmt != nil {
+		if cerr := q.insulinDosesExtendedIntoStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing insulinDosesExtendedIntoStmt: %w", cerr)
+		}
+	}
 	if q.lastModifiedCollectionsStmt != nil {
 		if cerr := q.lastModifiedCollectionsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing lastModifiedCollectionsStmt: %w", cerr)
@@ -1725,6 +1733,7 @@ type Queries struct {
 	hardDeleteTempBasalStmt                     *sql.Stmt
 	hardDeleteTempTargetStmt                    *sql.Stmt
 	insulinDoseTotalsStmt                       *sql.Stmt
+	insulinDosesExtendedIntoStmt                *sql.Stmt
 	lastModifiedCollectionsStmt                 *sql.Stmt
 	markSummariesStaleStmt                      *sql.Stmt
 	notificationEventTotalsStmt                 *sql.Stmt
@@ -1923,6 +1932,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteTempBasalStmt:                     q.hardDeleteTempBasalStmt,
 		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
 		insulinDoseTotalsStmt:                       q.insulinDoseTotalsStmt,
+		insulinDosesExtendedIntoStmt:                q.insulinDosesExtendedIntoStmt,
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
 		markSummariesStaleStmt:                      q.markSummariesStaleStmt,
 		notificationEventTotalsStmt:                 q.notificationEventTotalsStmt,
