@@ -8,7 +8,7 @@
     1. P3: A site far over its size limit that keeps writing changes records on each truncate, so its DB is vacuumed
        every 10 minutes: vacuum only when its free pages are a large part of it
 1. P1: Push Notification testing. Alarms testing.
-1. e2e restore/archiving/hydration testing
+1. e2e restore and archive testing
     1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up each site
        written to, so its tiles can be checked after a backup, not only before one
     1. P2: Test the S3 lock (`utils/s3utils/lock.go`) against the production S3: it is tested against MinIO, and
@@ -85,6 +85,8 @@
 1. P3: Control Page to verify backup_key, and regenerate a backup_key
 
 1. Site usability:
+    1. P4: While an urgent alarm is snoozed, the banner shows the alarm it quiets (a high under its urgent high) as
+       "Snoozed: High", though that one has no snooze: leave it out, or say what quiets it
     1. P4: An address outside a section, as `/data` or `/account`, gives a signed in person the bare text
        `404 page not found`: show the site's Not found page there too, as it shows for `/data/nope`
     1. P4: The number boxes of the add and details forms have no `inputmode`, so a phone opens its full keyboard for
@@ -98,6 +100,8 @@
 
 
 1. Tests:
+    1. P4: A browser test cannot check a text with a time of day in it that is not now, as the end of an alarm's
+       snooze 30 minutes on: `{{ now }}` takes no minutes to add, so a test checks only the words before the time
     1. P3: `TestNS` in `tests/api` sets the limits its files need with `t.Setenv`, but the first test to run loads the
        package's one config, so `go test -shuffle=2 ./tests/api`, or a test in a file named before
        `nightscout_test.go`, fails 54 files with 429: set them in a `TestMain`, as `tests/bdd` does
