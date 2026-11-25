@@ -164,6 +164,9 @@ func (ws *Websocket) engineConfig() engineio.Config {
 		// One IP may hold only a few of the site's sessions until they are given access, leaving the rest to its followers
 		ClientKey:       func(r *http.Request) string { return config.IPKey(httputils.GetSiteContext(r.Context()).IPAddress) },
 		MaxUnauthorized: ws.config.SocketMaxUnauthPerIP,
+		// Many IPs together may hold every session with none given access, so a full site closes the oldest of those
+		// for a new session, which its follower's is until it is given access
+		ReplaceUnauthorized: true,
 		// One identity may hold only half of the site's sessions, leaving the rest to its other identities
 		MaxPerHolder: max(1, ws.config.SocketMaxSessionsPerSite/2),
 	}

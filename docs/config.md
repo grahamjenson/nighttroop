@@ -206,7 +206,7 @@ settings keep that value, which replaces the env value until set back.
 | `SOCKET_PING_INTERVAL_IN_SECONDS` | `25` | How often a client is pinged: Nightscout's interval, which v2 clients expect. |
 | `SOCKET_PING_TIMEOUT_IN_SECONDS` | `20` | How long a ping waits for its pong before the client is closed. |
 | `SOCKET_MAX_PAYLOAD_BYTES` | `100000` | The largest POST body or websocket message. |
-| `SOCKET_MAX_SESSIONS_PER_SITE` | `300` | The most live sessions for one site. One identity can hold half of them. |
+| `SOCKET_MAX_SESSIONS_PER_SITE` | `300` | The most live sessions for one site. One identity can hold half of them. A full site closes its oldest session with no access to open a new one. |
 | `SOCKET_MAX_UNAUTH_SESSIONS_PER_IP` | `30` | The most of a site's live sessions one IP (an IPv6 /64) can hold before they get access, so it cannot take them all from the site's followers. |
 | `SOCKET_MAX_BUFFERED_PACKETS` | `1000` | Packets that wait for a client before it is closed as too slow. |
 | `SOCKET_MAX_BUFFERED_BYTES` | `2000000` | The same, in bytes. |
