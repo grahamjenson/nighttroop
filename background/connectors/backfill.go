@@ -14,6 +14,7 @@ import (
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/consts"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/utils/thin"
 )
 
 // A backfill fetches a connector's records from before the site's oldest glucose reading. A source has one queued
@@ -155,14 +156,50 @@ func (b *ConnectorJobManager) backfill(jobInfo *ConnectorJobInfo, backfill Backf
 	return err
 }
 
+// statusThinner keeps, of the device statuses a backfill reads newest first, only those the site's truncation keeps,
+// by utils/thin's rule: all from the last hour, then each device's newest in each of its buckets. So a backfill does
+// not write, then clear the loop status of, the statuses the next truncation deletes: most of the 288 a day each
+// device uploads.
+type statusThinner struct {
+	now  int64
+	kept map[statusBucket]bool
+}
+
+// statusBucket is a device's bucket of a size, in ms, numbered from the epoch as the truncation's are
+type statusBucket struct {
+	device       string
+	number, size int64
+}
+
+func newStatusThinner(now time.Time) *statusThinner {
+	return &statusThinner{now: now.UnixMilli(), kept: map[statusBucket]bool{}}
+}
+
+// keep is whether a status, read after every newer one, is the newest of its device in its bucket. One with no date is
+// kept, as truncation will thin it.
+func (t *statusThinner) keep(doc map[string]any) bool {
+	date, ok := doc["date"].(float64)
+	size := thin.Bucket(int64(date), t.now)
+	if !ok || size == 0 {
+		return true
+	}
+	device, _ := doc["device"].(string)
+	bucket := statusBucket{device: device, number: int64(date) / size, size: size}
+	if t.kept[bucket] {
+		return false
+	}
+	t.kept[bucket] = true
+	return true
+}
+
 // backfillNightscout copies each collection's documents dated from from to to, newest first a page at a time, but no
-// device statuses older than deviceStatusBackfillAge
+// device statuses older than deviceStatusBackfillAge, and of the rest only those the site's truncation keeps
 func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *ConnectorJobInfo, rangeFrom, to time.Time) (int, error) {
 	nsc := b.nightscoutClientFor(jobInfo)
 	nsc.Lock()
 	defer nsc.Unlock()
 
-	added, pages, statusCutoff := 0, 0, time.Now().Add(-deviceStatusBackfillAge)
+	added, pages, statusCutoff, thinner := 0, 0, time.Now().Add(-deviceStatusBackfillAge), newStatusThinner(time.Now())
 	for _, c := range nightscoutCollections {
 		from := rangeFrom
 		if c.collection == nsutils.Devicestatus && from.Before(statusCutoff) {
@@ -181,10 +218,11 @@ func (b *ConnectorJobManager) backfillNightscout(ctx context.Context, jobInfo *C
 				return added, fmt.Errorf("NightscoutBackfill Error: %w", err)
 			}
 			oldest, full := oldestDate(docs, before), len(docs) == c.backfillPage
-			// A Nightscout server can return a device status dated before the range, as its date is not what it filters on
+			// A Nightscout server can return a device status dated before the range, as its date is not what it filters on.
+			// The page is newest first, as each after it, so a status is kept only if it is the newest in its bucket.
 			if c.collection == nsutils.Devicestatus {
 				docs = slices.DeleteFunc(docs, func(doc map[string]any) bool {
-					return oldestDate([]map[string]any{doc}, before) < statusCutoff.UnixMilli()
+					return oldestDate([]map[string]any{doc}, before) < statusCutoff.UnixMilli() || !thinner.keep(doc)
 				})
 			}
 			created, err := b.createNightscoutDocuments(ctx, jobInfo, c.collection, docs, c.backfillSave)

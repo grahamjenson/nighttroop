@@ -338,14 +338,14 @@ const thinOldDeviceReports = `-- name: ThinOldDeviceReports :exec
 DELETE FROM device_reports WHERE device_reports.id IN (
     SELECT report.id FROM (
         SELECT thinned.id, thinned.created_by_device_name, thinned.occurred_at,
-            CASE WHEN thinned.occurred_at < CAST(?1 AS INTEGER) - 14 * 86400000 THEN 3600000
-                WHEN thinned.occurred_at < CAST(?1 AS INTEGER) - 7 * 86400000 THEN 1200000
-                ELSE 600000 END AS bucket
+            CASE WHEN thinned.occurred_at < CAST(?1 AS INTEGER) - CAST(?2 AS INTEGER) THEN CAST(?3 AS INTEGER)
+                WHEN thinned.occurred_at < CAST(?1 AS INTEGER) - CAST(?4 AS INTEGER) THEN CAST(?5 AS INTEGER)
+                ELSE CAST(?6 AS INTEGER) END AS bucket
         FROM device_reports AS thinned
-        WHERE thinned.occurred_at < CAST(?1 AS INTEGER) - 3600000 AND thinned.deleted_at IS NULL AND (
-            thinned.updated_at >= CAST(?2 AS INTEGER)
-            OR thinned.occurred_at BETWEEN CAST(?2 AS INTEGER) - 7 * 86400000 AND CAST(?1 AS INTEGER) - 7 * 86400000
-            OR thinned.occurred_at BETWEEN CAST(?2 AS INTEGER) - 14 * 86400000 AND CAST(?1 AS INTEGER) - 14 * 86400000
+        WHERE thinned.occurred_at < CAST(?1 AS INTEGER) - CAST(?7 AS INTEGER) AND thinned.deleted_at IS NULL AND (
+            thinned.updated_at >= CAST(?8 AS INTEGER)
+            OR thinned.occurred_at BETWEEN CAST(?8 AS INTEGER) - CAST(?4 AS INTEGER) AND CAST(?1 AS INTEGER) - CAST(?4 AS INTEGER)
+            OR thinned.occurred_at BETWEEN CAST(?8 AS INTEGER) - CAST(?2 AS INTEGER) AND CAST(?1 AS INTEGER) - CAST(?2 AS INTEGER)
         )
     ) AS report
     WHERE EXISTS (
@@ -359,18 +359,34 @@ DELETE FROM device_reports WHERE device_reports.id IN (
 `
 
 type ThinOldDeviceReportsParams struct {
-	Now   int64
-	Since int64
+	Now         int64
+	FortnightMs int64
+	LargeMs     int64
+	WeekMs      int64
+	MediumMs    int64
+	SmallMs     int64
+	KeepAllMs   int64
+	Since       int64
 }
 
-// A device report every few minutes is kept only for the last hour before Now; then each device keeps, of its
-// reports, the newest in every 10 minutes until a week old, in every 20 minutes until two weeks old, and in every hour
-// after that, which is enough to chart its IOB, COB, battery and reservoir. Each device keeps its newest report, and the
+// A device report every few minutes is kept only for KeepAllMs before Now; then each device keeps, of its reports,
+// the newest in every SmallMs until WeekMs old, in every MediumMs until FortnightMs old, and in every LargeMs after
+// that, which is enough to chart its IOB, COB, battery and reservoir. The ages and buckets are utils/thin's, which a
+// backfill keeps to as well (db.ThinParams). Each device keeps its newest report, and the
 // loop status on it, however old, until DeleteOldDeviceReports removes it. The buckets are aligned so each hour's
 // newest is also its 20 and 10 minutes' newest. A deleted report is neither kept nor removed, so clients syncing
 // deletions still see it. Only reports written since Since are looked at, as ClearOldLoopStatuses does, and those that
 // passed a week or two weeks old since then, as those are thinned again; 0 looks at them all.
 func (q *Queries) ThinOldDeviceReports(ctx context.Context, arg ThinOldDeviceReportsParams) error {
-	_, err := q.exec(ctx, q.thinOldDeviceReportsStmt, thinOldDeviceReports, arg.Now, arg.Since)
+	_, err := q.exec(ctx, q.thinOldDeviceReportsStmt, thinOldDeviceReports,
+		arg.Now,
+		arg.FortnightMs,
+		arg.LargeMs,
+		arg.WeekMs,
+		arg.MediumMs,
+		arg.SmallMs,
+		arg.KeepAllMs,
+		arg.Since,
+	)
 	return err
 }

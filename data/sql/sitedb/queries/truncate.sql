@@ -36,9 +36,10 @@ WHERE device_reports.updated_at >= @since AND device_reports.pump_json IS NOT NU
     );
 
 -- name: ThinOldDeviceReports :exec
--- A device report every few minutes is kept only for the last hour before Now; then each device keeps, of its
--- reports, the newest in every 10 minutes until a week old, in every 20 minutes until two weeks old, and in every hour
--- after that, which is enough to chart its IOB, COB, battery and reservoir. Each device keeps its newest report, and the
+-- A device report every few minutes is kept only for KeepAllMs before Now; then each device keeps, of its reports,
+-- the newest in every SmallMs until WeekMs old, in every MediumMs until FortnightMs old, and in every LargeMs after
+-- that, which is enough to chart its IOB, COB, battery and reservoir. The ages and buckets are utils/thin's, which a
+-- backfill keeps to as well (db.ThinParams). Each device keeps its newest report, and the
 -- loop status on it, however old, until DeleteOldDeviceReports removes it. The buckets are aligned so each hour's
 -- newest is also its 20 and 10 minutes' newest. A deleted report is neither kept nor removed, so clients syncing
 -- deletions still see it. Only reports written since Since are looked at, as ClearOldLoopStatuses does, and those that
@@ -46,14 +47,14 @@ WHERE device_reports.updated_at >= @since AND device_reports.pump_json IS NOT NU
 DELETE FROM device_reports WHERE device_reports.id IN (
     SELECT report.id FROM (
         SELECT thinned.id, thinned.created_by_device_name, thinned.occurred_at,
-            CASE WHEN thinned.occurred_at < CAST(@now AS INTEGER) - 14 * 86400000 THEN 3600000
-                WHEN thinned.occurred_at < CAST(@now AS INTEGER) - 7 * 86400000 THEN 1200000
-                ELSE 600000 END AS bucket
+            CASE WHEN thinned.occurred_at < CAST(@now AS INTEGER) - CAST(@fortnight_ms AS INTEGER) THEN CAST(@large_ms AS INTEGER)
+                WHEN thinned.occurred_at < CAST(@now AS INTEGER) - CAST(@week_ms AS INTEGER) THEN CAST(@medium_ms AS INTEGER)
+                ELSE CAST(@small_ms AS INTEGER) END AS bucket
         FROM device_reports AS thinned
-        WHERE thinned.occurred_at < CAST(@now AS INTEGER) - 3600000 AND thinned.deleted_at IS NULL AND (
+        WHERE thinned.occurred_at < CAST(@now AS INTEGER) - CAST(@keep_all_ms AS INTEGER) AND thinned.deleted_at IS NULL AND (
             thinned.updated_at >= CAST(@since AS INTEGER)
-            OR thinned.occurred_at BETWEEN CAST(@since AS INTEGER) - 7 * 86400000 AND CAST(@now AS INTEGER) - 7 * 86400000
-            OR thinned.occurred_at BETWEEN CAST(@since AS INTEGER) - 14 * 86400000 AND CAST(@now AS INTEGER) - 14 * 86400000
+            OR thinned.occurred_at BETWEEN CAST(@since AS INTEGER) - CAST(@week_ms AS INTEGER) AND CAST(@now AS INTEGER) - CAST(@week_ms AS INTEGER)
+            OR thinned.occurred_at BETWEEN CAST(@since AS INTEGER) - CAST(@fortnight_ms AS INTEGER) AND CAST(@now AS INTEGER) - CAST(@fortnight_ms AS INTEGER)
         )
     ) AS report
     WHERE EXISTS (

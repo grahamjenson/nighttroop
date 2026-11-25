@@ -23,6 +23,7 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/s3utils"
 	"nighttroop.t1d.nz/utils/testutils"
+	"nighttroop.t1d.nz/utils/thin"
 )
 
 // Sites created at the same time must each get their own subdomain and site DB
@@ -471,15 +472,9 @@ func (f *deviceReportsFixture) delete(id string) {
 // newest of its device's not deleted in its bucket, 10 minutes until a week old, 20 until two weeks and then an hour
 func (f *deviceReportsFixture) kept(id string, now time.Time, thinned func(deviceReportMade) bool) bool {
 	report := f.reports[id]
-	age := time.Duration(now.UnixMilli()-report.occurredAt) * time.Millisecond
-	if age < time.Hour || report.deleted || !thinned(report) {
+	bucket := thin.Bucket(report.occurredAt, now.UnixMilli())
+	if bucket == 0 || report.deleted || !thinned(report) {
 		return true
-	}
-	bucket := int64(600_000)
-	if age >= 14*24*time.Hour {
-		bucket = 3_600_000
-	} else if age >= 7*24*time.Hour {
-		bucket = 1_200_000
 	}
 	for _, other := range f.reports {
 		if other.device == report.device && !other.deleted && other.occurredAt > report.occurredAt && other.occurredAt/bucket == report.occurredAt/bucket {
@@ -546,7 +541,7 @@ func TestThinOldDeviceReportsLooksAtThoseThatChangedTier(t *testing.T) {
 	// A day after they were written, the job looks at those written since, none of them
 	since := time.Now().Add(time.Millisecond)
 	now := since.Add(day)
-	require.NoError(t, f.q.ThinOldDeviceReports(t.Context(), sitedb.ThinOldDeviceReportsParams{Since: since.UnixMilli(), Now: now.UnixMilli()}))
+	require.NoError(t, f.q.ThinOldDeviceReports(t.Context(), db.ThinParams(since.UnixMilli(), now.UnixMilli())))
 	remaining, removed := f.remaining(), 0
 	changedTier := func(report deviceReportMade) bool {
 		return (report.occurredAt >= since.Add(-7*day).UnixMilli() && report.occurredAt <= now.Add(-7*day).UnixMilli()) ||

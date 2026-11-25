@@ -1303,6 +1303,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Nightscout backfill device statuses drop the loop status (`openaps` or `loop`) and `pump` as sent, keeping IOB, COB,
   and the pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`. Existing ones
   are not changed.
+- A Nightscout backfill copies only the device statuses the truncation keeps (see Device status truncation): all from
+  the last hour, then each device's newest in each 10 minutes to 1 week old, each 20 minutes to 2 weeks, and each
+  hour after. It does not write the others, so the next truncation has none of them to delete.
 
 #### Connectors page status
 
