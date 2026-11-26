@@ -30,6 +30,8 @@ swap_size_mb = 512
   # Far fewer than a real server: enough for testers, little for anyone filling it
   MAX_SITES = "500"
   DELETE_AFTER_INACTIVITY_MINS = "1440"
+  # The metrics, which Fly.io's Prometheus reads (see [metrics] below), on a port that is not open to the internet
+  METRICS_PORT = "9091"
 
 [http_service]
   internal_port = 3000
@@ -50,6 +52,12 @@ swap_size_mb = 512
     path = "/health"
     [http_service.checks.headers]
       Host = "staging.nighttroop.nz"
+
+# Fly.io's Prometheus reads the server's metrics over its private network, to chart them in its Grafana
+# (fly-metrics.net). The port is not in [http_service], so the internet cannot reach it.
+[metrics]
+  port = 9091
+  path = "/metrics"
 
 # The databases, kept between deploys. The image built with --build-target staging opens them with try_migrate_or_delete
 # at each start, and deletes them all if one cannot be migrated. A deploy makes the volume if there is none.

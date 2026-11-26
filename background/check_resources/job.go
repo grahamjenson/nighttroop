@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/metrics"
 	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/usage"
 )
@@ -48,7 +49,9 @@ func Check(ctx context.Context, cfg *config.ServerConfig, controlDB *db.ControlD
 	if ok {
 		reading.DiskPercent, reading.DiskTotalBytes = new(100*used/total), new(int64(total))
 		refuseDiskFull(ctx, cfg, controlDB, total-used)
+		metrics.DiskFree(total - used)
 	}
+	metrics.Sites(len(controlDB.AllSites()), controlDB.UnavailableSites())
 	return controlDB.RecordResources(ctx, reading)
 }
 
@@ -73,6 +76,13 @@ func refuseDiskFull(ctx context.Context, cfg *config.ServerConfig, controlDB *db
 // 30 seconds.
 func MeasureSites(ctx context.Context, controlDB *db.ControlDB) error {
 	sites := controlDB.AllSites()
+	var bytes float64
+	for _, site := range sites {
+		if kb := site.EstimatedSizeKB(); kb != nil {
+			bytes += float64(*kb) * 1024
+		}
+	}
+	metrics.SiteDBs(bytes)
 	return errors.Join(controlDB.RecordSiteSizes(ctx, sites), controlDB.RecordAbuseScores(ctx, sites),
 		controlDB.RecordSiteTableSizes(ctx, sites), controlDB.RecordServerTableSizes(ctx))
 }

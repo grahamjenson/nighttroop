@@ -40,6 +40,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/metrics"
 	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/restore"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -87,6 +88,14 @@ func run() (err error) {
 		return fmt.Errorf("cannot serve HTTP: %w", err)
 	}
 	defer httpServer.Close()
+	// The metrics, on a port of their own, which only the server's private network, as Fly.io's Prometheus, should reach
+	if serverConfig.MetricsPort != 0 {
+		metricsServer := newHTTPServer(fmt.Sprintf(":%d", serverConfig.MetricsPort), metrics.Handler())
+		if _, err := serve(metricsServer); err != nil {
+			return fmt.Errorf("cannot serve metrics: %w", err)
+		}
+		defer metricsServer.Close()
+	}
 
 	// S3 is off without S3_URL; with it, the server only starts once S3 works
 	s3Client := s3utils.NewS3Client(serverConfig)

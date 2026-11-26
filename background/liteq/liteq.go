@@ -12,6 +12,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/utils/aslog"
+	"nighttroop.t1d.nz/utils/metrics"
 )
 
 func New(controlDB *db.ControlDB) *JobQueue {
@@ -111,8 +112,9 @@ type WorkerFunc func(context.Context, *jobsdb.Job) error
 // runJob runs the worker on the job and records how it went. A failure keeps its run's job_id, so the control site can
 // link to its logs.
 func runJob(ctx context.Context, q *jobsdb.Queries, worker WorkerFunc, job *jobsdb.Job) {
-	runCtx := jobContext(ctx, job)
+	runCtx, start := jobContext(ctx, job), time.Now()
 	err := runWorker(runCtx, worker, job)
+	metrics.JobRun(job.Queue, start, err)
 	// Stopping cancels ctx while a job may still be running: its outcome is still recorded, or the job would be
 	// fetched again after its visibility timeout and run twice
 	done := context.WithoutCancel(ctx)

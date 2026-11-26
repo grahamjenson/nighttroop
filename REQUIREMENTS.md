@@ -419,6 +419,24 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   Never values.
 - A write transaction that waits for the write lock logs as `BEGIN`.
 
+#### Metrics
+
+- With `METRICS_PORT` set, `/metrics` on that port gives the server's metrics in Prometheus's format. The site's port
+  does not give them. Fly.io's Prometheus reads them, for its Grafana.
+- `nighttroop_http_requests_total`: requests by router (`control`, `site`, `nightscout`, `public`, `unknown`) and status.
+- `nighttroop_http_request_duration_seconds`: request times by router. Long lived requests (Socket.IO, event streams)
+  are counted but not timed.
+- `nighttroop_requests_refused_total`: requests refused before sign in (as the logs' refused request summaries), by
+  why and status.
+- `nighttroop_rate_limited_total`: requests and writes a rate limit refused.
+- `nighttroop_site_writes_refused_total`: site writes refused, by why (`site_storage`, `disk_full`).
+- `nighttroop_job_runs_total` and `nighttroop_job_duration_seconds`: background job runs by job, failed or not, and
+  their times.
+- `nighttroop_sites_open`, `nighttroop_sites_unavailable` (by why) and `nighttroop_disk_free_bytes`: at each resource
+  check (30 seconds). `nighttroop_site_dbs_bytes`: the open site DBs' size, at each measure of the sites (5 minutes).
+- Go and process metrics: memory, goroutines, garbage collection, CPU, open files.
+- No metric has a site, identity or IP address.
+
 #### Captured requests (staging)
 
 - Staging with `CAPTURE_REQUESTS=true` logs each request and response as `Captured <method> <path>`. Other servers do

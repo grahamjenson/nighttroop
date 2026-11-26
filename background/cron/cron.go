@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/errors"
+	"nighttroop.t1d.nz/utils/metrics"
 )
 
 // CronScheduler runs jobs on a schedule. Each run's context logs the job's name and a job_id of its own.
@@ -78,6 +79,7 @@ func (c *ACron) wrap(name string, cmd func(ctx context.Context) error) func() {
 		ctx := aslog.NewJob(context.Background(), name)
 		// A failed run keeps its job_id, so the control site can link to its logs
 		fail := func(err error) {
+			metrics.JobRun(name, time.UnixMilli(startedAt), err)
 			_, runID := aslog.IDs(ctx)
 			c.jobsDB.Queries.InsertFailedCronJob(ctx, jobsdb.InsertFailedCronJobParams{
 				Job:               name,
@@ -109,6 +111,7 @@ func (c *ACron) wrap(name string, cmd func(ctx context.Context) error) func() {
 				slog.ErrorContext(ctx, "Cron: Command returned error", "error", err)
 				fail(err)
 			} else {
+				metrics.JobRun(name, time.UnixMilli(startedAt), nil)
 				c.jobsDB.Queries.InsertSuccessfulCronJob(ctx, jobsdb.InsertSuccessfulCronJobParams{
 					Job:               name,
 					ConsumerFetchedAt: startedAt,

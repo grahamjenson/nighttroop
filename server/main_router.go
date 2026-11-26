@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5/middleware"
+
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/server/controlapi"
 	"nighttroop.t1d.nz/server/nightscoutapi"
@@ -24,6 +26,7 @@ import (
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/metrics"
 )
 
 func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.Handler {
@@ -48,7 +51,7 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 
 	secure := httputils.SecurityHeaders(config.IsHTTPS())
 	oneSlash := nightscoutOneSlash(validHostnames)
-	return secure(oneSlash(shed(httputils.ClientIP(config.TrustedProxies)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return countRequests(validHostnames, secure(oneSlash(shed(httputils.ClientIP(config.TrustedProxies)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Text is in the browser's language, until a site's identity signs in with one of its own
 		ctx := i18n.WithLanguages(r.Context(), r.Header.Get("Accept-Language"))
 
@@ -102,8 +105,29 @@ func GetMainHandler(controlDB *db.ControlDB, config *config.ServerConfig) http.H
 			slog.InfoContext(r.Context(), "Main router 404 for subdomain", "host", r.Host, "siteSubdomain", siteSubdomain, "routeTarget", routeTarget)
 			http.NotFound(w, r)
 		}
-	})))))
+	}))))))
 
+}
+
+// routerNames are the routers' names in the metrics
+var routerNames = map[RouteTarget]string{RouteTargetPublic: "public", RouteTargetControl: "control", RouteTargetSite: "site",
+	RouteTargetNightscout: "nightscout"}
+
+// countRequests counts each request, with its status and how long it took, in the metrics, by the router it is for
+func countRequests(validHostnames []string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start, ww := time.Now(), middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+		next.ServeHTTP(ww, r)
+		host, _, err := net.SplitHostPort(r.Host)
+		if err != nil {
+			host = r.Host
+		}
+		router := "unknown"
+		if target, _, err := GetRouteTargetFromSubdomain(host, validHostnames); err == nil {
+			router = routerNames[target]
+		}
+		metrics.Request(router, ww.Status(), time.Since(start), httputils.LongLived(r))
+	})
 }
 
 // siteDBUpload is the control site's path a control admin uploads a site's DB to, of at most maxUploadedSiteDBBytes,
