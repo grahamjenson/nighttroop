@@ -194,7 +194,8 @@ func (b *ConnectorJobManager) RunConnector(ctx context.Context, connectorJob Con
 	}
 
 	// No sync goes over its limit, so a Nightscout many sites sync from, or a fault in scheduling, is never synced too
-	// often. One refused records nothing, so the next run, every few seconds, tries again. A backfill is not limited.
+	// often. One refused records nothing, so the next run, every few seconds, tries again. A backfill is not limited here:
+	// its site's backfill limit was spent when it was asked for (SiteBackfillLimiter).
 	if connectorJob.Backfill == nil && !b.config.RateLimiters.ConnectorSyncLimiter(syncLimitKey(connector, username)).Allow() {
 		slog.DebugContext(ctx, "A connector sync is over its rate limit, so waits for a later run")
 		return nil

@@ -207,6 +207,9 @@ type ServerConfig struct {
 	// Each printable report builds four months of the site's reports
 	SiteReportPrintPerMinuteLimit int
 	SiteReportPrintPerMinuteBurst int
+	// SiteBackfillPerMinuteLimit and Burst are a site's connector backfills, all its connectors' together
+	SiteBackfillPerMinuteLimit int
+	SiteBackfillPerMinuteBurst int
 	// SitePushPerMinuteLimit and Burst cap the pushes a site sends, each a request to Apple or Firebase
 	SitePushPerMinuteLimit int
 	SitePushPerMinuteBurst int
@@ -463,6 +466,8 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		SiteDownloadPerMinuteBurst:    configIntSelect(dotenv, "SITE_DOWNLOAD_PER_MINUTE_BURST", 3),
 		SiteReportPrintPerMinuteLimit: configIntSelect(dotenv, "SITE_REPORT_PRINT_PER_MINUTE_LIMIT", 5),
 		SiteReportPrintPerMinuteBurst: configIntSelect(dotenv, "SITE_REPORT_PRINT_PER_MINUTE_BURST", 10),
+		SiteBackfillPerMinuteLimit:    configIntSelect(dotenv, "SITE_BACKFILL_PER_MINUTE_LIMIT", 1),
+		SiteBackfillPerMinuteBurst:    configIntSelect(dotenv, "SITE_BACKFILL_PER_MINUTE_BURST", 2),
 		SitePushPerMinuteLimit:        configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_LIMIT", 10),
 		SitePushPerMinuteBurst:        configIntSelect(dotenv, "SITE_PUSH_PER_MINUTE_BURST", 30),
 		ConnectorSyncPerMinuteLimit:   configIntSelect(dotenv, "CONNECTOR_SYNC_PER_MINUTE_LIMIT", 6),

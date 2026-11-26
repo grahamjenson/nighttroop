@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/background/connectors"
@@ -14,10 +15,11 @@ import (
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/i18n"
+	"nighttroop.t1d.nz/utils/metrics"
 )
 
 // BackfillHandler starts a backfill of the site's connector in the URL, answering with what it will fetch. A source
-// with one queued or running is not started again.
+// with one queued or running is not started again, nor is any over the site's backfill limit.
 func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitesettings.ConnectorSettingsCollection{}).GetName(), can.ActionUpdate)
 	if siteContext == nil {
@@ -33,10 +35,24 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.backfill_off")))
 		return
 	}
+	// All the site's connectors share one backfill limit, so a site cannot hold the connector workers, or its connectors'
+	// hosts, with backfills. Only a backfill that starts spends it, so a click on one already running does not.
+	// Given back at the time it was reserved, as one given back later is not
+	now := time.Now()
+	limit := siteContext.Config.RateLimiters.SiteBackfillLimiter(siteContext.SiteID).ReserveN(now, 1)
+	if wait := limit.DelayFrom(now); !limit.OK() || wait > 0 {
+		limit.CancelAt(now)
+		metrics.RateLimited()
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(int(wait.Seconds())+1))
+		return
+	}
 
 	backfill, err := connectors.BackfillRange(r.Context(), siteContext.SiteDB, connectorType, siteContext.Config.BackfillDays, siteContext.GetSiteTimezone())
 	if err == nil {
 		err = connectors.QueueBackfill(r.Context(), siteContext.ControlDB, siteContext.SiteID, connectorType, backfill)
+	}
+	if err != nil {
+		limit.CancelAt(now)
 	}
 	if errors.Is(err, connectors.ErrBackfillRunning) {
 		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusConflict, Message: "A backfill of this connector is already running"})

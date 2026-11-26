@@ -37,6 +37,7 @@ var labels = map[string]string{
 	"site_identity_create":   "control.rate_limits.limiter_site_identity_create",
 	"site_download":          "control.rate_limits.limiter_site_download",
 	"site_report_print":      "control.rate_limits.limiter_site_report_print",
+	"site_backfill":          "control.rate_limits.limiter_site_backfill",
 	"site_push":              "control.rate_limits.limiter_site_push",
 	"connector_sync":         "control.rate_limits.limiter_connector_sync",
 }
@@ -57,6 +58,7 @@ var settingLabels = map[string]string{
 	"site_identity_create":   "control.rate_limits.setting_site_identity_create",
 	"site_download":          "control.rate_limits.setting_site_download",
 	"site_report_print":      "control.rate_limits.setting_site_report_print",
+	"site_backfill":          "control.rate_limits.setting_site_backfill",
 	"site_push":              "control.rate_limits.setting_site_push",
 	"connector_sync":         "control.rate_limits.setting_connector_sync",
 }
@@ -85,7 +87,7 @@ var groups = []struct {
 	{"site_create", "control.rate_limits.group_site_create", "control.rate_limits.group_site_create_note", []string{"site_create", "site_create_ip"}},
 	{"site_data", "control.rate_limits.group_site_data", "control.rate_limits.group_site_data_note", []string{"site_get", "site_post", "site_post_flagged"}},
 	{"site_actions", "control.rate_limits.group_site_actions", "control.rate_limits.group_site_actions_note",
-		[]string{"site_update_connectors", "site_identity_create", "site_download", "site_report_print", "site_push"}},
+		[]string{"site_update_connectors", "site_identity_create", "site_download", "site_report_print", "site_backfill", "site_push"}},
 	{"connectors", "control.rate_limits.group_connectors", "control.rate_limits.group_connectors_note", []string{"connector_sync"}},
 }
 
