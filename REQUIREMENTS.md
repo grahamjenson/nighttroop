@@ -101,21 +101,40 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 ### Control pages
 
 - The header (with menu) and status banner show only after sign in.
-- In a wide window, the header links Sites, Usage, Jobs, Events and Errors, each with an icon. The menu has every page.
-- The header stays at the top of the window while the page scrolls. It is as tall as the site's header.
+- Browser tab name: the page's name, for example `Sites · Nighttroop Control`.
+- Times in UTC, for example `2026-10-26 12:00:00`, and `-` when not set.
+
+#### Control header
+
+- In a wide window, the header links Sites, Usage, Jobs, Events and Errors, each with an icon.
+- The menu has every page.
+- The header stays at the top of the window while the page scrolls.
+- The header is as tall as the site's header.
 - The header marks the link of the page shown, or of the page it is under: a site's page is under Sites.
+
+#### Status banner
+
 - The banner shows when:
   - S3 backups, Sentry or PagerDuty are not connected;
   - the server started without S3, as S3 was not working (in red, in place of the S3 backups note);
   - the server turned S3 off at start, with why (in red, in place of the S3 backups note);
   - sites reach 90% of `MAX_SITES`, or all of it;
   - a resource is high (see [Resource alerts](#resource-alerts));
-  - sites are unavailable, as their DBs could not be opened or restored. In red, it names up to 10, each with why (DB
-    missing, DB does not open, migration failed, or schema differs) and a link to its page, then how many more.
+  - sites are unavailable, as their DBs could not be opened or restored (in red):
+    - it names up to 10 sites, each with a link to its page;
+    - each has why: DB missing, DB does not open, migration failed, or schema differs;
+    - then it says how many more.
+
+#### Unavailable sites
+
 - An unavailable site has a red Unavailable badge in the sites list and on its page.
-- An unavailable site's actions start with what fixes it, Upload DB then New Empty DB. Open Site, Download DB,
-  Truncate and Archive need its DB, so in place of their buttons they say "Its DB is unavailable. Fix it first, in
-  Actions." Disable is still offered as for any site.
+- An unavailable site's actions start with what fixes it, Upload DB then New Empty DB.
+- Open Site, Download DB, Truncate and Archive need its DB. In place of their buttons, they say "Its DB is
+  unavailable. Fix it first, in Actions."
+- Disable is still offered as for any site.
+
+#### New Empty DB
+
 - An unavailable site's page offers a control admin New Empty DB, as for a site created just before a crash, which has
   no backup. It asks first, then:
   - makes the site's DB again, empty, so the site is served again; its identities are kept, its data is not;
@@ -123,6 +142,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - counts the site as written, so its new DB is backed up;
   - records a "Site DB made empty" event with who made it and why the site was unavailable.
 - New Empty DB is refused for a site that is not unavailable, or whose DB is being restored at that moment.
+
+#### Upload DB
+
 - An unavailable site's page offers a control admin Upload DB (`POST /sites/{id}/db`, field `db`), for a `.sqlite`
   DB such as one from Download DB that the admin fixed. It asks first, then:
   - migrates and opens the uploaded DB, so the site is served again with that DB's data;
@@ -133,13 +155,17 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   unavailable.
 - Upload DB is refused for a site that is not unavailable, or whose DB is being restored at that moment.
 - If the form has no `db` file, or the file is over 512 MB, the upload is refused.
-- An unavailable site's page lists the backups S3 keeps of it (up to 100), newest first: when each was uploaded, its
-  size, and which is the latest. A control admin can restore any of them, after a confirm:
+
+#### Backups of an unavailable site
+
+- An unavailable site's page lists the backups S3 keeps of it (up to 100), newest first.
+  - Each has when it was uploaded and its size.
+  - The latest is marked.
+- A control admin can restore any of them, after a confirm:
   - as a restore at start does, a DB there that did not open is kept, and put back if the restored one does not open;
-  - once restored, the site is served again, and a "Site restored from a backup" event records who and which backup;
+  - once restored, the site is served again;
+  - a "Site restored from a backup" event records who and which backup;
   - one that is not there or does not open says so, and the site stays unavailable.
-- Browser tab name: the page's name, for example `Sites · Nighttroop Control`.
-- Times in UTC, for example `2026-10-26 12:00:00`, and `-` when not set.
 
 ### Control admins
 
@@ -331,17 +357,24 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Log storage
 
-- Every server log at info, warn or error is kept in the logs, written in batches, without IP addresses. Debug logs
-  are only written to standard out.
-- Requests refused before signing in are each logged at debug only: a site that does not exist (410/404), a missing or
-  wrong token or JWT, or a control admin not signed in (401), a country not allowed (403), an unknown host or Nightscout
-  path (404), the global, global IP and site unauthenticated rate limits (429) and a refused Socket.IO authorize.
-  - Each minute, and on shutdown, one `Unauthenticated requests refused` info log for each reason and status with any,
-    on the control logs page only (no site): `reason`, `status`, `total`, `keys`, `other` and `top`, the 10 most
-    refused keys with their counts. A key is the subdomain of a site that does not exist, the host refused, or the
-    route's pattern, never an IP address, token or path.
-  - At most 100 keys of a reason are counted apart; the rest are `other`, so a sweep of every subdomain cannot grow
-    the server's memory.
+- Every server log at info, warn or error is kept in the logs, written in batches, without IP addresses.
+- Debug logs are only written to standard out.
+- Requests refused before signing in are each logged at debug only:
+  - a site that does not exist (410/404);
+  - a missing or wrong token or JWT, or a control admin not signed in (401);
+  - a country not allowed (403);
+  - an unknown host or Nightscout path (404);
+  - the global, global IP and site unauthenticated rate limits (429);
+  - a refused Socket.IO authorize.
+- Each minute, and on shutdown, these refused requests get one `Unauthenticated requests refused` info log for each
+  reason and status with any:
+  - it is on the control logs page only (no site);
+  - it has `reason`, `status`, `total`, `keys`, `other` and `top`;
+  - `top` is the 10 most refused keys with their counts;
+  - a key is the subdomain of a site that does not exist, the host refused, or the route's pattern;
+  - a key is never an IP address, token or path.
+- At most 100 keys of a reason are counted apart. The rest are `other`, so a sweep of every subdomain cannot grow the
+  server's memory.
 - Logs, events and errors keep their `request_id` or `job_id`.
 - Logs, events and errors keep the identity of their request: `identity_id` for an identity of the site,
   `control_identity_id` for a control admin, and `identity_name` for its name. A row of a background job has none.
@@ -359,12 +392,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Client errors
 
-- A request refused for what it sent (400, 405, 413, 422), from any API or page, is a `client` error with status,
-  method, route pattern (never path or query), the response's reason, request ID, identity, role and User-Agent.
+- A request refused for what it sent (400, 405, 413, 422), from any API or page, is a `client` error. It has:
+  - status, method and route pattern (never path or query);
+  - the response's reason;
+  - request ID, identity, role and User-Agent.
 - An API v1 batch of any collection stored with documents left out for another problem than glucose out of range:
-  one `client` error with status 200. Its reason gives the count stored, the count left out, and the count for each
-  reason (e.g. `Stored 2 entries and left out 3: 2 Bad or missing body: unknown entry type: bad; 1 glucose out of
-  range`, or `Stored 2 treatments and left out 1: ...`).
+  one `client` error with status 200.
+  - Its reason gives the count stored, the count left out, and the count for each reason.
+  - Example: `Stored 2 entries and left out 3: 2 Bad or missing body: unknown entry type: bad; 1 glucose out of range`.
+  - Example: `Stored 2 treatments and left out 1: ...`.
 - Sentry gets it as a warning, grouped by status, route and reason, with role, User-Agent, site and identity.
 - For each site: the same one at most once a minute, at most 20 a minute.
 - Not client errors: missing credentials, permissions or records, and rate limits.
@@ -394,8 +430,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - If PagerDuty does not take a page, the server logs the error and continues.
 - If sites stay unavailable after their last restore try, the admin is paged with a Call.
 - If S3 is not working after the start's tries, and the server starts without it, the admin is paged with an SMS.
-- If the server does not start, or stops with an error after it started, the admin is paged with a Call. Each has one
-  message, so a server that fails each time Docker starts it again is one incident.
+- If the server does not start, or stops with an error after it started, the admin is paged with a Call.
+  - Each has one message, so a server that fails each time Docker starts it again is one incident.
   - A server whose S3 lock another server took stops with an error, so it pages.
   - A server told to stop, or one that restarts to use S3 again, does not page.
   - If a server is told to stop while it opens its DBs, it stops when the DBs are open. It does not serve, turn S3
@@ -450,20 +486,26 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 ### Usage
 
-- Refreshes every 10 seconds. Counts only signed in requests. Shows:
+- Refreshes every 10 seconds.
+- Counts only signed in requests.
+- Shows:
   - active sites and users, use since start, server resources, most used routes;
   - sites created today, this week, this month;
   - pushes sent and failed today and this week (from midnight and Monday UTC), in memory since start;
   - memory: the server's total as htop's RES, with SQLite's (not in Go's figures), and the Go heap part;
   - CPU: the last 5 seconds as htop shows it, 100% for each core (up to 400% on 4 cores);
-  - the size of each server DB (control, logs with events, jobs, live), and its 5 largest tables with their records,
-    size and share, as on a site's page. The resource check measures the tables every 5 minutes, if the size changed;
+  - the size of each server DB (control, logs with events, jobs, live);
+  - each server DB's 5 largest tables with their records, size and share, as on a site's page. The resource check
+    measures the tables every 5 minutes, if the size changed;
   - the 25 slowest DB queries by total time, of the `QUERY_SAMPLE_PERCENT` (10%) sampled since start: DB, name, runs,
     and mean, 95th percentile, longest and total ms.
-- Go's profiles at `/debug/pprof/` (heap, CPU, goroutines and more) and runtime stats at `/debug/vars`, for a control
-  admin only. A read only admin gets 403. A CPU profile or trace must end in under 30 seconds (example: `?seconds=20`).
-- At the top of the usage page, a control admin has two buttons, Profiles (pprof) and Runtime stats (vars). Each opens
-  its page in a new tab. A read only admin does not see them.
+- Go's profiles are at `/debug/pprof/` (heap, CPU, goroutines and more), for a control admin only.
+- Go's runtime stats are at `/debug/vars`, for a control admin only.
+- A read only admin gets 403 from both.
+- A CPU profile or trace must end in under 30 seconds (example: `?seconds=20`).
+- At the top of the usage page, a control admin has two buttons, Profiles (pprof) and Runtime stats (vars).
+  - Each opens its page in a new tab.
+  - A read only admin does not see them.
 
 ### Site banners
 
@@ -852,11 +894,14 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Pointing shows the time, nearest reading within 5 minutes and its time, basal and targets in force, and treatments
   within 5 minutes.
 - Each minute's targets and basal: a temp target or temp basal, else the profile switch, else the default profile in
-  force. One from before the summary's hours counts. When a temp or timed switch ends, the one under it returns.
+  force.
+  - One from before the summary's hours counts.
+  - When a temp or timed switch ends, the one under it returns.
   - A switch sent by name (no `profileJson`) uses the profile of that name in the profile store, with its shift and
     percentage.
   - A temp basal kept as a multiplier is that multiplier of the scheduled basal each minute. So it changes when a
-    schedule block starts or a switch starts or ends. A temp basal kept as a rate keeps its rate.
+    schedule block starts or a switch starts or ends.
+  - A temp basal kept as a rate keeps its rate.
   - A temp basal kept as a multiplier, with no profile in force, gives no basal.
 
 #### Periods and time in range
@@ -873,19 +918,24 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Glucose colour, age and live updates
 
-- Alarm settings set readings' colour and label: low, in range, high. High text is darker amber than the graph's.
+- Alarm settings set readings' colour and label: low, in range, high.
+- High text is darker amber than the graph's.
 - Latest glucose older than the no data alarm's minutes (default 20) is grey, with an amber badge ("No reading for 45
-  min"). An open summary changes when it becomes old, with no data change or reload, reading the summary one time then,
-  not every few seconds.
+  min").
+  - An open summary changes when it becomes old, with no data change or reload.
+  - It reads the summary one time then, not every few seconds.
   - Under the old reading, an admin sees "Readings stopped. See why on:" with links to Connectors, Users & Devices
     and Errors.
   - An identity that is not an admin sees "Readings stopped. Tell an admin of this site." with no links.
 - Ages in words, nearest hour after one hour: "45 minutes ago", "2 days 1 hour ago".
-- In Insulin and carbs, an intake more than 10 minutes ahead, as carbs Trio expects from fat and protein, says how
-  long until it: "in 58 minutes". One less ahead, as from a phone's clock running fast, is "just now".
+- In Insulin and carbs, an intake more than 10 minutes ahead says how long until it: "in 58 minutes".
+  - Example: the carbs Trio expects from fat and protein.
+  - One less ahead, as from a phone's clock running fast, is "just now".
 - Tiles and devices show units smaller and grey beside numbers.
 - Live updates:
-  - New data shows live; the page catches up after the background. "● Live" shows beside the title.
+  - New data shows live.
+  - The page catches up after the background.
+  - "● Live" shows beside the title.
   - Going to another page closes them (the alarms') with no browser console error.
   - Connected up to one hour, not cut by the 30 second request timeout, so an open summary is not read every 30
     seconds.
@@ -913,18 +963,21 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - Any day, week, fortnight or month back one year. Other overview IDs are not found.
   - Day and month: the one with the date.
-  - Week and fortnight: the 7 or 14 days to the date, not a summary's calendar week or fortnight. To today, they
-    include today so far.
+  - Week and fortnight: the 7 or 14 days to the date, not a summary's calendar week or fortnight.
+  - A week or fortnight to today includes today so far.
 - Day, Week, Fortnight, Month buttons: that kind ending on the report's last day, or today.
-- ‹ and › beside the dates (Previous and Next for a screen reader): the report before and after; for a week or
-  fortnight, 7 or 14 days, or to today when fewer are over. Disabled past today and one year ago.
+- ‹ and › beside the dates (Previous and Next for a screen reader): the report before and after.
+  - For a week or fortnight: 7 or 14 days before or after, or to today when fewer are over.
+  - Disabled past today and one year ago.
 - Back and forward move between reports.
-- If data in its days before today changed after they were calculated (backfill, late sync, a record moved or
-  deleted), a blue notice above says its numbers can be out of date and tells you to reload the page. A reload after
-  the rebuild removes it.
+- If data in its days before today changed after they were calculated, a blue notice above says its numbers can be
+  out of date and tells you to reload the page.
+  - Examples of such a change: a backfill, a late sync, a record moved or deleted.
+  - A reload after the rebuild removes the notice.
 - Under average glucose, GMI, coefficient of variation, time CGM active and time in range: ▲ or ▼ with the amount, or
-  "No change", from the previous report (previous 7 or 14 days, day before, previous month). Nothing when either has no
-  value (no data, or over one year ago).
+  "No change", from the previous report.
+  - The previous report: the previous 7 or 14 days, the day before, or the previous month.
+  - Nothing when either has no value (no data, or over one year ago).
 
 #### Overview
 
@@ -1130,26 +1183,33 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Lows and highs: the summary's colours, and L or H. Screen readers read "Low" or "High".
   - Add: type (Meter or Sensor), trend as arrow and name (`↗ FortyFiveUp`), as in table and details.
   - Above page one: small graphs of the last 10 days, same scale, oldest first, each with the range shaded and time in
-    range. The last is today so far, from clean readings. Title: "Last N days", or "Today" on a new site's first day.
+    range.
+    - The last is today so far, from clean readings.
+    - Title: "Last N days", or "Today" on a new site's first day.
   - A day with no readings shows "No readings" in place of its graph, and no time in range.
   - Click a day to open its AGP report. A note under the title says so.
 - **Insulin doses**
-  - Dose: the units given at once. A combo or extended bolus also has an extended dose (U) and the minutes it is given
-    over. A dose of 0 is refused, except when it has an extended dose.
-  - `automatic`: if a loop gave it. `true`/`false` as Loop uploaded, `null` if the app does not tell. Site API
-    returns it, ignores it on create or update.
-  - `is_basal_insulin`: if it is basal insulin, as long acting insulin injected. `true`/`false` as AAPS uploaded,
-    `true` for Juggluco's Long-Acting, `null` if the app does not tell. Site API returns it, ignores it on create or
-    update.
+  - Dose: the units given at once.
+    - A combo or extended bolus also has an extended dose (U) and the minutes it is given over.
+    - A dose of 0 is refused, except when it has an extended dose.
+  - `automatic`: if a loop gave it.
+    - `true`/`false` as Loop uploaded, `null` if the app does not tell.
+    - Site API returns it, ignores it on create or update.
+  - `is_basal_insulin`: if it is basal insulin, as long acting insulin injected.
+    - `true`/`false` as AAPS uploaded, `true` for Juggluco's Long-Acting, `null` if the app does not tell.
+    - Site API returns it, ignores it on create or update.
 - **Food intakes**
 - **Temp basals**: a `rate` in U/hr or a `multiplier` of the scheduled basal (0 for a zero temp), not both. The
   other is `null`.
-  - The page shows the U/hr and the Basal (%) at its start. It finds the one not kept from the scheduled basal then.
-    With no profile then, it shows `-`.
-  - `scheduled_basal`: the profile's basal in U/hr at its start, or `null` with no profile then. Site API returns it,
-    ignores it on create or update.
-  - Create: a `rate` is required. The add form has no Basal (%).
-  - Update: a `rate` makes it a rate, and a `multiplier` makes it a multiplier. If both are sent, the API returns 400.
+  - The page shows the U/hr and the Basal (%) at its start.
+    - It finds the one not kept from the scheduled basal then.
+    - With no profile then, it shows `-`.
+  - `scheduled_basal`: the profile's basal in U/hr at its start, or `null` with no profile then.
+    - Site API returns it, ignores it on create or update.
+  - Create: a `rate` is required.
+  - The add form has no Basal (%).
+  - Update: a `rate` makes it a rate, and a `multiplier` makes it a multiplier.
+    - If both are sent, the API returns 400.
   - The edit form has Rate (U/hr) for a rate, and Basal (%) for a multiplier.
 - **Temp targets**: in the settings' units.
 - **Profile switches**: the profile's schedules, and a multiplier of its insulin.
@@ -1158,8 +1218,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - **Activities**
 - **Notifications**
 - **Event groups**: see below.
-- **Device statuses**: each device's latest 3, and all a device sent. Header units: Phone battery (%),
-  Reservoir (U), IOB (U), COB (g).
+- **Device statuses**: each device's latest 3, and all a device sent.
+  - Header units: Phone battery (%), Reservoir (U), IOB (U), COB (g).
 
 #### Percent fields
 
@@ -2292,31 +2352,42 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - it serves its sites from the DBs on the server, and restores, replicates and backs up nothing;
     - the control plane's banner says, in red, that S3 is not working and the server started without it;
     - the admin is paged with an SMS;
-    - it tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, then stops and exits with an
-      error, for Docker to start it again with S3.
+    - it tests S3 every 20 seconds;
+    - after 3 tests in a row work, it takes the lock, then stops and exits with an error, for Docker to start it
+      again with S3;
     - if S3 refuses the lock, it logs a warning and tests S3 again until 3 tests in a row work.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
-  - If S3 takes a small request and does not answer, the request fails after 20 seconds. This is the start's test
-    upload, the versioning setup, and each read, write and delete of the lock. A start then continues as for an S3
-    that is not working.
+  - If S3 takes a small request and does not answer, the request fails after 20 seconds.
+    - This is the start's test upload, the versioning setup, and each read, write and delete of the lock.
+    - A start then continues as for an S3 that is not working.
   - If S3 stops answering during a restore of the control DB, the restore fails after 15 minutes.
-  - Only one server backs up to a host's folder of the bucket. A server takes the lock `<host>/server.lock` before it
-    restores, backs up or replicates, writes it again every 20 seconds, and deletes it after its last backup.
-  - While another server holds the lock, a server that starts waits. It takes the lock when the other server deletes
-    it, or 60 seconds after the other server last wrote it.
-  - If another server takes a server's lock, that server logs an error, stops replicating the control DB immediately
-    and sends no more of it, uploads no site backups, then stops and exits with an error. Docker starts it again,
-    and it waits for the lock.
-  - If S3 takes a write of the lock and does not answer, or refuses it because another write is in progress, the
-    server keeps its lock: the lock holds the ID of the server that wrote it.
-  - If S3 refuses a write of the lock and the server cannot read the lock, the server keeps its lock and tries again.
-  - If another server takes the lock and the server stops before its next write of the lock, the server does not
-    delete the lock. It also does not delete a lock that it cannot read.
-  - If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
   - The server restarts by an exit with an error, when S3 works again and when its lock is taken. Its supervisor must
     start it again: the compose files set `restart: unless-stopped`.
+
+#### S3 lock
+
+With `S3_URL`:
+
+- Only one server backs up to a host's folder of the bucket.
+- A server takes the lock `<host>/server.lock` before it restores, backs up or replicates.
+  - It writes the lock again every 20 seconds.
+  - It deletes the lock after its last backup.
+- While another server holds the lock, a server that starts waits. It takes the lock when the other server deletes
+  it, or 60 seconds after the other server last wrote it.
+- If another server takes a server's lock, that server:
+  - logs an error;
+  - stops replicating the control DB immediately and sends no more of it;
+  - uploads no site backups;
+  - then stops and exits with an error. Docker starts it again, and it waits for the lock.
+- If S3 takes a write of the lock and does not answer, or refuses it because another write is in progress, the
+  server keeps its lock: the lock holds the ID of the server that wrote it.
+- If S3 refuses a write of the lock and the server cannot read the lock, the server keeps its lock and tries again.
+- If another server takes the lock and the server stops before its next write of the lock, the server does not
+  delete the lock.
+- The server does not delete a lock that it cannot read.
+- If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
 
 #### Backups
 
@@ -2324,39 +2395,11 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A site written to since its last backup is backed up once that backup is an hour old
   (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every minute (or each interval, if it is shorter), and when the server
   stops.
-- With S3, the control DB is replicated by Litestream, with its defaults, as it is written: its writes are in S3 within
-  about a second, at `<host>/litestream/control`. Its last writes are sent when the server stops.
-  - Over HTTPS, S3 encrypts the replica with SSE-C, with a key made from the MAC key set. Production and staging
-    refuse an `S3_URL` that is not `https://`.
-  - A start with no `data/db/controldb.sqlite` restores it from the replica; with no replica, it starts a new server.
-  - The start logs which it does: keeps the control DB there, restores it from the replica, or starts a new one, as
-    there is no replica or S3 is off (a warning).
-  - `cmd/keysets/restore_replica.go <path>` restores it by hand, with the server's config.
-    - It only reads the bucket and does not take the S3 lock, so it also works while the server runs.
-  - A control DB is replicated only to the replica it was restored from, or first replicated to. The file
-    `controldb.sqlite.replica` next to it has that replica's address.
-  - If a start finds a control DB that is not known to be the replica's, as one made while S3 was off or was another
-    bucket or host, it does not replicate it over the replica:
-    - If S3 has no replica, the control DB is replicated.
-    - If the control DB has no control admin, the server moves it to `controldb.sqlite.replaced-<time>` and restores
-      the replica.
-    - If the control DB has a control admin, the server starts with S3 off, and logs an error that says how to keep
-      one of the two.
-    - If S3 gives an error to that check, the server starts with S3 off.
-  - If the control DB is missing and its write-ahead log is still there, the server moves the log to
-    `controldb.sqlite.replaced-<time>-wal` before the restore. The restored control DB has only the replica's data.
-  - If the control DB's replication cannot start, the server starts with S3 off.
-  - If the control DB does not open at start, as a file a disk damaged, the server restores it from its replica:
-    - The one that does not open is kept as `controldb.sqlite.unopened-<time>`, with its write-ahead log.
-    - The admin is paged with an SMS.
-    - It is done one time. While a file is kept from an earlier time, the server does not restore again.
-    - With no replica, or a restore that fails, the file is put back and the start fails as before.
-    - A control DB whose migration fails is not restored: its replica has the same DB.
-  - A server that starts with S3 off for one of these replicates and backs up nothing until it is fixed and started
-    again. The control plane's banner says which, in red, and the admin is paged with an SMS.
+- The control DB: see [Control DB replica](#control-db-replica).
 - A site is written to when one of its requests writes, or when a model change (for example a connector's sync or a
-  live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
-  recorded one counts as since it.
+  live update) changes it.
+  - Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last recorded one counts as
+    since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
 - When the server stops, it backs up every site written since its last backup, and every live site not uploaded yet,
   with no such limit.
@@ -2380,9 +2423,46 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - when the site was last copied, and the size of the copy on disk;
   - when it was last uploaded. If S3 is not connected or the upload fails, this time does not change.
 
+#### Control DB replica
+
+- With S3, the control DB is replicated by Litestream, with its defaults, as it is written.
+  - Its writes are in S3 within about a second, at `<host>/litestream/control`.
+  - Its last writes are sent when the server stops.
+- Over HTTPS, S3 encrypts the replica with SSE-C, with a key made from the MAC key set.
+- Production and staging refuse an `S3_URL` that is not `https://`.
+- A start with no `data/db/controldb.sqlite` restores it from the replica; with no replica, it starts a new server.
+- The start logs which it does: keeps the control DB there, restores it from the replica, or starts a new one, as
+  there is no replica or S3 is off (a warning).
+- `cmd/keysets/restore_replica.go <path>` restores it by hand, with the server's config.
+  - It only reads the bucket and does not take the S3 lock, so it also works while the server runs.
+- A control DB is replicated only to the replica it was restored from, or first replicated to.
+  - The file `controldb.sqlite.replica` next to it has that replica's address.
+- If a start finds a control DB that is not known to be the replica's, as one made while S3 was off or was another
+  bucket or host, it does not replicate it over the replica:
+  - If S3 has no replica, the control DB is replicated.
+  - If the control DB has no control admin, the server moves it to `controldb.sqlite.replaced-<time>` and restores
+    the replica.
+  - If the control DB has a control admin, the server starts with S3 off, and logs an error that says how to keep
+    one of the two.
+  - If S3 gives an error to that check, the server starts with S3 off.
+- If the control DB is missing and its write-ahead log is still there, the server moves the log to
+  `controldb.sqlite.replaced-<time>-wal` before the restore. The restored control DB has only the replica's data.
+- If the control DB's replication cannot start, the server starts with S3 off.
+- If the control DB does not open at start, as a file a disk damaged, the server restores it from its replica:
+  - The one that does not open is kept as `controldb.sqlite.unopened-<time>`, with its write-ahead log.
+  - The admin is paged with an SMS.
+  - It is done one time. While a file is kept from an earlier time, the server does not restore again.
+  - With no replica, or a restore that fails, the file is put back and the start fails as before.
+  - A control DB whose migration fails is not restored: its replica has the same DB.
+- A server that starts with S3 off for one of these replicates and backs up nothing until it is fixed and started
+  again.
+  - The control plane's banner says which, in red.
+  - The admin is paged with an SMS.
+
 #### Restore and start
 
-- A missing control DB is restored from its replica on start (see Backups). A restore that fails stops the start.
+- A missing control DB is restored from its replica on start (see [Control DB replica](#control-db-replica)).
+  A restore that fails stops the start.
 - A restore decompresses each `.lz4` copy to its `.sqlite` DB.
 - A restore (on start, or of an archived site) without a backup at its `.tar.enc` key uses the old backup at the same
   key with `.tar.lz4.enc`: a tar of uncompressed DBs, compressed with LZ4 as a whole.
@@ -2390,18 +2470,22 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A start removes only the staging folders that a stopped restore or archive left beside the DBs and backups.
 - A live or disabled site whose DB file is missing, or cannot be opened or migrated, is unavailable. The start goes on
   without it, and serves every other site.
-- A site DB that cannot be migrated to the latest migration, as one whose migration fails or one from a later release,
-  is unavailable as "migration failed", keeping the migration it failed at. So is one whose restored backup cannot be
-  migrated, and its "Site DB missing" event says migration failed.
-- A site DB at the latest migration whose tables, indexes or triggers are not the ones the migrations make on a new DB,
-  as one made before a migration was edited, is unavailable as "schema differs". The error names a statement that
-  differs. So is one whose restored backup differs, and its "Site DB missing" event says schema differs.
-- An unavailable site's requests get 503 with `Retry-After`, as a busy server's do, so its uploaders try again. The
-  jobs leave it out.
+- A site DB that cannot be migrated to the latest migration is unavailable as "migration failed", keeping the migration
+  it failed at.
+  - Examples: one whose migration fails, or one from a later release.
+  - So is one whose restored backup cannot be migrated. Its "Site DB missing" event says migration failed.
+- A site DB at the latest migration whose tables, indexes or triggers are not the ones the migrations make on a new DB
+  is unavailable as "schema differs".
+  - Example: one made before a migration was edited.
+  - The error names a statement that differs.
+  - So is one whose restored backup differs. Its "Site DB missing" event says schema differs.
+- An unavailable site's requests get 503 with `Retry-After`, as a busy server's do, so its uploaders try again.
+- The jobs leave an unavailable site out.
 - After the start, in the background, each unavailable site:
   - Is restored from its latest S3 backup (one download a site, 16 at a time) and opened.
   - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
-    restore failed). One not restored is also logged as an error, and stays unavailable.
+    restore failed).
+  - One not restored is also logged as an error, and stays unavailable.
 - The sites still unavailable are tried again after 1, 2, 4, 8, 16 and 32 minutes, each try logged the same way.
   - After the last, the admin is paged once with a Call, with the sites.
 - A site DB that cannot be opened is moved aside while its backup is restored, and put back if the restored DB cannot
@@ -2439,10 +2523,11 @@ Before it backs up a site written to, at most every hour, the server truncates i
   minutes to 2 weeks, and each hour to 30 days.
   - The device's newest and deleted statuses are kept.
   - All statuses over 30 days old are deleted, also newest and deleted ones.
-- The job reads statuses written since the last backup of the site, or in the last day if that is longer. It also
-  reads statuses that became 1 day old in that time, and thins again those that became 1 or 2 weeks old.
-- A site truncate reads all statuses. It also clears those older than a day (e.g. a device's newest from before it
-  stopped reports for a day).
+- The job reads statuses written since the last backup of the site, or in the last day if that is longer.
+  - It also reads statuses that became 1 day old in that time.
+  - It thins again those that became 1 or 2 weeks old.
+- A site truncate reads all statuses.
+  - It also clears those older than a day (e.g. a device's newest from before it stopped reports for a day).
 
 #### Truncation of a site far over its size limit
 
@@ -2793,9 +2878,11 @@ harder:
 
 ### Usage
 
-- Usage (`/usage`) is in the user menu, for an admin only. My Account and the General settings do not show it.
-- As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
-  the largest tables with records, size and share, the rest as Other, as last measured.
+- Usage (`/usage`) is in the user menu, for an admin only.
+- My Account and the General settings do not show it.
+- As control's page of the site, it shows:
+  - the DB size (measured on open) against its limit;
+  - a bar and key of the largest tables with records, size and share, the rest as Other, as last measured.
 - The key names each table by the page that shows it, such as Glucose Readings or Device Status, not by its table name.
 - On a phone the key fits the window, with no sideways scroll.
 - "Truncate", after a confirmation, does as control's Truncate:
