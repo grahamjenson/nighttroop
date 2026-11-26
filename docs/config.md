@@ -175,6 +175,16 @@ PagerDuty selects who to page and how, not Nighttroop. To set it up:
 - A page with the same message as an open incident adds to that incident. It does not page again.
 - Each page is also logged as an error, so the control site's errors and Sentry show it.
 
+## Email
+
+A site needs no email. If the server can send email, a site's admin can give the site one and verify it.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `RESEND_API_KEY` | Empty | The API key of the Resend account that sends email. Empty turns email off. |
+| `RESEND_FROM` | Empty | Who the emails are from, an address of a domain verified in Resend, such as `Nighttroop <hello@example.org>`. Empty turns email off. |
+| `RESEND_API_URL` | `https://api.resend.com/emails` | Where emails are sent. |
+
 ## Rate limits
 
 Each is a default. A control admin can change it on the control site's **Rate Limits** page. The control DB's server

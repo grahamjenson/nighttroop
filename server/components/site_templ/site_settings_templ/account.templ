@@ -6,11 +6,15 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/server/components/card"
+	"nighttroop.t1d.nz/server/components/field"
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_login_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/badge"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/input"
 	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/display"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -18,7 +22,14 @@ import (
 
 // MyAccount is the signed in identity's, or control admin's, own page at path: who it is, and up to most passkeys it
 // adds, on its own address, and removes. A site identity's, with guide, also opens the guide to setting the site up.
-templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string, guide bool) {
+// SiteEmail is the email a site's admin gave the site, "" for none, and whether they have verified it
+type SiteEmail struct {
+	Email    string `json:"email"`
+	Verified bool   `json:"verified"`
+}
+
+// MyAccount also has, with an email, the card a site's admin gives the site's email on.
+templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path string, guide bool, email *SiteEmail) {
 	<div id="site--account" class="mx-auto max-w-5xl space-y-6">
 		@heading.Page(i18n.T(ctx, "site.settings.account.title")) {
 			{ i18n.T(ctx, "site.settings.account.about", i18n.Data{"Name": name, "Role": role}) }
@@ -63,8 +74,69 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 				}
 			}
 		}
+		if email != nil {
+			@EmailCard(email)
+		}
 		@site_login_templ.PasskeyScript()
 	</div>
+}
+
+// EmailCard is the site's email: the one given, whether it is verified, a form to give or change it, and a button to
+// remove it. Saving one sends it a link, and the card swaps itself for the answer.
+templ EmailCard(email *SiteEmail) {
+	<div id="site--account--email">
+		@card.Card(card.Props{Title: i18n.T(ctx, "site.settings.account.email.title"), Note: i18n.T(ctx, "site.settings.account.email.note")}) {
+			if email.Email != "" {
+				<p class="mb-3 text-sm">
+					<span id="site--account--email-current" class="font-medium">{ email.Email }</span>
+					if email.Verified {
+						@badge.Badge(badge.Props{ID: "site--account--email-verified", Variant: badge.VariantSuccess, Class: "ml-2"}) {
+							{ i18n.T(ctx, "site.settings.account.email.verified") }
+						}
+					} else {
+						@badge.Badge(badge.Props{ID: "site--account--email-not-verified", Variant: badge.VariantWarning, Class: "ml-2"}) {
+							{ i18n.T(ctx, "site.settings.account.email.not_verified") }
+						}
+					}
+				</p>
+			}
+			<form
+				class="flex flex-wrap items-end gap-2"
+				hx-post="/settings/account/email"
+				hx-target="#site--account--email"
+				hx-swap="outerHTML"
+				hx-status:4xx="target:#toaster swap:beforeend"
+				hx-status:5xx="target:#toaster swap:beforeend"
+			>
+				@field.Field("site--account--email-input", i18n.T(ctx, "site.settings.account.email.label"), "w-72") {
+					@input.Input(input.Props{ID: "site--account--email-input", Name: "email", Type: input.TypeEmail, Required: true,
+						Attributes: templ.Attributes{"maxlength": "254", "autocomplete": "email"}})
+				}
+				@button.Button(button.Props{ID: "site--account--email-save", Type: button.TypeSubmit, Size: button.SizeSm}) {
+					{ i18n.T(ctx, "site.settings.account.email.save") }
+				}
+				if email.Email != "" {
+					@button.Button(button.Props{ID: "site--account--email-remove", Type: button.TypeButton, Variant: button.VariantOutline, Size: button.SizeSm,
+						Attributes: templ.Attributes{"hx-delete": "/settings/account/email", "hx-target": "#site--account--email", "hx-swap": "outerHTML",
+							"hx-confirm": i18n.T(ctx, "site.settings.account.email.remove_confirm"), "data-confirm-delete": i18n.T(ctx, "site.settings.account.remove")}}) {
+						{ i18n.T(ctx, "site.settings.account.remove") }
+					}
+				}
+			</form>
+		}
+	</div>
+}
+
+// EmailSaved is the card with the email just given, and that its link was sent
+templ EmailSaved(email *SiteEmail) {
+	@EmailCard(email)
+	@successtoast.OOB(i18n.T(ctx, "site.settings.account.email.sent"))
+}
+
+// EmailRemoved is the card with no email, and that it was removed
+templ EmailRemoved(email *SiteEmail) {
+	@EmailCard(email)
+	@successtoast.OOB(i18n.T(ctx, "site.settings.account.email.removed"))
 }
 
 // labelled is a button of a card's action, as its text

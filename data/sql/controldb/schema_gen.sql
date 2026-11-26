@@ -246,7 +246,12 @@ CREATE TABLE sites (
 
     -- The site's own settings: a JSON object of each setting that is set, by its identifier (utils/settings). One not
     -- set is not in it, so the default shows through. A new setting is a new key, not a new column.
-    settings_json TEXT NOT NULL DEFAULT '{}' CHECK(length(settings_json) <= 4096 AND json_valid(settings_json))
+    settings_json TEXT NOT NULL DEFAULT '{}' CHECK(length(settings_json) <= 4096 AND json_valid(settings_json)),
+
+    -- An email a site's admin may give, encrypted, to be told about the site by, and when they proved it is theirs by
+    -- the link sent to it. A site needs none. One not verified is never written to.
+    email_enc TEXT CHECK(length(email_enc) <= 512),
+    email_verified_at INTEGER
 
 ) STRICT;
 

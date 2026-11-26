@@ -333,6 +333,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteDateFlags: %w", err)
 	}
+	if q.updateSiteEmailStmt, err = db.PrepareContext(ctx, updateSiteEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSiteEmail: %w", err)
+	}
 	if q.updateSiteIdentityDateFlagsStmt, err = db.PrepareContext(ctx, updateSiteIdentityDateFlags); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteIdentityDateFlags: %w", err)
 	}
@@ -365,6 +368,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.upsertPushRegistrationStmt, err = db.PrepareContext(ctx, upsertPushRegistration); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertPushRegistration: %w", err)
+	}
+	if q.verifySiteEmailStmt, err = db.PrepareContext(ctx, verifySiteEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query VerifySiteEmail: %w", err)
 	}
 	return &q, nil
 }
@@ -886,6 +892,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteDateFlagsStmt: %w", cerr)
 		}
 	}
+	if q.updateSiteEmailStmt != nil {
+		if cerr := q.updateSiteEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSiteEmailStmt: %w", cerr)
+		}
+	}
 	if q.updateSiteIdentityDateFlagsStmt != nil {
 		if cerr := q.updateSiteIdentityDateFlagsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteIdentityDateFlagsStmt: %w", cerr)
@@ -939,6 +950,11 @@ func (q *Queries) Close() error {
 	if q.upsertPushRegistrationStmt != nil {
 		if cerr := q.upsertPushRegistrationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertPushRegistrationStmt: %w", cerr)
+		}
+	}
+	if q.verifySiteEmailStmt != nil {
+		if cerr := q.verifySiteEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing verifySiteEmailStmt: %w", cerr)
 		}
 	}
 	return err
@@ -1083,6 +1099,7 @@ type Queries struct {
 	updateSiteBackedUpStmt                  *sql.Stmt
 	updateSiteDBSizeStmt                    *sql.Stmt
 	updateSiteDateFlagsStmt                 *sql.Stmt
+	updateSiteEmailStmt                     *sql.Stmt
 	updateSiteIdentityDateFlagsStmt         *sql.Stmt
 	updateSiteIdentityEnabledStmt           *sql.Stmt
 	updateSiteIdentityPasskeyUsedStmt       *sql.Stmt
@@ -1094,6 +1111,7 @@ type Queries struct {
 	updateSiteTableSizesStmt                *sql.Stmt
 	updateSitesBackupUploadedStmt           *sql.Stmt
 	upsertPushRegistrationStmt              *sql.Stmt
+	verifySiteEmailStmt                     *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -1203,6 +1221,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteBackedUpStmt:                  q.updateSiteBackedUpStmt,
 		updateSiteDBSizeStmt:                    q.updateSiteDBSizeStmt,
 		updateSiteDateFlagsStmt:                 q.updateSiteDateFlagsStmt,
+		updateSiteEmailStmt:                     q.updateSiteEmailStmt,
 		updateSiteIdentityDateFlagsStmt:         q.updateSiteIdentityDateFlagsStmt,
 		updateSiteIdentityEnabledStmt:           q.updateSiteIdentityEnabledStmt,
 		updateSiteIdentityPasskeyUsedStmt:       q.updateSiteIdentityPasskeyUsedStmt,
@@ -1214,5 +1233,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteTableSizesStmt:                q.updateSiteTableSizesStmt,
 		updateSitesBackupUploadedStmt:           q.updateSitesBackupUploadedStmt,
 		upsertPushRegistrationStmt:              q.upsertPushRegistrationStmt,
+		verifySiteEmailStmt:                     q.verifySiteEmailStmt,
 	}
 }

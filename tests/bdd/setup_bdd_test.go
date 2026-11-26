@@ -102,6 +102,11 @@ var ownServers = []ownServer{
 	{"s3down/banner.bdd", "192.0.2.18", func(c *config.ServerConfig) { c.Status.S3Down = true }, seedDevAdmin},
 	// A server that turned S3 off at start, as its control DB is not the one replicated in S3
 	{"s3off/banner.bdd", "192.0.2.19", func(c *config.ServerConfig) { c.Status.S3Off = config.S3OffConflict }, seedDevAdmin},
+	// A server that sends email, through a Resend that takes every one
+	{"email/account.bdd", "192.0.2.21", func(c *config.ServerConfig) {
+		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
+	}, seedDevAdmin},
 	// A server run by another operator, with its own support email
 	{"operator/legal.bdd", "192.0.2.15", func(c *config.ServerConfig) {
 		c.OperatorName, c.SupportEmail = "Example Health Trust", "help@example.org"

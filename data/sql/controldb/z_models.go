@@ -96,6 +96,8 @@ type Site struct {
 	ArchivedAt         *int64
 	DeletedAt          *int64
 	SettingsJson       string
+	EmailEnc           *string
+	EmailVerifiedAt    *int64
 }
 
 type SiteBanner struct {

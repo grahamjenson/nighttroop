@@ -229,3 +229,12 @@ UPDATE sites SET table_sizes_json = sqlc.arg('TableSizesJson') WHERE id = sqlc.a
 
 -- name: UpdateSiteSummariesCheckedAt :exec
 UPDATE sites SET summaries_checked_at = sqlc.arg('SummariesCheckedAt') WHERE id = sqlc.arg('ID');
+
+-- name: UpdateSiteEmail :exec
+-- A new email is not verified, and none takes the email away
+UPDATE sites SET email_enc = sqlc.narg('EmailEnc'), email_verified_at = NULL WHERE id = sqlc.arg('ID');
+
+-- name: VerifySiteEmail :execrows
+-- Only the email the link was sent to is verified, not one saved since
+UPDATE sites SET email_verified_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = sqlc.arg('ID') AND email_enc = sqlc.arg('EmailEnc');

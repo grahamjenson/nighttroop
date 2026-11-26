@@ -61,6 +61,6 @@ func TestControlDataLimits(t *testing.T) {
 		}, q.CreateSiteIdentity, append(settings, "UpdatedByIdentityName")...),
 		"sites": testutils.Recipe(func(i int) controldb.CreateSiteParams {
 			return controldb.CreateSiteParams{ID: id(i), BackupKeyHash: "hash"}
-		}, testutils.NoResult(q.CreateSite), append(settings, "TableSizesJson", "AbuseScore")...),
+		}, testutils.NoResult(q.CreateSite), append(settings, "TableSizesJson", "AbuseScore", "EmailEnc")...),
 	})
 }

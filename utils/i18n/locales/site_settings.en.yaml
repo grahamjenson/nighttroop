@@ -364,6 +364,18 @@ site:
       not_used: "Not used yet"
       remove_confirm: "Remove this passkey? It will no longer sign you in."
       remove: "Remove"
+      email:
+        title: "Site email"
+        note: "An email for this site, so the people who run this server can tell you about it, such as before it is archived. A site needs none. It is kept encrypted, and only used once you open the link sent to it."
+        label: "Email"
+        save: "Save and send link"
+        verified: "Verified"
+        not_verified: "Not verified"
+        sent: "A link was sent to the email. Open it within a day to verify the email."
+        removed: "The email was removed."
+        remove_confirm: "Remove this site's email?"
+        verify_subject: "Verify the email of your Nighttroop site"
+        verify_text: "This email was given as the email of the Nighttroop site {{.Site}}.\n\nOpen this link within a day to verify it:\n{{.Link}}\n\nIf you did not ask for this, do nothing. The email is not used."
   login:
     title: "Nighttroop Sign In"
     name: "Username"

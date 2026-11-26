@@ -2670,6 +2670,23 @@ harder:
   - Not added again if the browser already has one for the identity. At most 10.
 - "Remove", after a confirmation, removes a passkey. It no longer signs in.
 
+#### Site email
+
+- A site needs no email. A site's admin can give the site one, to be told about the site by.
+- If the server sends email (`RESEND_API_KEY` and `RESEND_FROM` are set), My Account shows an admin a **Site email**
+  card. If it does not, or the identity is not an admin, the card is not shown and the API refuses (400, 403).
+- **Save and send link** keeps the email, encrypted, as **Not verified**, and sends it a link.
+  - The email is one address of at most 254 characters. Other text is refused (400).
+  - A site is sent one link each hour. Another save in that hour is refused (429), also after the email is removed.
+  - If the email cannot be sent, the email is kept as not verified, and the page says to try again.
+- The link verifies the email it was sent to, and opens My Account, which shows **Verified**.
+  - It needs no sign in. It works one time, for 24 hours.
+  - If the server restarts, a link sent before no longer works. Send a new one.
+  - A link with another key, a used link, or the link of an email that was changed since is refused (400).
+- **Remove**, after a confirmation, removes the email.
+- The email is not in logs, events or errors. A not verified email is never written to again.
+- Getting Started shows an admin, on a server that sends email, **Add an email for the site**, which opens My Account.
+
 ### Usage
 
 - Usage (`/usage`) is in the user menu, for an admin only. My Account and the General settings do not show it.
