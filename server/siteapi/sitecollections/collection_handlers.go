@@ -85,6 +85,12 @@ type CollectionTotals interface {
 	SearchTotals(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) (*apiutils.Totals, error)
 }
 
+// CollectionFill is a collection whose models read more of the site's data than their rows, such as a temp basal's
+// scheduled basal, once for all the models of a request
+type CollectionFill[M any] interface {
+	FillModels(ctx context.Context, collectionTx *siteapiutils.CollectionTx, models []*M, siteContext *httputils.SiteContext) error
+}
+
 type CollectionDelete[R, M any] interface {
 	CollectionBase[R, M]
 
@@ -399,12 +405,28 @@ func get[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collectio
 	if model == nil {
 		return nil, nil, herr
 	}
+	if herr := fill(ctx, tx, collection, siteContext, model); herr != nil {
+		return nil, nil, herr
+	}
 	return model, row, nil
 }
 
 func search[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionSearch[R, M], query *apiutils.Query, siteContext *httputils.SiteContext) ([]*M, *apiutils.HTTPError) {
 	rows, err := collection.SearchRows(ctx, tx, query, siteContext)
-	return apiutils.Searched(rows, err, collection.GetName(), apiutils.WithContext(collection.ToModel, siteContext))
+	models, herr := apiutils.Searched(rows, err, collection.GetName(), apiutils.WithContext(collection.ToModel, siteContext))
+	if herr != nil {
+		return nil, herr
+	}
+	return models, fill(ctx, tx, collection, siteContext, models...)
+}
+
+// fill reads what the models need beyond their rows when the collection is a CollectionFill
+func fill[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionBase[R, M], siteContext *httputils.SiteContext, models ...*M) *apiutils.HTTPError {
+	filler, ok := collection.(CollectionFill[M])
+	if !ok || len(models) == 0 {
+		return nil
+	}
+	return apiutils.ErrorFor(filler.FillModels(ctx, tx, models, siteContext), collection.GetName())
 }
 
 func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionCreate[R, M], id *string, siteContext *httputils.SiteContext, model *M) *apiutils.HTTPError {
@@ -417,7 +439,7 @@ func create[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 	}
 	reportChange(tx, events.Created, row)
 	*model = *collection.ToModel(row, siteContext)
-	return nil
+	return fill(ctx, tx, collection, siteContext, model)
 }
 
 func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collection CollectionUpdate[R, M], siteContext *httputils.SiteContext, oldModel *M, oldRow *R, model *M) *apiutils.HTTPError {
@@ -430,7 +452,7 @@ func update[R, M any](ctx context.Context, tx *siteapiutils.CollectionTx, collec
 	}
 	tx.ReportChange(events.Updated, row, oldRow)
 	*model = *collection.ToModel(row, siteContext)
-	return nil
+	return fill(ctx, tx, collection, siteContext, model)
 }
 
 // delete deletes the row read as the model, so the change can say what was deleted

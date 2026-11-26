@@ -44,32 +44,37 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 // TempBasalNew adds a temp basal with all its fields, putting its row at the top of the table
 templ TempBasalNew() {
 	@addmodal.Modal(addmodal.Props{ID: "site--temp-basal--create", Title: i18n.T(ctx, "site.data.temp_basals.add"), Path: "/data/temp-basals", Target: "#tempBasalsTable tbody",
-		Submit: i18n.T(ctx, "site.data.temp_basals.add"), Fields: tempBasalFields(ctx)})
+		Submit: i18n.T(ctx, "site.data.temp_basals.add"), Fields: tempBasalFields(ctx, false)})
 }
 
-// tempBasalFields are what a temp basal has that a person can type in
-func tempBasalFields(ctx context.Context) []addmodal.Field {
+// tempBasalFields are what a temp basal has that a person can type in: its rate, as the site adds one, or for one kept
+// as a multiplier of the scheduled basal, as AAPS sends a percent, its basal percent
+func tempBasalFields(ctx context.Context, multiplier bool) []addmodal.Field {
+	amount := addmodal.Field{Name: "rate", Column: "temp_basals.Rate", Label: i18n.T(ctx, "site.data.temp_basals.rate"), Help: i18n.T(ctx, "site.data.temp_basals.rate_help"), Required: true, Step: "any"}
+	if multiplier {
+		amount = addmodal.Field{Name: "multiplier", Column: "temp_basals.Multiplier", Label: i18n.T(ctx, "site.data.temp_basals.basal_percent"), Help: i18n.T(ctx, addmodal.MultiplierHelp), Required: true, Kind: addmodal.Percent}
+	}
 	return []addmodal.Field{
-		{Name: "rate", Column: "temp_basals.Rate", Label: i18n.T(ctx, "site.data.temp_basals.rate"), Help: i18n.T(ctx, "site.data.temp_basals.rate_help"), Required: true, Step: "any"},
+		amount,
 		{Name: "duration_minutes", Column: "temp_basals.DurationMinutes", Label: i18n.T(ctx, "site.data.common.duration_minutes"), Help: i18n.T(ctx, "site.data.temp_basals.duration_help"), Required: true, Step: "1"},
 		{Name: "occurred_at", Label: i18n.T(ctx, "site.data.common.when"), Help: i18n.T(ctx, "site.data.temp_basals.when_help"), Kind: addmodal.When},
-		{Name: "multiplier", Column: "temp_basals.Multiplier", Label: i18n.T(ctx, "site.data.temp_basals.basal_percent"), Help: i18n.T(ctx, addmodal.MultiplierHelp), Kind: addmodal.Percent},
 		{Name: "reason", Column: "temp_basals.Reason", Label: i18n.T(ctx, "site.data.common.reason"), Help: i18n.T(ctx, "site.data.temp_basals.reason_help"), Kind: addmodal.Text},
 		{Name: "notes", Column: "temp_basals.Notes", Label: i18n.T(ctx, "site.data.common.notes"), Help: i18n.T(ctx, "site.data.common.notes_help"), Kind: addmodal.Text, Wide: true},
 	}
 }
 
-// tempBasalRow opens the temp basal's details when clicked.
+// tempBasalRow opens the temp basal's details when clicked. It shows its rate and percent at its start, from the
+// scheduled basal then for the one it does not keep.
 templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 	@table.DataRow("site--temp-basal--"+tempBasal.ID, "/data/temp-basals/"+tempBasal.ID, i18n.T(ctx, "site.data.temp_basals.delete_confirm")) {
 		@table.Cell() {
 			{ formatReadingDate(ctx, tempBasal.OccurredAt) }
 		}
 		@table.Cell(table.NumCell) {
-			{ orDash(tempBasal.Rate) }
+			{ orDash(tempBasal.StartRate()) }
 		}
 		@table.Cell(table.NumCell) {
-			{ percentOr(tempBasal.Multiplier, "-") }
+			{ percentOr(tempBasal.StartMultiplier(), "-") }
 		}
 		@table.Cell(table.NumCell) {
 			{ fmt.Sprint(tempBasal.DurationMinutes) }
@@ -85,8 +90,8 @@ templ tempBasalRow(tempBasal *sitemodels.SiteTempBasal) {
 
 templ TempBasalModal(tempBasal *sitemodels.SiteTempBasal) {
 	{{ edit := addmodal.Props{ID: "site--temp-basal--edit", Path: "/data/temp-basals/" + tempBasal.ID, Target: "#site--temp-basal--" + tempBasal.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-		Fields: addmodal.Edit(tempBasalFields(ctx), tempBasal, nil), Delete: i18n.T(ctx, "site.data.temp_basals.delete_confirm")} }}
-	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: i18n.T(ctx, "site.data.temp_basals.details_title", i18n.Data{"Rate": orDash(tempBasal.Rate), "Minutes": tempBasal.DurationMinutes}), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
+		Fields: addmodal.Edit(tempBasalFields(ctx, tempBasal.Rate == nil), tempBasal, nil), Delete: i18n.T(ctx, "site.data.temp_basals.delete_confirm")} }}
+	@modal.Modal(modal.Props{ID: "site--temp-basal--details", Title: i18n.T(ctx, "site.data.temp_basals.details_title", i18n.Data{"Rate": orDash(tempBasal.StartRate()), "Minutes": tempBasal.DurationMinutes}), Subtitle: formatReadingDate(ctx, tempBasal.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
 			@RecordDetails(Record{ID: tempBasal.ID, UtcOffset: tempBasal.UtcOffsetMinutes, App: tempBasal.CreatedByAppName, Device: tempBasal.CreatedByDeviceName, CreatedBy: tempBasal.CreatedByIdentityName, Created: tempBasal.CreatedAt, Updated: tempBasal.UpdatedAt, UpdatedBy: tempBasal.UpdatedByIdentityName})

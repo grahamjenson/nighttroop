@@ -78,6 +78,15 @@ B {"duration_minutes": 30}
 ASSERT_STATUS 400
 ASSERT_CONTAINS "rate is required" "@message"
 
+// A temp basal is a rate or a multiplier of the scheduled basal, not both
+NAME create_temp_basal_rate_and_multiplier
+POST http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"rate": 1, "multiplier": 0.5, "duration_minutes": 30}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "a temp basal has a rate or a basal percent, not both" "@message"
+
 NAME create_temp_basal_too_high
 POST http://{{ site }}/data/temp-basals
 H Authorization: Bearer {{ jwt }}
@@ -169,7 +178,7 @@ H Accept: application/json
 ASSERT_STATUS 404
 
 // A Nightscout percent is the change from the basal, -50 for half, as AAPS sends it, which the site keeps as a multiplier
-// of the basal, 0.5, and the Nightscout API returns as sent
+// of the basal, 0.5, with no rate, and the Nightscout API returns as sent. With no profile it has no scheduled basal.
 NAME create_percent_treatment
 POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B { "eventType": "Temp Basal", "created_at": "{{ time -5 }}", "rate": 0.4, "percent": -50, "duration": 30 }
@@ -182,4 +191,42 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS 0.5 "@result.items.0.multiplier"
-ASSERT_EQUALS 0.4 "@result.items.0.rate"
+ASSERT_EQUALS null "@result.items.0.rate"
+ASSERT_EQUALS null "@result.items.0.scheduled_basal"
+SET percent_id {{ dig "list_percent_temp_basal.result.items.0.id" }}
+
+// An update of its multiplier keeps it a multiplier
+NAME update_percent_temp_basal_multiplier
+POST http://{{ site }}/data/temp-basals/{{ .percent_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"multiplier": 0.7}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.7 "@result.multiplier"
+ASSERT_EQUALS null "@result.rate"
+
+NAME update_percent_temp_basal_rate_and_multiplier
+POST http://{{ site }}/data/temp-basals/{{ .percent_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"rate": 0.4, "multiplier": 0.7}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "a temp basal has a rate or a basal percent, not both" "@message"
+
+// An update of its rate makes it a rate
+NAME update_percent_temp_basal_rate
+POST http://{{ site }}/data/temp-basals/{{ .percent_id }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"rate": 0.4}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.4 "@result.rate"
+ASSERT_EQUALS null "@result.multiplier"
+
+// So the Nightscout API gives it as an absolute rate
+NAME percent_temp_basal_now_absolute
+GET http://{{ .ns_site }}/api/v1/treatments/{{ dig "create_percent_treatment.0._id" }}?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 0.4 "@0.absolute"
+ASSERT_EQUALS "absolute" "@0.temp"
+ASSERT_EQUALS null "@0.percent"

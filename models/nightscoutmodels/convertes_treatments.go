@@ -249,8 +249,8 @@ type TreatmentsEvenetConverter interface {
 	// goverter:map Date OccurredAt | OrNow
 	// goverter:map App CreatedByAppName
 	// goverter:map Device CreatedByDeviceName
-	// goverter:map TempBasalPercent Multiplier | PercentToMultiplier
-	// goverter:map . FollowsBasal | SentAsPercent
+	// goverter:map . Rate | TempBasalRate
+	// goverter:map . Multiplier | TempBasalMultiplier
 	// goverter:map Duration DurationMinutes | DurationToMinutes
 	PartialTreatmentToTempBasal(source Treatment) sitedb.TempBasal
 

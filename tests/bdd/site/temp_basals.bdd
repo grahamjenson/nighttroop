@@ -22,13 +22,19 @@ ASSERT_NOT_VISIBLE #site--temp-basal--next
 ASSERT_NOT_VISIBLE #site--temp-basal--previous
 SCREENSHOT temp_basals
 
+// Its rate is an absolute 0.85 U/hr, and its percent is of the profile's 0.8 U/hr at its start
+ASSERT_VISIBLE #tempBasalsTable tbody tr >> nth=0 >> td:text-is("0.85")
+ASSERT_VISIBLE #tempBasalsTable tbody tr >> nth=0 >> td:text-is("106.25")
+
 // Clicking a temp basal shows all its details
 CLICK #tempBasalsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--temp-basal--details
 ASSERT_TEXT_VISIBLE virtual_connector
-// Its record's details are listed, and what it edits, like its multiplier of the basal, is shown once, in its form
+// Its record's details are listed, and what it edits, its rate, is shown once, in its form. It is a rate, so it has no
+// basal percent to edit.
 ASSERT_VISIBLE #site--temp-basal--details dt:text-is("Device")
-ASSERT_COUNT #site--temp-basal--details :is(dt, label):has-text("Basal (%)") 1
+ASSERT_COUNT #site--temp-basal--details :is(dt, label):has-text("Rate (U/hr)") 1
+ASSERT_COUNT #site--temp-basal--details :is(dt, label):has-text("Basal (%)") 0
 SCREENSHOT temp_basal_details
 
 CLICK #site--temp-basal--details--close
@@ -40,21 +46,18 @@ CLICK #site--temp-basal--add
 ASSERT_VISIBLE #site--temp-basal--create--modal
 ASSERT_TEXT_VISIBLE The basal rate given instead, 0 for a suspend.
 ASSERT_TEXT_VISIBLE Required
-ASSERT_VISIBLE #site--temp-basal--create--multiplier
-// Its multiplier of the scheduled basal is typed in as a percent above 0, so a temp basal under it is under 100%
-ASSERT_TEXT_VISIBLE Basal (%)
-ASSERT_TEXT_VISIBLE A percent above 0: 100% is unchanged, 120% is 1.2 times.
-ASSERT_VISIBLE #site--temp-basal--create--multiplier[min="1"][max="1100"]
+// One typed in is a rate, so it has no basal percent to type in
+ASSERT_NOT_VISIBLE #site--temp-basal--create--multiplier
 INPUT #site--temp-basal--create--rate 1.25
 INPUT #site--temp-basal--create--duration-minutes 45
-INPUT #site--temp-basal--create--multiplier 70
 INPUT #site--temp-basal--create--notes Sick day
 CLICK #site--temp-basal--create--notes
 SCREENSHOT temp_basal_add
 CLICK #site--temp-basal--create--submit
 ASSERT_STATUS 201
 ASSERT_TEXT_VISIBLE 1.25
-ASSERT_VISIBLE #tempBasalsTable td:text-is("70")
+// Its percent is of the profile's 0.8 U/hr now
+ASSERT_VISIBLE #tempBasalsTable td:text-is("156.25")
 
 // Its details can be edited, which updates its row
 CLICK #tempBasalsTable tbody tr >> nth=0
@@ -101,3 +104,40 @@ ASSERT_NOT_VISIBLE #site--temp-basal--details
 GOTO /data/temp-basals
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
+
+// AAPS on a percent pump sends 150% with its rate at its start, and no absolute, so it is kept as a percent of the basal
+HTTP
+NAME aaps_percent_temp_basal
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Temp Basal", "created_at": "{{ time 10 }}", "percent": 50, "rate": 1.2, "duration": 60, "type": "NORMAL", "enteredBy": "AAPS"}]
+ASSERT_STATUS 200
+BROWSE
+
+// It shows its rate at its start, 150% of the profile's 0.8 U/hr, and its percent
+GOTO /data/temp-basals
+ASSERT_STATUS 200
+ASSERT_VISIBLE #tempBasalsTable tbody tr >> nth=0 >> td:text-is("1.2")
+ASSERT_VISIBLE #tempBasalsTable tbody tr >> nth=0 >> td:text-is("150")
+SCREENSHOT temp_basals_percent
+
+// Its details edit its basal percent, not a rate, typed in as a percent above 0
+CLICK #tempBasalsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--temp-basal--details
+ASSERT_TEXT_VISIBLE 1.2 U/hr for 60 minutes
+ASSERT_NOT_VISIBLE #site--temp-basal--edit--rate
+ASSERT_VISIBLE #site--temp-basal--edit--multiplier[value="150"]
+ASSERT_TEXT_VISIBLE A percent above 0: 100% is unchanged, 120% is 1.2 times.
+ASSERT_VISIBLE #site--temp-basal--edit--multiplier[min="1"][max="1100"]
+SCREENSHOT temp_basal_percent_details
+INPUT #site--temp-basal--edit--multiplier 120
+CLICK #site--temp-basal--edit--submit
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Temp Basal Updated
+ASSERT_VISIBLE #tempBasalsTable tbody tr >> nth=0 >> td:text-is("0.96")
+ASSERT_VISIBLE #tempBasalsTable tbody tr >> nth=0 >> td:text-is("120")
+
+// The summary's other treatments show it at its rate at its start
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--treatments tbody tr >> nth=0 >> text=0.96 U/hr for 60 min
+SCREENSHOT summary_percent_temp_basal

@@ -13,6 +13,7 @@ import (
 
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/livedb"
+	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -82,13 +83,20 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 		if !started {
 			return
 		}
-		// eventData is a change's data: an own row's model as JSON, or {} for any other change or a row it hides
+		// eventData is a change's data: an own row's model as JSON, read as a get reads it, or {} for any other change or a
+		// row it hides
 		eventData := func(event events.Event) ([]byte, error) {
 			row, own := event.Model.(*R)
 			if !own || hides(event, siteContext) {
 				return []byte("{}"), nil
 			}
-			return json.Marshal(collection.ToModel(row, siteContext))
+			model := collection.ToModel(row, siteContext)
+			tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
+			defer tx.Rollback()
+			if herr := fill(r.Context(), tx, collection, siteContext, model); herr != nil {
+				return nil, herr
+			}
+			return json.Marshal(model)
 		}
 		sendEvents(w, r, siteContext, stream, changes, overflowed, eventData)
 	}

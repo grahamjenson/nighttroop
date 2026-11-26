@@ -5,6 +5,26 @@ import (
 	"slices"
 )
 
+// SwitchLookbackMs is how long before a time a profile switch with a duration is looked for, as one still in force then
+const SwitchLookbackMs = 7 * 24 * 60 * 60_000
+
+// SummaryProfilesParams are the times SummaryProfiles reads the profiles in force through, and the most it reads of each
+type SummaryProfilesParams struct {
+	Since, Until, Limit int64
+}
+
+// SummaryProfiles are the default profiles and the profile switches in force from Since to Until, each oldest first, at
+// most Limit of each, see SearchSummaryDefaultProfiles and SummaryProfileSwitches
+func (q *Queries) SummaryProfiles(ctx context.Context, arg SummaryProfilesParams) ([]*ProfilePreset, []*ProfileSwitch, error) {
+	defaults, err := q.SearchSummaryDefaultProfiles(ctx, SearchSummaryDefaultProfilesParams{Since: arg.Since, Until: arg.Until, Limit: arg.Limit})
+	if err != nil {
+		return nil, nil, err
+	}
+	slices.Reverse(defaults)
+	switches, err := q.SummaryProfileSwitches(ctx, SearchSummaryProfileSwitchesParams{Since: arg.Since, Until: arg.Until, Earliest: arg.Since - SwitchLookbackMs, Limit: arg.Limit})
+	return defaults, switches, err
+}
+
 // SummaryProfileSwitches are the profile switches in force from Since to Until, oldest first, as
 // SearchSummaryProfileSwitches finds them. A switch with no schedules of its own, as the careportal and T1DCarer send
 // one by its profile's name, reads those of the profile of its name in the store in force when it started, as

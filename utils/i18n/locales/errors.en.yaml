@@ -27,6 +27,7 @@ errors:
     day_in_range: "date must be before today and within a year"
     dose: "dose must not be 0"
     targets: "the low target must be at most the high target"
+    rate_or_multiplier: "a temp basal has a rate or a basal percent, not both"
   site:
     delete_needs_s3: "a site can only be deleted when its data can be archived to S3"
     backfill_off: "turn on and save this connector before backfilling it"

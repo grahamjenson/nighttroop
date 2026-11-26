@@ -73,29 +73,49 @@ func (p *profile) at(schedule []*SiteScheduleValue, ms int64) *float64 {
 	return &value
 }
 
-// SummaryMinutes is each minute from since until until, oldest first, with the targets and basal in force: the
-// default profile as of that minute, overridden by a profile switch, overridden by a temp target or temp basal.
-// Defaults and switches are oldest first. A switch lasts its duration, or until the next one when it has none, and
-// one that ends hands back to the last switch without a duration. A newer temp target or temp basal replaces an older
-// one, and a temp basal's rate, the U/hr given, is the basal; one that follows the basal is its multiplier times the
-// scheduled basal each minute, as Nightscout and AAPS read a temp basal sent as a percent. A suspend of 0 minutes is a
-// basal of 0 until the next.
-func SummaryMinutes(since, until int64, units *consts.Units, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch, targets []*SiteTempTarget, basals []*SiteTempBasal) []SummaryMinute {
-	var defaultProfiles, switchProfiles []*profile
-	parsed := schedules{}
+// Profiles are the default profiles and the profile switches in force through a time, each parsed once, to read what
+// they have in force at each minute
+type Profiles struct {
+	defaults, switches []*profile
+}
+
+// NewProfiles are the defaults and switches, each oldest first. One without its own timezone is read in location's
+// time.
+func NewProfiles(location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch) *Profiles {
+	p, parsed := &Profiles{}, schedules{}
 	for _, d := range defaults {
-		defaultProfiles = append(defaultProfiles, newProfile(d.OccurredAt, 0, d.Timezone, d.TargetsLowJson, d.TargetsHighJson, d.BasalRatesJson, location, parsed))
+		p.defaults = append(p.defaults, newProfile(d.OccurredAt, 0, d.Timezone, d.TargetsLowJson, d.TargetsHighJson, d.BasalRatesJson, location, parsed))
 	}
 	for _, s := range switches {
-		p := newProfile(s.OccurredAt, s.DurationMinutes, s.Timezone, s.TargetsLowJson, s.TargetsHighJson, s.BasalRatesJson, location, parsed)
+		sp := newProfile(s.OccurredAt, s.DurationMinutes, s.Timezone, s.TargetsLowJson, s.TargetsHighJson, s.BasalRatesJson, location, parsed)
 		if s.Multiplier != nil {
-			p.basalScale = *s.Multiplier
+			sp.basalScale = *s.Multiplier
 		}
 		if s.Timeshift != nil {
-			p.shift = *s.Timeshift * 60
+			sp.shift = *s.Timeshift * 60
 		}
-		switchProfiles = append(switchProfiles, p)
+		p.switches = append(p.switches, sp)
 	}
+	return p
+}
+
+// BasalAt is the profiles' scheduled basal in U/hr at ms, with a switch's percent and timeshift, as Nightscout reads
+// one for a temp basal then. It is nil when no profile has a basal then.
+func (p *Profiles) BasalAt(ms int64) *float64 {
+	if p == nil {
+		return nil
+	}
+	return p.Minutes(ms, ms, nil, nil, nil)[0].Basal
+}
+
+// Minutes is each minute from since until until, oldest first, with the targets and basal in force: the default
+// profile as of that minute, overridden by a profile switch, overridden by a temp target or temp basal. A switch lasts
+// its duration, or until the next one when it has none, and one that ends hands back to the last switch without a
+// duration. A newer temp target or temp basal replaces an older one, and a temp basal's basal is its RateAt the
+// scheduled basal of each minute, so one sent as a percent changes with the schedule and the switches. A suspend of 0
+// minutes is a basal of 0 until the next.
+func (p *Profiles) Minutes(since, until int64, units *consts.Units, targets []*SiteTempTarget, basals []*SiteTempBasal) []SummaryMinute {
+	defaultProfiles, switchProfiles := p.defaults, p.switches
 	byStart := func(a, b *SiteTempTarget) int { return int(a.OccurredAt - b.OccurredAt) }
 	targets = slices.SortedFunc(slices.Values(targets), byStart)
 	basals = slices.SortedFunc(slices.Values(basals), func(a, b *SiteTempBasal) int { return int(a.OccurredAt - b.OccurredAt) })
@@ -158,12 +178,7 @@ func SummaryMinutes(since, until int64, units *consts.Units, location *time.Loca
 			minute.LowTarget, minute.HighTarget = new(target.LowTarget), new(target.HighTarget)
 		}
 		if basal != nil && basal.Running(ms) {
-			follows := basal.FollowsBasal != nil && *basal.FollowsBasal && basal.Multiplier != nil && minute.Basal != nil
-			if follows {
-				minute.Basal = new(*minute.Basal * *basal.Multiplier)
-			} else if basal.Rate != nil {
-				minute.Basal = new(*basal.Rate)
-			}
+			minute.Basal = basal.RateAt(minute.Basal)
 		}
 		minutes = append(minutes, minute)
 	}
@@ -176,11 +191,4 @@ func fromMgdl(units *consts.Units, mgdl *float64) *float64 {
 		return nil
 	}
 	return new(units.FromMGDL(*mgdl))
-}
-
-// BasalAt is the profiles' scheduled basal in U/hr at ms, with a switch's percent and timeshift, as Nightscout reads
-// one for a temp basal starting then. It is nil when no profile has a basal then. Defaults and switches are oldest
-// first.
-func BasalAt(ms int64, location *time.Location, defaults []*sitedb.ProfilePreset, switches []*sitedb.ProfileSwitch) *float64 {
-	return SummaryMinutes(ms, ms, nil, location, defaults, switches, nil, nil)[0].Basal
 }

@@ -799,6 +799,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   resumes". After the pump resumes, it shows "Pump suspended for" its minutes.
 - A temp target of no duration, as AAPS and T1D Carer send to cancel one, shows in **Other treatments** as
   **Temp Target**, "Cancelled", not its range for 0 minutes.
+- A temp basal shows in **Other treatments** with its U/hr rate at its start. For a percent, this is the percent of
+  the scheduled basal at its start.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
 - A dose of basal insulin, as long acting insulin injected, says "basal" after its units ("14 U basal"), in the table
   and on the graph.
@@ -835,8 +837,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   force. One from before the summary's hours counts. When a temp or timed switch ends, the one under it returns.
   - A switch sent by name (no `profileJson`) uses the profile of that name in the profile store, with its shift and
     percentage.
-  - A temp basal sent as a `percent` with no `absolute` is that percent of the scheduled basal each minute. So it
-    changes when a schedule block starts or a switch starts or ends. Other temp basals keep their rate.
+  - A temp basal kept as a multiplier is that multiplier of the scheduled basal each minute. So it changes when a
+    schedule block starts or a switch starts or ends. A temp basal kept as a rate keeps its rate.
+  - A temp basal kept as a multiplier, with no profile in force, gives no basal.
 
 #### Periods and time in range
 
@@ -1121,9 +1124,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     `true` for Juggluco's Long-Acting, `null` if the app does not tell. Site API returns it, ignores it on create or
     update.
 - **Food intakes**
-- **Temp basals**: rate in U/hr, and a multiplier of the scheduled basal (0 for a zero temp).
-  - `follows_basal`: `true` if a Nightscout client sent it as a `percent` with no `absolute`. Site API returns it,
+- **Temp basals**: a `rate` in U/hr or a `multiplier` of the scheduled basal (0 for a zero temp), not both. The
+  other is `null`.
+  - The page shows the U/hr and the Basal (%) at its start. It finds the one not kept from the scheduled basal then.
+    With no profile then, it shows `-`.
+  - `scheduled_basal`: the profile's basal in U/hr at its start, or `null` with no profile then. Site API returns it,
     ignores it on create or update.
+  - Create: a `rate` is required. The add form has no Basal (%).
+  - Update: a `rate` makes it a rate, and a `multiplier` makes it a multiplier. If both are sent, the API returns 400.
+  - The edit form has Rate (U/hr) for a rate, and Basal (%) for a multiplier.
 - **Temp targets**: in the settings' units.
 - **Profile switches**: the profile's schedules, and a multiplier of its insulin.
   - Details: basal, carb ratio, sensitivity and target schedule tables, as on profiles, in the settings' units (named
@@ -1181,7 +1190,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Glucose: in the settings' units, to one decimal place, moved in to a value that is taken (e.g.
     `reading must be more than 0 and at most 55.5 mmol/L`).
   - Food energy and portions, and a food preset's nutrients, are at least 0. A temp basal is at least 1 %.
-  - Other rules stay: a dose is not 0, a temp target's low is at most its high, a temp basal has a rate.
+  - Other rules stay: a dose is not 0, a temp target's low is at most its high, a new temp basal has a rate, and a
+    temp basal does not have both a rate and a multiplier.
 - Nightscout API: each value is checked against the limit of its column in the site DB (its range, its length, its
   type, and if it can be empty) before it is stored. A patch is checked as the stored document with the fields sent.
   - If a value is out of its limit and the document can be kept without it: the value is left out, and the rest kept.
@@ -2011,15 +2021,26 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 #### Temp basals
 
-- Input: the U/hr rate as `rate` or `absolute`, the `percent`, or both. A `percent` with no `absolute` (AAPS on a
-  percent pump) follows the basal.
+- Input, in this order:
+  - `absolute`: stored as the rate in U/hr.
+  - Else `percent`: stored as a multiplier. A `rate` sent with it (AAPS on a percent pump) is not stored, as it is only
+    the rate at the start.
+  - Else `rate`: stored as the rate in U/hr.
+  - Else (a cancel): stored as a rate of 0.
 - `percent`: Nightscout's change from the basal, as AAPS sends it (-50 for half, 20 for 1.2x, -100 for a zero temp,
   never under -100). Stored as a multiplier (0.5, 1.2, 0).
-- The value not sent: from the default profile's or profile switch's basal at the start, in the profile's timezone.
-  A rate over 11 times that basal keeps no percent.
-- Output: always `rate` (U/hr), and `percent` if it has one. `absolute` (U/hr), if it does not follow the basal.
-- Summary and daily dose: the basal during a temp basal is its rate. If it follows the basal, the basal is its
-  `percent` of the scheduled basal each minute, as Nightscout and AAPS read it.
+- An update keeps the kind: the stored document has `absolute` only for a rate, so a patch of a percent (e.g. AAPS
+  shortening its `duration`) stays a percent.
+- Output:
+  - `rate`: the U/hr at the start. For a multiplier, from the scheduled basal at the start.
+  - `percent`: the change from the scheduled basal at the start. For a rate, from the scheduled basal at the start. A
+    rate over 11 times that basal has no percent.
+  - `absolute` and `temp` `absolute`: only for a rate. Nightscout (`getTempBasal`) reads `absolute` before `percent`,
+    so a percent stays a percent for followers and AAPS.
+  - The scheduled basal is the default profile's or profile switch's basal, in the profile's timezone.
+  - If no profile is in force at the start: a percent has no `rate`, and a rate has no `percent`.
+- Summary and daily dose: the basal during a temp basal is its rate. For a multiplier, the basal is the multiplier of
+  the scheduled basal each minute, as Nightscout and AAPS read it.
 - A temp basal of under a minute (e.g. `durationInMilliseconds` 43491 with `duration` 0) keeps 1 minute, not 0.
 - A suspended pump: a temp basal of `type` `PUMP_SUSPEND`, as AAPS sends it.
   - From any client, a temp basal sent with `rate` 0 and `reason` `suspend`, and no `type`, is kept with `type`

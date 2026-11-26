@@ -7,7 +7,6 @@ INSERT INTO temp_basals (
     duration_minutes,
     rate,
     multiplier,
-    follows_basal,
     type,
     insulin_type,
     automatic,
@@ -21,7 +20,7 @@ INSERT INTO temp_basals (
     created_by_identity_name,
     created_by_identity_id
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 --------
@@ -91,7 +90,6 @@ UPDATE temp_basals SET
     duration_minutes = sqlc.arg('DurationMinutes'),
     rate = sqlc.arg('Rate'),
     multiplier = sqlc.arg('Multiplier'),
-    follows_basal = sqlc.arg('FollowsBasal'),
     type = sqlc.arg('Type'),
     insulin_type = sqlc.arg('InsulinType'),
     automatic = sqlc.arg('Automatic'),
@@ -108,10 +106,11 @@ WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
 RETURNING *;
 
 -- name: UpdateTempBasal :one
+-- A rate sent makes it a rate, and a multiplier sent makes it a multiplier, as a temp basal is one or the other
 UPDATE temp_basals SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
-    rate = COALESCE(sqlc.narg('Rate'), rate),
-    multiplier = COALESCE(sqlc.narg('Multiplier'), multiplier),
+    rate = CASE WHEN CAST(sqlc.narg('Multiplier') AS REAL) IS NULL THEN COALESCE(CAST(sqlc.narg('Rate') AS REAL), rate) END,
+    multiplier = CASE WHEN CAST(sqlc.narg('Rate') AS REAL) IS NULL THEN COALESCE(CAST(sqlc.narg('Multiplier') AS REAL), multiplier) END,
     type = COALESCE(sqlc.narg('Type'), type),
     insulin_type = COALESCE(NULLIF(CAST(sqlc.narg('InsulinType') AS TEXT), ''), insulin_type),
     automatic = COALESCE(sqlc.narg('Automatic'), automatic),

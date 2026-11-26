@@ -32,7 +32,7 @@ func summarySite(t testing.TB) *httputils.SiteContext {
 
 // tempBasal adds a temp basal of minutes at a rate that started at
 func tempBasal(t testing.TB, q *sitedb.Queries, id string, at time.Time, minutes int64, rate float64) {
-	_, err := q.CreateTempBasal(t.Context(), sitedb.CreateTempBasalParams{ID: id, DurationMinutes: minutes, Rate: rate, OccurredAt: at.UnixMilli(), CreatedByIdentityName: "test"})
+	_, err := q.CreateTempBasal(t.Context(), sitedb.CreateTempBasalParams{ID: id, DurationMinutes: minutes, Rate: &rate, OccurredAt: at.UnixMilli(), CreatedByIdentityName: "test"})
 	require.NoError(t, err)
 }
 

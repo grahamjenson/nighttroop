@@ -538,9 +538,8 @@ type SummaryPeriod struct {
 type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64
-	Rate                  float64
+	Rate                  *float64
 	Multiplier            *float64
-	FollowsBasal          *bool
 	Type                  *string
 	InsulinType           *string
 	Automatic             *bool
@@ -564,7 +563,6 @@ type TempBasalsVw struct {
 	DurationMinutes       *int64
 	Rate                  *float64
 	Multiplier            *float64
-	FollowsBasal          *bool
 	Type                  *string
 	InsulinType           *string
 	Automatic             *bool

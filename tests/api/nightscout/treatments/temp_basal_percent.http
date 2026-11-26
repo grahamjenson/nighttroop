@@ -2,15 +2,16 @@ INCLUDE steps/new_ns_site.steps
 
 // A temp basal's percent is Nightscout's change from the basal, as AAPS, Nightscout's careportal and Nightguard have it:
 // -50 is half, 20 is 1.2 times and -100 a zero temp. Sent only as a percent, its rate is the profile's basal at its
-// start so changed: here 0.5 U/hr from midnight and 0.8 U/hr from 2am UTC. It is kept and returned as it was sent,
-// with no absolute, as Nightscout reads one with a percent and no absolute as that percent of the basal each minute.
+// start so changed: here 0.5 U/hr from midnight and 0.8 U/hr from 2am UTC. It is kept as the percent and returned as
+// it was sent, with no absolute, as Nightscout reads one with a percent and no absolute as that percent of the basal
+// each minute.
 
 // Before any profile there is no basal to take the percent of, so it has no rate
 NAME percent_before_profile_v1
 POST http://{{ site }}/api/v1/treatments?token={{ token }}
 B {"eventType": "Temp Basal", "created_at": "2025-12-01T01:00:00.000Z", "percent": -50, "duration": 30}
 ASSERT_STATUS 200
-ASSERT_EQUALS 0 "@0.rate"
+ASSERT_EQUALS null "@0.rate"
 ASSERT_EQUALS null "@0.absolute"
 ASSERT_EQUALS -50 "@0.percent"
 
@@ -68,11 +69,12 @@ ASSERT_EQUALS 1.2 "@result.rate"
 ASSERT_EQUALS null "@result.absolute"
 ASSERT_EQUALS 50 "@result.percent"
 
-// A rate sent with the percent is kept, rather than taken from the profile, as AAPS sends 70% of the basal
+// A rate sent with the percent, as AAPS sends 70% of the basal, is only its rate at its start: the percent is kept, and
+// the rate given back is the profile's 0.8 U/hr at 3am, at 70%
 NAME rate_and_percent_temp_basal_v3
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
-B {"eventType": "Temp Basal", "date": 1772334000000, "percent": -30, "rate": 0.56, "duration": 30}
+B {"eventType": "Temp Basal", "date": 1772334000000, "percent": -30, "rate": 0.5, "duration": 30}
 ASSERT_STATUS 201
 ASSERT_EQUALS 0.56 "@result.rate"
 ASSERT_EQUALS null "@result.absolute"
@@ -94,8 +96,8 @@ H Authorization: Bearer {{ jwt }}
 B {"eventType": "Temp Basal", "date": 1772337600000, "percent": -101, "duration": 30}
 ASSERT_STATUS 400
 
-// A temp basal sent in U/hr gets its percent from the profile's basal at its start, 0.8 U/hr at 6am, and is returned
-// with its rate as both rate and absolute
+// A temp basal sent in U/hr is kept as the rate, and is returned with it as both rate and absolute, and its percent of
+// the profile's basal at its start, 0.8 U/hr at 6am
 NAME rate_temp_basal_v3
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}

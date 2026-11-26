@@ -161,6 +161,8 @@ type SiteConverter interface {
 	// App's text is shown without its tags
 	// goverter:map Notes | StripTags
 	// goverter:map Reason | StripTags
+	// Its scheduled basal is read from the profiles, see FillScheduledBasals
+	// goverter:ignore ScheduledBasal
 	TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal
 
 	// goverter:context siteContext
@@ -168,9 +170,8 @@ type SiteConverter interface {
 	// goverter:map OccurredAt | OccurredAtOrNow
 	// goverter:map CreatedByIdentityID | ContextIdentityID
 	// goverter:map CreatedByIdentityName | ContextIdentityNameValue
-	// The site does not set AAPS's type of temp basal, nor Loop's insulin, nor whether the loop set it, nor whether it
-	// follows the basal, so one entered on the site is its rate
-	// goverter:ignore Type InsulinType Automatic FollowsBasal
+	// The site does not set AAPS's type of temp basal, nor Loop's insulin, nor whether the loop set it
+	// goverter:ignore Type InsulinType Automatic
 	TempBasalToCreate(source *SiteTempBasal, siteContext *httputils.SiteContext) sitedb.CreateTempBasalParams
 
 	// goverter:context siteContext

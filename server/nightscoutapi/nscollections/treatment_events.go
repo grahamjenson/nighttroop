@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
-	"time"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
@@ -251,15 +250,17 @@ var (
 			return isAssigned(source.Absolute, source.Rate, source.TempBasalPercent, source.Duration)
 		},
 		partial: nightscoutmodels.PartialTreatmentToTempBasal,
-		// AAPS sends its rate as rate, and Loop as absolute too
+		// AAPS sends its rate as rate, and Loop as absolute too, or AAPS on a percent pump its percent, see
+		// nightscoutmodels.TempBasalRate
 		complete: func(source nightscoutmodels.Treatment, target *sitedb.TempBasal) {
-			if rate := nightscoutmodels.TempBasalValuePtr(source); rate != nil {
-				target.Rate = *rate
-				// A rate of 0 sent with the reason suspend, as Loop sends one, is a suspended pump, kept so as AAPS sends
-				// one. A cancel has no such reason.
-				if *rate == 0 && target.Type == nil && target.Reason != nil && *target.Reason == "suspend" {
-					target.Type = new(sitemodels.PumpSuspendType)
-				}
+			// A rate of 0 sent with the reason suspend, as Loop sends one, is a suspended pump, kept so as AAPS sends one.
+			// A cancel has no such reason.
+			if rate := target.Rate; rate != nil && *rate == 0 && target.Type == nil && target.Reason != nil && *target.Reason == "suspend" {
+				target.Type = new(sitemodels.PumpSuspendType)
+			}
+			// One sent with no rate, absolute or percent, as the careportal's cancel, is a rate of 0
+			if target.Rate == nil && target.Multiplier == nil {
+				target.Rate = new(0.0)
 			}
 			// One that ran under a minute keeps 1, as 0 is a cancel, or a suspended pump that has not resumed
 			if ms := source.Duration.MsP(); target.DurationMinutes == 0 && ms != nil && *ms > 0 {
@@ -502,45 +503,3 @@ var treatmentTypeEvents = func() map[nightscoutmodels.TreatmentEventType][]treat
 	}
 	return types
 }()
-
-// percentSwitchMs is how long before a temp basal a profile switch with a duration is looked for, as one still in force,
-// and percentSwitches the most switches looked at
-const percentSwitchMs, percentSwitches = 7 * 24 * 60 * 60_000, 1000
-
-// maxMultiplier is the most times the basal a temp basal keeps, as Nightscout's 1000 percent
-const maxMultiplier = 11
-
-// fillTempBasal sets what the treatment doesn't send of a temp basal's rate in U/hr and its multiplier, from the other
-// and the profile's basal at its start, see sitemodels.BasalAt, keeping them as they are when no profile has a basal
-// then
-func fillTempBasal(ctx context.Context, q *sitedb.Queries, treatment nightscoutmodels.Treatment, tempBasal *sitedb.TempBasal) error {
-	sentRate, sentPercent := nightscoutmodels.TempBasalValuePtr(treatment) != nil, treatment.TempBasalPercent != nil
-	if tempBasal == nil || sentRate == sentPercent || (sentPercent && tempBasal.Multiplier == nil) {
-		return nil
-	}
-	at := tempBasal.OccurredAt
-	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: at, Until: at, Limit: 1})
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to find the profile for a temp basal's percent", "error", err)
-		return err
-	}
-	switches, err := q.SummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: at, Until: at, Earliest: at - percentSwitchMs, Limit: percentSwitches})
-	if err != nil {
-		slog.ErrorContext(ctx, "failed to find the profile switches for a temp basal's percent", "error", err)
-		return err
-	}
-	location := time.UTC
-	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
-		location = siteContext.GetSiteTimezone()
-	}
-	basal := sitemodels.BasalAt(at, location, defaults, switches)
-	switch {
-	case basal == nil:
-	case sentPercent:
-		tempBasal.Rate = consts.Round(*basal**tempBasal.Multiplier, 3)
-	// A rate far over the basal, as a temp basal set over a basal of nearly nothing, has no multiplier kept
-	case *basal > 0 && tempBasal.Rate <= maxMultiplier**basal:
-		tempBasal.Multiplier = new(consts.Round(tempBasal.Rate / *basal, 5))
-	}
-	return nil
-}

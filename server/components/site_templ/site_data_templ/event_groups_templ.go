@@ -43,7 +43,7 @@ func eventGroupEvents(ctx context.Context, group *sitemodels.SiteEventGroup) []s
 		events = append(events, i18n.T(ctx, "site.data.common.carbs", i18n.Data{"Carbs": orDash(f.Carbs)}))
 	}
 	if b := group.TempBasal; b != nil {
-		events = append(events, i18n.T(ctx, "site.data.event_groups.temp_basal_event", i18n.Data{"Rate": orDash(b.Rate), "Minutes": b.DurationMinutes}))
+		events = append(events, i18n.T(ctx, "site.data.event_groups.temp_basal_event", i18n.Data{"Rate": orDash(b.StartRate()), "Minutes": b.DurationMinutes}))
 	}
 	if t := group.TempTarget; t != nil {
 		events = append(events, i18n.T(ctx, "site.data.event_groups.temp_target_event", i18n.Data{"Low": formatGlucose(ctx, t.LowTarget, t.Units), "High": formatGlucose(ctx, t.HighTarget, t.Units), "Units": orDash(t.Units), "Minutes": t.DurationMinutes}))

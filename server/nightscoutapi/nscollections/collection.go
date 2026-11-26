@@ -60,6 +60,12 @@ type CollectionDB[NS, DM any] interface {
 	Rows(nsModel NS) []sitedb.TableRow
 }
 
+// CollectionBatcher is a collection whose documents read the site's DB, which it reads once for many models at once
+type CollectionBatcher[NS, DM any] interface {
+	// ToNSBatch is ToNS for the models, reading what they need of the site's DB once for all of them
+	ToNSBatch(models []*DM, siteContext *httputils.SiteContext) func(*DM, *httputils.SiteContext) NS
+}
+
 // CollectionKeyed is a CollectionDB whose model sent again is found by its fallback key when no model has its
 // identifier, as Nightscout finds a duplicate (treatment-fallback-key.js, API v3's dedup). Without one, only the
 // identifier finds a duplicate. A create returns the duplicate instead.
@@ -209,12 +215,17 @@ func (c Collection[NS, DM]) Record(model any, siteContext *httputils.SiteContext
 
 // document is a database model as this collection's document
 func (c Collection[NS, DM]) document(dbModel *DM, siteContext *httputils.SiteContext) nsutils.Document {
+	return c.documentBy(dbModel, siteContext, c.db.ToNS)
+}
+
+// documentBy is a database model as this collection's document, its model converted by toNS
+func (c Collection[NS, DM]) documentBy(dbModel *DM, siteContext *httputils.SiteContext, toNS func(*DM, *httputils.SiteContext) NS) nsutils.Document {
 	m := row(*dbModel)
 	// One kept with no offset, a food or a profile sent without one, is in the site's timezone, as Nightscout's
 	if (*dbModel).GetUtcOffsetMinutes() == nil {
 		m.utcOffset = siteUtcOffset(siteContext)(m.occurredAt)
 	}
-	return stored[NS]{meta: m, model: c.db.ToNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
+	return stored[NS]{meta: m, model: toNS(dbModel, siteContext), unitsLabels: unitsLabels(siteContext)}
 }
 
 // Create stores the model sent, see createdModel, unless it has a duplicate, see duplicate. It returns the duplicate,
@@ -241,7 +252,9 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	if duplicate != nil && resent(nsModel, identifier, duplicate) {
 		return c.repeated(ctx, siteContext, tx, q, nsModel, data, duplicate)
 	}
+	// The write is rolled back before the duplicate's document is read, as that may read the site's database
 	if duplicate != nil {
+		_ = tx.Rollback()
 		return c.document(duplicate, siteContext), true, nil
 	}
 
@@ -553,11 +566,16 @@ func (c Collection[NS, DM]) History(ctx context.Context, siteContext *httputils.
 	return c.documents(models, siteContext), nil
 }
 
-// documents are the database models as this collection's documents
+// documents are the database models as this collection's documents, converted together when it is a
+// CollectionBatcher
 func (c Collection[NS, DM]) documents(models []*DM, siteContext *httputils.SiteContext) []nsutils.Document {
+	toNS := c.db.ToNS
+	if batcher, ok := any(c.db).(CollectionBatcher[NS, DM]); ok {
+		toNS = batcher.ToNSBatch(models, siteContext)
+	}
 	docs := make([]nsutils.Document, len(models))
 	for i, model := range models {
-		docs[i] = c.document(model, siteContext)
+		docs[i] = c.documentBy(model, siteContext, toNS)
 	}
 	return docs
 }

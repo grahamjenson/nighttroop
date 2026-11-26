@@ -1886,15 +1886,12 @@ func TempBasalFromView(source TempBasalsVw) TempBasal {
 		sitedbTempBasal.DurationMinutes = *source.DurationMinutes
 	}
 	if source.Rate != nil {
-		sitedbTempBasal.Rate = *source.Rate
+		xfloat64 := *source.Rate
+		sitedbTempBasal.Rate = &xfloat64
 	}
 	if source.Multiplier != nil {
-		xfloat64 := *source.Multiplier
-		sitedbTempBasal.Multiplier = &xfloat64
-	}
-	if source.FollowsBasal != nil {
-		xbool := *source.FollowsBasal
-		sitedbTempBasal.FollowsBasal = &xbool
+		xfloat642 := *source.Multiplier
+		sitedbTempBasal.Multiplier = &xfloat642
 	}
 	if source.Type != nil {
 		xstring := *source.Type
@@ -1905,8 +1902,8 @@ func TempBasalFromView(source TempBasalsVw) TempBasal {
 		sitedbTempBasal.InsulinType = &xstring2
 	}
 	if source.Automatic != nil {
-		xbool2 := *source.Automatic
-		sitedbTempBasal.Automatic = &xbool2
+		xbool := *source.Automatic
+		sitedbTempBasal.Automatic = &xbool
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
@@ -1962,14 +1959,13 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 	var sitedbCreateTempBasalParams CreateTempBasalParams
 	sitedbCreateTempBasalParams.ID = source.ID
 	sitedbCreateTempBasalParams.DurationMinutes = source.DurationMinutes
-	sitedbCreateTempBasalParams.Rate = source.Rate
-	if source.Multiplier != nil {
-		xfloat64 := *source.Multiplier
-		sitedbCreateTempBasalParams.Multiplier = &xfloat64
+	if source.Rate != nil {
+		xfloat64 := *source.Rate
+		sitedbCreateTempBasalParams.Rate = &xfloat64
 	}
-	if source.FollowsBasal != nil {
-		xbool := *source.FollowsBasal
-		sitedbCreateTempBasalParams.FollowsBasal = &xbool
+	if source.Multiplier != nil {
+		xfloat642 := *source.Multiplier
+		sitedbCreateTempBasalParams.Multiplier = &xfloat642
 	}
 	if source.Type != nil {
 		xstring := *source.Type
@@ -1980,8 +1976,8 @@ func TempBasalToCreate(source TempBasal) CreateTempBasalParams {
 		sitedbCreateTempBasalParams.InsulinType = &xstring2
 	}
 	if source.Automatic != nil {
-		xbool2 := *source.Automatic
-		sitedbCreateTempBasalParams.Automatic = &xbool2
+		xbool := *source.Automatic
+		sitedbCreateTempBasalParams.Automatic = &xbool
 	}
 	if source.Notes != nil {
 		xstring3 := *source.Notes
@@ -2015,11 +2011,13 @@ func TempBasalToUpdate(source TempBasal) UpdateTempBasalParams {
 	var sitedbUpdateTempBasalParams UpdateTempBasalParams
 	pInt64 := source.DurationMinutes
 	sitedbUpdateTempBasalParams.DurationMinutes = &pInt64
-	pFloat64 := source.Rate
-	sitedbUpdateTempBasalParams.Rate = &pFloat64
 	if source.Multiplier != nil {
 		xfloat64 := *source.Multiplier
 		sitedbUpdateTempBasalParams.Multiplier = &xfloat64
+	}
+	if source.Rate != nil {
+		xfloat642 := *source.Rate
+		sitedbUpdateTempBasalParams.Rate = &xfloat642
 	}
 	if source.Type != nil {
 		xstring := *source.Type
@@ -3000,10 +2998,6 @@ func sitedbTempBasalsVwToSitedbTempBasalsVw(source TempBasalsVw) TempBasalsVw {
 		xfloat642 := *source.Multiplier
 		sitedbTempBasalsVw.Multiplier = &xfloat642
 	}
-	if source.FollowsBasal != nil {
-		xbool := *source.FollowsBasal
-		sitedbTempBasalsVw.FollowsBasal = &xbool
-	}
 	if source.Type != nil {
 		xstring2 := *source.Type
 		sitedbTempBasalsVw.Type = &xstring2
@@ -3013,8 +3007,8 @@ func sitedbTempBasalsVwToSitedbTempBasalsVw(source TempBasalsVw) TempBasalsVw {
 		sitedbTempBasalsVw.InsulinType = &xstring3
 	}
 	if source.Automatic != nil {
-		xbool2 := *source.Automatic
-		sitedbTempBasalsVw.Automatic = &xbool2
+		xbool := *source.Automatic
+		sitedbTempBasalsVw.Automatic = &xbool
 	}
 	if source.Notes != nil {
 		xstring4 := *source.Notes

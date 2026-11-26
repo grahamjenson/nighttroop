@@ -118,6 +118,24 @@ func (s *EventGroupsCollection) GetRow(ctx context.Context, collectionTx *siteap
 	return &bundle, nil
 }
 
+// FillModels gives the groups' temp basals their scheduled basal, so they show their rate at their start
+func (s *EventGroupsCollection) FillModels(ctx context.Context, collectionTx *siteapiutils.CollectionTx, models []*sitemodels.SiteEventGroup, siteContext *httputils.SiteContext) error {
+	basals := []*sitemodels.SiteTempBasal{}
+	for _, group := range models {
+		if group.TempBasal != nil {
+			basals = append(basals, group.TempBasal)
+		}
+	}
+	if len(basals) == 0 {
+		return nil
+	}
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	return sitemodels.FillScheduledBasals(ctx, q, siteContext.GetSiteTimezone(), basals)
+}
+
 // GetHTMXResponse is the group's details and events, shown in a modal
 func (s *EventGroupsCollection) GetHTMXResponse(model *sitemodels.SiteEventGroup) templ.Component {
 	return site_data_templ.EventGroupModal(model)

@@ -45,9 +45,6 @@ const maxRows = 7 * 24 * 12
 // maxDevices caps how many devices' latest statuses are shown
 const maxDevices = 20
 
-// maxSwitchMinutes is how long before the summary a profile switch with a duration is looked for, as one still in force
-const maxSwitchMinutes = 7 * 24 * 60
-
 // maxTempTargetMinutes and maxTempBasalMinutes are the longest the site takes, so one still running is looked for
 var maxTempTargetMinutes, maxTempBasalMinutes = maxMinutes("temp_targets.DurationMinutes"), maxMinutes("temp_basals.DurationMinutes")
 
@@ -226,17 +223,12 @@ func addMinutes(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summ
 // profiles, profile switches, temp targets and temp basals in force through it. The temp targets and basals from since
 // are given. Of those that started before it only the newest of each is looked up, as it replaced the ones before it,
 // so a loop's week of temp basals is not read for one of them; without a site context only the basal is wanted, so an
-// earlier temp target is not.
+// earlier temp target is not. Each temp basal given gets its ScheduledBasal.
 func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, units *consts.Units, location *time.Location, siteContext *httputils.SiteContext, targets []*sitemodels.SiteTempTarget, basals []*sitemodels.SiteTempBasal) ([]sitemodels.SummaryMinute, *apiutils.HTTPError) {
 	excludeDeleted := false
-	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: since, Until: until, Limit: maxRows})
+	defaults, switches, err := q.SummaryProfiles(ctx, sitedb.SummaryProfilesParams{Since: since, Until: until, Limit: maxRows})
 	if err != nil {
-		slog.ErrorContext(ctx, "Error searching summary profiles", "error", err)
-		return nil, apiutils.ErrInternalServerError
-	}
-	switches, err := q.SummaryProfileSwitches(ctx, sitedb.SearchSummaryProfileSwitchesParams{Since: since, Until: until, Earliest: since - maxSwitchMinutes*60_000, Limit: maxRows})
-	if err != nil {
-		slog.ErrorContext(ctx, "Error searching summary profile switches", "error", err)
+		slog.ErrorContext(ctx, "Error searching summary profiles and profile switches", "error", err)
 		return nil, apiutils.ErrInternalServerError
 	}
 	targetsSince, basalsSince, before := since-maxTempTargetMinutes*60_000, since-maxTempBasalMinutes*60_000, since-1
@@ -253,9 +245,12 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 	if herr != nil {
 		return nil, herr
 	}
-	slices.Reverse(defaults)
-	return sitemodels.SummaryMinutes(since, until, units, location, defaults, switches,
-		append(earlier, targets...), append(earlierBasal, basals...)), nil
+	profiles := sitemodels.NewProfiles(location, defaults, switches)
+	// The temp basals from since are shown with their rate and percent at their start
+	for _, b := range basals {
+		b.ScheduledBasal = profiles.BasalAt(b.OccurredAt)
+	}
+	return profiles.Minutes(since, until, units, append(earlier, targets...), append(earlierBasal, basals...)), nil
 }
 
 // addDays is today so far, yesterday, last week and last month, as days from midnight in the site's timezone: today

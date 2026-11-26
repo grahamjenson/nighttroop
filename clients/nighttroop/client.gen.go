@@ -595,21 +595,21 @@ type TempBasal struct {
 	CreatedByDeviceName   *string `json:"created_by_device_name,omitempty"`
 	CreatedByIdentityName *string `json:"created_by_identity_name,omitempty"`
 	DurationMinutes       *int64  `json:"duration_minutes,omitempty"`
+	Id                    *string `json:"id,omitempty"`
 
-	// FollowsBasal True when a Nightscout client sent it as a percent with no absolute rate: each minute it runs is multiplier times the scheduled basal then
-	FollowsBasal *bool   `json:"follows_basal"`
-	Id           *string `json:"id,omitempty"`
-
-	// Multiplier Times the scheduled basal at its start, so 0.5 is half
+	// Multiplier Times the scheduled basal each minute it runs, as a Nightscout client sends a percent, so 0.5 is half. Null when it is a rate. An update sets it or rate, not both
 	Multiplier *float64 `json:"multiplier"`
 	Notes      *string  `json:"notes,omitempty"`
 
 	// OccurredAt Now, if not sent when creating
 	OccurredAt *int64 `json:"occurred_at,omitempty"`
 
-	// Rate U/hr while it runs; 0 is a suspended basal
+	// Rate U/hr while it runs, as an absolute rate; 0 is a suspended basal. Null when it is a multiplier. A create needs it; an update sets it or multiplier, not both
 	Rate   *float64 `json:"rate"`
 	Reason *string  `json:"reason,omitempty"`
+
+	// ScheduledBasal The profile's basal in U/hr at its start, from the profile or profile switch then; null when there is none
+	ScheduledBasal *float64 `json:"scheduled_basal"`
 
 	// Type The kind of temp basal a Nightscout client sent, e.g. NORMAL, or PUMP_SUSPEND for a suspended pump. The site does not set it.
 	Type                  *string `json:"type"`

@@ -38,7 +38,7 @@ type treatment struct {
 }
 
 // otherTreatments are the summary's treatments besides insulin and carbs, its temp targets and temp basals, in one
-// list, newest first
+// list, newest first. A temp basal shows its rate at its start.
 func otherTreatments(ctx context.Context, s *sitemodels.Summary) []treatment {
 	list := []treatment{}
 	for _, t := range s.TempTargets {
@@ -52,7 +52,7 @@ func otherTreatments(ctx context.Context, s *sitemodels.Summary) []treatment {
 		list = append(list, treatment{t.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_target"), "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
-		kind, detail := i18n.T(ctx, "site.summary.treatments.temp_basal"), i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(ctx, b.Rate, " U/hr"), "Minutes": b.DurationMinutes})
+		kind, detail := i18n.T(ctx, "site.summary.treatments.temp_basal"), i18n.T(ctx, "site.summary.treatments.temp_basal_detail", i18n.Data{"Rate": display.Value(ctx, b.StartRate(), " U/hr"), "Minutes": b.DurationMinutes})
 		// A suspended pump shows as one, which has not resumed while it has no duration
 		if b.Suspend() {
 			kind, detail = i18n.T(ctx, "site.summary.treatments.suspended"), i18n.T(ctx, "site.summary.treatments.suspended_detail", i18n.Data{"Minutes": b.DurationMinutes})

@@ -1695,11 +1695,13 @@ func TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal {
 		var sitemodelsSiteTempBasal SiteTempBasal
 		sitemodelsSiteTempBasal.ID = (*source).ID
 		sitemodelsSiteTempBasal.DurationMinutes = (*source).DurationMinutes
-		pFloat64 := (*source).Rate
-		sitemodelsSiteTempBasal.Rate = &pFloat64
+		if (*source).Rate != nil {
+			xfloat64 := *(*source).Rate
+			sitemodelsSiteTempBasal.Rate = &xfloat64
+		}
 		if (*source).Multiplier != nil {
-			xfloat64 := *(*source).Multiplier
-			sitemodelsSiteTempBasal.Multiplier = &xfloat64
+			xfloat642 := *(*source).Multiplier
+			sitemodelsSiteTempBasal.Multiplier = &xfloat642
 		}
 		sitemodelsSiteTempBasal.Notes = StripTags((*source).Notes)
 		sitemodelsSiteTempBasal.Reason = StripTags((*source).Reason)
@@ -1727,10 +1729,6 @@ func TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal {
 			xstring4 := *(*source).Type
 			sitemodelsSiteTempBasal.Type = &xstring4
 		}
-		if (*source).FollowsBasal != nil {
-			xbool := *(*source).FollowsBasal
-			sitemodelsSiteTempBasal.FollowsBasal = &xbool
-		}
 		pSitemodelsSiteTempBasal = &sitemodelsSiteTempBasal
 	}
 	return pSitemodelsSiteTempBasal
@@ -1741,11 +1739,12 @@ func TempBasalToCreate(source *SiteTempBasal, context *httputils.SiteContext) si
 		sitedbCreateTempBasalParams.ID = NewSiteDataID()
 		sitedbCreateTempBasalParams.DurationMinutes = (*source).DurationMinutes
 		if (*source).Rate != nil {
-			sitedbCreateTempBasalParams.Rate = *(*source).Rate
+			xfloat64 := *(*source).Rate
+			sitedbCreateTempBasalParams.Rate = &xfloat64
 		}
 		if (*source).Multiplier != nil {
-			xfloat64 := *(*source).Multiplier
-			sitedbCreateTempBasalParams.Multiplier = &xfloat64
+			xfloat642 := *(*source).Multiplier
+			sitedbCreateTempBasalParams.Multiplier = &xfloat642
 		}
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes
@@ -1777,13 +1776,13 @@ func TempBasalToUpdate(source *SiteTempBasal, context *httputils.SiteContext) si
 	var sitedbUpdateTempBasalParams sitedb.UpdateTempBasalParams
 	if source != nil {
 		sitedbUpdateTempBasalParams.DurationMinutes = Int64OrNil((*source).DurationMinutes)
-		if (*source).Rate != nil {
-			xfloat64 := *(*source).Rate
-			sitedbUpdateTempBasalParams.Rate = &xfloat64
-		}
 		if (*source).Multiplier != nil {
-			xfloat642 := *(*source).Multiplier
-			sitedbUpdateTempBasalParams.Multiplier = &xfloat642
+			xfloat64 := *(*source).Multiplier
+			sitedbUpdateTempBasalParams.Multiplier = &xfloat64
+		}
+		if (*source).Rate != nil {
+			xfloat642 := *(*source).Rate
+			sitedbUpdateTempBasalParams.Rate = &xfloat642
 		}
 		if (*source).Notes != nil {
 			xstring := *(*source).Notes
