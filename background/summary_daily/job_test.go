@@ -224,12 +224,14 @@ func TestRebuildStaleTriesASiteAgainAfterAnError(t *testing.T) {
 // Only today's data, which is built as it is read, and data not of a day's summary, open no site
 func TestRebuildStaleLeavesToday(t *testing.T) {
 	r := newRig(t)
-	now := time.Now().UTC()
-	r.reading("now", now, now)
+	// A minute before midnight, so the run is on the day after the data was marked: today is the day of the run
+	now := time.Now().UTC().Truncate(24 * time.Hour).Add(24*time.Hour - time.Minute)
+	run := now.Add(staleQuiet)
+	r.reading("today", run, now)
 	activity, err := r.site.CreateActivity(t.Context(), sitedb.CreateActivityParams{ID: "walk", ActivityType: "walk", OccurredAt: now.AddDate(0, 0, -3).UnixMilli(), CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
 	r.builder.markStale(events.ModelChange(r.siteID, events.Created, activity), now)
-	require.NoError(t, r.builder.RebuildStale(t.Context(), now.Add(staleQuiet)))
+	require.NoError(t, r.builder.RebuildStale(t.Context(), run))
 	require.Zero(t, r.opened)
 }
 
