@@ -100,6 +100,16 @@ type Site struct {
 	EmailVerifiedAt    *int64
 }
 
+type SiteBanner struct {
+	ID                    int64
+	Message               string
+	Level                 string
+	SiteIdsJson           string
+	ExpiresAt             int64
+	CreatedByIdentityName string
+	CreatedAt             int64
+}
+
 type SiteConnector struct {
 	SiteID                     string
 	Type                       consts.ConnectorType

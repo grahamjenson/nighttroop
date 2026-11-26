@@ -12,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/background/onevent"
+	"nighttroop.t1d.nz/background/site_banners"
 	"nighttroop.t1d.nz/background/summarise_jobs"
 	"nighttroop.t1d.nz/background/summary_daily"
 	"nighttroop.t1d.nz/background/trim_logs"
@@ -56,6 +57,7 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Check each identity's alarms on new readings, and periodically
 	check_alarms.SetupCron(cron, config, controlDB)
+	site_banners.SetupCron(cron, controlDB)
 
 	// Watch the server's CPU, memory and disk, warning the control site when one gets high
 	check_resources.SetupCron(cron, config, controlDB)

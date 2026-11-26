@@ -74,6 +74,15 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 		"UpdatedAt":             {Column: "updated_at"},
 		"UpdatedByIdentityName": {Column: "updated_by_identity_name", MaxLength: 32},
 	},
+	"site_banners": {
+		"ID":                    {Column: "id", Required: true},
+		"Message":               {Column: "message", Required: true, MaxLength: 500},
+		"Level":                 {Column: "level", Required: true, MaxLength: 16},
+		"SiteIdsJson":           {Column: "site_ids_json", Required: true, MaxLength: 4096},
+		"ExpiresAt":             {Column: "expires_at", Required: true, Min: new(0.0), Max: new(253402300799999.0)},
+		"CreatedByIdentityName": {Column: "created_by_identity_name", Required: true, MaxLength: 32},
+		"CreatedAt":             {Column: "created_at", Required: true},
+	},
 	"site_connectors": {
 		"SiteID":                     {Column: "site_id", Required: true},
 		"Type":                       {Column: "type", Required: true},
