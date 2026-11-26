@@ -1,0 +1,31 @@
+// On a server that sends email, a site's admin gives the site an email on My Account
+INCLUDE steps/new_site_admin.steps
+
+// Getting Started tells an admin a site can have an email, and opens My Account
+GOTO {{ .site_url }}/getting-started
+ASSERT_VISIBLE #site--getting-started--email >> text=Add an email for the site
+CLICK #site--getting-started--email-link
+ASSERT_PATH /settings/account
+ASSERT_VISIBLE #site--account--email >> text=Site email
+ASSERT_NOT_VISIBLE #site--account--email-current
+SCREENSHOT email_none
+
+// Saving an email sends it a link, and it is not verified until the link is opened
+INPUT #site--account--email-input sam@example.com
+CLICK #site--account--email-save
+ASSERT_TEXT_VISIBLE A link was sent to the email.
+ASSERT_VISIBLE #site--account--email-current >> text=sam@example.com
+ASSERT_VISIBLE #site--account--email-not-verified >> text=Not verified
+SCREENSHOT email_not_verified
+
+// A site is sent one link an hour
+INPUT #site--account--email-input pat@example.com
+CLICK #site--account--email-save
+ASSERT_TEXT_VISIBLE Too Many Requests
+ASSERT_VISIBLE #site--account--email-current >> text=sam@example.com
+
+// The admin removes the email
+CLICK_ASKS #site--account--email-remove
+CLICK #confirm--ok
+ASSERT_TEXT_VISIBLE The email was removed.
+ASSERT_NOT_VISIBLE #site--account--email-current

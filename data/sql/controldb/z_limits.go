@@ -161,5 +161,7 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 		"ArchivedAt":         {Column: "archived_at"},
 		"DeletedAt":          {Column: "deleted_at"},
 		"SettingsJson":       {Column: "settings_json", Required: true, MaxLength: 4096},
+		"EmailEnc":           {Column: "email_enc", MaxLength: 512},
+		"EmailVerifiedAt":    {Column: "email_verified_at"},
 	},
 }

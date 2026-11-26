@@ -932,6 +932,16 @@ func (m *UpdateSiteDateFlagsParams) SetID(v string) {
 }
 
 // GetID returns the ID value.
+func (m UpdateSiteEmailParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateSiteEmailParams.
+func (m *UpdateSiteEmailParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m UpdateSiteSummariesCheckedAtParams) GetID() string {
 	return m.ID
 }
@@ -948,6 +958,16 @@ func (m UpdateSiteTableSizesParams) GetID() string {
 
 // SetID sets the ID value and returns the updated UpdateSiteTableSizesParams.
 func (m *UpdateSiteTableSizesParams) SetID(v string) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m VerifySiteEmailParams) GetID() string {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated VerifySiteEmailParams.
+func (m *VerifySiteEmailParams) SetID(v string) {
 	m.ID = v
 }
 
