@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
-	"nighttroop.t1d.nz/server/components/control_templ/control_site_emails_templ"
+	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
 	"nighttroop.t1d.nz/server/controlapi/controlcollections"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -33,21 +33,6 @@ var siteEmailTexts = map[string][2]string{
 	"archive": {"control.site_emails.archive.subject", "control.site_emails.archive.text"},
 	"storage": {"control.site_emails.storage.subject", "control.site_emails.storage.text"},
 	"contact": {"control.site_emails.contact.subject", "control.site_emails.contact.text"},
-}
-
-// SiteEmailsHandler is the live sites with a verified email, the last verified first
-func SiteEmailsHandler(w http.ResponseWriter, r *http.Request) {
-	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
-	rows, err := controlContext.ControlDB.Queries.GetSitesWithVerifiedEmail(r.Context())
-	sites, herr := apiutils.Searched(rows, err, "sites", func(row *controldb.GetSitesWithVerifiedEmailRow) *controlmodels.VerifiedSite {
-		return &controlmodels.VerifiedSite{SiteID: row.ID, EmailVerifiedAt: *row.EmailVerifiedAt}
-	})
-	if herr != nil {
-		herr.Write(acceptType, w)
-		return
-	}
-	working := controlContext.ControlDB.ServerConfig.EmailWorking()
-	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, sites, control_site_emails_templ.SiteEmails(sites, working))
 }
 
 // SendSiteEmailHandler sends one of the pre-built emails to a site's verified email. Only admins can, only where the
@@ -109,5 +94,5 @@ func SendSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	controlContext.ControlDB.Logs.SiteEmailedEvent(r.Context(), siteID, controlContext.IdentityModel.Name, form.Email)
-	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, &controlmodels.SiteEmailSent{SiteID: siteID, Email: form.Email}, control_site_emails_templ.Sent())
+	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, &controlmodels.SiteEmailSent{SiteID: siteID, Email: form.Email}, control_sites_templ.SiteEmailSent())
 }

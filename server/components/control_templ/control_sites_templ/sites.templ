@@ -326,6 +326,53 @@ func lastError(ctx context.Context, errors []*controlmodels.Error) string {
 	return display.Ago(ctx, &errors[0].CreatedAt, time.Now())
 }
 
+// emailLabels are the ids of each pre-built email's name
+var emailLabels = map[string]string{
+	"archive": "control.site_emails.archive.label", "storage": "control.site_emails.storage.label", "contact": "control.site_emails.contact.label",
+}
+
+// emailUnavailable is why the site cannot be sent an email, or "" when it can: the server sends email, and the site is
+// live with a verified email
+func emailUnavailable(ctx context.Context, site *controlmodels.Site) string {
+	controlContext := httputils.GetControlContext(ctx)
+	switch {
+	case controlContext == nil || controlContext.ControlDB == nil || !controlContext.ControlDB.ServerConfig.EmailWorking():
+		return i18n.T(ctx, "control.site_emails.off")
+	case site.State != "live":
+		return i18n.T(ctx, "control.site.open_unavailable")
+	case site.EmailVerifiedAt == nil:
+		return i18n.T(ctx, "control.site_emails.no_email")
+	}
+	return ""
+}
+
+// siteEmailForm picks one of the pre-built emails and, after a question, sends it to the site. There is no text to write.
+templ siteEmailForm(siteID string) {
+	<form
+		class="flex flex-wrap items-center gap-2"
+		hx-post={ "/sites/" + siteID + "/email" }
+		hx-swap="none"
+		hx-confirm={ i18n.T(ctx, "control.site_emails.send_confirm") }
+		hx-status:4xx="target:#toaster swap:beforeend"
+		hx-status:5xx="target:#toaster swap:beforeend"
+	>
+		<select id="control--site--email" name="email" aria-label={ i18n.T(ctx, "control.site_emails.email") } class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm">
+			for _, email := range controlmodels.SiteEmails {
+				<option value={ email }>{ i18n.T(ctx, emailLabels[email]) }</option>
+			}
+		</select>
+		@button.Button(button.Props{ID: "control--site--email-send", Type: button.TypeSubmit, Variant: button.VariantOutline}) {
+			@icon.Send()
+			{ i18n.T(ctx, "control.site_emails.send") }
+		}
+	</form>
+}
+
+// SiteEmailSent says the email was sent
+templ SiteEmailSent() {
+	@successtoast.OOB(i18n.T(ctx, "control.site_emails.sent"))
+}
+
 // siteURL is the site's own address, to open it
 func siteURL(ctx context.Context, siteID string) string {
 	controlContext := httputils.GetControlContext(ctx)
@@ -457,6 +504,9 @@ templ siteActions(site *controlmodels.Site) {
 					}) {
 						{ i18n.T(ctx, "control.site.download_db") }
 					}
+				}
+				@actionCard("control--site--action-email", i18n.T(ctx, "control.site_emails.action"), i18n.T(ctx, "control.site_emails.action_intro"), emailUnavailable(ctx, site), icon.Send) {
+					@siteEmailForm(site.ID)
 				}
 				@actionCard("control--site--action-enable", i18n.T(ctx, "control.site.enable"), i18n.T(ctx, "control.site.enable_intro"), unless(site.State == "disabled", i18n.T(ctx, "control.site.enable_disabled_only")), icon.RotateCcw) {
 					@siteActionForm("/sites/"+site.ID, "live", i18n.T(ctx, "control.site.enable_confirm"), "control--site--enable", i18n.T(ctx, "control.site.enable"))

@@ -20,6 +20,8 @@ type Site struct {
 	DisabledAt        *int64 `json:"disabled_at"`
 	ArchivedAt        *int64 `json:"archived_at"`
 	DeletedAt         *int64 `json:"deleted_at"`
+	// EmailVerifiedAt is when the site's admin verified its email, nil with none. The address is not in the model.
+	EmailVerifiedAt *int64 `json:"email_verified_at"`
 
 	// BackedUpAt is when the site's backup copy was last made, BackupSizeKb that copy's size on disk, and
 	// BackupUploadedAt when it was last uploaded to S3

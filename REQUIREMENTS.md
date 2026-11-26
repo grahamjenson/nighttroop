@@ -478,11 +478,13 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 ### Site emails
 
-- Site Emails (user menu) lists the live sites with a verified email, the last verified first: the site ID, with a
-  link to the site, and when it was verified. At most 1000 sites.
-- The page and the API never show the address of a site.
-- If the server has no `RESEND_API_KEY` or no `RESEND_FROM`, the page says the server sends no email, and has no Send.
-- An admin picks one email from a list and sends it to a site, after a confirmation. There is no text to write.
+- A site's page (Sites, then the site) has an action, **Email this site**, for an admin.
+- The action never shows the address of the site. The API gives `email_verified_at` and no address.
+- The action says why it is not available:
+  - the server has no `RESEND_API_KEY` or no `RESEND_FROM`;
+  - the site is not live;
+  - the site has no verified email.
+- An admin picks one email from a list and sends it, after a confirmation. There is no text to write.
 
   | Email | Subject |
   | --- | --- |
@@ -496,7 +498,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - 400: the server sends no email, the email is not one of the list, or Resend did not accept the email.
   - 404: the site is not live, has no email, or its email is not verified.
   - 429: the site was sent an email in the last 24 hours. An email that was not sent does not count.
-- A read-only admin sees the list, with no Send (403 from the API).
+- A read-only admin does not see the action (403 from the API).
 
 ### Rate limits
 

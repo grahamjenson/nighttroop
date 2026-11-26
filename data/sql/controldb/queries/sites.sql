@@ -230,12 +230,6 @@ UPDATE sites SET table_sizes_json = sqlc.arg('TableSizesJson') WHERE id = sqlc.a
 -- name: UpdateSiteSummariesCheckedAt :exec
 UPDATE sites SET summaries_checked_at = sqlc.arg('SummariesCheckedAt') WHERE id = sqlc.arg('ID');
 
--- name: GetSitesWithVerifiedEmail :many
--- The live sites whose admin verified an email, the ones a control admin can send an email to
-SELECT id, email_verified_at FROM sites
-WHERE state = 'live' AND email_verified_at IS NOT NULL
-ORDER BY email_verified_at DESC, id LIMIT 1000;
-
 -- name: UpdateSiteEmail :exec
 -- A new email is not verified, and none takes the email away
 UPDATE sites SET email_enc = sqlc.narg('EmailEnc'), email_verified_at = NULL WHERE id = sqlc.arg('ID');
