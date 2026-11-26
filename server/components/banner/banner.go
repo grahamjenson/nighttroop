@@ -29,6 +29,18 @@ const (
 	Error   Level = "error"
 )
 
+// levelRanks are how much each level matters, as a number, so a rule can be for every level under one
+var levelRanks = map[Level]int{Info: 2, Warning: 5, Error: 8}
+
+// hideFrom is the rank from which a banner cannot be hidden: a warning or an error stays until it is no longer true
+const hideFrom = 5
+
+// CanHide is whether a person may hide a banner of this level, which only one that is good to know is
+func (l Level) CanHide() bool {
+	rank, known := levelRanks[l]
+	return known && rank < hideFrom
+}
+
 // Banner is one line of the strip: a title in bold, its text, then any links and what follows them
 type Banner struct {
 	// ID is the line's id on the page

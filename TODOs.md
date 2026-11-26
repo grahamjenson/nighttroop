@@ -31,7 +31,7 @@
     1. P4: Add the icons of Dexcom and FreeStyle Libre to `server/assets/static/logos`, with their makers' leave, as
        they are trade marks of Dexcom and Abbott: their tiles under Add a connector show their first letter
     1. P2: Recovering a lost control admin login, as setup only runs on a server with no control admin
-    1. P3: A person cannot hide a site banner they have read: it shows on every page until it expires
+    1. P4: A hidden site banner is hidden in one browser only: the same person sees it again in another browser
     1. P2: Recover a site through its verified email: a site's admin can verify an email on My Account, but nothing
        uses it yet to give the admin a new sign in
     1. P4: Sent Emails lists the last 50 emails only, with no next page

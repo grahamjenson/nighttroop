@@ -74,7 +74,7 @@ func ControlBase() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = banner.Strip("control--status-banner", banner.ForControl(ctx, controlContext.ServerStatus)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = banner.Strip("control--status-banner", banner.ForControl(ctx, controlContext.ServerStatus), false).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

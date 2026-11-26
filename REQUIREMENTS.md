@@ -468,6 +468,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     and not over it.
   - Each banner an admin added for the site or for every site, oldest first, that is not expired: blue for
     **Information**, amber for **Warning**. The message shows as text, not as HTML.
+- A banner that is information has a **Hide** button. A warning or an error has none.
+  - Hide removes the banner in that browser, on every page of the site, for 7 days. Then it shows again if it still applies.
+  - Each level has a rank (information 2, warning 5, error 8). A banner can be hidden only if its rank is under 5.
+  - The banners of the control pages have no Hide.
 - A site does not show a banner added for other sites. A site with no banner shows no strip.
 - One package (`server/components/banner`) decides the banners of the control pages and of the site pages, and
   draws them.
