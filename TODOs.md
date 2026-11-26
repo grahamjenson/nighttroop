@@ -105,9 +105,6 @@
 1. Tests:
     1. P4: A browser test cannot check a text with a time of day in it that is not now, as the end of an alarm's
        snooze 30 minutes on: `{{ now }}` takes no minutes to add, so a test checks only the words before the time
-    1. P3: `TestNS` in `tests/api` sets the limits its files need with `t.Setenv`, but the first test to run loads the
-       package's one config, so `go test -shuffle=2 ./tests/api`, or a test in a file named before
-       `nightscout_test.go`, fails 54 files with 429: set them in a `TestMain`, as `tests/bdd` does
     1. P4: The tests back sites up into a `.dbs` folder beside each test package, kept from run to run (`tests/api`:
        about 5 MB and 170 files a run): give the test config a data folder of the test's own
     1. Steps of the test scripts (`tests/dsl/flow`) that pass when they cannot check, none of which hides a failure in
