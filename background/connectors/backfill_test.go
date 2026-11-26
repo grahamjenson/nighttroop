@@ -441,3 +441,35 @@ func TestNightscoutBackfillCopiesOnlyTheDeviceStatusesTruncationKeeps(t *testing
 	require.NoError(t, err)
 	require.Len(t, copied(), len(want))
 }
+
+// A source's next backfill waits 5 times as long as its last one took, and 10 seconds at least, from when it finished
+func TestBackfillWait(t *testing.T) {
+	finished := time.UnixMilli(1_700_000_000_000)
+	ms := func(d time.Duration) *int64 { return new(d.Milliseconds()) }
+	tests := []struct {
+		name  string
+		typ   consts.ConnectorType
+		took  *int64
+		after time.Duration // since the last one finished
+		wait  time.Duration
+	}{
+		{"all a backfill's time, as from a slow host", consts.ConnectorTypeNightscout, ms(50 * time.Second), 0, 250 * time.Second},
+		{"part of the wait is over", consts.ConnectorTypeNightscout, ms(50 * time.Second), 100 * time.Second, 150 * time.Second},
+		{"the wait is over", consts.ConnectorTypeNightscout, ms(50 * time.Second), 250 * time.Second, 0},
+		{"long after", consts.ConnectorTypeNightscout, ms(50 * time.Second), 24 * time.Hour, 0},
+		{"a usual backfill of a few days", consts.ConnectorTypeNightscout, ms(3 * time.Second), 0, 15 * time.Second},
+		{"a host that refuses at once", consts.ConnectorTypeNightscout, ms(5 * time.Millisecond), 0, 10 * time.Second},
+		{"one that was not queued, so took no time", consts.ConnectorTypeNightscout, nil, 4 * time.Second, 6 * time.Second},
+		{"Dexcom", consts.ConnectorTypeDexcom, ms(4 * time.Second), 0, 20 * time.Second},
+		{"Libre", consts.ConnectorTypeLibre, ms(4 * time.Second), 5 * time.Second, 15 * time.Second},
+		{"virtual asks no host", consts.ConnectorTypeVirtual, ms(50 * time.Second), 0, 0},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			source := &controldb.SiteConnector{Type: test.typ, LastBackfillFinishedAt: new(finished.UnixMilli()), LastBackfillDuration: test.took}
+			require.Equal(t, test.wait, BackfillWait(source, finished.Add(test.after)))
+		})
+	}
+	// Before its first backfill a source has no wait
+	require.Zero(t, BackfillWait(&controldb.SiteConnector{Type: consts.ConnectorTypeNightscout}, finished))
+}

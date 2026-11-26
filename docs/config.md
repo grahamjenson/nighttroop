@@ -208,7 +208,7 @@ settings keep that value, which replaces the env value until set back.
 | `SITE_DOWNLOAD_PER_MINUTE_LIMIT` / `_BURST` | `1` / `3` | A site's data downloads, truncates and summary regenerations. Each reads its whole DB, or a year of it. |
 | `SITE_REPORT_PRINT_PER_MINUTE_LIMIT` / `_BURST` | `5` / `10` | A site's printable reports. Each builds four months of reports. |
 | `SITE_PUSH_PER_MINUTE_LIMIT` / `_BURST` | `10` / `30` | A site's pushes to its devices' apps. Each is a request to Apple or Firebase. |
-| `CONNECTOR_SYNC_PER_MINUTE_LIMIT` / `_BURST` | `6` / `1` | Syncs from a Nightscout host, however many sites sync from it, or of a Dexcom or LibreLinkUp connector. A sync over the limit waits for a later run. A backfill is not limited. |
+| `CONNECTOR_SYNC_PER_MINUTE_LIMIT` / `_BURST` | `6` / `1` | Syncs from a Nightscout host, however many sites sync from it, or of a Dexcom or LibreLinkUp connector. A sync over the limit waits for a later run. A backfill does not use this limit. |
 
 ## Socket.IO live updates
 

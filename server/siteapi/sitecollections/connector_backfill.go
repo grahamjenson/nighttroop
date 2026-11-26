@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/background/connectors"
@@ -17,7 +18,7 @@ import (
 )
 
 // BackfillHandler starts a backfill of the site's connector in the URL, answering with what it will fetch. A source
-// with one queued or running is not started again.
+// with one queued or running is not started again, nor is one still waiting after its last (connectors.BackfillWait).
 func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitesettings.ConnectorSettingsCollection{}).GetName(), can.ActionUpdate)
 	if siteContext == nil {
@@ -31,6 +32,11 @@ func BackfillHandler(w http.ResponseWriter, r *http.Request) {
 	source, err := siteContext.ControlDB.Queries.GetConnector(r.Context(), controldb.GetConnectorParams{Type: connectorType, SiteID: siteContext.SiteID})
 	if err != nil || source == nil || !source.Enabled {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.backfill_off")))
+		return
+	}
+	// One just after another is refused, so a site cannot hold a connector worker, or its connector's host, with them
+	if wait := connectors.BackfillWait(source, time.Now()); wait > 0 {
+		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(int(wait.Seconds())+1))
 		return
 	}
 
