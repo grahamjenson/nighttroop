@@ -204,6 +204,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSiteDBSizeLimitsStmt, err = db.PrepareContext(ctx, getSiteDBSizeLimits); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteDBSizeLimits: %w", err)
 	}
+	if q.getSiteEmailsStmt, err = db.PrepareContext(ctx, getSiteEmails); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSiteEmails: %w", err)
+	}
 	if q.getSiteIDsWithAlarmsStmt, err = db.PrepareContext(ctx, getSiteIDsWithAlarms); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSiteIDsWithAlarms: %w", err)
 	}
@@ -680,6 +683,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSiteDBSizeLimitsStmt: %w", cerr)
 		}
 	}
+	if q.getSiteEmailsStmt != nil {
+		if cerr := q.getSiteEmailsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSiteEmailsStmt: %w", cerr)
+		}
+	}
 	if q.getSiteIDsWithAlarmsStmt != nil {
 		if cerr := q.getSiteIDsWithAlarmsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSiteIDsWithAlarmsStmt: %w", cerr)
@@ -1064,6 +1072,7 @@ type Queries struct {
 	getSiteStmt                             *sql.Stmt
 	getSiteConnectorFailuresStmt            *sql.Stmt
 	getSiteDBSizeLimitsStmt                 *sql.Stmt
+	getSiteEmailsStmt                       *sql.Stmt
 	getSiteIDsWithAlarmsStmt                *sql.Stmt
 	getSiteIdentityStmt                     *sql.Stmt
 	getSiteIdentityByIDStmt                 *sql.Stmt
@@ -1187,6 +1196,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSiteStmt:                             q.getSiteStmt,
 		getSiteConnectorFailuresStmt:            q.getSiteConnectorFailuresStmt,
 		getSiteDBSizeLimitsStmt:                 q.getSiteDBSizeLimitsStmt,
+		getSiteEmailsStmt:                       q.getSiteEmailsStmt,
 		getSiteIDsWithAlarmsStmt:                q.getSiteIDsWithAlarmsStmt,
 		getSiteIdentityStmt:                     q.getSiteIdentityStmt,
 		getSiteIdentityByIDStmt:                 q.getSiteIdentityByIDStmt,

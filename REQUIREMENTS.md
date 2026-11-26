@@ -500,6 +500,22 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - 429: the site was sent an email in the last 24 hours. An email that was not sent does not count.
 - A read-only admin does not see the action (403 from the API).
 
+### Sent emails
+
+- Sent Emails (user menu) lists the last 50 emails the server sent, newest first, read from the Resend API: the
+  verification links and the emails to sites.
+- Each email shows when it was sent, its subject, its status from Resend (example: `delivered`, `bounced`), its site
+  and its address.
+  - The site is a link to the site's page. It shows when a live site has that address as its email. If not, it shows `-`.
+  - The address shows only the first letter of the name, the first letter of the domain, and the end of the domain
+    (example: `s•••@e•••.com`). The page and the list API do not have the full address.
+- An admin clicks **Show** to see the full address of one email. The server reads it from Resend
+  (`GET /sent-emails/{id}/address`) and logs who asked, without the address.
+- A read-only admin sees the list, with no Show (403 from the API).
+- If the server has no `RESEND_API_KEY` or no `RESEND_FROM`, the page says the server sends no email, and the list
+  is empty.
+- If Resend does not answer, the list is refused (400). An email Resend does not have is 404.
+
 ### Rate limits
 
 - Shows the limits in groups. Each group has a card with a title and one line that says what it protects:

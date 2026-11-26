@@ -430,6 +430,39 @@ func (q *Queries) GetSiteDBSizeLimits(ctx context.Context) ([]*GetSiteDBSizeLimi
 	return items, nil
 }
 
+const getSiteEmails = `-- name: GetSiteEmails :many
+SELECT id, email_enc FROM sites WHERE state = 'live' AND email_enc IS NOT NULL ORDER BY id LIMIT 1000
+`
+
+type GetSiteEmailsRow struct {
+	ID       string
+	EmailEnc *string
+}
+
+// Each live site's email, encrypted, to find the site an email was sent to
+func (q *Queries) GetSiteEmails(ctx context.Context) ([]*GetSiteEmailsRow, error) {
+	rows, err := q.query(ctx, q.getSiteEmailsStmt, getSiteEmails)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetSiteEmailsRow
+	for rows.Next() {
+		var i GetSiteEmailsRow
+		if err := rows.Scan(&i.ID, &i.EmailEnc); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSiteIDsWithAlarms = `-- name: GetSiteIDsWithAlarms :many
 SELECT id FROM sites WHERE state = 'live' AND (
     json_extract(settings_json, '$.alarms.urgent_low.enabled') OR json_extract(settings_json, '$.alarms.low.enabled') OR json_extract(settings_json, '$.alarms.urgent_high.enabled') OR json_extract(settings_json, '$.alarms.high.enabled') OR json_extract(settings_json, '$.alarms.no_data.enabled') OR json_extract(settings_json, '$.alarms.device_battery_low.enabled')

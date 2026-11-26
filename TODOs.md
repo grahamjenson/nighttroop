@@ -34,7 +34,8 @@
     1. P4: A hidden site banner is hidden in one browser only: the same person sees it again in another browser
     1. P2: Recover a site through its verified email: a site's admin can verify an email on My Account, but nothing
        uses it yet to give the admin a new sign in
-    1. P3: Control has no list of the sites with a verified email, or of the emails it sent
+    1. P4: Sent Emails lists the last 50 emails only, with no next page
+    1. P4: Sent Emails finds the site of an email among the first 1000 live sites with an email
     1. P4: A restart of the server forgets when control last sent a site an email, so the site can be sent one again
 
 1. Security

@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"regexp"
 	"time"
 )
 
@@ -61,4 +63,55 @@ func (m *Mailer) Send(ctx context.Context, to, subject, text string) error {
 		return fmt.Errorf("Resend answered %s", res.Status)
 	}
 	return nil
+}
+
+// Sent is an email Resend was given, as Resend's API has it: who it was to, when it was made, and the last that
+// happened to it, such as delivered or bounced
+type Sent struct {
+	ID        string   `json:"id"`
+	To        []string `json:"to"`
+	Subject   string   `json:"subject"`
+	CreatedAt string   `json:"created_at"`
+	LastEvent string   `json:"last_event"`
+}
+
+// sentID is what an email's ID in Resend looks like, so one from a request is safe in a URL
+var sentID = regexp.MustCompile(`^[0-9A-Za-z-]{1,64}$`)
+
+// List is the emails Resend was last given, the newest first, at most limit of them
+func (m *Mailer) List(ctx context.Context, limit int) ([]Sent, error) {
+	var list struct {
+		Data []Sent `json:"data"`
+	}
+	return list.Data, m.get(ctx, fmt.Sprintf("%s?limit=%d", m.url, limit), &list)
+}
+
+// Get is one email Resend was given, by its ID
+func (m *Mailer) Get(ctx context.Context, id string) (*Sent, error) {
+	if !sentID.MatchString(id) {
+		return nil, fmt.Errorf("%q is not the ID of an email", id)
+	}
+	var sent Sent
+	return &sent, m.get(ctx, m.url+"/"+id, &sent)
+}
+
+// get reads what Resend answers at url into into
+func (m *Mailer) get(ctx context.Context, url string, into any) error {
+	if m.apiKey == "" || m.from == "" {
+		return ErrNotSetUp
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+m.apiKey)
+	res, err := m.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("Resend answered %s", res.Status)
+	}
+	return json.NewDecoder(io.LimitReader(res.Body, 1<<20)).Decode(into)
 }

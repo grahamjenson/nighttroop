@@ -113,18 +113,20 @@ var ownServers = []ownServer{
 	{"siteemail/control.bdd", "192.0.2.22", func(c *config.ServerConfig) {
 		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
 		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
-	}, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
-		seedDevAdmin(t, controlDB)
-		_, err := controlDB.CreateSiteWithID(t.Context(), "emailsit")
-		require.NoError(t, err)
-		emailEnc, err := controlDB.ServerConfig.Security.EncryptFor(security.PurposeSiteEmail, "emailsit", "sam@example.com")
-		require.NoError(t, err)
-		require.NoError(t, controlDB.Queries.UpdateSiteEmail(t.Context(), controldb.UpdateSiteEmailParams{ID: "emailsit", EmailEnc: &emailEnc}))
-		verified, err := controlDB.Queries.VerifySiteEmail(t.Context(), controldb.VerifySiteEmailParams{ID: "emailsit", EmailEnc: &emailEnc})
-		require.NoError(t, err)
-		require.EqualValues(t, 1, verified)
-		return nil
-	}},
+	}, seedVerifiedSite},
+	// A server whose Resend has two sent emails: one to emailsit's address, and one to an address no site has
+	{"sentemail/list.bdd", "192.0.2.24", func(c *config.ServerConfig) {
+		resend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/emails":
+				_, _ = w.Write([]byte(`{"data": [{"id": "e2", "to": ["sam@example.com"], "subject": "Your Nighttroop site will be archived", "created_at": "2026-11-25 22:13:42.674981+00", "last_event": "delivered"},
+					{"id": "e1", "to": ["pat@other.example.org"], "subject": "Verify the email of your Nighttroop site", "created_at": "2026-11-24T10:00:00Z", "last_event": "bounced"}]}`))
+			case "/emails/e1":
+				_, _ = w.Write([]byte(`{"id": "e1", "to": ["pat@other.example.org"]}`))
+			}
+		}))
+		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL+"/emails"
+	}, seedVerifiedSite},
 	// A server with one site, nearlimt, that holds 19000 KB of the 20480 KB a site may: near its storage limit
 	{"storage/banner.bdd", "192.0.2.23", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
 		seedDevAdmin(t, controlDB)
@@ -141,6 +143,20 @@ var ownServers = []ownServer{
 
 func seedDevAdmin(t *testing.T, controlDB *db.ControlDB) map[string]any {
 	require.NoError(t, controlDB.SeedDevAdmin(t.Context()))
+	return nil
+}
+
+// seedVerifiedSite makes the control admin and one site, emailsit, whose email, sam@example.com, is verified
+func seedVerifiedSite(t *testing.T, controlDB *db.ControlDB) map[string]any {
+	seedDevAdmin(t, controlDB)
+	_, err := controlDB.CreateSiteWithID(t.Context(), "emailsit")
+	require.NoError(t, err)
+	emailEnc, err := controlDB.ServerConfig.Security.EncryptFor(security.PurposeSiteEmail, "emailsit", "sam@example.com")
+	require.NoError(t, err)
+	require.NoError(t, controlDB.Queries.UpdateSiteEmail(t.Context(), controldb.UpdateSiteEmailParams{ID: "emailsit", EmailEnc: &emailEnc}))
+	verified, err := controlDB.Queries.VerifySiteEmail(t.Context(), controldb.VerifySiteEmailParams{ID: "emailsit", EmailEnc: &emailEnc})
+	require.NoError(t, err)
+	require.EqualValues(t, 1, verified)
 	return nil
 }
 
