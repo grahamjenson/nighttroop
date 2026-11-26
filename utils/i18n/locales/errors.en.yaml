@@ -79,6 +79,11 @@ errors:
     no_private_key: "the service account has no private key"
     bad_private_key: "the service account's private key cannot be read"
   control:
+    banner_message: "a banner needs a message of at most {{.Length}} characters"
+    banner_level: "a banner is shown as information or as a warning"
+    banner_days: "a banner lasts from 1 to {{.Days}} days"
+    banner_sites: "a banner is for at most {{.Sites}} sites, each by its site ID"
+    banner_most: "there are already {{.Max}} banners: delete one first"
     hydrate_to_live: "an archived site's state can only be changed to live"
     hydrate_archived_only: "only an archived site can be restored"
     hydrate_needs_s3: "this site has no archive here, and S3 is not connected to restore it from"

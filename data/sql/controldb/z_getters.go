@@ -216,6 +216,41 @@ func (m *Site) SetDeletedAt(v *int64) {
 	m.DeletedAt = v
 }
 
+// GetID returns the ID value.
+func (m SiteBanner) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated SiteBanner.
+func (m *SiteBanner) SetID(v int64) {
+	m.ID = v
+}
+
+// SetLevel sets the Level value and returns the updated SiteBanner.
+func (m *SiteBanner) SetLevel(v string) {
+	m.Level = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m SiteBanner) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated SiteBanner.
+func (m *SiteBanner) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m SiteBanner) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated SiteBanner.
+func (m *SiteBanner) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
 // GetType returns the Type value.
 func (m SiteConnector) GetType() consts.ConnectorType {
 	return m.Type
@@ -573,6 +608,31 @@ func (m UpdateSiteSettingsParams) GetID() string {
 
 // SetID sets the ID value and returns the updated UpdateSiteSettingsParams.
 func (m *UpdateSiteSettingsParams) SetID(v string) {
+	m.ID = v
+}
+
+// SetLevel sets the Level value and returns the updated CreateSiteBannerParams.
+func (m *CreateSiteBannerParams) SetLevel(v string) {
+	m.Level = v
+}
+
+// GetCreatedByIdentityName returns the CreatedByIdentityName value.
+func (m CreateSiteBannerParams) GetCreatedByIdentityName() string {
+	return m.CreatedByIdentityName
+}
+
+// SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated CreateSiteBannerParams.
+func (m *CreateSiteBannerParams) SetCreatedByIdentityName(v string) {
+	m.CreatedByIdentityName = v
+}
+
+// GetID returns the ID value.
+func (m DeleteSiteBannerParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated DeleteSiteBannerParams.
+func (m *DeleteSiteBannerParams) SetID(v int64) {
 	m.ID = v
 }
 

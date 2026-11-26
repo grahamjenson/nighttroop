@@ -68,6 +68,10 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		admin.Post("/push-credentials", (&controlcollections.PushCredentialsCollection{}).CreateHandler)
 		admin.Delete("/push-credentials/{id}", (&controlcollections.PushCredentialsCollection{}).DeleteHandler)
 		// Control's admins, which an admin manages, never itself
+		// Messages sites show at the top of their pages, which an admin adds and deletes
+		r.Get("/banners", controlapi.SiteBannersHandler)
+		admin.Post("/banners", controlapi.CreateSiteBannerHandler)
+		admin.Delete("/banners/{id}", controlapi.DeleteSiteBannerHandler)
 		r.Get("/admins", controlapi.ControlAdminsHandler)
 		admin.Post("/admins", controlapi.CreateControlAdminHandler)
 		admin.Post("/admins/{id}/role", controlapi.SetControlAdminRoleHandler)

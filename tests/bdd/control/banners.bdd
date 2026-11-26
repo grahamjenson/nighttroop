@@ -1,0 +1,47 @@
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+
+// Site Banners, in the menu, lists the messages sites show at the top of their pages
+CLICK #control--menu
+CLICK #control--banners-button
+ASSERT_STATUS 200
+ASSERT_PATH /banners
+ASSERT_TEXT_VISIBLE A message shown at the top of sites' pages until it expires.
+
+// An admin adds one, for the sites listed, as a warning, for some days
+INPUT #control--banners--add--message Sites that are not used are archived on 1 March.
+INPUT #control--banners--add--sites bddbanna, bddbannb
+INPUT #control--banners--add--level warning
+INPUT #control--banners--add--days 14
+CLICK #control--banners--add--submit
+ASSERT_STATUS 201
+ASSERT_TEXT_VISIBLE The banner was added.
+ASSERT_VISIBLE #control--banners--table tr:has-text("archived on 1 March") >> text=Warning
+ASSERT_VISIBLE #control--banners--table tr:has-text("archived on 1 March") >> text=bddbanna, bddbannb
+ASSERT_VISIBLE #control--banners--table tr:has-text("archived on 1 March") >> text=/in 1[34] days|in 2 weeks/
+SCREENSHOT banner_added
+
+// One with no sites is for every site
+INPUT #control--banners--add--message Nighttroop is down for an hour on Sunday.
+INPUT #control--banners--add--days 1
+CLICK #control--banners--add--submit
+ASSERT_STATUS 201
+ASSERT_VISIBLE #control--banners--table tr:has-text("down for an hour") >> text=Every site
+ASSERT_VISIBLE #control--banners--table tr:has-text("down for an hour") >> text=Information
+
+// A site ID that is not one is refused, and says why
+INPUT #control--banners--add--message Hello
+INPUT #control--banners--add--sites not a site
+CLICK #control--banners--add--submit
+ASSERT_TEXT_VISIBLE each by its site ID
+
+// Deleting one, after the question, takes it from the list
+CLICK_ASKS #control--banners--table tr:has-text("down for an hour") button
+CLICK #confirm--ok
+ASSERT_TEXT_VISIBLE The banner was deleted.
+ASSERT_NOT_VISIBLE #control--banners--table tr:has-text("down for an hour")
+ASSERT_VISIBLE #control--banners--table tr:has-text("archived on 1 March")
