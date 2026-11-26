@@ -125,6 +125,14 @@ var ownServers = []ownServer{
 		require.EqualValues(t, 1, verified)
 		return nil
 	}},
+	// A server with one site, nearlimt, that holds 19000 KB of the 20480 KB a site may: near its storage limit
+	{"storage/banner.bdd", "192.0.2.23", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		site, err := controlDB.CreateSiteWithID(t.Context(), "nearlimt")
+		require.NoError(t, err)
+		require.NoError(t, controlDB.Queries.UpdateSiteDBSize(t.Context(), controldb.UpdateSiteDBSizeParams{ID: "nearlimt", EstimatedDbSizeKb: new(int64(19000))}))
+		return map[string]any{"admin_password": site.AdminPassword}
+	}},
 	// A server run by another operator, with its own support email
 	{"operator/legal.bdd", "192.0.2.15", func(c *config.ServerConfig) {
 		c.OperatorName, c.SupportEmail = "Example Health Trust", "help@example.org"

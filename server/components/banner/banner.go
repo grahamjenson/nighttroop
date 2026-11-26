@@ -134,6 +134,9 @@ func resourceWarning(ctx context.Context, level config.ResourceLevel) string {
 	return i18n.T(ctx, "control.status_banner.memory_warning", i18n.Data{"UsedBytes": display.Bytes(*level.Total*level.Value/100), "TotalBytes": display.Bytes(*level.Total)})
 }
 
+// nearStoragePercent is how much of its storage limit a site holds before its pages say it is near it
+const nearStoragePercent = 90
+
 // ForSite is what a site's pages tell whoever is signed in to it: that nothing more is stored, that the site is over
 // its storage, and the messages a control admin wrote for the site or for every site
 func ForSite(ctx context.Context) []Banner {
@@ -161,6 +164,9 @@ func OfSite(ctx context.Context, site *controldb.Site, writesRefused string, wri
 	case size != nil && limit != nil && *size > *limit:
 		banners = append(banners, Banner{ID: "site--banner--over-storage", Level: Warning, Title: i18n.T(ctx, "site.banner.over_storage"),
 			Text: i18n.T(ctx, "site.banner.over_storage_text", i18n.Data{"Size": display.Bytes(float64(*size) * 1024), "Limit": display.Bytes(float64(*limit) * 1024)})})
+	case size != nil && limit != nil && *size*100 >= *limit*nearStoragePercent:
+		banners = append(banners, Banner{ID: "site--banner--near-storage", Level: Info, Title: i18n.T(ctx, "site.banner.near_storage"),
+			Text: i18n.T(ctx, "site.banner.near_storage_text", i18n.Data{"Size": display.Bytes(float64(*size) * 1024), "Limit": display.Bytes(float64(*limit) * 1024)})})
 	}
 	for _, row := range written {
 		var siteIDs []string

@@ -148,6 +148,8 @@ site:
   banner:
     storage_full: "Storage full:"
     over_storage: "Over the storage limit:"
+    near_storage: "Near the storage limit:"
+    near_storage_text: "This site's data is {{.Size}} of its limit of {{.Limit}}. Delete old data to make space."
     over_storage_text: "This site's data is {{.Size}}, over its limit of {{.Limit}}. Delete old data, or the site stops storing more."
   base:
     alpha: "Alpha"
