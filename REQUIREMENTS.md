@@ -459,7 +459,19 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - An admin deletes a banner, after a confirmation. A banner that is not there is 404.
 - A read-only admin sees the list, with no form and no Delete.
 - A job deletes the banners that are past the time they expire at, each 10 minutes.
-<<<<<<< HEAD
+- A site shows its banners below the header of each page, to a person who is signed in. One line for each banner:
+  - **Storage full** (red), with why: the site is far over its storage limit, or the disk of the server is almost
+    full, and writes are refused.
+  - **Over the storage limit** (amber), with the size and the limit: the site is over its storage limit and writes
+    are not refused.
+  - **Near the storage limit** (blue), with the size and the limit: the site is at 90% or more of its storage limit,
+    and not over it.
+  - Each banner an admin added for the site or for every site, oldest first, that is not expired: blue for
+    **Information**, amber for **Warning**. The message shows as text, not as HTML.
+- A site does not show a banner added for other sites. A site with no banner shows no strip.
+- One package (`server/components/banner`) decides the banners of the control pages and of the site pages, and
+  draws them.
+
 ### Site emails
 
 - A site's page (Sites, then the site) has an action, **Email this site**, for an admin.
