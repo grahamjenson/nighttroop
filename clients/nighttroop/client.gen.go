@@ -866,6 +866,15 @@ type PasskeySignedIn struct {
 	Redirect *string `json:"redirect,omitempty"`
 }
 
+// SiteEmail defines model for SiteEmail.
+type SiteEmail struct {
+	Result *struct {
+		Email    *string `json:"email,omitempty"`
+		Verified *bool   `json:"verified,omitempty"`
+	} `json:"result,omitempty"`
+	Status *int `json:"status,omitempty"`
+}
+
 // SiteUsageResult defines model for SiteUsageResult.
 type SiteUsageResult struct {
 	// Result A site's storage, as its Usage page shows it
@@ -1136,6 +1145,16 @@ type ListLoopSettingsParams struct {
 	Skip *Skip `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
+// SaveSiteEmailJSONBody defines parameters for SaveSiteEmail.
+type SaveSiteEmailJSONBody struct {
+	Email openapi_types.Email `json:"email"`
+}
+
+// VerifySiteEmailParams defines parameters for VerifySiteEmail.
+type VerifySiteEmailParams struct {
+	Key string `form:"key" json:"key"`
+}
+
 // AccountPasskeyFinishJSONBody defines parameters for AccountPasskeyFinish.
 type AccountPasskeyFinishJSONBody map[string]interface{}
 
@@ -1209,6 +1228,9 @@ type LoginJSONRequestBody = LoginRequest
 
 // PasskeyLoginFinishJSONRequestBody defines body for PasskeyLoginFinish for application/json ContentType.
 type PasskeyLoginFinishJSONRequestBody PasskeyLoginFinishJSONBody
+
+// SaveSiteEmailJSONRequestBody defines body for SaveSiteEmail for application/json ContentType.
+type SaveSiteEmailJSONRequestBody SaveSiteEmailJSONBody
 
 // AccountPasskeyFinishJSONRequestBody defines body for AccountPasskeyFinish for application/json ContentType.
 type AccountPasskeyFinishJSONRequestBody AccountPasskeyFinishJSONBody
@@ -2120,6 +2142,17 @@ type ClientInterface interface {
 
 	// RegenerateSummaries request
 	RegenerateSummaries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveSiteEmail request
+	RemoveSiteEmail(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SaveSiteEmailWithBody request with any body
+	SaveSiteEmailWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SaveSiteEmail(ctx context.Context, body SaveSiteEmailJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// VerifySiteEmail request
+	VerifySiteEmail(ctx context.Context, params *VerifySiteEmailParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AccountPasskeyBegin request
 	AccountPasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3271,6 +3304,54 @@ func (c *Client) GetLoopSettings(ctx context.Context, id Id, reqEditors ...Reque
 
 func (c *Client) RegenerateSummaries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewRegenerateSummariesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveSiteEmail(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveSiteEmailRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SaveSiteEmailWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSaveSiteEmailRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SaveSiteEmail(ctx context.Context, body SaveSiteEmailJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSaveSiteEmailRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) VerifySiteEmail(ctx context.Context, params *VerifySiteEmailParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVerifySiteEmailRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -7045,6 +7126,118 @@ func NewRegenerateSummariesRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewRemoveSiteEmailRequest generates requests for RemoveSiteEmail
+func NewRemoveSiteEmailRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/account/email")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSaveSiteEmailRequest calls the generic SaveSiteEmail builder with application/json body
+func NewSaveSiteEmailRequest(server string, body SaveSiteEmailJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSaveSiteEmailRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewSaveSiteEmailRequestWithBody generates requests for SaveSiteEmail with any type of body
+func NewSaveSiteEmailRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/account/email")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewVerifySiteEmailRequest generates requests for VerifySiteEmail
+func NewVerifySiteEmailRequest(server string, params *VerifySiteEmailParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/account/email/verify")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "key", runtime.ParamLocationQuery, params.Key); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewAccountPasskeyBeginRequest generates requests for AccountPasskeyBegin
 func NewAccountPasskeyBeginRequest(server string) (*http.Request, error) {
 	var err error
@@ -7639,6 +7832,17 @@ type ClientWithResponsesInterface interface {
 
 	// RegenerateSummariesWithResponse request
 	RegenerateSummariesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RegenerateSummariesResponse, error)
+
+	// RemoveSiteEmailWithResponse request
+	RemoveSiteEmailWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RemoveSiteEmailResponse, error)
+
+	// SaveSiteEmailWithBodyWithResponse request with any body
+	SaveSiteEmailWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SaveSiteEmailResponse, error)
+
+	SaveSiteEmailWithResponse(ctx context.Context, body SaveSiteEmailJSONRequestBody, reqEditors ...RequestEditorFn) (*SaveSiteEmailResponse, error)
+
+	// VerifySiteEmailWithResponse request
+	VerifySiteEmailWithResponse(ctx context.Context, params *VerifySiteEmailParams, reqEditors ...RequestEditorFn) (*VerifySiteEmailResponse, error)
 
 	// AccountPasskeyBeginWithResponse request
 	AccountPasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AccountPasskeyBeginResponse, error)
@@ -9357,6 +9561,73 @@ func (r RegenerateSummariesResponse) StatusCode() int {
 	return 0
 }
 
+type RemoveSiteEmailResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SiteEmail
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveSiteEmailResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveSiteEmailResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SaveSiteEmailResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SiteEmail
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r SaveSiteEmailResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SaveSiteEmailResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type VerifySiteEmailResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r VerifySiteEmailResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r VerifySiteEmailResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type AccountPasskeyBeginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -10388,6 +10659,41 @@ func (c *ClientWithResponses) RegenerateSummariesWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParseRegenerateSummariesResponse(rsp)
+}
+
+// RemoveSiteEmailWithResponse request returning *RemoveSiteEmailResponse
+func (c *ClientWithResponses) RemoveSiteEmailWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RemoveSiteEmailResponse, error) {
+	rsp, err := c.RemoveSiteEmail(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveSiteEmailResponse(rsp)
+}
+
+// SaveSiteEmailWithBodyWithResponse request with arbitrary body returning *SaveSiteEmailResponse
+func (c *ClientWithResponses) SaveSiteEmailWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SaveSiteEmailResponse, error) {
+	rsp, err := c.SaveSiteEmailWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSaveSiteEmailResponse(rsp)
+}
+
+func (c *ClientWithResponses) SaveSiteEmailWithResponse(ctx context.Context, body SaveSiteEmailJSONRequestBody, reqEditors ...RequestEditorFn) (*SaveSiteEmailResponse, error) {
+	rsp, err := c.SaveSiteEmail(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSaveSiteEmailResponse(rsp)
+}
+
+// VerifySiteEmailWithResponse request returning *VerifySiteEmailResponse
+func (c *ClientWithResponses) VerifySiteEmailWithResponse(ctx context.Context, params *VerifySiteEmailParams, reqEditors ...RequestEditorFn) (*VerifySiteEmailResponse, error) {
+	rsp, err := c.VerifySiteEmail(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVerifySiteEmailResponse(rsp)
 }
 
 // AccountPasskeyBeginWithResponse request returning *AccountPasskeyBeginResponse
@@ -12879,6 +13185,88 @@ func ParseRegenerateSummariesResponse(rsp *http.Response) (*RegenerateSummariesR
 		}
 		response.JSONDefault = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseRemoveSiteEmailResponse parses an HTTP response from a RemoveSiteEmailWithResponse call
+func ParseRemoveSiteEmailResponse(rsp *http.Response) (*RemoveSiteEmailResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveSiteEmailResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SiteEmail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSaveSiteEmailResponse parses an HTTP response from a SaveSiteEmailWithResponse call
+func ParseSaveSiteEmailResponse(rsp *http.Response) (*SaveSiteEmailResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SaveSiteEmailResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SiteEmail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseVerifySiteEmailResponse parses an HTTP response from a VerifySiteEmailWithResponse call
+func ParseVerifySiteEmailResponse(rsp *http.Response) (*VerifySiteEmailResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &VerifySiteEmailResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil

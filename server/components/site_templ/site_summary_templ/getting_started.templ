@@ -24,6 +24,15 @@ func isNew(summary *sitemodels.Summary) bool {
 	return len(summary.GlucoseReadings) == 0 && len(summary.DeviceStatuses) == 0
 }
 
+// canGiveEmail is whether the identity signed in may give the site an email: an admin, on a server that sends email
+func canGiveEmail(ctx context.Context) bool {
+	if !isAdmin(ctx) {
+		return false
+	}
+	config := httputils.GetSiteContext(ctx).Config
+	return config != nil && config.EmailWorking()
+}
+
 // isAdmin is whether the identity signed in may set up where the site's data comes from and who can use it
 func isAdmin(ctx context.Context) bool {
 	siteContext := httputils.GetSiteContext(ctx)
@@ -91,6 +100,12 @@ templ GettingStarted() {
 			@step("site--getting-started--alarms", "", icon.BellRing, i18n.T(ctx, "site.summary.getting_started.alarms")) {
 				<p>{ i18n.T(ctx, "site.summary.getting_started.alarms_text") }</p>
 				@stepLink("site--getting-started--alarms-link", "/settings/alarms", i18n.T(ctx, "site.summary.getting_started.alarms_link"))
+			}
+			if canGiveEmail(ctx) {
+				@step("site--getting-started--email", "", icon.Send, i18n.T(ctx, "site.summary.getting_started.email")) {
+					<p>{ i18n.T(ctx, "site.summary.getting_started.email_text") }</p>
+					@stepLink("site--getting-started--email-link", "/settings/account", i18n.T(ctx, "site.summary.getting_started.email_link"))
+				}
 			}
 		</ol>
 		if !isAdmin(ctx) {

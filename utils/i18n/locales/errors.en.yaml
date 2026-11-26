@@ -32,6 +32,10 @@ errors:
     backfill_off: "turn on and save this connector before backfilling it"
     no_push_credential: "there is no push credential for the app {{.App}}: add one in Push Credentials"
     max_push_credentials: "a site can have at most {{.Max}} push credentials"
+    email_off: "this server does not send email, so a site cannot have one"
+    email_bad: "type one email address, such as you@example.com"
+    email_not_sent: "the email was saved, but its link could not be sent: try again later"
+    email_link: "This link does not work. It may be old or used already. Sign in and send a new one from My Account."
   settings:
     number: "{{.Name}} must be a number"
     range: "must be between {{.Min}} and {{.Max}}"

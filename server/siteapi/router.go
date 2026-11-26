@@ -33,6 +33,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/login", sitelogin.GETLoginPageHandler())
 		// A new or recovered site's credentials are shown once on its own address, which checks the admin's TOTP code too
 		r.Get("/welcome", publicapi.GETWelcomeHandler())
+		r.Get("/settings/account/email/verify", sitecollections.VerifySiteEmailHandler)
 		r.Post("/welcome", publicapi.POSTWelcomeHandler(config))
 		r.Post("/site/totp", publicapi.POSTCheckTOTPHandler(config))
 		// The browser shown them adds the admin a passkey, and signs in with it
@@ -110,6 +111,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/settings/connectors/{id}/backfill", sitecollections.BackfillHandler)
 		r.Get("/settings/push-devices", sitecollections.PushDevicesHandler)
 		r.Get("/settings/account", sitelogin.GETAccount(controlDB))
+		r.Post("/settings/account/email", sitecollections.SaveSiteEmailHandler)
+		r.Delete("/settings/account/email", sitecollections.RemoveSiteEmailHandler)
 		r.Post("/settings/account/passkeys/begin", sitelogin.POSTAccountPasskeyBegin(controlDB, config))
 		r.Post("/settings/account/passkeys/finish", sitelogin.POSTAccountPasskeyFinish(controlDB, config))
 		r.Delete("/settings/account/passkeys/{id}", sitelogin.DELETEAccountPasskey(controlDB))

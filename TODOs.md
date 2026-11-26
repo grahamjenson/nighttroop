@@ -31,6 +31,9 @@
     1. P4: Add the icons of Dexcom and FreeStyle Libre to `server/assets/static/logos`, with their makers' leave, as
        they are trade marks of Dexcom and Abbott: their tiles under Add a connector show their first letter
     1. P2: Recovering a lost control admin login, as setup only runs on a server with no control admin
+    1. P2: Recover a site through its verified email: a site's admin can verify an email on My Account, but nothing
+       uses it yet to give the admin a new sign in
+    1. P3: Control cannot see which sites have a verified email, or write to one
 
 1. Security
     1. P1: A Caregiver device changes glucose readings through Nightscout treatments, which it may write: a treatment
