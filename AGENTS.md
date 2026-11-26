@@ -222,15 +222,17 @@ When writing code, make sure to consider how an operation may be used by malicio
 # Privacy
 
 ## PII
-We aim to not store any PII or user data that could be used to identify a user. This is not possible because:
 
+The preference would be to not keep any data that identify a user. This is not possible because:
+
+1. Email for recovery and communication
 1. Profile names or notes may have personal information in them
 1. Dexcom username has to be recorded for sync to work
 1. Nightscout URL or token may have personal information in them
 
-Dexcom username and Nightscout URL and their credentials should also be encrypted at rest and be treated very carefully.
-
-Profile names and notes, and other fields that may have user data inserted should be treated very carefully as well.
+If possible all PII should be encrypted at rest. 
+This is also not possible because profile names and notes and other user input may have user data inserted.
+These fields should be treated carefully to make sure not to expose this data.
 
 ## Cross Site Information
 
