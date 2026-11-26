@@ -49,9 +49,8 @@
        messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
-    1. P3: A backfill's wait is for each site's connector, and a backfill skips the host limiter, so many sites that
-       backfill from one Nightscout host send it requests together, and each can hold a connector worker a sixth of
-       the time: limit the backfills of a host across sites, as its syncs are
+    1. P3: A backfill's limit is each site's, and a backfill skips the host limiter, so many sites that backfill from
+       one Nightscout host send it requests together: limit the backfills of a host across sites, as its syncs are
     1. P4: A site JWT sent to `/api/v2/authorization/request` or `/api/v1/status.json` gets a new JWT, so a TOTP
        user's session never has to end: decide if a JWT may renew itself, or cap its total life
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels

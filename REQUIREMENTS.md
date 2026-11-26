@@ -541,7 +541,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - **Sign in**: sign ins for each username and IP, and requests to a site before signing in;
   - **Site creation**: new sites, from the server and from each IP;
   - **Site reads and writes**: each site's and identity's reads and writes, and a flagged site's writes;
-  - **Site actions**: connector changes, identities created, downloads, printable reports and pushes.
+  - **Site actions**: connector changes, identities created, downloads, printable reports, connector backfills and
+    pushes.
 - Each limit shows its env variables, its env default, and its rate and burst now.
 - Under each limit are the limiter kinds that use it. Each kind shows:
   - what one is for (server, IP, site, identity, username or IP on a site), and its multiple of the limit if more
@@ -1374,7 +1375,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - for each Nightscout host, however many sites sync from it, and however its URL is written;
   - for each Dexcom, LibreLinkUp or virtual connector;
   - a sync over the limit sends no request and records nothing, so a later run, a few seconds after, tries again;
-  - a backfill does not use this limit. It has its own wait (see [Backfill](#backfill)).
+  - a backfill does not use this limit. It has its own (see [Backfill](#backfill)).
 - A Nightscout connector's token is sent as one part of the request path. A `/`, `?` or `#` in it does not change
   the path or query of the request.
 - A change of a Nightscout connector's URL needs its token again, or the API returns 400 with "Enter the Nightscout
@@ -1402,11 +1403,11 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - No device status older than 30 days. Other records: any age.
 - Dexcom and LibreLinkUp fetch all they keep: 24 hours and 12 hours.
 - A connector with a backfill queued or running does not start another: 409.
-- After a backfill, the next backfill of that connector waits 5 times as long as the backfill took, and at least 10
-  seconds.
-  - A backfill sent in the wait gets 429 with the seconds to wait, and starts nothing.
-  - The wait is kept when the connector is deleted and added again.
-  - The virtual connector has no wait.
+- A site's backfills, of all its connectors together, are limited to 1 a minute, with a burst of 2
+  (`SITE_BACKFILL_PER_MINUTE_LIMIT` / `_BURST`).
+  - Over the limit: 429 with the seconds to wait, and nothing starts.
+  - Only a backfill that starts spends the limit. One refused, as one already running (409), does not.
+  - The virtual connector has the same limit.
 - Nightscout backfill device statuses drop the loop status (`openaps` or `loop`) and `pump` as sent, keeping IOB, COB,
   and the pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`. Existing ones
   are not changed.

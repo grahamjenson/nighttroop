@@ -36,6 +36,7 @@ type RateLimiters struct {
 	siteIdentityCreateRateLimiters   *lru.Cache[string, *rate.Limiter]
 	siteDownloadRateLimiters         *lru.Cache[string, *rate.Limiter]
 	siteReportPrintRateLimiters      *lru.Cache[string, *rate.Limiter]
+	siteBackfillRateLimiters         *lru.Cache[string, *rate.Limiter]
 	sitePushRateLimiters             *lru.Cache[string, *rate.Limiter]
 	connectorSyncRateLimiters        *lru.Cache[string, *rate.Limiter]
 
@@ -81,6 +82,7 @@ func NewRateLimiters(config ServerConfig) *RateLimiters {
 		siteIdentityCreateRateLimiters:   lruMust(maxSites * wiggle),
 		siteDownloadRateLimiters:         lruMust(maxSites * wiggle),
 		siteReportPrintRateLimiters:      lruMust(maxSites * wiggle),
+		siteBackfillRateLimiters:         lruMust(maxSites * wiggle),
 		sitePushRateLimiters:             lruMust(maxSites * wiggle),
 		connectorSyncRateLimiters:        lruMust(maxSites * wiggle * 2),
 
@@ -195,6 +197,12 @@ func (r *RateLimiters) SiteReportPrintLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteReportPrintRateLimiters, subdomain, "site_report_print")
 }
 
+// SiteBackfillLimiter is a site's connector backfills, one limit for all its connectors, as each backfill can hold a
+// connector worker for 50 seconds and send its connector's host 200 requests
+func (r *RateLimiters) SiteBackfillLimiter(subdomain string) *rate.Limiter {
+	return r.getOrCreateLimiter(r.siteBackfillRateLimiters, subdomain, "site_backfill")
+}
+
 func (r *RateLimiters) SiteDownloadLimiter(subdomain string) *rate.Limiter {
 	return r.getOrCreateLimiter(r.siteDownloadRateLimiters, subdomain, "site_download")
 }
@@ -300,6 +308,7 @@ func rateDefaults(c ServerConfig) []RateSetting {
 		{Name: "site_download", Env: "SITE_DOWNLOAD_PER_MINUTE", Default: Rate{float64(c.SiteDownloadPerMinuteLimit), c.SiteDownloadPerMinuteBurst}},
 		{Name: "site_push", Env: "SITE_PUSH_PER_MINUTE", Default: Rate{float64(c.SitePushPerMinuteLimit), c.SitePushPerMinuteBurst}},
 		{Name: "site_report_print", Env: "SITE_REPORT_PRINT_PER_MINUTE", Default: Rate{float64(c.SiteReportPrintPerMinuteLimit), c.SiteReportPrintPerMinuteBurst}},
+		{Name: "site_backfill", Env: "SITE_BACKFILL_PER_MINUTE", Default: Rate{float64(c.SiteBackfillPerMinuteLimit), c.SiteBackfillPerMinuteBurst}},
 		{Name: "login_name", Env: "SITE_LOGIN_NAME_PER_MINUTE", Default: Rate{float64(c.SiteLoginNamePerMinuteLimit), c.SiteLoginNamePerMinuteBurst}},
 		{Name: "site_post_flagged", Env: "SITE_POST_FLAGGED_PER_MINUTE", Default: Rate{float64(c.SitePOSTFlaggedPerMinuteLimit), c.SitePOSTFlaggedPerMinuteBurst}},
 		{Name: "connector_sync", Env: "CONNECTOR_SYNC_PER_MINUTE", Default: Rate{float64(c.ConnectorSyncPerMinuteLimit), c.ConnectorSyncPerMinuteBurst}},
@@ -375,6 +384,7 @@ func (r *RateLimiters) kinds() []limiterKind {
 		{"site_download", "site", "site_download", r.siteDownloadRateLimiters.Values(), 1},
 		{"site_push", "site", "site_push", r.sitePushRateLimiters.Values(), 1},
 		{"site_report_print", "site", "site_report_print", r.siteReportPrintRateLimiters.Values(), 1},
+		{"site_backfill", "site", "site_backfill", r.siteBackfillRateLimiters.Values(), 1},
 		{"site_post_flagged", "site", "site_post_flagged", r.siteFlaggedPOSTRateLimiters.Values(), 1},
 		{"connector_sync", "connector", "connector_sync", r.connectorSyncRateLimiters.Values(), 1},
 	}

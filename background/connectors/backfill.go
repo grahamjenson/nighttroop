@@ -68,27 +68,6 @@ func eachRange(backfill BackfillParams, fetch func(from, to time.Time) (int, err
 	return added, nil
 }
 
-// A source's next backfill waits backfillWaitFactor times as long as its last one took, and backfillMinWait at least,
-// from when that one finished. So a site that starts one after another, as against a slow host, holds a connector
-// worker, and sends that host requests, a sixth of the time at most, and starts no more a minute than it syncs.
-const (
-	backfillWaitFactor = 5
-	backfillMinWait    = 10 * time.Second
-)
-
-// BackfillWait is how long, at now, the source's next backfill still has to wait after its last one. The virtual
-// source has no wait, as it asks no host and is not on a production server.
-func BackfillWait(source *controldb.SiteConnector, now time.Time) time.Duration {
-	if source.Type == consts.ConnectorTypeVirtual || source.LastBackfillFinishedAt == nil {
-		return 0
-	}
-	wait := backfillMinWait
-	if took := source.LastBackfillDuration; took != nil {
-		wait = max(wait, backfillWaitFactor*time.Duration(*took)*time.Millisecond)
-	}
-	return max(0, time.UnixMilli(*source.LastBackfillFinishedAt).Add(wait).Sub(now))
-}
-
 // ErrBackfillRunning is a backfill asked for while the source has one queued or running
 var ErrBackfillRunning = errors.New("a backfill is already running")
 

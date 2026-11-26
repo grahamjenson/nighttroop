@@ -16,8 +16,10 @@ func GetTestServerConfig() *config.ServerConfig {
 		return storedServerConfig
 	}
 
-	// Tests sync a connector many times a minute, as RUN_BACKGROUND_JOBS does, so they set the connector sync limit
+	// Tests sync a connector many times a minute, as RUN_BACKGROUND_JOBS does, and backfill a site again and again, as
+	// reports_tdd.bdd does, so they set the connector sync and site backfill limits
 	os.Setenv("CONNECTOR_SYNC_PER_MINUTE_BURST", "100000")
+	os.Setenv("SITE_BACKFILL_PER_MINUTE_BURST", "100000")
 	cfg, err := config.NewServerConfig()
 	if err != nil {
 		panic(err)

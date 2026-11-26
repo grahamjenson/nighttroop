@@ -19,8 +19,9 @@ ASSERT_VISIBLE #control--rate-limits--group--site_actions h2 >> text=Site action
 ASSERT_VISIBLE #control--rate-limits--group--connectors h2 >> text=Connectors
 ASSERT_VISIBLE #control--rate-limits--group--connectors #control--rate-settings--connector_sync >> text=CONNECTOR_SYNC_PER_MINUTE_LIMIT/_BURST
 // Every limit is in a group, and so is every kind of rate limiter
-ASSERT_COUNT #control--rate-settings [id$="--per_minute"] 16
-ASSERT_COUNT #control--rate-settings [id$="--bar"] 19
+ASSERT_COUNT #control--rate-settings [id$="--per_minute"] 17
+ASSERT_COUNT #control--rate-settings [id$="--bar"] 20
+ASSERT_VISIBLE #control--rate-limits--group--site_actions #control--rate-settings--site_backfill >> text=SITE_BACKFILL_PER_MINUTE_LIMIT/_BURST
 
 // Under each limit are the rate limiters that use it, what one is kept for, and how many times its rate they have
 ASSERT_VISIBLE #control--rate-limits--group--server #control--rate-settings--global + #control--rate-limits--global + #control--rate-limits--control

@@ -14,10 +14,15 @@ ASSERT_EQUALS "site_get" "@result.8.setting"
 ASSERT_EQUALS 4 "@result.8.scale"
 ASSERT_EQUALS "site_get" "@result.10.setting"
 ASSERT_EQUALS 1 "@result.10.scale"
+// A site's connector backfills, all its connectors together, have a limit of their own, 1 a minute (the tests' burst is
+// far higher, as they backfill a site again and again)
+ASSERT_EQUALS "site_backfill" "@result.17.name"
+ASSERT_EQUALS "site" "@result.17.per"
+ASSERT_EQUALS 1 "@result.17.per_minute"
 // A site flagged for abuse has its own far lower writes limit
-ASSERT_EQUALS "site_post_flagged" "@result.17.name"
-ASSERT_EQUALS 12 "@result.17.per_minute"
-ASSERT_EQUALS 36 "@result.17.burst"
+ASSERT_EQUALS "site_post_flagged" "@result.18.name"
+ASSERT_EQUALS 12 "@result.18.per_minute"
+ASSERT_EQUALS 36 "@result.18.burst"
 
 // Setting one uses it at once, and says it was set, its env default kept beside it
 NAME set_rate_limits
