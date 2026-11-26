@@ -64,6 +64,7 @@ control:
     push_devices: "Push Devices"
     push_credentials: "Push Credentials"
     banners: "Site Banners"
+    site_emails: "Site Emails"
     jobs: "Jobs"
     job_stats: "Job Stats"
     logs: "Logs"
@@ -226,6 +227,29 @@ control:
     test: "Test"
     never: "Never"
     tested: "Test push sent to {{.AppName}}"
+  site_emails:
+    title: "Site Emails"
+    intro: "The sites whose admin verified an email. Send a site one of the emails below, at most one a day. The address is not shown."
+    off: "This server sends no email. Set RESEND_API_KEY and RESEND_FROM to send emails to sites."
+    none: "No site has a verified email."
+    site: "Site"
+    verified: "Verified"
+    email: "Email"
+    send: "Send"
+    send_confirm: "Send this email to the site?"
+    sent: "The email was sent."
+    archive:
+      label: "Your site will be archived"
+      subject: "Your Nighttroop site will be archived"
+      text: "Your Nighttroop site {{.Site}} is not used, so it will be archived in 14 days.\n\nTo keep it, sign in to it or send data to it before then.\n\nAn archived site is not deleted: its data is kept, and it can be restored."
+    storage:
+      label: "Your site is over its storage limit"
+      subject: "Your Nighttroop site is over its storage limit"
+      text: "Your Nighttroop site {{.Site}} holds more data than its storage limit.\n\nSign in and open Usage, in the menu under your name, to see what it holds and to delete old data.\n\nA site far over its limit stops storing new data."
+    contact:
+      label: "Please reply to the server's admin"
+      subject: "A question about your Nighttroop site"
+      text: "The admin of the Nighttroop server has a question about your site {{.Site}}.\n\nPlease reply to this email."
   push_credentials:
     title: "Push Credentials"
     intro: "Keys for sending pushes to apps, both each site's own and those for every site, newest first. A key is never shown again once added."

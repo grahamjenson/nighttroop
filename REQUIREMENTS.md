@@ -459,6 +459,29 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - An admin deletes a banner, after a confirmation. A banner that is not there is 404.
 - A read-only admin sees the list, with no form and no Delete.
 - A job deletes the banners that are past the time they expire at, each 10 minutes.
+<<<<<<< HEAD
+### Site emails
+
+- Site Emails (user menu) lists the live sites with a verified email, the last verified first: the site ID, with a
+  link to the site, and when it was verified. At most 1000 sites.
+- The page and the API never show the address of a site.
+- If the server has no `RESEND_API_KEY` or no `RESEND_FROM`, the page says the server sends no email, and has no Send.
+- An admin picks one email from a list and sends it to a site, after a confirmation. There is no text to write.
+
+  | Email | Subject |
+  | --- | --- |
+  | `archive` | Your Nighttroop site will be archived |
+  | `storage` | Your Nighttroop site is over its storage limit |
+  | `contact` | A question about your Nighttroop site |
+
+- Each email has the URL of the site. Text sent with the request is not used.
+- A sent email shows a toast and records a "Site emailed" event for the site, with the admin and the name of the email.
+- Refused, with why:
+  - 400: the server sends no email, the email is not one of the list, or Resend did not accept the email.
+  - 404: the site is not live, has no email, or its email is not verified.
+  - 429: the site was sent an email in the last 24 hours. An email that was not sent does not count.
+- A read-only admin sees the list, with no Send (403 from the API).
+=======
 - A site shows its banners below the header of each page, to a person who is signed in. One line for each banner:
   - **Storage full** (red), with why: the site is far over its storage limit, or the disk of the server is almost
     full, and writes are refused.
@@ -469,6 +492,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A site does not show a banner added for other sites. A site with no banner shows no strip.
 - One package (`server/components/banner`) decides the banners of the control pages and of the site pages, and
   draws them.
+>>>>>>> origin/main
 
 ### Rate limits
 

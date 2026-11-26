@@ -39,6 +39,9 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		// Only an admin can change the server, its sites, its push credentials and its admins, send a test push, or
 		// download or upload a DB, not a read only identity
 		admin := r.With(controlcollections.AdminOnly)
+		// The sites with a verified email, which an admin sends one of the pre-built emails to
+		r.Get("/site-emails", controlapi.SiteEmailsHandler)
+		admin.Post("/site-emails/{id}", controlapi.SendSiteEmailHandler)
 		admin.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		admin.Post("/settings", (&controlcollections.SitesCollection{}).SettingsHandler)
 		admin.Post("/sites/{id}/truncate", (&controlcollections.SitesCollection{}).TruncateHandler)

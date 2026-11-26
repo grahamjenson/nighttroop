@@ -685,6 +685,41 @@ func (q *Queries) GetSitesToDelete(ctx context.Context, arg GetSitesToDeletePara
 	return items, nil
 }
 
+const getSitesWithVerifiedEmail = `-- name: GetSitesWithVerifiedEmail :many
+SELECT id, email_verified_at FROM sites
+WHERE state = 'live' AND email_verified_at IS NOT NULL
+ORDER BY email_verified_at DESC, id LIMIT 1000
+`
+
+type GetSitesWithVerifiedEmailRow struct {
+	ID              string
+	EmailVerifiedAt *int64
+}
+
+// The live sites whose admin verified an email, the ones a control admin can send an email to
+func (q *Queries) GetSitesWithVerifiedEmail(ctx context.Context) ([]*GetSitesWithVerifiedEmailRow, error) {
+	rows, err := q.query(ctx, q.getSitesWithVerifiedEmailStmt, getSitesWithVerifiedEmail)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetSitesWithVerifiedEmailRow
+	for rows.Next() {
+		var i GetSitesWithVerifiedEmailRow
+		if err := rows.Scan(&i.ID, &i.EmailVerifiedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const hydrateSite = `-- name: HydrateSite :execresult
 UPDATE sites
 SET

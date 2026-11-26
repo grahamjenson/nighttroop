@@ -44,6 +44,7 @@ stored:
     site_archived: "Site archived"
     site_hydrated: "Site restored"
     site_truncated: "Site truncated"
+    site_emailed: "Site emailed"
     site_db_made_empty: "Site DB made empty"
     site_db_uploaded: "Site DB uploaded"
     site_version_restored: "Site restored from a backup"

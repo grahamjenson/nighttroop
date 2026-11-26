@@ -17,11 +17,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -107,6 +109,22 @@ var ownServers = []ownServer{
 		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
 		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
 	}, seedDevAdmin},
+	// A server that sends email, with one site, emailsit, whose email is verified
+	{"siteemail/control.bdd", "192.0.2.22", func(c *config.ServerConfig) {
+		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
+	}, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		_, err := controlDB.CreateSiteWithID(t.Context(), "emailsit")
+		require.NoError(t, err)
+		emailEnc, err := controlDB.ServerConfig.Security.EncryptFor(security.PurposeSiteEmail, "emailsit", "sam@example.com")
+		require.NoError(t, err)
+		require.NoError(t, controlDB.Queries.UpdateSiteEmail(t.Context(), controldb.UpdateSiteEmailParams{ID: "emailsit", EmailEnc: &emailEnc}))
+		verified, err := controlDB.Queries.VerifySiteEmail(t.Context(), controldb.VerifySiteEmailParams{ID: "emailsit", EmailEnc: &emailEnc})
+		require.NoError(t, err)
+		require.EqualValues(t, 1, verified)
+		return nil
+	}},
 	// A server run by another operator, with its own support email
 	{"operator/legal.bdd", "192.0.2.15", func(c *config.ServerConfig) {
 		c.OperatorName, c.SupportEmail = "Example Health Trust", "help@example.org"
