@@ -15,3 +15,7 @@ DELETE FROM site_banners WHERE id = sqlc.arg('ID');
 
 -- name: DeleteExpiredSiteBanners :execrows
 DELETE FROM site_banners WHERE expires_at <= sqlc.arg('Now');
+
+-- name: ActiveSiteBanners :many
+-- The banners not yet expired, oldest first, for a site's pages to show those that are its own
+SELECT * FROM site_banners WHERE expires_at > sqlc.arg('Now') ORDER BY id LIMIT 100;

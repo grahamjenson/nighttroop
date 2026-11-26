@@ -1,0 +1,31 @@
+package banner
+
+// levelClasses are how a line of each level is coloured: blue for information, amber for a warning, red for an error
+var levelClasses = map[Level]string{
+	Info:    "border-blue-200 bg-blue-50 text-blue-700",
+	Warning: "border-amber-500/20 bg-amber-500/10 text-amber-800",
+	Error:   "border-red-200 bg-red-50 text-red-700",
+}
+
+// Strip is the banners of a page, one line each, under its header. With none it is nothing.
+templ Strip(id string, banners []Banner) {
+	if len(banners) > 0 {
+		<div id={ id } role="alert" class="text-sm">
+			for _, banner := range banners {
+				<div class={ "border-b", levelClasses[banner.Level] }>
+					<p id={ banner.ID } class="mx-auto max-w-7xl px-4 py-1.5 sm:px-6 lg:px-8">
+						if banner.Title != "" {
+							<strong>{ banner.Title }</strong>
+						}
+						{ " " + banner.Text }
+						for _, link := range banner.Links {
+							{ " " }
+							<a id={ link.ID } href={ templ.SafeURL(link.Href) } class="underline">{ link.Text }</a>{ link.After }
+						}
+						{ " " + banner.After }
+					</p>
+				</div>
+			}
+		</div>
+	}
+}

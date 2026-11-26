@@ -459,6 +459,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - An admin deletes a banner, after a confirmation. A banner that is not there is 404.
 - A read-only admin sees the list, with no form and no Delete.
 - A job deletes the banners that are past the time they expire at, each 10 minutes.
+<<<<<<< HEAD
 ### Site emails
 
 - Site Emails (user menu) lists the live sites with a verified email, the last verified first: the site ID, with a
@@ -480,6 +481,18 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - 404: the site is not live, has no email, or its email is not verified.
   - 429: the site was sent an email in the last 24 hours. An email that was not sent does not count.
 - A read-only admin sees the list, with no Send (403 from the API).
+=======
+- A site shows its banners below the header of each page, to a person who is signed in. One line for each banner:
+  - **Storage full** (red), with why: the site is far over its storage limit, or the disk of the server is almost
+    full, and writes are refused.
+  - **Over the storage limit** (amber), with the size and the limit: the site is over its storage limit and writes
+    are not refused.
+  - Each banner an admin added for the site or for every site, oldest first, that is not expired: blue for
+    **Information**, amber for **Warning**. The message shows as text, not as HTML.
+- A site does not show a banner added for other sites. A site with no banner shows no strip.
+- One package (`server/components/banner`) decides the banners of the control pages and of the site pages, and
+  draws them.
+>>>>>>> origin/main
 
 ### Rate limits
 
