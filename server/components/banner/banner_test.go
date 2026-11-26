@@ -97,6 +97,13 @@ func TestOfSite(t *testing.T) {
 	}{
 		{name: "nothing to say", site: controldb.Site{ID: "davezzzz", EstimatedDbSizeKb: kb(10), MaxDbSizeKbLimit: kb(20)}},
 		{name: "size not known", site: controldb.Site{ID: "davezzzz"}},
+		{name: "under 90% of its storage", site: controldb.Site{ID: "davezzzz", EstimatedDbSizeKb: kb(921), MaxDbSizeKbLimit: kb(1024)}},
+		{name: "at 90% of its storage", site: controldb.Site{ID: "davezzzz", EstimatedDbSizeKb: kb(922), MaxDbSizeKbLimit: kb(1024)}, want: []Banner{
+			{ID: "site--banner--near-storage", Level: Info, Title: "Near the storage limit:", Text: "This site's data is 922.0 KB of its limit of 1.0 MB. Delete old data to make space."},
+		}},
+		{name: "at its storage limit, not over it", site: controldb.Site{ID: "davezzzz", EstimatedDbSizeKb: kb(1024), MaxDbSizeKbLimit: kb(1024)}, want: []Banner{
+			{ID: "site--banner--near-storage", Level: Info, Title: "Near the storage limit:", Text: "This site's data is 1.0 MB of its limit of 1.0 MB. Delete old data to make space."},
+		}},
 		{name: "over its storage", site: controldb.Site{ID: "davezzzz", EstimatedDbSizeKb: kb(2048), MaxDbSizeKbLimit: kb(1024)}, want: []Banner{
 			{ID: "site--banner--over-storage", Level: Warning, Title: "Over the storage limit:", Text: "This site's data is 2.0 MB, over its limit of 1.0 MB. Delete old data, or the site stops storing more."},
 		}},
