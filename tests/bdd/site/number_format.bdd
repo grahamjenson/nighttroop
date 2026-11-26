@@ -42,6 +42,8 @@ SCREENSHOT glucose_decimal_comma
 CLICK #glucoseReadingsTable tbody tr >> nth=0
 ASSERT_VISIBLE #site--glucose--details >> text="5,4 mmol/L"
 ASSERT_VISIBLE #site--glucose--edit--reading[value="5.4"]
+// The details' edit form opens a phone's number keys too
+ASSERT_VISIBLE #site--glucose--edit--reading[inputmode="decimal"]
 SCREENSHOT glucose_details_decimal_comma
 CLICK #site--glucose--details--close
 

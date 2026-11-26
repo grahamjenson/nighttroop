@@ -11,6 +11,10 @@ ASSERT_VISIBLE #site--insulin--create--dose[min="-100"][max="100"][step="any"]
 ASSERT_VISIBLE #site--insulin--create--extended-dose[min="0"][max="500"][step="any"]
 ASSERT_VISIBLE #site--insulin--create--dose-type[maxlength="32"]
 ASSERT_VISIBLE #site--insulin--create--notes[maxlength="1024"]
+// A phone opens its number keys for a number that cannot be negative. They have no minus sign, so a dose, which can
+// take back one entered by mistake, keeps the full keyboard
+ASSERT_VISIBLE #site--insulin--create--extended-dose[inputmode="decimal"]
+ASSERT_VISIBLE #site--insulin--create--dose:not([inputmode])
 SCREENSHOT insulin_dose_limits
 CLICK #site--insulin--create--modal--close
 ASSERT_NOT_VISIBLE #site--insulin--create--modal
@@ -22,6 +26,10 @@ CLICK #site--food--add
 ASSERT_VISIBLE #site--food--create--carbs[min="-1000"][max="1000"]
 ASSERT_VISIBLE #site--food--create--energy[min="0"][max="20000"]
 ASSERT_VISIBLE #site--food--create--absorption-time-minutes[min="0"][max="1440"][step="1"]
+// Carbs can be negative, so they keep the full keyboard; energy has a decimal point, and whole minutes have none
+ASSERT_VISIBLE #site--food--create--carbs:not([inputmode])
+ASSERT_VISIBLE #site--food--create--energy[inputmode="decimal"]
+ASSERT_VISIBLE #site--food--create--absorption-time-minutes[inputmode="numeric"]
 ASSERT_VISIBLE #site--food--create--name[maxlength="64"]
 CLICK #site--food--create--modal--close
 
@@ -31,6 +39,7 @@ ASSERT_STATUS 200
 CLICK #site--profile-switch--add
 ASSERT_VISIBLE #site--profile-switch--create--multiplier[min="10"][max="500"]
 ASSERT_VISIBLE #site--profile-switch--create--duration-minutes[min="0"][max="10080"]
+ASSERT_VISIBLE #site--profile-switch--create--multiplier[inputmode="decimal"]
 CLICK #site--profile-switch--create--modal--close
 
 // A temp target's targets are in the site's mmol/L, more than 0 and at most 1000 mg/dL
@@ -40,6 +49,7 @@ CLICK #site--temp-target--add
 ASSERT_VISIBLE #site--temp-target--create--low-target[min="0.1"][max="55.5"]
 ASSERT_VISIBLE #site--temp-target--create--high-target[min="0.1"][max="55.5"]
 ASSERT_VISIBLE #site--temp-target--create--duration-minutes[min="1"][max="10080"]
+ASSERT_VISIBLE #site--temp-target--create--low-target[inputmode="decimal"]
 SCREENSHOT temp_target_limits_mmol
 CLICK #site--temp-target--create--modal--close
 

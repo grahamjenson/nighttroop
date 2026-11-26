@@ -1234,13 +1234,16 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - A percent: its column's fraction as a percent (e.g. a profile switch: 10 to 500 %).
   - Glucose: in the settings' units, to one decimal place (e.g. a reading: 0.1 to 55.5 mmol/L, or 0.1 to 1000 mg/dL).
   - If the column refuses its limit (e.g. glucose more than 0), the input limit moves in by one step.
+- Number keys: a number field that cannot be negative has an `inputmode`, so a phone shows its number keys.
+  - A field of whole numbers (e.g. minutes) has `numeric`. Other fields (e.g. glucose, a percent) have `decimal`.
+  - A field that can be negative (a dose, carbs) has no `inputmode`, as the number keys of a phone have no minus sign.
 - Time: in the settings' timezone; blank is now. Other blank fields: not set.
 
 #### Record details form
 
 - Details (data and presets pages) are an edit form with labelled inputs, wrapped on a phone so each can be tapped.
-- The add modal's fields, labels, help and limits, filled in, except the time and fields an edit does not change (a
-  reading's type and method, a temp target's insulin needs).
+- The add modal's fields, labels, help, limits and number keys, filled in, except the time and fields an edit does
+  not change (a reading's type and method, a temp target's insulin needs).
 - Emptied notes or reason: cleared. A blank number: not changed.
 - Save (Rename for a profile): at the foot by Close, as Add is. Enter also saves.
 - Delete: at the foot, on the side opposite Save and Close, red, with an icon. A profile, a device status and a

@@ -32,7 +32,9 @@ func Check(fields []Field) error {
 
 // numberAttributes are a number's step, and its limit as it is typed in: a Percent's fraction as a percent, and
 // glucose in its Units. Each bound is rounded to the step's decimal places, one for any, and moved in by one place
-// when its limit does not take it, so the input never takes what the column does not.
+// when its limit does not take it, so the input never takes what the column does not. A number that cannot be
+// negative has an inputmode, so a phone opens its number keys, which have no minus sign: decimal, or numeric for a
+// whole number.
 func numberAttributes(f Field) templ.Attributes {
 	attributes, step, limit := templ.Attributes{}, f.Step, f.limit()
 	from, to := func(v float64) float64 { return v }, func(v float64) float64 { return v }
@@ -51,6 +53,12 @@ func numberAttributes(f Field) templ.Attributes {
 	}
 	if limit.Min != nil {
 		attributes["min"] = bound(*limit.Min, limit.MinExclusive, 1, from, to, places)
+		if *limit.Min >= 0 {
+			attributes["inputmode"] = "decimal"
+			if places == 0 {
+				attributes["inputmode"] = "numeric"
+			}
+		}
 	}
 	if limit.Max != nil {
 		attributes["max"] = bound(*limit.Max, limit.MaxExclusive, -1, from, to, places)
