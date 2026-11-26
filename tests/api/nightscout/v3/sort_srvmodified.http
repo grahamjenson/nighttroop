@@ -2,11 +2,15 @@ INCLUDE steps/new_ns_site.steps
 
 // A search sorted by srvModified or srvCreated is in that order, and pages by it, as a client after the latest changes
 // asks: three treatments, the oldest changed last, as AAPS cut a temp target after later ones were made
+// srvModified and srvCreated are in milliseconds, and two the same are sorted by identifier, so each write waits to be
+// in a later millisecond than the one before
 NAME create_oldest
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B { "eventType": "Note", "created_at": "{{ time 30 }}", "notes": "oldest" }
 ASSERT_STATUS 201
+
+SLEEP 5ms
 
 NAME create_middle
 POST http://{{ site }}/api/v3/treatments
@@ -14,11 +18,15 @@ H Authorization: Bearer {{ jwt }}
 B { "eventType": "Note", "created_at": "{{ time 20 }}", "notes": "middle" }
 ASSERT_STATUS 201
 
+SLEEP 5ms
+
 NAME create_newest
 POST http://{{ site }}/api/v3/treatments
 H Authorization: Bearer {{ jwt }}
 B { "eventType": "Note", "created_at": "{{ time 10 }}", "notes": "newest" }
 ASSERT_STATUS 201
+
+SLEEP 5ms
 
 NAME change_oldest
 PATCH http://{{ site }}/api/v3/treatments/{{ dig "create_oldest.identifier" }}
@@ -74,11 +82,15 @@ H Authorization: Bearer {{ jwt }}
 B { "type": "sgv", "sgv": 120, "date": {{ itime 15 }} }
 ASSERT_STATUS 201
 
+SLEEP 5ms
+
 NAME create_later_entry
 POST http://{{ site }}/api/v3/entries
 H Authorization: Bearer {{ jwt }}
 B { "type": "sgv", "sgv": 130, "date": {{ itime 5 }} }
 ASSERT_STATUS 201
+
+SLEEP 5ms
 
 NAME change_entry
 PATCH http://{{ site }}/api/v3/entries/{{ dig "create_entry.identifier" }}

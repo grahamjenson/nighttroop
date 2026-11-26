@@ -137,8 +137,6 @@
     1. P4: The v2 `pump`, `openaps` and `loop` properties read only the newest loop device status of the last 20
        minutes. Nightscout reads 6 hours (2 for the pump), so it also has a pump with no loop, and an earlier
        enacted when the newest status has none
-    1. P5: `/api/v2/properties/{names}` reads every property, then leaves out those not asked for: read only those
-       asked for, as each change age (`cage`, `iage`, `bage`, `sage`) is a query of its own
     1. P4: A suspended pump (`PUMP_SUSPEND`) of 0 minutes is a basal of 0 in the summaries until the next temp basal;
        also end it at a `Resume Pump` event, kept as an event group, for a Loop that does not send the suspend again
        with its duration

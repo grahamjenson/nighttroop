@@ -1,13 +1,18 @@
 package nsv2
 
 import (
+	"cmp"
+	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/sitedb"
+	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -29,41 +34,78 @@ func openAPSStatus(at time.Time) string {
 		"suggested": {` + run + `}, "enacted": {` + run + `, "received": true}}`
 }
 
-// BenchmarkProperties is a watch face or Nightguard polling an AAPS site's properties, and only its openaps property.
-// Run with go test -run XXX -bench Properties -benchmem ./server/nightscoutapi/nsapi/nsv2
-func BenchmarkProperties(b *testing.B) {
-	_, _, site := testutils.NewControlDBWithSite(b)
-	ctx, q, now := b.Context(), site.SiteDB.Queries(), time.Now()
+// seedProperties gives an AAPS site what every property is made from: readings, change treatments and a loop's status
+func seedProperties(t testing.TB) (context.Context, *sitedb.Queries) {
+	_, _, site := testutils.NewControlDBWithSite(t)
+	ctx, q, now := t.Context(), site.SiteDB.Queries(), time.Now()
 	for i := range int64(12) {
 		_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: fmt.Sprint("r", i), Mgdl: float64(120 + i),
 			ReadingType: "sgv", Trend: new(int64(4)), OccurredAt: now.Add(-time.Duration(i) * 5 * time.Minute).UnixMilli(), CreatedByIdentityName: "test"})
-		require.NoError(b, err)
+		require.NoError(t, err)
 	}
 	for i, groupType := range []string{"Site Change", "Insulin Change", "Sensor Change", "Sensor Start"} {
 		_, err := q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: fmt.Sprint("g", i), GroupType: groupType,
 			OccurredAt: now.Add(-time.Duration(i+1) * 24 * time.Hour).UnixMilli(), CreatedByIdentityName: "test"})
-		require.NoError(b, err)
+		require.NoError(t, err)
 	}
 	_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: "d", LoopName: new("openaps"),
 		LoopStatusJson: new(openAPSStatus(now.Add(-time.Minute))), LoopIob: new(0.736), LoopCob: new(0.0),
 		DeviceBatteryPercent: new(88.0), PumpJson: new(`{"clock": "` + now.UTC().Format(time.RFC3339) + `", "reservoir": 38, "status": {"status": "normal"}}`),
 		OccurredAt: now.Add(-time.Minute).UnixMilli(), CreatedByDeviceName: new("openaps://Test Phone"), CreatedByIdentityName: "test"})
-	require.NoError(b, err)
+	require.NoError(t, err)
+	return ctx, q
+}
 
+// BenchmarkProperties is a watch face or Nightguard polling an AAPS site's properties, a client asking for some of
+// them, as LoopFollow asks for dbsize, and only the openaps property.
+// Run with go test -run XXX -bench Properties -benchmem ./server/nightscoutapi/nsapi/nsv2
+func BenchmarkProperties(b *testing.B) {
+	ctx, q := seedProperties(b)
 	properties := Properties(ctx, q, time.Now())
 	require.Equal(b, "Enacted", properties["openaps"].(map[string]any)["status"].(LoopState).Label)
 	require.NotNil(b, properties["openaps"].(map[string]any)["lastPredBGs"])
-	b.Run("all", func(b *testing.B) {
-		for b.Loop() {
-			Properties(ctx, q, time.Now())
-		}
-	})
+	for _, names := range [][]string{nil, {"dbsize"}, {"cage"}, {"bgnow", "delta", "direction"}, {"iob", "cob"}} {
+		b.Run(cmp.Or(strings.Join(names, ","), "all"), func(b *testing.B) {
+			for b.Loop() {
+				Properties(ctx, q, time.Now(), names...)
+			}
+		})
+	}
 	dr := LastDeviceStatusFromPWD(q, ctx)
 	b.Run("openaps", func(b *testing.B) {
 		for b.Loop() {
 			GetOpenAPS(dr, time.Now())
 		}
 	})
+}
+
+// A request for some properties gives what the list of all has for them, and reads only what they are made from
+func TestPropertiesAskedFor(t *testing.T) {
+	ctx, q := seedProperties(t)
+	sqltiming.SetSamplePercent(100)
+	t.Cleanup(func() { sqltiming.SetSamplePercent(0) })
+	queries := func() (count int64) {
+		for _, query := range sqltiming.Slowest(math.MaxInt) {
+			count += query.Count
+		}
+		return count
+	}
+	now, before := time.Now(), queries()
+	all := Properties(ctx, q, now)
+	require.Equal(t, int64(8), queries()-before)
+	require.Len(t, all, 13)
+	for names, reads := range map[string]int64{"dbsize": 0, "cage": 1, "sage": 2, "upbat": 1, "delta": 1,
+		"bgnow,delta,direction": 1, "iob,cob,pump,openaps,loop": 1, "cage,notaproperty,bgnow": 2, ",": 0} {
+		want := map[string]any{}
+		for _, name := range strings.Split(names, ",") {
+			if property, ok := all[name]; ok {
+				want[name] = property
+			}
+		}
+		before := queries()
+		require.Equal(t, want, Properties(ctx, q, now, strings.Split(names, ",")...), names)
+		require.Equal(t, reads, queries()-before, names)
+	}
 }
 
 // Each run of a loop status has its own moment, and the status is shown as it was sent
