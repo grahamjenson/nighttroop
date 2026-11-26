@@ -6,7 +6,8 @@
     1. P2: Regenerate summaries rebuilds from site data, so it removes the summaries of days whose records the
        truncate of a site far over its size limit deleted: keep a day's summary when its records are gone
     1. P3: A site far over its size limit that keeps writing changes records on each truncate, so its DB is vacuumed
-       every 10 minutes: vacuum only when its free pages are a large part of it
+       at each backup (each hour, `SITE_BACKUP_INTERVAL_IN_SECONDS`): vacuum only when its free pages are a large part
+       of it
 1. P1: Push Notification testing. Alarms testing.
 1. e2e restore and archive testing
     1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up each site
@@ -19,7 +20,6 @@
        the schema does not have: restore only a file that fails a quick integrity check
     1. P3: Page the admin when the server's settings stop it starting (`config.NewServerConfig`): the pager's key
        is one of those settings, so that failure is only printed
-1. P2: e2e backup_key testing. Control
 1. Performance testing (cost estimate for running full node)
     1. P3: Each read of the summary builds its today so far again, from all of today's glucose readings, doses, food
        and device statuses: about 40% of what a read allocates for a loop's site (`BenchmarkSummary` in `sitedata`),
@@ -69,8 +69,6 @@
         1. P2: Delete a site's old records (truncate step 2) only while it is also over its size limit, as deleting does
            not help a site whose level comes from refusals or connectors
         1. P3: Record an event when a site's level changes, and sort the control sites list by abuse score
-        1. P3: Narrow a site's Events, Errors and Logs pages to one identity: the API takes `identity_id`, the pages
-           have no field for it, and Manage's **Its events** and **Its errors** still search by name
 
 ## Before Prod Deployment
 
@@ -86,7 +84,8 @@
 
 ## Build these things
 
-1. P3: Control Page to verify backup_key, and regenerate a backup_key
+1. Control pages:
+    1. P3: Control Page to verify backup_key, and regenerate a backup_key
 
 1. Site usability:
     1. P4: While an urgent alarm is snoozed, the banner shows the alarm it quiets (a high under its urgent high) as
@@ -132,8 +131,8 @@
 
 
 1. Nightscout API:
-    1. P3: Add the v2 `basal` property watch faces read: the profile's basal now (`sitemodels.BasalAt`) and the temp
-       basal running, as `display` and `current` (`basal`, `tempbasal`, `totalbasal`, `treatment`)
+    1. P3: Add the v2 `basal` property watch faces read: the profile's basal now (`sitemodels.Profiles.BasalAt`) and
+       the temp basal running, as `display` and `current` (`basal`, `tempbasal`, `totalbasal`, `treatment`)
     1. P4: The v2 `pump`, `openaps` and `loop` properties read only the newest loop device status of the last 20
        minutes. Nightscout reads 6 hours (2 for the pump), so it also has a pump with no loop, and an earlier
        enacted when the newest status has none
@@ -182,5 +181,7 @@
        settings, a connector's sync), which `TestSiteDataLimits` and `TestControlDataLimits` leave out
 
 1. Site pages:
+    1. P3: Narrow a site's Events, Errors and Logs pages to one identity: the API takes `identity_id`, the pages
+       have no field for it, and Manage's **Its events** and **Its errors** still search by name
     1. P4: The details of a profile, a device status and a loop's settings have no Delete button, as they have no
        `addmodal` edit form: add one, so they too are deleted on a phone with no scroll of the table to the row's icon
