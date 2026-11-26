@@ -231,9 +231,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSitesToDeleteStmt, err = db.PrepareContext(ctx, getSitesToDelete); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSitesToDelete: %w", err)
 	}
-	if q.getSitesWithVerifiedEmailStmt, err = db.PrepareContext(ctx, getSitesWithVerifiedEmail); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSitesWithVerifiedEmail: %w", err)
-	}
 	if q.hydrateSiteStmt, err = db.PrepareContext(ctx, hydrateSite); err != nil {
 		return nil, fmt.Errorf("error preparing query HydrateSite: %w", err)
 	}
@@ -728,11 +725,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSitesToDeleteStmt: %w", cerr)
 		}
 	}
-	if q.getSitesWithVerifiedEmailStmt != nil {
-		if cerr := q.getSitesWithVerifiedEmailStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSitesWithVerifiedEmailStmt: %w", cerr)
-		}
-	}
 	if q.hydrateSiteStmt != nil {
 		if cerr := q.hydrateSiteStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hydrateSiteStmt: %w", cerr)
@@ -1081,7 +1073,6 @@ type Queries struct {
 	getSitesNotUploadedStmt                 *sql.Stmt
 	getSitesToBackUpStmt                    *sql.Stmt
 	getSitesToDeleteStmt                    *sql.Stmt
-	getSitesWithVerifiedEmailStmt           *sql.Stmt
 	hydrateSiteStmt                         *sql.Stmt
 	listControlPasskeysStmt                 *sql.Stmt
 	listSiteIdentityPasskeysStmt            *sql.Stmt
@@ -1205,7 +1196,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getSitesNotUploadedStmt:                 q.getSitesNotUploadedStmt,
 		getSitesToBackUpStmt:                    q.getSitesToBackUpStmt,
 		getSitesToDeleteStmt:                    q.getSitesToDeleteStmt,
-		getSitesWithVerifiedEmailStmt:           q.getSitesWithVerifiedEmailStmt,
 		hydrateSiteStmt:                         q.hydrateSiteStmt,
 		listControlPasskeysStmt:                 q.listControlPasskeysStmt,
 		listSiteIdentityPasskeysStmt:            q.listSiteIdentityPasskeysStmt,

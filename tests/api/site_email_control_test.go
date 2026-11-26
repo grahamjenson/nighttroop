@@ -61,50 +61,50 @@ func TestControlSendsAPreBuiltEmailToAVerifiedSite(t *testing.T) {
 		return &emailEnc
 	}
 
-	// A site with no email, or one not verified, is not listed and is sent nothing
+	// A site with no email, or one not verified, is sent nothing
 	cfg.ResendAPIKey, cfg.ResendFrom, cfg.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
-	status, body := call("GET", "/site-emails", "")
+	status, body := call("GET", "/sites/"+siteID, "")
 	require.Equal(t, http.StatusOK, status)
-	require.NotContains(t, body, siteID)
-	status, _ = call("POST", "/site-emails/"+siteID, `{"email": "archive"}`)
+	require.Contains(t, body, `"email_verified_at":null`)
+	status, _ = call("POST", "/sites/"+siteID+"/email", `{"email": "archive"}`)
 	require.Equal(t, http.StatusNotFound, status)
 	emailEnc := saveEmail(siteID)
-	status, _ = call("POST", "/site-emails/"+siteID, `{"email": "archive"}`)
+	status, _ = call("POST", "/sites/"+siteID+"/email", `{"email": "archive"}`)
 	require.Equal(t, http.StatusNotFound, status)
 
-	// Verified, it is listed by its site ID, with no address
+	// Verified, the site says when, with no address
 	verified, err := controlDB.Queries.VerifySiteEmail(t.Context(), controldb.VerifySiteEmailParams{ID: siteID, EmailEnc: emailEnc})
 	require.NoError(t, err)
 	require.EqualValues(t, 1, verified)
-	status, body = call("GET", "/site-emails", "")
+	status, body = call("GET", "/sites/"+siteID, "")
 	require.Equal(t, http.StatusOK, status)
-	require.Contains(t, body, `"site_id":"`+siteID+`"`)
+	require.NotContains(t, body, `"email_verified_at":null`)
 	require.NotContains(t, body, "sam@example.com")
 	require.NotContains(t, body, *emailEnc)
 
 	// A server that sends no email sends none
 	cfg.ResendAPIKey = ""
-	status, _ = call("POST", "/site-emails/"+siteID, `{"email": "archive"}`)
+	status, _ = call("POST", "/sites/"+siteID+"/email", `{"email": "archive"}`)
 	require.Equal(t, http.StatusBadRequest, status)
 	cfg.ResendAPIKey = "re_key"
 
 	// The admin picks an email of the list, and writes no text of their own
 	for _, bad := range []string{`{}`, `{"email": "hello"}`, `{"email": "archive "}`, `{"email": "", "text": "Buy now", "subject": "Hi"}`} {
-		status, _ = call("POST", "/site-emails/"+siteID, bad)
+		status, _ = call("POST", "/sites/"+siteID+"/email", bad)
 		require.Equal(t, http.StatusBadRequest, status, bad)
 	}
-	status, _ = call("POST", "/site-emails/nosuchsi", `{"email": "archive"}`)
+	status, _ = call("POST", "/sites/nosuchsi/email", `{"email": "archive"}`)
 	require.Equal(t, http.StatusNotFound, status)
 	require.Empty(t, sent)
 
 	// An email Resend did not take does not count, so it can be sent again at once
 	refuse = true
-	status, _ = call("POST", "/site-emails/"+siteID, `{"email": "archive"}`)
+	status, _ = call("POST", "/sites/"+siteID+"/email", `{"email": "archive"}`)
 	require.Equal(t, http.StatusBadRequest, status)
 	refuse = false
 
 	// The email goes to the site's address, with the site's own URL, and an event says who sent which
-	status, body = call("POST", "/site-emails/"+siteID, `{"email": "archive", "text": "Buy now"}`)
+	status, body = call("POST", "/sites/"+siteID+"/email", `{"email": "archive", "text": "Buy now"}`)
 	require.Equal(t, http.StatusOK, status, body)
 	require.Len(t, sent, 1)
 	require.Equal(t, []string{"sam@example.com"}, sent[0].To)
@@ -117,7 +117,7 @@ func TestControlSendsAPreBuiltEmailToAVerifiedSite(t *testing.T) {
 	require.JSONEq(t, `{"by": "admin", "email": "archive"}`, *events[0].Attributes)
 
 	// A site is sent one email a day
-	status, _ = call("POST", "/site-emails/"+siteID, `{"email": "storage"}`)
+	status, _ = call("POST", "/sites/"+siteID+"/email", `{"email": "storage"}`)
 	require.Equal(t, http.StatusTooManyRequests, status)
 	require.Len(t, sent, 1)
 }

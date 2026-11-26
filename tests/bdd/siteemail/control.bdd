@@ -6,29 +6,24 @@ INPUT #control--login--password password
 TYPE #control--login--otp-1 123123
 ASSERT_VISIBLE #control--nav--logo
 
-// Site Emails, in the menu, lists the sites with a verified email, and never the address
-CLICK #control--menu
-CLICK #control--site-emails-button
+// The site's page has the emails to pick from, with no text to write, and never the address
+GOTO {{ .control_url }}/sites/emailsit
 ASSERT_STATUS 200
-ASSERT_PATH /site-emails
-ASSERT_TITLE Site Emails · Nighttroop Control
-ASSERT_NOT_VISIBLE #control--site-emails--off
-ASSERT_VISIBLE #control--site-email--emailsit >> text=emailsit
-ASSERT_NOT_VISIBLE #control--site-emails >> text=sam@example.com
-
-// The emails are a list to pick from, with no text to write
-ASSERT_NOT_VISIBLE #control--site-emails textarea
-SCREENSHOT site_emails
+ASSERT_VISIBLE #control--site--action-email >> text=Email this site
+ASSERT_VISIBLE #control--site--email
+ASSERT_NOT_VISIBLE #control--site--action-email textarea
+ASSERT_NOT_VISIBLE #main-content >> text=sam@example.com
+SCREENSHOT site_email
 
 // It asks first, then sends the email picked
-INPUT #control--site-email--emailsit--email storage
-CLICK_ASKS #control--site-email--emailsit--send
+INPUT #control--site--email storage
+CLICK_ASKS #control--site--email-send
 CLICK #confirm--ok
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE The email was sent.
 
 // A site is sent one email a day
-CLICK_ASKS #control--site-email--emailsit--send
+CLICK_ASKS #control--site--email-send
 CLICK #confirm--ok
 ASSERT_TEXT_VISIBLE Too Many Requests
 
