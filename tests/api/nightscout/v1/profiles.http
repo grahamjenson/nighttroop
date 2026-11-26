@@ -55,7 +55,7 @@ B {
   }
 ASSERT_STATUS 200
 ASSERT_EQUALS "Default" "@0.defaultProfile"
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 ASSERT_EQUALS "US/Eastern" "@0.store.Default.timezone"
 ASSERT_EQUALS 0.35 "@0.store.Default.basal.0.value"
 ASSERT_EQUALS 100 "@0.store.Default.target_low.0.value"
@@ -366,7 +366,8 @@ B {
   }
 ASSERT_STATUS 200
 ASSERT_EQUALS "TestDash-2025" "@0.defaultProfile"
-ASSERT_EQUALS "mg/dL" "@0.store.TestDash-2025.units"
+// AAPS uploaded it in mmol, so it comes back in mmol/L
+ASSERT_EQUALS "mmol/L" "@0.store.TestDash-2025.units"
 ASSERT_EQUALS "Pacific/Auckland" "@0.store.TestDash-2025.timezone"
 
 
@@ -379,7 +380,7 @@ NAME get_profiles_type_v1
 GET http://{{ site }}/api/v1/profiles/{{ dig "create_profile_v1.0._id" }}?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "Default" "@0.defaultProfile"
-ASSERT_EQUALS "mg/dL" "@0.units"
+ASSERT_EQUALS "mg/dl" "@0.units"
 ASSERT_EQUALS "US/Eastern" "@0.store.Default.timezone"
 ASSERT_EQUALS 0.35 "@0.store.Default.basal.0.value"
 ASSERT_EQUALS 100 "@0.store.Default.target_low.0.value"

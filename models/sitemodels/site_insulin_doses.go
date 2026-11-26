@@ -5,6 +5,9 @@ type SiteInsulinDose struct {
 	Dose                  float64 `json:"dose"`
 	DoseType              *string `json:"dose_type"`
 	Automatic             *bool   `json:"automatic"` // whether a loop gave it, as Loop sends, so it is an SMB
+	// IsBasalInsulin is whether it is basal insulin, as long acting insulin injected, which AAPS and Juggluco send: it
+	// counts as basal in the daily dose, not as a bolus
+	IsBasalInsulin *bool `json:"is_basal_insulin"`
 	Notes                 *string `json:"notes"`
 	Reason                *string `json:"reason"`
 	UtcOffsetMinutes      *int64  `json:"utc_offset_minutes"`

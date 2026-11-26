@@ -304,6 +304,82 @@ func TestMaxSessions(t *testing.T) {
 	}
 }
 
+// With ReplaceUnauthorized a full server closes its oldest session not yet authorized to open a new one, over polling
+// or a websocket, so sessions that never authorize cannot keep a client out. One with every session authorized
+// refuses a new one.
+func TestFullServerReplacesItsOldestUnauthorizedSession(t *testing.T) {
+	tests := []struct {
+		transport string
+		open      func(url string) (*Client, error)
+	}{
+		{"polling", func(url string) (*Client, error) { return Dial(context.Background(), url, V4, nil, nil) }},
+		{"websocket", func(url string) (*Client, error) { return DialOverWebSocket(context.Background(), url, V4, nil) }},
+	}
+	for _, test := range tests {
+		t.Run(test.transport, func(t *testing.T) {
+			opened := make(chan *Session, 4)
+			server := NewServer(Config{MaxSessions: 2, ReplaceUnauthorized: true}, func(s *Session) { opened <- s })
+			ts := httptest.NewServer(server)
+			t.Cleanup(func() {
+				server.Close()
+				ts.Close()
+			})
+			open := func() *Session {
+				client, err := test.open(ts.URL)
+				require.NoError(t, err)
+				t.Cleanup(func() { client.Close() })
+				return <-opened
+			}
+			oldest, authorized := open(), open()
+			authorized.Authorize()
+			closed := make(chan string, 1)
+			oldest.OnClose(func(reason string) { closed <- reason })
+
+			newer := open()
+			require.Equal(t, "replaced by a newer session", <-closed)
+			require.Equal(t, 2, server.Count(), "the server has no more sessions than its most")
+			select {
+			case <-authorized.Done():
+				t.Fatal("an authorized session was closed for a newer one")
+			default:
+			}
+
+			newer.Authorize()
+			_, err := test.open(ts.URL)
+			require.ErrorContains(t, err, "429", "every session is authorized, so none is closed for a new one")
+		})
+	}
+}
+
+// A holder, as an identity, holds at most MaxPerHolder of the server's sessions, so it cannot take every one
+func TestMaxPerHolder(t *testing.T) {
+	opened := make(chan *Session, 4)
+	server := NewServer(Config{MaxPerHolder: 2}, func(s *Session) { opened <- s })
+	ts := httptest.NewServer(server)
+	t.Cleanup(func() {
+		server.Close()
+		ts.Close()
+	})
+	var sessions []*Session
+	for range 4 {
+		handshake(t, ts.URL, "4")
+		sessions = append(sessions, <-opened)
+	}
+	require.True(t, sessions[0].Hold("reader"))
+	require.True(t, sessions[1].Hold("reader"))
+	require.False(t, sessions[2].Hold("reader"), "a third session is refused")
+	require.True(t, sessions[0].Hold("reader"), "a session its holder holds already is not counted again")
+	require.True(t, sessions[2].Hold("phone"), "another holder has its own sessions")
+	require.False(t, sessions[3].Hold("reader"))
+
+	// A session that closes, or passes to another holder, leaves its place to its holder's next
+	sessions[0].Close("test")
+	require.True(t, sessions[3].Hold("reader"))
+	require.True(t, sessions[1].Hold("phone"))
+	require.False(t, sessions[3].Hold("phone"), "a refused session is held as it was")
+	require.True(t, sessions[2].Hold("reader"))
+}
+
 // A client that does not poll is closed once the messages waiting for it are too many, or hold too many bytes
 func TestSlowClientIsClosedWhenItsBufferFills(t *testing.T) {
 	tests := []struct {

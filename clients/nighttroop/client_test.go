@@ -170,7 +170,7 @@ func TestNightscoutClient(t *testing.T) {
 	found, err := ns.NsV1SearchWithResponse(ctx, nighttroop.Entries, &nighttroop.NsV1SearchParams{Count: ptr(int64(10)), DateGte: ptr(now - 1000)}, auth)
 	require.NoError(t, err)
 	require.Len(t, *found.JSON200, 1)
-	require.Equal(t, "mg/dL", *(*found.JSON200)[0].Units, "glucose is in mg/dL, whatever the identity's default mmol/L")
+	require.Equal(t, "mg/dl", *(*found.JSON200)[0].Units, "glucose is in mg/dL, spelt as Nightscout does, whatever the identity's default mmol/L")
 	require.InDelta(t, 120, *(*found.JSON200)[0].Sgv, 0.01)
 	current, err := ns.NsV1CurrentWithResponse(ctx, nighttroop.Entries, auth)
 	require.NoError(t, err)

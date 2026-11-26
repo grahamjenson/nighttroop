@@ -85,7 +85,7 @@ var GlucoseColours = map[string]GlucoseColour{
 // RangeBounds are the range settings, low and high, in the settings' units, for this and other pages' graphs
 func RangeBounds(ctx context.Context) (float64, float64) {
 	settings, units := httputils.GetSiteContext(ctx).GetSettings(), glucoseUnits(ctx)
-	return units.FromMGDL(float64(*settings.GetRangeLowMgdl())), units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
+	return units.FromMGDL(float64(settings.GetRange().LowMgdl)), units.FromMGDL(float64(settings.GetRange().HighMgdl))
 }
 
 // glucoseRange is "Low" or "High" for a reading, in the settings' units, below or above the range settings
@@ -541,7 +541,7 @@ func GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) templ.Component
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		edit := addmodal.Props{ID: "site--glucose--edit", Path: "/data/glucose/" + reading.ID, Target: "#site--glucose--" + reading.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-			Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": display.GlucoseValue(reading.Reading, reading.Units)}, "reading_type", "measurement_method")}
+			Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": display.GlucoseValue(reading.Reading, reading.Units)}, "reading_type", "measurement_method"), Delete: i18n.T(ctx, "site.data.glucose_readings.delete_confirm")}
 		templ_7745c5c3_Var22 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

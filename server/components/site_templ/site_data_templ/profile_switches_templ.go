@@ -348,7 +348,7 @@ func ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) templ.Compo
 		siteContext, units := httputils.GetSiteContext(ctx), glucoseUnits(ctx)
 		unitsLabel := orEmpty(units.Stringp())
 		edit := addmodal.Props{ID: "site--profile-switch--edit", Path: "/data/profile-switches/" + profileSwitch.ID, Target: "#site--profile-switch--" + profileSwitch.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-			Fields: addmodal.Edit(profileSwitchFields(ctx), profileSwitch, nil)}
+			Fields: addmodal.Edit(profileSwitchFields(ctx), profileSwitch, nil), Delete: i18n.T(ctx, "site.data.profile_switches.delete_confirm")}
 		templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

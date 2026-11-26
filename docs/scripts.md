@@ -28,6 +28,7 @@ A line `HTTP` or `BROWSE` switches the lines after it. A `.bdd` file starts with
     QR code, `#public--site-info--totp-secret`).
 - **Values** from `{{ }}`:
   - `{{ .name.field }}` or `{{ dig "name.0.field" }}`: from an earlier step;
+    - If the step has no such value, or the value is null, the step fails.
   - `{{ site_url "abcdefgh" }}`: a site's address; `{{ server_url }}`: the server's;
   - `{{ env "PASSWORD" }}`: an environment variable;
   - `{{ totp .create_site.totp_secret }}`: the code an authenticator app shows when the step runs.

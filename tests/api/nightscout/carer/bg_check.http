@@ -1,0 +1,63 @@
+# A Caregiver device (device_read_write), such as LoopFollow or T1D Carer, cannot add glucose readings. Its careportal
+# BG Check is still kept, but as a meter reading (mbg), never as a CGM reading (sgv): a loop that reads its CGM from
+# Nightscout, and the alarms, would take a CGM reading for the PWD's glucose. The PWD phone's is a CGM reading still.
+
+INCLUDE steps/new_site_admin.steps
+
+NAME create_caregiver
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "carer", "role": "device_read_write"}
+ASSERT_STATUS 201
+SET carer_token {{ .create_caregiver.result.ns_token }}
+
+NAME carer_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .carer_token }}
+ASSERT_STATUS 200
+SET carer_jwt {{ .carer_jwt.token }}
+
+// With no glucoseType, a treatment's glucose is a CGM reading for the PWD phone
+NAME carer_bg_check_v1
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ .carer_token }}
+B [{"eventType": "BG Check", "glucose": 40, "units": "mg/dl", "created_at": "{{ time 10 }}", "enteredBy": "carer"}]
+ASSERT_STATUS 200
+
+NAME carer_bg_check_sensor_v3
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ .carer_jwt }}
+B {"eventType": "BG Check", "glucose": 39, "glucoseType": "Sensor", "units": "mg/dl", "date": {{ itime 5 }}}
+ASSERT_STATUS 201
+
+// The treatments are given back as they were sent
+NAME carer_bg_checks_kept
+GET http://{{ .ns_site }}/api/v1/treatments.json?token={{ .carer_token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 39 "@0.glucose"
+ASSERT_EQUALS "Sensor" "@0.glucoseType"
+ASSERT_EQUALS 40 "@1.glucose"
+
+NAME no_cgm_readings
+GET http://{{ .ns_site }}/api/v1/entries/sgv.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+NAME meter_readings
+GET http://{{ .ns_site }}/api/v1/entries/mbg.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 39 "@0.mbg"
+ASSERT_EQUALS 40 "@1.mbg"
+
+// The PWD phone's BG Check with no glucoseType is a CGM reading
+NAME pwd_bg_check
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "BG Check", "glucose": 120, "units": "mg/dl", "created_at": "{{ time 1 }}"}]
+ASSERT_STATUS 200
+
+NAME pwd_cgm_reading
+GET http://{{ .ns_site }}/api/v1/entries/sgv.json?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 120 "@0.sgv"

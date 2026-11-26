@@ -66,3 +66,24 @@ func TestPOSTCreateSite(t *testing.T) {
 	require.JSONEq(t, `{"error": "Too many requests"}`, limited.Body.String())
 	require.Contains(t, []string{"60", "61"}, limited.Header().Get("Retry-After"))
 }
+
+// No site is created while the DBs' disk is nearly full, as a full disk stops every site, and one is once it has room
+func TestPOSTCreateSiteRefusedWhileDiskFull(t *testing.T) {
+	cfg, controlDB := testutils.NewControlDB(t)
+	create := func() *httptest.ResponseRecorder {
+		r := httptest.NewRequest(http.MethodPost, "/site", nil)
+		r.Header.Set("Accept", "application/json")
+		w := httptest.NewRecorder()
+		POSTCreateSiteHandler(controlDB, cfg)(w, r)
+		return w
+	}
+	sites := controlDB.GetNSitesDBs()
+	controlDB.SetDiskFull(true)
+	full := create()
+	require.Equal(t, http.StatusInsufficientStorage, full.Code)
+	require.JSONEq(t, `{"error": "Full: the server's disk is nearly full"}`, full.Body.String())
+	require.Equal(t, sites, controlDB.GetNSitesDBs())
+
+	controlDB.SetDiskFull(false)
+	require.Equal(t, http.StatusOK, create().Code)
+}

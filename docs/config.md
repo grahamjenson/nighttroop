@@ -107,7 +107,7 @@ AAPS, Trio) send.
 | `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on at startup. |
 | `S3_ACCESS_KEY` | `minioadmin` (docker-compose MinIO) | The access key ID. |
 | `S3_SECRET_KEY` | `minioadmin` (docker-compose MinIO) | The secret key. |
-| `SITE_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How old a written site's backup is before it is backed up again. Each tick (the interval / 26) deletes the sites never used, then truncates and backs up those sites. |
+| `SITE_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How old a written site's backup is before it is backed up again. Each minute (or each interval, if it is shorter), the job deletes the sites never used, then truncates and backs up the sites that are due. |
 | `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a file of the control DB's replica after Litestream replaces or deletes it. |
 | `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site backup or archive. |
 
@@ -147,6 +147,7 @@ AAPS, Trio) send.
 | `MEMORY_ALERT_PERCENT` | `60` | Memory used (of the container's limit, else the machine's) at or above which the control site is warned. |
 | `DISK_ALERT_PERCENT` | `60` | The same, for space used on the DBs' disk. |
 | `DISK_ALERT_FREE_GB` | `100` | Free GB on the DBs' disk at or above which the disk never warns, however full. |
+| `DISK_REFUSE_FREE_MB` | `256` | Free MB on the DBs' disk under which, at each check (every 30 seconds), no site is created and site writes that add data are refused, and the admin is paged (SMS). |
 | `CPU_PEGGED_ALERT_SECONDS` | `20` | How long the CPU is at 100% of every core before the control site is warned. |
 
 ### Paging with PagerDuty
@@ -173,6 +174,16 @@ PagerDuty selects who to page and how, not Nighttroop. To set it up:
 - SMS and Call are both high urgency. To make a Call ring at once, add an Event Orchestration rule for `critical`.
 - A page with the same message as an open incident adds to that incident. It does not page again.
 - Each page is also logged as an error, so the control site's errors and Sentry show it.
+
+## Email
+
+A site needs no email. If the server can send email, a site's admin can give the site one and verify it.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `RESEND_API_KEY` | Empty | The API key of the Resend account that sends email. Empty turns email off. |
+| `RESEND_FROM` | Empty | Who the emails are from, an address of a domain verified in Resend, such as `Nighttroop <hello@example.org>`. Empty turns email off. |
+| `RESEND_API_URL` | `https://api.resend.com/emails` | Where emails are sent. |
 
 ## Rate limits
 
@@ -205,7 +216,7 @@ settings keep that value, which replaces the env value until set back.
 | `SOCKET_PING_INTERVAL_IN_SECONDS` | `25` | How often a client is pinged: Nightscout's interval, which v2 clients expect. |
 | `SOCKET_PING_TIMEOUT_IN_SECONDS` | `20` | How long a ping waits for its pong before the client is closed. |
 | `SOCKET_MAX_PAYLOAD_BYTES` | `100000` | The largest POST body or websocket message. |
-| `SOCKET_MAX_SESSIONS_PER_SITE` | `300` | The most live sessions for one site. |
+| `SOCKET_MAX_SESSIONS_PER_SITE` | `300` | The most live sessions for one site. One identity can hold half of them. A full site closes its oldest session with no access to open a new one. |
 | `SOCKET_MAX_UNAUTH_SESSIONS_PER_IP` | `30` | The most of a site's live sessions one IP (an IPv6 /64) can hold before they get access, so it cannot take them all from the site's followers. |
 | `SOCKET_MAX_BUFFERED_PACKETS` | `1000` | Packets that wait for a client before it is closed as too slow. |
 | `SOCKET_MAX_BUFFERED_BYTES` | `2000000` | The same, in bytes. |

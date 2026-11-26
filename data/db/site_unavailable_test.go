@@ -119,6 +119,28 @@ func TestKeepRestoringStopsWithTheServer(t *testing.T) {
 	require.Empty(t, paged.messages)
 }
 
+// A deleted site that is unavailable, as its DB did not open, is not restored any more and loses the DB files it has.
+// The sites deleted with it are still closed and lose theirs.
+func TestDeleteSitesWithAnUnavailableSite(t *testing.T) {
+	controlDB, siteID, _ := missingSite(t)
+	ctx := t.Context()
+	path := sitedb.GetPath(siteID, controlDB.ServerConfig)
+	require.NoError(t, os.WriteFile(path, []byte("not a DB"), 0o600))
+	other, err := controlDB.CreateSiteWithID(ctx, "opensite")
+	require.NoError(t, err)
+
+	require.NoError(t, controlDB.DeleteSites(ctx, []string{siteID, "opensite"}))
+	require.Empty(t, controlDB.UnavailableSites())
+	require.NoFileExists(t, path)
+	require.NoFileExists(t, other.SiteDB.Path)
+	tries := 0
+	controlDB.RestoreUnavailableSites(ctx, func(context.Context, string, string) (int64, bool, error) {
+		tries++
+		return 0, false, nil
+	})
+	require.Zero(t, tries, "a deleted site is not restored")
+}
+
 // A control admin makes an unavailable site's DB again, empty, so it is served again, and counts as written, so its new
 // DB is backed up. A site that is not unavailable, or whose DB is being restored now, is not made again.
 func TestNewEmptySiteDB(t *testing.T) {

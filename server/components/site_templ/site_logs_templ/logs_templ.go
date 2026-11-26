@@ -24,16 +24,16 @@ import (
 var view = logview.View{Prefix: "site", Path: "/logs", Date: site_data_templ.FormatDate}
 
 func eventRow(e *sitemodels.SiteEvent) logview.Row {
-	return logview.Row{ID: e.ID, Name: e.Name, At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID,
+	return logview.Row{ID: e.ID, Name: e.Name, At: e.StartedAt, FinishedAt: e.FinishedAt, RequestID: e.RequestID, JobID: e.JobID, IdentityID: e.IdentityID, IdentityName: e.IdentityName,
 		Attributes: e.Attributes}
 }
 
 func errorRow(e *sitemodels.SiteError) logview.Row {
-	return logview.Row{ID: e.ID, Message: e.Message, At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, Attributes: e.Attributes}
+	return logview.Row{ID: e.ID, Message: e.Message, At: e.CreatedAt, RequestID: e.RequestID, JobID: e.JobID, IdentityID: e.IdentityID, IdentityName: e.IdentityName, Attributes: e.Attributes}
 }
 
 func logRow(l *sitemodels.SiteLog) logview.Row {
-	return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, Attributes: l.Attributes}
+	return logview.Row{ID: l.ID, Name: l.Level, Message: l.Message, At: l.CreatedAt, RequestID: l.RequestID, JobID: l.JobID, IdentityID: l.IdentityID, IdentityName: l.IdentityName, Attributes: l.Attributes}
 }
 
 // EventsTable shows one page of the site's events, the newest first

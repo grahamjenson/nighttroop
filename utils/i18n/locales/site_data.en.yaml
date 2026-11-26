@@ -69,6 +69,7 @@ site:
       glucose_on: "Glucose on {{.Date}}"
       last_days: "Last {{.Days}} days"
       no_readings: "No readings"
+      open_report: "Click a day to see its AGP report."
     insulin_doses:
       title: "Insulin Doses"
       about: "Each bolus of insulin, from a pump, a pen or a loop. Newest first. Click an insulin dose to see all its details."
@@ -123,6 +124,10 @@ site:
       subcategory: "Subcategory"
       subcategory_help: "A group within its category, e.g. apples."
       reason_help: "Why it was eaten, e.g. lunch or a low."
+      preset: "Food Preset"
+      preset_help: "Pick a food preset to fill in its values. Then change the values that are different. The list shows the first 100 by name: type part of a name to find others."
+      preset_search: "Search by name"
+      preset_not_found: "No food preset has this name"
       delete_confirm: "Delete this food intake?"
       updated: "Food Intake Updated"
       deleted: "Food Intake Deleted"

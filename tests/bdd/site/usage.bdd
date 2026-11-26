@@ -5,7 +5,7 @@ ASSERT_PATH /
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--submit
 ASSERT_TEXT_VISIBLE Connector Updated
 RUN_BACKGROUND_JOBS
@@ -23,6 +23,10 @@ ASSERT_VISIBLE #site--usage--db-limit >> text=of its 20.00 MB limit
 ASSERT_DRAWN #site--usage--db-used
 ASSERT_VISIBLE #site--usage--db-table--Other
 ASSERT_VISIBLE #site--usage--db-table--device_reports
+// Its key names each table by the page that shows it, with its records in full, not in thousands
+ASSERT_VISIBLE #site--usage--db-table--device_reports >> text="Device Status"
+ASSERT_VISIBLE #site--usage--db-table--device_reports >> text=/^[\d,]+ records? · \d+\.\d\d MB · \d+%$/
+ASSERT_NOT_VISIBLE #site--usage--db-tables >> text=device_reports
 ASSERT_VISIBLE #site--usage--truncate-card >> text=Readings, treatments, profiles and everything else are kept.
 // It has Download Data, a link to a snapshot of the site's DB, to look through its data
 ASSERT_VISIBLE #site--usage--download >> text=All the site's data as it is now
@@ -62,3 +66,12 @@ ASSERT_NO_PAGE_ERRORS
 GOTO /logs/events
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Site truncated
+
+// On a phone the key, with each table's name and its records, size and share, fits the window. The window is tall enough
+// for the whole page, so fitting it checks only its width
+WINDOW 390x1200
+GOTO /usage
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--usage--db-table--device_reports >> text="Device Status"
+ASSERT_FITS
+SCREENSHOT usage_phone

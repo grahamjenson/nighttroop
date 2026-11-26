@@ -791,11 +791,6 @@ func (m GlucoseReading) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated GlucoseReading.
-func (m *GlucoseReading) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetDelta returns the Delta value.
 func (m GlucoseReading) GetDelta() *float64 {
 	return m.Delta
@@ -919,11 +914,6 @@ func (m *GlucoseReadingsVw) SetReadingType(v *string) {
 // GetUnits returns the Units value.
 func (m GlucoseReadingsVw) GetUnits() *consts.Units {
 	return m.Units
-}
-
-// SetUnits sets the Units value and returns the updated GlucoseReadingsVw.
-func (m *GlucoseReadingsVw) SetUnits(v *consts.Units) {
-	m.Units = v
 }
 
 // GetDelta returns the Delta value.
@@ -1556,19 +1546,9 @@ func (m ProfilePreset) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m ProfilePreset) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated ProfilePreset.
-func (m *ProfilePreset) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -1696,19 +1676,9 @@ func (m ProfileSwitch) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m ProfileSwitch) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated ProfileSwitch.
-func (m *ProfileSwitch) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -1866,19 +1836,9 @@ func (m ProfileSwitchesVw) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m ProfileSwitchesVw) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated ProfileSwitchesVw.
-func (m *ProfileSwitchesVw) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -2014,11 +1974,6 @@ func (m SummaryPeriod) GetDate() string {
 // GetTimezone returns the Timezone value.
 func (m SummaryPeriod) GetTimezone() string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated SummaryPeriod.
-func (m *SummaryPeriod) SetTimezone(v string) {
-	m.Timezone = v
 }
 
 // GetCreatedAt returns the CreatedAt value.
@@ -2596,6 +2551,11 @@ func (m *DeviceReportHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated DeviceReportSortedIDsParams.
+func (m *DeviceReportSortedIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetDevice returns the Device value.
 func (m DeviceReportTotalsParams) GetDevice() *string {
 	return m.Device
@@ -2723,6 +2683,11 @@ func (m *ActivityAscendingIDsParams) SetLimit(v int64) {
 
 // SetLimit sets the Limit value and returns the updated ActivityHistoryIDsParams.
 func (m *ActivityHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// SetLimit sets the Limit value and returns the updated ActivitySortedIDsParams.
+func (m *ActivitySortedIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
@@ -3061,6 +3026,11 @@ func (m *CreateFoodIntakeParams) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
+// SetLimit sets the Limit value and returns the updated FoodIntakeDurationsParams.
+func (m *FoodIntakeDurationsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m GetFoodIntakeParams) GetID() string {
 	return m.ID
@@ -3246,11 +3216,6 @@ func (m CreateGlucoseReadingParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated CreateGlucoseReadingParams.
-func (m *CreateGlucoseReadingParams) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetDelta returns the Delta value.
 func (m CreateGlucoseReadingParams) GetDelta() *float64 {
 	return m.Delta
@@ -3346,6 +3311,11 @@ func (m *GlucoseReadingHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated GlucoseReadingSortedIDsParams.
+func (m *GlucoseReadingSortedIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m HardDeleteGlucoseReadingParams) GetID() string {
 	return m.ID
@@ -3384,11 +3354,6 @@ func (m *RewriteGlucoseReadingParams) SetReadingType(v string) {
 // GetUnits returns the Units value.
 func (m RewriteGlucoseReadingParams) GetUnits() *consts.Units {
 	return m.Units
-}
-
-// SetUnits sets the Units value and returns the updated RewriteGlucoseReadingParams.
-func (m *RewriteGlucoseReadingParams) SetUnits(v *consts.Units) {
-	m.Units = v
 }
 
 // GetDelta returns the Delta value.
@@ -3618,6 +3583,11 @@ func (m *EventGroupAscendingIDsParams) SetLimit(v int64) {
 
 // SetLimit sets the Limit value and returns the updated EventGroupHistoryIDsParams.
 func (m *EventGroupHistoryIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// SetLimit sets the Limit value and returns the updated EventGroupSortedIDsParams.
+func (m *EventGroupSortedIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
@@ -3899,6 +3869,11 @@ func (m HardDeleteInsulinDoseParams) GetID() string {
 // SetID sets the ID value and returns the updated HardDeleteInsulinDoseParams.
 func (m *HardDeleteInsulinDoseParams) SetID(v string) {
 	m.ID = v
+}
+
+// SetLimit sets the Limit value and returns the updated InsulinDosesExtendedIntoParams.
+func (m *InsulinDosesExtendedIntoParams) SetLimit(v int64) {
+	m.Limit = v
 }
 
 // GetID returns the ID value.
@@ -4311,19 +4286,9 @@ func (m CreateProfileSwitchParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m CreateProfileSwitchParams) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated CreateProfileSwitchParams.
-func (m *CreateProfileSwitchParams) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetIcfgJson returns the IcfgJson value.
@@ -4471,19 +4436,9 @@ func (m RewriteProfileSwitchParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated RewriteProfileSwitchParams.
-func (m *RewriteProfileSwitchParams) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m RewriteProfileSwitchParams) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated RewriteProfileSwitchParams.
-func (m *RewriteProfileSwitchParams) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetIcfgJson returns the IcfgJson value.
@@ -5172,6 +5127,11 @@ func (m *DeleteGeneralSettingsBeforeParams) SetUpdatedAt(v int64) {
 }
 
 // GetKey returns the Key value.
+func (m GeneralSettingsBytesParams) GetKey() string {
+	return m.Key
+}
+
+// GetKey returns the Key value.
 func (m GetGeneralSettingParams) GetKey() string {
 	return m.Key
 }
@@ -5336,6 +5296,21 @@ func (m *FoodPresetHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated FoodPresetSortedIDsParams.
+func (m *FoodPresetSortedIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
+// GetName returns the Name value.
+func (m FoodPresetsNamedParams) GetName() string {
+	return m.Name
+}
+
+// SetLimit sets the Limit value and returns the updated FoodPresetsNamedParams.
+func (m *FoodPresetsNamedParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetID returns the ID value.
 func (m GetFoodPresetParams) GetID() string {
 	return m.ID
@@ -5451,19 +5426,9 @@ func (m CreateProfilePresetParams) GetUnits() *consts.Units {
 	return m.Units
 }
 
-// SetUnits sets the Units value and returns the updated CreateProfilePresetParams.
-func (m *CreateProfilePresetParams) SetUnits(v *consts.Units) {
-	m.Units = v
-}
-
 // GetTimezone returns the Timezone value.
 func (m CreateProfilePresetParams) GetTimezone() *string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated CreateProfilePresetParams.
-func (m *CreateProfilePresetParams) SetTimezone(v *string) {
-	m.Timezone = v
 }
 
 // GetCarbRatiosJson returns the CarbRatiosJson value.
@@ -5571,6 +5536,11 @@ func (m *ProfileStoreHistoryIDsParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated ProfileStoreSortedIDsParams.
+func (m *ProfileStoreSortedIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // SetLimit sets the Limit value and returns the updated SearchProfileStoresParams.
 func (m *SearchProfileStoresParams) SetLimit(v int64) {
 	m.Limit = v
@@ -5624,10 +5594,5 @@ func (m UpsertSummaryPeriodParams) GetDate() string {
 // GetTimezone returns the Timezone value.
 func (m UpsertSummaryPeriodParams) GetTimezone() string {
 	return m.Timezone
-}
-
-// SetTimezone sets the Timezone value and returns the updated UpsertSummaryPeriodParams.
-func (m *UpsertSummaryPeriodParams) SetTimezone(v string) {
-	m.Timezone = v
 }
 

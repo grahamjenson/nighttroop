@@ -17,11 +17,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/background"
 	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/migrateup"
 	"nighttroop.t1d.nz/server"
 	"nighttroop.t1d.nz/tests/dsl/flow"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/s3utils"
+	"nighttroop.t1d.nz/utils/security"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -92,9 +94,47 @@ var ownServers = []ownServer{
 		return nil
 	}},
 	// A server that started without S3, as S3 was not working and its control DB was there
+	// A server without S3, as staging, with archivme, a site no one has used, to disable, archive and restore
+	{"control/archive_restore.bdd", "192.0.2.20", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		_, err := controlDB.CreateSiteWithID(t.Context(), "archivme")
+		require.NoError(t, err)
+		return nil
+	}},
 	{"s3down/banner.bdd", "192.0.2.18", func(c *config.ServerConfig) { c.Status.S3Down = true }, seedDevAdmin},
 	// A server that turned S3 off at start, as its control DB is not the one replicated in S3
 	{"s3off/banner.bdd", "192.0.2.19", func(c *config.ServerConfig) { c.Status.S3Off = config.S3OffConflict }, seedDevAdmin},
+	// A server that sends email, through a Resend that takes every one
+	{"email/account.bdd", "192.0.2.21", func(c *config.ServerConfig) {
+		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
+	}, seedDevAdmin},
+	// A server that sends email, with one site, emailsit, whose email is verified
+	{"siteemail/control.bdd", "192.0.2.22", func(c *config.ServerConfig) {
+		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
+	}, seedVerifiedSite},
+	// A server whose Resend has two sent emails: one to emailsit's address, and one to an address no site has
+	{"sentemail/list.bdd", "192.0.2.24", func(c *config.ServerConfig) {
+		resend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/emails":
+				_, _ = w.Write([]byte(`{"data": [{"id": "e2", "to": ["sam@example.com"], "subject": "Your Nighttroop site will be archived", "created_at": "2026-11-25 22:13:42.674981+00", "last_event": "delivered"},
+					{"id": "e1", "to": ["pat@other.example.org"], "subject": "Verify the email of your Nighttroop site", "created_at": "2026-11-24T10:00:00Z", "last_event": "bounced"}]}`))
+			case "/emails/e1":
+				_, _ = w.Write([]byte(`{"id": "e1", "to": ["pat@other.example.org"]}`))
+			}
+		}))
+		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL+"/emails"
+	}, seedVerifiedSite},
+	// A server with one site, nearlimt, that holds 19000 KB of the 20480 KB a site may: near its storage limit
+	{"storage/banner.bdd", "192.0.2.23", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		site, err := controlDB.CreateSiteWithID(t.Context(), "nearlimt")
+		require.NoError(t, err)
+		require.NoError(t, controlDB.Queries.UpdateSiteDBSize(t.Context(), controldb.UpdateSiteDBSizeParams{ID: "nearlimt", EstimatedDbSizeKb: new(int64(19000))}))
+		return map[string]any{"admin_password": site.AdminPassword}
+	}},
 	// A server run by another operator, with its own support email
 	{"operator/legal.bdd", "192.0.2.15", func(c *config.ServerConfig) {
 		c.OperatorName, c.SupportEmail = "Example Health Trust", "help@example.org"
@@ -103,6 +143,20 @@ var ownServers = []ownServer{
 
 func seedDevAdmin(t *testing.T, controlDB *db.ControlDB) map[string]any {
 	require.NoError(t, controlDB.SeedDevAdmin(t.Context()))
+	return nil
+}
+
+// seedVerifiedSite makes the control admin and one site, emailsit, whose email, sam@example.com, is verified
+func seedVerifiedSite(t *testing.T, controlDB *db.ControlDB) map[string]any {
+	seedDevAdmin(t, controlDB)
+	_, err := controlDB.CreateSiteWithID(t.Context(), "emailsit")
+	require.NoError(t, err)
+	emailEnc, err := controlDB.ServerConfig.Security.EncryptFor(security.PurposeSiteEmail, "emailsit", "sam@example.com")
+	require.NoError(t, err)
+	require.NoError(t, controlDB.Queries.UpdateSiteEmail(t.Context(), controldb.UpdateSiteEmailParams{ID: "emailsit", EmailEnc: &emailEnc}))
+	verified, err := controlDB.Queries.VerifySiteEmail(t.Context(), controldb.VerifySiteEmailParams{ID: "emailsit", EmailEnc: &emailEnc})
+	require.NoError(t, err)
+	require.EqualValues(t, 1, verified)
 	return nil
 }
 

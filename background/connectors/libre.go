@@ -2,12 +2,10 @@ package connectors
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 
 	"nighttroop.t1d.nz/clients/libre_client"
-	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/libremodels"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -57,24 +55,5 @@ func (b *ConnectorJobManager) copyLibreReadings(ctx context.Context, jobInfo *Co
 	}
 	lc.Lock()
 	defer lc.Unlock()
-
-	refused := false
-	refuse := func(err error, record any) {
-		if !refused {
-			refused = true
-			recordRefused(ctx, jobInfo, err, record)
-		}
-	}
-	lc.Unreadable = func(raw json.RawMessage, err error) { refuse(fmt.Errorf("Libre: cannot read a reading: %w", err), raw) }
-	readings, err := lc.FetchReadings(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("Libre Error: %w", err)
-	}
-	added, err := keepReadings(ctx, jobInfo.Site, readings, func(r libremodels.Reading) sitedb.CreateGlucoseReadingParams {
-		return libremodels.ReadingToCreate(r, "libre_connector")
-	}, func(err error, r libremodels.Reading) { refuse(fmt.Errorf("Libre: cannot keep a reading: %w", err), r) })
-	if err != nil {
-		return 0, fmt.Errorf("Libre Error: %w", err)
-	}
-	return added, nil
+	return copyReadings(ctx, jobInfo, "Libre", &lc.Unreadable, lc.FetchReadings, libremodels.ReadingToCreate)
 }

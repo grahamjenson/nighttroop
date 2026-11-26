@@ -8,13 +8,17 @@ CLICK #site--data--device-status-button
 ASSERT_STATUS 200
 ASSERT_PATH /data/device-status
 ASSERT_VISIBLE #site--device-status--empty
+// As the other data pages' empty tables, it says how a new site gets its data, with a link to the guide
+ASSERT_VISIBLE #site--device-status--empty >> text=No device has reported in the last week.
+ASSERT_VISIBLE #site--device-status--empty >> text=On a new site, nothing is here until an app or a connector sends it.
+ASSERT_VISIBLE #site--device-status--empty #site--data--new-site-link
 SCREENSHOT device_statuses_empty
 
 // Virtual connector writes a device status every 5 minutes, 6 of them on its first run
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated

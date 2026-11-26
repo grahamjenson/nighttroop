@@ -3,6 +3,7 @@ package nscollections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"log/slog"
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -51,6 +52,11 @@ func (c FoodCollection) GetModel(q *sitedb.Queries, ctx context.Context, identif
 	return q.GetFoodPreset(ctx, sitedb.GetFoodPresetParams{ID: identifier})
 }
 
+func (c FoodCollection) GetModels(q *sitedb.Queries, ctx context.Context, ids []string, _ bool) ([]*sitedb.FoodPreset, error) {
+	idIn, _ := json.Marshal(ids)
+	return q.GetFoodPresetsByIDs(ctx, sitedb.GetFoodPresetsByIDsParams{IDs: new(string(idIn))})
+}
+
 // Delete always deletes a preset for good, as presets are not soft deleted
 func (c FoodCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, _ bool) (sql.Result, error) {
 	return q.HardDeleteFoodPreset(ctx, sitedb.HardDeleteFoodPresetParams{ID: identifier})
@@ -69,6 +75,10 @@ func (c FoodCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, nsM
 
 func (c FoodCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
 	return q.FoodPresetAscendingIDs(ctx, nsquery.FoodPresetAscending(query))
+}
+
+func (c FoodCollection) SortedIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.FoodPresetSortedIDs(ctx, nsquery.FoodPresetSorted(query))
 }
 
 func (c FoodCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {

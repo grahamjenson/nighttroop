@@ -81,6 +81,28 @@
         "responses": { "200": { "$ref": "#/components/responses/PasskeySignedIn" }, "default": { "$ref": "#/components/responses/PasskeyError" } }
       }
     },
+    "/settings/account/email": {
+      "post": {
+        "operationId": "SaveSiteEmail", "tags": ["Settings"],
+        "summary": "Keeps an email as the site's, not verified, and sends it a link that verifies it. For an admin, on a server that sends email. A site is sent one link each hour (429)",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["email"], "properties": { "email": { "type": "string", "format": "email", "maxLength": 254 } } } } } },
+        "responses": { "200": { "$ref": "#/components/responses/SiteEmail" }, "default": { "$ref": "#/components/responses/Error" } }
+      },
+      "delete": {
+        "operationId": "RemoveSiteEmail", "tags": ["Settings"],
+        "summary": "Removes the site's email. For an admin, on a server that sends email",
+        "responses": { "200": { "$ref": "#/components/responses/SiteEmail" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/settings/account/email/verify": {
+      "get": {
+        "operationId": "VerifySiteEmail", "tags": ["Site"],
+        "summary": "The link sent to a site's email: with its key, within 24 hours and once, it verifies the email and goes to My Account",
+        "security": [],
+        "parameters": [{ "name": "key", "in": "query", "required": true, "schema": { "type": "string" } }],
+        "responses": { "303": { "description": "Verified, with My Account to go to" }, "400": { "description": "The link does not work" } }
+      }
+    },
     "/login": {
       "post": {
         "operationId": "Login", "tags": ["Site"],
@@ -196,7 +218,7 @@
       },
       "post": {
         "operationId": "CreateEventGroup", "tags": ["Data"], "summary": "Groups events already made, picked by their IDs",
-        "description": "Needs group_type. Each ID sent must be of a kind the type can have, from GET /data/event-groups/choices, and at least one is needed, except for a change (a sensor, site or pump part), which has none. 400 when the type is missing or unknown, an ID is of a kind the type cannot have, none is sent, or an event does not exist; 409 when an event is already in another group.",
+        "description": "Needs group_type. Each ID sent must be of a kind the type can have, from GET /data/event-groups/choices, and at least one is needed, except for a change (a sensor, site or pump part), which has none. 400 when the type is missing or unknown, an ID is of a kind the type cannot have, none is sent, or an event does not exist; 403 when a Caregiver device sends a glucose_reading_id; 409 when an event is already in another group.",
         "requestBody": { "$ref": "#/components/requestBodies/EventGroupBody" },
         "responses": { "201": { "$ref": "#/components/responses/EventGroupResult" }, "409": { "$ref": "#/components/responses/Error" }, "default": { "$ref": "#/components/responses/Error" } }
       }
@@ -604,8 +626,8 @@
       "NsCollection": { "name": "collection", "in": "path", "required": true, "schema": { "type": "string", "enum": ["entries", "treatments", "devicestatus", "profile", "food", "settings", "activity"] } },
       "NsIdentifier": { "name": "identifier", "in": "path", "required": true, "schema": { "type": "string" } },
       "NsCount": { "name": "count", "in": "query", "description": "How many documents, at most 1000", "schema": { "type": "integer", "format": "int64" } },
-      "NsSort": { "name": "sort", "in": "query", "description": "A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. Other fields are the newest first", "schema": { "type": "string" } },
-      "NsSortDesc": { "name": "sort$desc", "in": "query", "description": "A field to sort by, descending", "schema": { "type": "string" } },
+      "NsSort": { "name": "sort", "in": "query", "description": "A field to sort by, ascending. On the date (date, created_at, mills, ...) the search is the oldest first; with a filter other than the date a page can have fewer than limit. srvModified and srvCreated are sorted, and paged, by when each was last changed or created. Other fields are the newest first", "schema": { "type": "string" } },
+      "NsSortDesc": { "name": "sort$desc", "in": "query", "description": "A field to sort by, descending: the date, srvModified or srvCreated, the newest first", "schema": { "type": "string" } },
       "NsFields": { "name": "fields", "in": "query", "description": "Comma separated fields to return", "schema": { "type": "string" } },
       "NsDateGte": { "name": "date$gte", "in": "query", "description": "Documents from this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
       "NsDateLte": { "name": "date$lte", "in": "query", "description": "Documents up to this time, in milliseconds", "schema": { "type": "integer", "format": "int64" } },
@@ -627,6 +649,7 @@
     "responses": {
       "PasskeyOptions": { "description": "WebAuthn options, as publicKey, for the browser", "content": { "application/json": { "schema": { "type": "object", "properties": { "publicKey": { "type": "object", "additionalProperties": true } } } } } },
       "PasskeySignedIn": { "description": "Done, with where to go", "content": { "application/json": { "schema": { "type": "object", "properties": { "redirect": { "type": "string" } } } } } },
+      "SiteEmail": { "description": "The site's email, empty for none, and whether it is verified", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "object", "properties": { "email": { "type": "string" }, "verified": { "type": "boolean" } } } } } } } },
       "PasskeyError": { "description": "Why the passkey did not work", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } },
       "Error": { "description": "An error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
       "Deleted": { "description": "Deleted", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "description": "deleted" } } } } } },
@@ -750,7 +773,8 @@
               "dose_type": { "type": "string" },
               "extended_dose": { "type": "number", "format": "double", "description": "A combo or extended bolus's units given evenly over extended_duration_minutes after the dose" },
               "extended_duration_minutes": { "type": "integer", "format": "int64", "description": "How long the extended dose is given over" },
-              "automatic": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether a loop gave it, as Loop uploads a bolus; set only by a loop's upload, not the site" }
+              "automatic": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether a loop gave it, as Loop uploads a bolus; set only by a loop's upload, not the site" },
+              "is_basal_insulin": { "type": "boolean", "nullable": true, "readOnly": true, "description": "Whether it is basal insulin, as long acting insulin injected, which counts as basal in the daily dose, not as a bolus; set only by an upload through the Nightscout API, not the site" }
             }
           }
         ]
@@ -794,6 +818,7 @@
               "category": { "type": "string" },
               "subcategory": { "type": "string" },
               "absorption_time_minutes": { "type": "integer", "format": "int64" },
+              "duration_minutes": { "type": "integer", "format": "int64", "readOnly": true, "description": "In the summary only: how long the food is given over, as AAPS's extended carbs are, from its treatment's duration" },
               "pre_bolus": { "type": "number", "format": "double" },
               "carbs": { "type": "number", "format": "double", "description": "Grams" },
               "fat": { "type": "number", "format": "double" },
@@ -984,7 +1009,7 @@
           "created_at": { "type": "string" },
           "sgv": { "type": "number", "format": "double", "description": "In units" },
           "mbg": { "type": "number", "format": "double", "description": "In units" },
-          "units": { "type": "string", "description": "The units of sgv and mbg, always mg/dL" },
+          "units": { "type": "string", "description": "The units of sgv and mbg, always mg/dL: spelt mg/dl, as Nightscout does, or mg/dL for a device added for Loop" },
           "direction": { "type": "string" },
           "insulin": { "type": "number", "format": "double" },
           "carbs": { "type": "number", "format": "double" },

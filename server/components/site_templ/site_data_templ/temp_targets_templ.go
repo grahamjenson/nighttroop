@@ -350,7 +350,7 @@ func TempTargetModal(tempTarget *sitemodels.SiteTempTarget) templ.Component {
 		ctx = templ.InitializeContext(ctx)
 		ctx = templ.ClearChildren(ctx)
 		edit := addmodal.Props{ID: "site--temp-target--edit", Path: "/data/temp-targets/" + tempTarget.ID, Target: "#site--temp-target--" + tempTarget.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-			Fields: addmodal.Edit(tempTargetFields(ctx), tempTarget, map[string]string{"low_target": display.GlucoseValue(tempTarget.LowTarget, tempTarget.Units), "high_target": display.GlucoseValue(tempTarget.HighTarget, tempTarget.Units)}, "insulin_needs_scale_factor")}
+			Fields: addmodal.Edit(tempTargetFields(ctx), tempTarget, map[string]string{"low_target": display.GlucoseValue(tempTarget.LowTarget, tempTarget.Units), "high_target": display.GlucoseValue(tempTarget.HighTarget, tempTarget.Units)}, "insulin_needs_scale_factor"), Delete: i18n.T(ctx, "site.data.temp_targets.delete_confirm")}
 		templ_7745c5c3_Var19 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

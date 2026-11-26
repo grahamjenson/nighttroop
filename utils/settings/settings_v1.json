@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "units": "mg/dL",
+  "timezone": "Pacific/Auckland",
+  "language": "en-US",
+  "date_format": "DD/MM/YYYY",
+  "time_format": "hh:mm a",
+  "week_start_day": "sunday",
+  "number_format": "1.234,5",
+  "bolus": {"dia_hours": 5, "onset_minutes": 15, "peak_minutes": 75},
+  "basal": {"dia_hours": 30, "onset_minutes": 90, "peak_minutes": 150},
+  "defaults": {"insulin_sensitivity": 12.5, "carb_ratio": 8, "basal_rate": 0.8},
+  "carbs": {"max_absorption_hours": 4, "min_5m_impact": 8},
+  "range": {"urgent_low_mgdl": 54, "low_mgdl": 80, "high_mgdl": 200, "urgent_high_mgdl": 300},
+  "alarms": {
+    "urgent_low": {"enabled": true},
+    "low": {"enabled": true, "minutes": 10},
+    "low_prediction": {"enabled": true, "minutes": 30},
+    "high": {"enabled": true, "minutes": 60},
+    "urgent_high": {"enabled": true},
+    "fast_rise": {"enabled": true, "mgdl": 36, "minutes": 20},
+    "fast_drop": {"enabled": true, "mgdl": 27, "minutes": 10},
+    "no_data": {"enabled": true, "minutes": 30},
+    "device_battery_low": {"enabled": true, "percent": 25, "minutes": 45, "devices": ["openaps://pixel", "SugarPixel"]},
+    "low_reservoir": {"enabled": true, "units": 30}
+  },
+  "notifications": {"enabled": true}
+}

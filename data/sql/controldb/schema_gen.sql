@@ -96,6 +96,17 @@ CREATE TABLE server_settings (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 32)
 ) STRICT;
 
+CREATE TABLE site_banners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message TEXT NOT NULL CHECK(length(message) <= 500),
+    level TEXT NOT NULL CHECK(length(level) <= 16), -- how it is shown, from the code's list: info or warning
+    -- The IDs of the sites it is shown on, as a JSON list. An empty list is every site.
+    site_ids_json TEXT NOT NULL DEFAULT '[]' CHECK(length(site_ids_json) <= 4096 AND json_valid(site_ids_json)),
+    expires_at INTEGER NOT NULL CHECK(expires_at BETWEEN 0 AND 253402300799999),
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+) STRICT;
+
 CREATE TABLE site_connectors (
     -- Nightscout/Dexcom
     site_id TEXT NOT NULL REFERENCES sites(id), -- only for nightscout, dexcom can leave null
@@ -106,7 +117,7 @@ CREATE TABLE site_connectors (
     url_host_mac TEXT CHECK(length(url_host_mac) <= 128), -- a MAC of a Nightscout URL's host, to find many sites syncing from one
 
     -- Specific Info
-    region TEXT CHECK(region IN ('US', 'OUS', 'GLOBAL', 'AE', 'AP', 'AU', 'CA', 'DE', 'EU', 'EU2', 'FR', 'JP', 'LA')), -- dexcom US or OUS, or a libre region in consts.LibreRegions
+    region TEXT CHECK(length(region) <= 16), -- dexcom US or OUS, or a libre region in consts.LibreRegions: checked in code, as the list grows
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
@@ -192,78 +203,8 @@ CREATE TABLE site_identities (
     -- api-secret. It is the SHA256 of that SHA1, so it is not what is sent.
     nightscout_token_digest TEXT CHECK(length(nightscout_token_digest) = 64),
 
-    ---------------
-    -- IDENTITY SETTINGS
-    ---------------
-    units TEXT CHECK (units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
-    -- how the Nightscout API writes each units, as some clients read only one spelling
-    units_mgdl_label TEXT CHECK (units_mgdl_label IN ('mg/dL', 'mg/dl')),
-    units_mmol_label TEXT CHECK (units_mmol_label IN ('mmol/L', 'mmol')),
-
-    -- DATE
-    timezone TEXT CHECK(length(timezone) <= 64),
-    language TEXT CHECK(length(language) <= 12),
-    date_format TEXT CHECK(length(date_format) <= 24),
-    time_format TEXT CHECK(length(time_format) <= 24),
-    week_start_day TEXT CHECK (length(week_start_day) <= 16),
-    number_format TEXT CHECK (length(number_format) <= 16),
-
-    -- INSULIN
-    bolus_dia_hours REAL,
-    bolus_onset_minutes REAL,
-    bolus_peak_minutes REAL,
-
-    basal_dia_hours REAL,
-    basal_onset_minutes REAL,
-    basal_peak_minutes REAL,
-
-    default_insulin_sensitivity REAL,
-    default_carb_ratio REAL,
-    default_basal_rate REAL,
-
-    -- CARBS
-    carb_max_absorption_hours REAL,
-    carb_min_5m_impact REAL,
-
-
-    -- ALERTS
-    alarm_urgent_low_enabled INTEGER,
-    range_urgent_low_mgdl INTEGER,
-
-    alarm_low_enabled INTEGER,
-    range_low_mgdl INTEGER,
-    alarm_low_minutes INTEGER,
-    alarm_low_prediction_enabled INTEGER,
-    alarm_low_prediction_minutes INTEGER, -- how far ahead the current trend is followed to the low alarm's glucose
-
-    alarm_high_enabled INTEGER,
-    range_high_mgdl INTEGER,
-    alarm_high_minutes INTEGER,
-    
-    alarm_urgent_high_enabled INTEGER,
-    range_urgent_high_mgdl INTEGER,
-
-    alarm_fast_rise_enabled INTEGER,
-    alarm_fast_rise_mgdl INTEGER,
-    alarm_fast_rise_minutes INTEGER,
-
-    alarm_fast_drop_enabled INTEGER,
-    alarm_fast_drop_mgdl INTEGER,
-    alarm_fast_drop_minutes INTEGER,
-
-    alarm_no_data_enabled INTEGER,
-    alarm_no_data_minutes INTEGER,
-
-    alarm_device_battery_low_enabled INTEGER,
-    alarm_device_battery_low_percent INTEGER,
-    alarm_device_battery_low_minutes INTEGER,
-    alarm_device_battery_low_devices_json TEXT CHECK(length(alarm_device_battery_low_devices_json) <= 1024 AND json_valid(alarm_device_battery_low_devices_json)), -- the devices whose batteries and statuses are checked
-
-    alarm_low_reservoir_enabled INTEGER,
-    alarm_low_reservoir_units  INTEGER,
-
-    -- NOTIFICATIONS
-    notifications_enabled INTEGER,
+    -- The identity's own settings, as the site's settings_json: one not set shows the site's, then the default
+    settings_json TEXT NOT NULL DEFAULT '{}' CHECK(length(settings_json) <= 4096 AND json_valid(settings_json)),
 
     -- Constraints
     UNIQUE(site_id, name)
@@ -303,78 +244,14 @@ CREATE TABLE sites (
     archived_at INTEGER,
     deleted_at INTEGER,
 
-    ---------------
-    -- SITE SETTINGS
-    ---------------
-    units TEXT CHECK (units IN ('mmol/L', 'mg/dL')), -- mg/dL, mmol/L
-    -- how the Nightscout API writes each units, as some clients read only one spelling
-    units_mgdl_label TEXT CHECK (units_mgdl_label IN ('mg/dL', 'mg/dl')),
-    units_mmol_label TEXT CHECK (units_mmol_label IN ('mmol/L', 'mmol')),
+    -- The site's own settings: a JSON object of each setting that is set, by its identifier (utils/settings). One not
+    -- set is not in it, so the default shows through. A new setting is a new key, not a new column.
+    settings_json TEXT NOT NULL DEFAULT '{}' CHECK(length(settings_json) <= 4096 AND json_valid(settings_json)),
 
-    -- DATE
-    timezone TEXT CHECK(length(timezone) <= 64),
-    language TEXT CHECK(length(language) <= 12),
-    date_format TEXT CHECK(length(date_format) <= 24),
-    time_format TEXT CHECK(length(time_format) <= 24),
-    week_start_day TEXT CHECK (length(week_start_day) <= 16),
-    number_format TEXT CHECK (length(number_format) <= 16),
-
-    -- INSULIN
-    bolus_dia_hours REAL,
-    bolus_onset_minutes REAL,
-    bolus_peak_minutes REAL,
-
-    basal_dia_hours REAL,
-    basal_onset_minutes REAL,
-    basal_peak_minutes REAL,
-
-    default_insulin_sensitivity REAL,
-    default_carb_ratio REAL,
-    default_basal_rate REAL,
-
-    -- CARBS
-    carb_max_absorption_hours REAL,
-    carb_min_5m_impact REAL,
-
-
-    -- ALERTS
-    alarm_urgent_low_enabled INTEGER,
-    range_urgent_low_mgdl INTEGER,
-
-    alarm_low_enabled INTEGER,
-    range_low_mgdl INTEGER,
-    alarm_low_minutes INTEGER,
-    alarm_low_prediction_enabled INTEGER,
-    alarm_low_prediction_minutes INTEGER, -- how far ahead the current trend is followed to the low alarm's glucose
-
-    alarm_high_enabled INTEGER,
-    range_high_mgdl INTEGER,
-    alarm_high_minutes INTEGER,
-    
-    alarm_urgent_high_enabled INTEGER,
-    range_urgent_high_mgdl INTEGER,
-
-    alarm_fast_rise_enabled INTEGER,
-    alarm_fast_rise_mgdl INTEGER,
-    alarm_fast_rise_minutes INTEGER,
-
-    alarm_fast_drop_enabled INTEGER,
-    alarm_fast_drop_mgdl INTEGER,
-    alarm_fast_drop_minutes INTEGER,
-
-    alarm_no_data_enabled INTEGER,
-    alarm_no_data_minutes INTEGER,
-
-    alarm_device_battery_low_enabled INTEGER,
-    alarm_device_battery_low_percent INTEGER,
-    alarm_device_battery_low_minutes INTEGER,
-    alarm_device_battery_low_devices_json TEXT CHECK(length(alarm_device_battery_low_devices_json) <= 1024 AND json_valid(alarm_device_battery_low_devices_json)), -- the devices whose batteries and statuses are checked
-
-    alarm_low_reservoir_enabled INTEGER,
-    alarm_low_reservoir_units  INTEGER,
-
-    -- NOTIFICATIONS
-    notifications_enabled INTEGER
+    -- An email a site's admin may give, encrypted, to be told about the site by, and when they proved it is theirs by
+    -- the link sent to it. A site needs none. One not verified is never written to.
+    email_enc TEXT CHECK(length(email_enc) <= 512),
+    email_verified_at INTEGER
 
 ) STRICT;
 

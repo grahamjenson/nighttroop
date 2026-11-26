@@ -69,44 +69,56 @@ func TestOversizedJobErrorsStillSummariseAndDeleteJobs(t *testing.T) {
 	require.Equal(t, int64(2*count), stats[0].TotalFailed)
 }
 
-// A queued job's logs say which queue and job row it is, with an ID for the run
-func TestQueuedJobLogsItsIDs(t *testing.T) {
-	_, controlDB := testutils.NewControlDB(t)
-	ctx, queue := t.Context(), liteq.New(controlDB)
-	var logs bytes.Buffer
-	testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})
-	require.NoError(t, queue.QueueJob(ctx, liteq.QueueJobParams{Queue: "logged", Job: "fetch"}))
-
-	var queuedID int64
-	worker := func(ctx context.Context, job *jobsdb.Job) error {
-		queuedID = job.ID
-		slog.InfoContext(ctx, "in the job")
-		return nil
+// A queued job's logs say which queue and job row it is, with an ID for the run. A job that fails keeps that ID, so the
+// control site can link to its logs. A job runs in a goroutine of its own, where a panic would stop the whole server:
+// it fails the job instead.
+func TestQueuedJobRun(t *testing.T) {
+	tests := []struct {
+		name   string
+		worker func(context.Context) error
+		status string
+		errors string // in the job's errors
+		logged string // the start of the line logged, before the job's IDs
+	}{
+		{"a job that completes", func(ctx context.Context) error {
+			slog.InfoContext(ctx, "in the job")
+			return nil
+		}, "completed", "", `msg="in the job"`},
+		{"a job that fails", func(ctx context.Context) error {
+			slog.ErrorContext(ctx, "upstream is down")
+			return fmt.Errorf("upstream is down")
+		}, "failed", "upstream is down", `msg="upstream is down"`},
+		{"a job that panics", func(context.Context) error {
+			var reading *int
+			return fmt.Errorf("reading %d", *reading)
+		}, "failed", "job panicked: runtime error: invalid memory address", `msg="Liteq: Job panicked" stack=.*`},
 	}
-	require.NoError(t, liteq.NewConsumerSupervisor(queue, "logged", 1, worker).RunQueued(ctx))
-	require.Regexp(t, fmt.Sprintf(`msg="in the job" job_id=[0-9a-f]{16} job=logged queued_job_id=%d`, queuedID), logs.String())
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, controlDB := testutils.NewControlDB(t)
+			ctx, queue := t.Context(), liteq.New(controlDB)
+			var logs bytes.Buffer
+			testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})
+			require.NoError(t, queue.QueueJob(ctx, liteq.QueueJobParams{Queue: "fetching", Job: "fetch"}))
 
-// A failed queued job keeps the job_id its run's logs have, so the control site can link to them
-func TestFailedQueuedJobKeepsItsRunID(t *testing.T) {
-	_, controlDB := testutils.NewControlDB(t)
-	ctx, queue := t.Context(), liteq.New(controlDB)
-	var logs bytes.Buffer
-	testutils.UseLogHandler(t, aslog.ContextHandler{Handler: slog.NewTextHandler(&logs, nil)})
-	require.NoError(t, queue.QueueJob(ctx, liteq.QueueJobParams{Queue: "failing", Job: "fetch"}))
-
-	var queuedID int64
-	worker := func(ctx context.Context, job *jobsdb.Job) error {
-		queuedID = job.ID
-		slog.ErrorContext(ctx, "upstream is down")
-		return fmt.Errorf("upstream is down")
+			var queuedID int64
+			worker := func(ctx context.Context, job *jobsdb.Job) error {
+				queuedID = job.ID
+				return tt.worker(ctx)
+			}
+			require.NoError(t, liteq.NewConsumerSupervisor(queue, "fetching", 1, worker).RunQueued(ctx))
+			job, err := controlDB.Jobs.Queries.FindJob(ctx, jobsdb.FindJobParams{ID: queuedID})
+			require.NoError(t, err)
+			require.Equal(t, tt.status, job.JobStatus)
+			require.Contains(t, strings.Join(job.Errors, " "), tt.errors)
+			runID := `[0-9a-f]{16}`
+			if tt.status == "failed" {
+				require.NotNil(t, job.RunID, "a failed run keeps its job_id, for its logs")
+				runID = *job.RunID
+			}
+			require.Regexp(t, fmt.Sprintf(`(?m)^.* %s job_id=%s job=fetching queued_job_id=%d$`, tt.logged, runID, queuedID), logs.String())
+		})
 	}
-	require.NoError(t, liteq.NewConsumerSupervisor(queue, "failing", 1, worker).RunQueued(ctx))
-	job, err := controlDB.Jobs.Queries.FindJob(ctx, jobsdb.FindJobParams{ID: queuedID})
-	require.NoError(t, err)
-	require.Equal(t, "failed", job.JobStatus)
-	require.NotNil(t, job.RunID)
-	require.Contains(t, logs.String(), `msg="upstream is down" job_id=`+*job.RunID)
 }
 
 // A job is only fetched when a worker is free to run it. Its visibility timeout counts from when it is fetched, so a

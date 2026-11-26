@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 // The holder writes the lock again every lockHeartbeat. A lock not written for lockStaleAfter is of a server that
@@ -108,8 +109,8 @@ func (c *S3Client) Lock(ctx context.Context) error {
 	}
 }
 
-// keepLock writes the lock every lockHeartbeat until ctx ends, then deletes it. If another server took it, it stops
-// this server's uploads, and leaves the lock to that server.
+// keepLock writes the lock every lockHeartbeat until ctx ends, then deletes it if it is still this server's. If another
+// server took it, it stops this server's uploads, and leaves the lock to that server.
 func (c *S3Client) keepLock(ctx context.Context, etag string) {
 	defer close(c.lockDone)
 	for {
@@ -117,6 +118,11 @@ func (c *S3Client) keepLock(ctx context.Context, etag string) {
 		case <-ctx.Done():
 			released, cancel := c.short(context.Background())
 			defer cancel()
+			// Another server takes the lock over while this one cannot write it, and learns of it only at its next write
+			if own, err := c.ownLockETag(released); err != nil || own == "" {
+				slog.Error("Cannot release the S3 lock, as it is not known to be this server's", "error", err)
+				return
+			}
 			if _, err := c.s3.DeleteObject(released, &s3.DeleteObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())}); err != nil {
 				slog.Error("Cannot release the S3 lock, so the next start waits for it", "error", err)
 			}
@@ -129,7 +135,13 @@ func (c *S3Client) keepLock(ctx context.Context, etag string) {
 			slog.Warn("Cannot write the S3 lock, trying again", "error", err)
 		case !held:
 			// A write S3 took but never answered leaves the lock this server's, with an ETag it does not know
-			if etag = c.ownLockETag(ctx); etag != "" {
+			own, err := c.ownLockETag(ctx)
+			if err != nil {
+				// Not known to be another server's: the next write, refused again, reads it again
+				slog.Warn("Cannot read the S3 lock, trying again", "error", err)
+				continue
+			}
+			if etag = own; etag != "" {
 				continue
 			}
 			c.lockLost.Store(true)
@@ -142,19 +154,24 @@ func (c *S3Client) keepLock(ctx context.Context, etag string) {
 	}
 }
 
-// ownLockETag is the lock's ETag if this server wrote the lock that is there, or else empty
-func (c *S3Client) ownLockETag(ctx context.Context) string {
+// ownLockETag is the lock's ETag if this server wrote the lock that is there, or else empty: there is none, or it is
+// another server's. A lock that cannot be read is an error, as whose it is is not known.
+func (c *S3Client) ownLockETag(ctx context.Context) (string, error) {
 	ctx, cancel := c.short(ctx)
 	defer cancel()
 	lock, err := c.s3.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(c.Bucket), Key: aws.String(c.lockKey())})
+	if _, gone := errors.AsType[*types.NoSuchKey](err); gone {
+		return "", nil
+	}
 	if err != nil {
-		return ""
+		return "", err
 	}
 	defer lock.Body.Close()
-	if body, _ := io.ReadAll(lock.Body); !strings.HasPrefix(string(body), c.lockID+" ") {
-		return ""
+	body, err := io.ReadAll(lock.Body)
+	if err != nil || !strings.HasPrefix(string(body), c.lockID+" ") {
+		return "", err
 	}
-	return aws.ToString(lock.ETag)
+	return aws.ToString(lock.ETag), nil
 }
 
 // Lost closes when another server took this server's lock: the bucket is that server's now

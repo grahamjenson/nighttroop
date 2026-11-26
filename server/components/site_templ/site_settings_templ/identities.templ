@@ -1,6 +1,7 @@
 package site_settings_templ
 
 import (
+	"net/url"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/server/components/addmodal"
 	"context"
@@ -193,27 +194,30 @@ func nightscoutPermissions(ctx context.Context, role consts.IdentityRole) string
 // Nightscout API. The last two are read from utils/can, so the page cannot differ from what the server allows.
 templ rolesTable() {
 	@card.Card(card.Props{ID: "site--identities--roles", Title: i18n.T(ctx, "site.settings.identities.roles_table.title")}) {
-		@table.Table(table.Props{ID: "site--identities--roles--table"}) {
+		// On a phone each role is a block, its name over what it can do, then the two columns the headings name on a
+		// wider window, each with its heading before it: a table of four columns would be cut off mid sentence
+		@table.Table(table.Props{ID: "site--identities--roles--table", Class: "max-sm:[&_thead]:hidden"}) {
 			@table.Heads([]table.Column{{Label: i18n.T(ctx, "site.settings.identities.heads.role")}, {Label: i18n.T(ctx, "site.settings.identities.roles_table.can")},
 				{Label: i18n.T(ctx, "site.settings.identities.roles_table.signs_in")}, {Label: i18n.T(ctx, "site.settings.identities.roles_table.nightscout")}})
 			@table.Body() {
 				for _, role := range allRoles {
-					@table.Row(table.RowProps{ID: "site--identities--role--" + string(role)}) {
-						@table.Cell(table.CellProps{Class: "font-medium"}) {
+					@table.Row(table.RowProps{ID: "site--identities--role--" + string(role), Class: "max-sm:flex max-sm:flex-col max-sm:py-1"}) {
+						@table.Cell(table.CellProps{Class: "font-medium max-sm:pb-0"}) {
 							{ RoleLabel(ctx, string(role)) }
 						}
-						// Wide enough to read on a phone, where the table scrolls sideways
-						@table.Cell(table.CellProps{Class: "min-w-64 whitespace-normal"}) {
+						@table.Cell(table.CellProps{Class: "whitespace-normal max-sm:py-0 sm:min-w-64"}) {
 							{ i18n.T(ctx, roleAbouts[role]) }
 						}
-						@table.Cell() {
+						@table.Cell(table.CellProps{Class: "max-sm:py-0 max-sm:text-xs max-sm:text-gray-500 max-sm:before:content-[attr(data-label)]",
+							Attributes: templ.Attributes{"data-label": i18n.T(ctx, "site.settings.identities.roles_table.signs_in") + ": "}}) {
 							if can.IdentityLoginToWebsite(role) {
 								{ i18n.T(ctx, "site.settings.identities.roles_table.does") }
 							} else {
 								{ i18n.T(ctx, "site.settings.identities.roles_table.does_not") }
 							}
 						}
-						@table.Cell(table.CellProps{Class: "min-w-56 whitespace-normal font-mono text-xs"}) {
+						@table.Cell(table.CellProps{Class: "whitespace-normal font-mono text-xs max-sm:pt-0 max-sm:text-gray-500 max-sm:before:font-sans max-sm:before:content-[attr(data-label)] sm:min-w-56",
+							Attributes: templ.Attributes{"data-label": i18n.T(ctx, "site.settings.identities.roles_table.nightscout") + ": "}}) {
 							{ nightscoutPermissions(ctx, role) }
 						}
 					}
@@ -260,7 +264,7 @@ templ buildIdentityTable(id string, identities []*sitemodels.UserIdentity) {
 
 // IdentityRow has the identity's name on it, for the add modal to name a new device apart from it
 templ IdentityRow(identity *sitemodels.UserIdentity) {
-	@table.Row(table.RowProps{Attributes: templ.Attributes{"data-identity-name": identity.Name}}) {
+	@table.Row(table.RowProps{Class: "group", Attributes: templ.Attributes{"data-identity-name": identity.Name}}) {
 		@table.Cell() {
 			{ identity.Name }
 			if identity.CurrentIdentity {
@@ -268,6 +272,7 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 					{ i18n.T(ctx, "site.settings.identities.you") }
 				}
 			}
+			@identityState(identity)
 		}
 		@table.Cell() {
 			{ RoleLabel(ctx, identity.Role) }
@@ -276,7 +281,7 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 			{ formatIdentityDate(ctx, &identity.CreatedAt) }
 		}
 		@table.Cell() {
-			<span title={ formatIdentityDate(ctx, identity.LastSeenAt) }>{ display.Ago(ctx, identity.LastSeenAt, time.Now()) }</span>
+			<span id={ "site--identities--" + identity.Name + "--seen" } data-seen?={ identity.LastSeenAt != nil } title={ formatIdentityDate(ctx, identity.LastSeenAt) }>{ display.Ago(ctx, identity.LastSeenAt, time.Now()) }</span>
 		}
 		@table.Cell() {
 			<span title={ formatIdentityDate(ctx, identity.LastWriteAt) }>{ display.Ago(ctx, identity.LastWriteAt, time.Now()) }</span>
@@ -284,8 +289,46 @@ templ IdentityRow(identity *sitemodels.UserIdentity) {
 		@table.Cell() {
 			@recentClients(identity)
 		}
-		@table.Cell() {
+		// Its switch and Manage menu stay at the card's right edge while a phone scrolls the table's other columns
+		// sideways under them, so they are in reach with no scrolling
+		@table.Cell(table.CellProps{ID: "site--identities--" + identity.Name + "--actions", Class: "max-sm:sticky max-sm:right-0 max-sm:bg-white max-sm:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]"}) {
 			@identityActions(identity)
+		}
+	}
+}
+
+// A device is active when it was seen in activeFor, as when one was seen is kept at most every 10 minutes, and quiet
+// when it was not seen for quietAfter, as a loop's phone or a follower's app that stopped is what to look into
+const (
+	activeFor  = 30 * time.Minute
+	quietAfter = 24 * time.Hour
+)
+
+// identityStateOf is how an identity is used, its name in words, and the badge's colour for it: never used, active,
+// or, for a device only, quiet. "" when there is nothing to say, as for a person who signed in days ago.
+func identityStateOf(ctx context.Context, identity *sitemodels.UserIdentity, now time.Time) (string, string, badge.Variant) {
+	device := consts.IdentityRole(identity.Role).GetType() == consts.IdentityTypeDevice
+	switch {
+	case identity.LastSeenAt == nil && device:
+		return "unused", i18n.T(ctx, "site.settings.identities.state.not_connected"), badge.VariantWarning
+	case identity.LastSeenAt == nil:
+		return "unused", i18n.T(ctx, "site.settings.identities.state.not_signed_in"), badge.VariantWarning
+	case now.Sub(time.UnixMilli(*identity.LastSeenAt)) <= activeFor:
+		return "active", i18n.T(ctx, "site.settings.identities.state.active"), badge.VariantSuccess
+	case device && now.Sub(time.UnixMilli(*identity.LastSeenAt)) > quietAfter:
+		return "quiet", i18n.T(ctx, "site.settings.identities.state.quiet"), badge.VariantWarning
+	}
+	return "", "", badge.VariantNeutral
+}
+
+// identityState is a badge after an identity's name saying how it is used, so an admin sees at a glance which were
+// never set up, which are in use now, and which device went quiet. An identity turned off has none: its switch, in
+// the same row, says so, and hides the badge as it is turned off.
+templ identityState(identity *sitemodels.UserIdentity) {
+	{{ state, label, variant := identityStateOf(ctx, identity, time.Now()) }}
+	if state != "" {
+		@badge.Badge(badge.Props{ID: "site--identities--" + identity.Name + "--state", Variant: variant, Class: "ml-2 group-has-[input[name=enabled]:not(:checked)]:hidden", Attributes: templ.Attributes{"data-state": state}}) {
+			{ label }
 		}
 	}
 }
@@ -362,13 +405,27 @@ templ identityActions(identity *sitemodels.UserIdentity) {
 				}
 				@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-password", Disabled: identity.CurrentIdentity,
 					Attributes: resetAttributes(identity.ID, "password", i18n.T(ctx, "site.settings.identities.reset_password_confirm", i18n.Data{"Name": identity.Name}))}) {
-					@menuLabel(icon.KeyRound, i18n.T(ctx, "site.settings.identities.reset_password"))
+					// A device's apps use its token, so that is what its reset is named for
+					if consts.IdentityRole(identity.Role).GetType() == consts.IdentityTypeDevice {
+						@menuLabel(icon.KeyRound, i18n.T(ctx, "site.settings.identities.reset_token"))
+					} else {
+						@menuLabel(icon.KeyRound, i18n.T(ctx, "site.settings.identities.reset_password"))
+					}
 				}
 				if identity.HasTotpSecret {
 					@dropdown.Item(dropdown.ItemProps{ID: id + "--reset-totp", Disabled: identity.CurrentIdentity,
 						Attributes: resetAttributes(identity.ID, "totp", i18n.T(ctx, "site.settings.identities.reset_totp_confirm", i18n.Data{"Name": identity.Name}))}) {
 						@menuLabel(icon.RotateCcwKey, i18n.T(ctx, "site.settings.identities.reset_totp"))
 					}
+				}
+				// What the identity did and what was refused it, to see why its app does not work: the site's events and
+				// errors, searched for its name
+				@dropdown.Separator()
+				@dropdown.Item(dropdown.ItemProps{ID: id + "--events", Attributes: nav.Attributes("/logs/events?search=" + url.QueryEscape(identity.Name))}) {
+					@menuLabel(icon.Activity, i18n.T(ctx, "site.settings.identities.its_events"))
+				}
+				@dropdown.Item(dropdown.ItemProps{ID: id + "--errors", Attributes: nav.Attributes("/logs/errors?search=" + url.QueryEscape(identity.Name))}) {
+					@menuLabel(icon.TriangleAlert, i18n.T(ctx, "site.settings.identities.its_errors"))
 				}
 				@dropdown.Separator()
 				@dropdown.Item(dropdown.ItemProps{ID: id + "--delete", Disabled: identity.CurrentIdentity, Class: "text-red-600 hover:text-red-700",
@@ -425,8 +482,39 @@ templ CreateIdentityResponse(url string, identity *sitemodels.UserIdentity, pass
 	<div id="modal-container" class="w-full" hx-swap-oob="innerHTML">
 		@CredentialsModal(url, identity.Name, password, totpSecret, nsToken, false) {
 			@clientGuide(identity)
+			if nsToken != nil && consts.IdentityRole(identity.Role).GetType() == consts.IdentityTypeDevice {
+				@waitingToConnect(identity.Name)
+			}
 		}
 	</div>
+}
+
+// waitingToConnect says, under a new device's credentials, that Nighttroop is waiting for its app, and then that the
+// app connected, so the person setting it up knows it worked without leaving the credentials. It reads this page
+// every 3 seconds, for at most 10 minutes, for the device's Last Seen, and puts it in the device's row too.
+templ waitingToConnect(name string) {
+	<p id="site--identities--created--connection" data-seen-id={ "site--identities--" + name + "--seen" } data-connected={ i18n.T(ctx, "site.settings.identities.connected", i18n.Data{"Name": name}) } class="mt-4 flex w-full items-center gap-2 rounded-lg bg-amber-100 px-3 py-2 text-left text-sm text-amber-800 data-[state=connected]:bg-green-50 data-[state=connected]:font-medium data-[state=connected]:text-green-800" role="status">
+		<span class="size-4 shrink-0 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-500"></span>
+		<span>{ i18n.T(ctx, "site.settings.identities.waiting", i18n.Data{"Name": name}) }</span>
+	</p>
+	<script>
+		(() => {
+			const el = document.getElementById("site--identities--created--connection")
+			let tries = 200
+			const timer = setInterval(async () => {
+				if (!el.isConnected || tries-- <= 0) return clearInterval(timer)
+				try {
+					const page = new DOMParser().parseFromString(await (await fetch("/settings/identities", {headers: {"HX-Request": "true"}})).text(), "text/html")
+					const seen = page.getElementById(el.dataset.seenId)
+					if (!seen?.hasAttribute("data-seen")) return
+					clearInterval(timer)
+					document.getElementById(el.dataset.seenId)?.replaceWith(seen)
+					el.dataset.state = "connected"
+					el.textContent = el.dataset.connected
+				} catch (e) {}
+			}, 3000)
+		})()
+	</script>
 }
 
 // clientGuide says how to set up the client a device was added for, and that its units are mg/dL when it needs them
@@ -467,7 +555,10 @@ templ copyValue(id string, name string, value string) {
 
 // IdentityReset shows an identity's new credentials once. Resetting your own signed you out, to sign in again with them.
 templ IdentityReset(url string, identity *sitemodels.UserIdentity, signedOut bool) {
-	@CredentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut)
+	// A device added for an app has that app's setup steps again, with its new token, as the app needs it entered
+	@CredentialsModal(url, identity.Name, identity.Password, identity.TotpSecret, identity.NSToken, signedOut) {
+		@clientGuide(identity)
+	}
 }
 
 // CredentialsModal is a dialog of an identity's, or a control admin's, new credentials. Escape or pressing beside it

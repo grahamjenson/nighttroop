@@ -1,6 +1,7 @@
 package nscollections
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -135,6 +136,10 @@ func (c ProfileCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, 
 	return q.ProfileStoreAscendingIDs(ctx, nsquery.ProfileStoreAscending(query))
 }
 
+func (c ProfileCollection) SortedIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.ProfileStoreSortedIDs(ctx, nsquery.ProfileStoreSorted(query))
+}
+
 func (c ProfileCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {
 	return q.ProfileStoreHistoryIDs(ctx, sitedb.ProfileStoreHistoryIDsParams{Since: since, Limit: limit})
 }
@@ -170,12 +175,16 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 			break
 		}
 	}
-	settingsUnits := siteContext.GetSettings().GetUnits()
+	settingsUnits := new(siteContext.GetSettings().GetUnits())
+	// A profile comes back in the units it was uploaded in, as Nightscout gives it back, though its targets are kept in
+	// mg/dL: an app importing it, as Trio does, takes its units from it. One uploaded without units is in the settings'.
+	unitsOf := func(p *sitedb.ProfilePreset) *consts.Units { return cmp.Or(p.Units, settingsUnits) }
+	storeUnits := unitsOf(defaultProfile)
 
 	profileStore := nightscoutmodels.DBModelToProfileStore(defaultProfile, siteContext)
 	profileStore.Store = make(map[types.ShortString]nightscoutmodels.Profile)
 	profileStore.DefaultProfile = ptr(types.ShortString(defaultProfile.Name))
-	profileStore.Units = settingsUnits
+	profileStore.Units = storeUnits
 	// Loop's and Trio's settings are the loop_settings it refers to, left out when they were deleted. Loop's glucose
 	// is in the profile's units, from mg/dL, or guessed from its size for settings kept in the units Loop sent. A
 	// profile sent with neither, as AAPS's and the careportal's are, has Loop's newest, for LoopFollow to control Loop.
@@ -185,7 +194,7 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 	}
 	if loop != nil {
 		profileStore.LoopSettings = nightscoutmodels.JSONToLoopSettings(ptr(string(loop))).WithGlucose(func(glucose float64) float64 {
-			return settingsUnits.FromMGDL((*consts.Units)(nil).ToMGDL(glucose))
+			return storeUnits.FromMGDL((*consts.Units)(nil).ToMGDL(glucose))
 		})
 	}
 	if remote := loopSettingsJSON(context.Background(), siteContext, defaultProfile.RemoteSettingsID); remote != nil {
@@ -194,7 +203,8 @@ func DBToNightscoutProfileStore(source *sitedb.ProfilePresetBundle, siteContext 
 
 	for _, p := range realSource {
 		profile := nightscoutmodels.DBModelToProfile(p, siteContext)
-		profile.Units = settingsUnits
+		profile.Units = unitsOf(p)
+		profile.ConvertUnits(settingsUnits, profile.Units)
 
 		profileStore.Store[types.ShortString(p.Name)] = profile
 	}

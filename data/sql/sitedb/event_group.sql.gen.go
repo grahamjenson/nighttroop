@@ -627,6 +627,62 @@ func (q *Queries) EventGroupHistoryIDs(ctx context.Context, arg EventGroupHistor
 	return items, nil
 }
 
+const eventGroupSortedIDs = `-- name: EventGroupSortedIDs :many
+SELECT id FROM (
+    SELECT id, CASE CAST(?1 AS INTEGER) WHEN 3 THEN updated_at WHEN -3 THEN -updated_at WHEN 2 THEN created_at ELSE -created_at END AS sort_key
+    FROM event_groups
+    WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?2 AS INTEGER), 0), COALESCE(CAST(?3 AS INTEGER) + 1, 0), COALESCE(CAST(?4 AS INTEGER), 0))
+        AND MIN(COALESCE(CAST(?5 AS INTEGER), 253402300799999), COALESCE(CAST(?6 AS INTEGER) - 1, 253402300799999), COALESCE(?4, 253402300799999))
+        AND (CAST(?7 AS BOOL) = TRUE OR deleted_at IS NULL)
+) ORDER BY sort_key, id LIMIT CAST(?9 AS INTEGER) OFFSET CAST(?8 AS INTEGER)
+`
+
+type EventGroupSortedIDsParams struct {
+	SortOrder      int64
+	DateGTE        *int64
+	DateGT         *int64
+	DateEQ         *int64
+	DateLTE        *int64
+	DateLT         *int64
+	IncludeDeleted bool
+	Skip           int64
+	Limit          int64
+}
+
+// The treatments in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or srvCreated
+func (q *Queries) EventGroupSortedIDs(ctx context.Context, arg EventGroupSortedIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.eventGroupSortedIDsStmt, eventGroupSortedIDs,
+		arg.SortOrder,
+		arg.DateGTE,
+		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
+		arg.DateLT,
+		arg.IncludeDeleted,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const eventGroupTotals = `-- name: EventGroupTotals :one
 SELECT COUNT(*) AS total, CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) AS earliest_at,
     CAST(COALESCE(MAX(occurred_at), 0) AS INTEGER) AS latest_at
@@ -1165,6 +1221,303 @@ func (q *Queries) GetEventGroupWithoutJoins(ctx context.Context, arg GetEventGro
 		&i.CreatedByIdentityName,
 	)
 	return &i, err
+}
+
+const getEventGroupsByIDs = `-- name: GetEventGroupsByIDs :many
+SELECT
+    eg.id, eg.group_type, eg.glucose_reading_id, eg.insulin_dose_id, eg.food_intake_id, eg.temp_basal_id, eg.temp_target_id, eg.profile_switch_id, eg.activity_id, eg.notification_event_id, eg.entered_by, eg.uuid, eg.mode, eg.auto_forced, eg.reasons, eg.original_duration_ms, eg.sent_hash, eg.pump_id, eg.pump_serial, eg.pump_type, eg.ending_pump_id, eg.sensor_code, eg.transmitter_id, eg.bolus_calculator_result_json, eg.sync_identifier, eg.client_created_at, eg.emulated_treatment_json, eg.notes, eg.reason, eg.duration_minutes, eg.duration_ms, eg.deleted_at, eg.utc_offset_minutes, eg.occurred_at, eg.created_at, eg.updated_at, eg.created_by_app_name, eg.created_by_device_name, eg.updated_by_identity_id, eg.updated_by_identity_name, eg.created_by_identity_id, eg.created_by_identity_name,
+    gr.id, gr.mgdl, gr.reading_type, gr.units, gr.measurement_method, gr.delta, gr.trend, gr.noise, gr.filtered, gr.unfiltered, gr.rssi, gr.is_calibration, gr.sensor_mgdl_at_pairing, gr.notes, gr.reason, gr.deleted_at, gr.utc_offset_minutes, gr.occurred_at, gr.created_at, gr.updated_at, gr.created_by_app_name, gr.created_by_device_name, gr.updated_by_identity_id, gr.updated_by_identity_name, gr.created_by_identity_id, gr.created_by_identity_name,
+    idose.id, idose.dose, idose.dose_type, idose.extended_dose, idose.extended_duration_ms, idose.automatic, idose.is_basal_insulin, idose.insulin_type, idose.unabsorbed, idose.icfg_json, idose.notes, idose.reason, idose.deleted_at, idose.utc_offset_minutes, idose.occurred_at, idose.created_at, idose.updated_at, idose.created_by_app_name, idose.created_by_device_name, idose.updated_by_identity_id, idose.updated_by_identity_name, idose.created_by_identity_id, idose.created_by_identity_name,
+    fi.id, fi.name, fi.food_type, fi.absorption_time_minutes, fi.carbs, fi.category, fi.subcategory, fi.fat, fi.protein, fi.fibre, fi.energy, fi.portions, fi.pre_bolus, fi.user_entered_at, fi.notes, fi.reason, fi.deleted_at, fi.utc_offset_minutes, fi.occurred_at, fi.created_at, fi.updated_at, fi.created_by_app_name, fi.created_by_device_name, fi.updated_by_identity_id, fi.updated_by_identity_name, fi.created_by_identity_id, fi.created_by_identity_name,
+    tb.id, tb.duration_minutes, tb.rate, tb.multiplier, tb.type, tb.insulin_type, tb.automatic, tb.notes, tb.reason, tb.deleted_at, tb.utc_offset_minutes, tb.occurred_at, tb.created_at, tb.updated_at, tb.created_by_app_name, tb.created_by_device_name, tb.updated_by_identity_id, tb.updated_by_identity_name, tb.created_by_identity_id, tb.created_by_identity_name,
+    tt.id, tt.duration_minutes, tt.high_target_mgdl, tt.low_target_mgdl, tt.insulin_needs_scale_factor, tt.duration_type, tt.notes, tt.reason, tt.deleted_at, tt.utc_offset_minutes, tt.occurred_at, tt.created_at, tt.updated_at, tt.created_by_app_name, tt.created_by_device_name, tt.updated_by_identity_id, tt.updated_by_identity_name, tt.created_by_identity_id, tt.created_by_identity_name,
+    ps.id, ps.name, ps.duration_minutes, ps.multiplier, ps.timeshift, ps.original_profile_name, ps.original_customized_name, ps.original_timeshift_ms, ps.original_percentage, ps.original_duration_ms, ps.original_end, ps.icfg_json, ps.dia, ps.units, ps.timezone, ps.carbs_hr, ps.delay, ps.carb_ratios_json, ps.insulin_sensitivities_json, ps.basal_rates_json, ps.targets_high_json, ps.targets_low_json, ps.notes, ps.reason, ps.deleted_at, ps.utc_offset_minutes, ps.occurred_at, ps.created_at, ps.updated_at, ps.created_by_app_name, ps.created_by_device_name, ps.updated_by_identity_id, ps.updated_by_identity_name, ps.created_by_identity_id, ps.created_by_identity_name,
+    a.id, a.name, a.activity_type, a.duration_minutes, a.calories, a.steps, a.heart_rate, a.notes, a.reason, a.deleted_at, a.utc_offset_minutes, a.occurred_at, a.created_at, a.updated_at, a.created_by_app_name, a.created_by_device_name, a.updated_by_identity_id, a.updated_by_identity_name, a.created_by_identity_id, a.created_by_identity_name,
+    n.id, n.notification_type, n.title, n.severity, n.content, n.notes, n.reason, n.deleted_at, n.utc_offset_minutes, n.occurred_at, n.created_at, n.updated_at, n.created_by_app_name, n.created_by_device_name, n.updated_by_identity_id, n.updated_by_identity_name, n.created_by_identity_id, n.created_by_identity_name
+FROM event_groups eg
+LEFT JOIN glucose_readings gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches ps ON eg.profile_switch_id = ps.id
+LEFT JOIN activities a ON eg.activity_id = a.id
+LEFT JOIN notification_events n ON eg.notification_event_id = n.id
+WHERE eg.id IN (SELECT value FROM json_each(CAST(?1 AS TEXT)))
+    AND (CAST(?2 AS BOOL) = TRUE OR eg.deleted_at IS NULL)
+`
+
+type GetEventGroupsByIDsParams struct {
+	IDs            *string
+	IncludeDeleted bool
+}
+
+type GetEventGroupsByIDsRow struct {
+	EventGroup           EventGroup
+	GlucoseReadingsVw    GlucoseReadingsVw
+	InsulinDosesVw       InsulinDosesVw
+	FoodIntakesVw        FoodIntakesVw
+	TempBasalsVw         TempBasalsVw
+	TempTargetsVw        TempTargetsVw
+	ProfileSwitchesVw    ProfileSwitchesVw
+	ActivitiesVw         ActivitiesVw
+	NotificationEventsVw NotificationEventsVw
+}
+
+// The groups with the identifiers in IDs, a JSON array, with their events, in no order, each found by its primary key in
+// one query
+func (q *Queries) GetEventGroupsByIDs(ctx context.Context, arg GetEventGroupsByIDsParams) ([]*GetEventGroupsByIDsRow, error) {
+	rows, err := q.query(ctx, q.getEventGroupsByIDsStmt, getEventGroupsByIDs, arg.IDs, arg.IncludeDeleted)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GetEventGroupsByIDsRow
+	for rows.Next() {
+		var i GetEventGroupsByIDsRow
+		if err := rows.Scan(
+			&i.EventGroup.ID,
+			&i.EventGroup.GroupType,
+			&i.EventGroup.GlucoseReadingID,
+			&i.EventGroup.InsulinDoseID,
+			&i.EventGroup.FoodIntakeID,
+			&i.EventGroup.TempBasalID,
+			&i.EventGroup.TempTargetID,
+			&i.EventGroup.ProfileSwitchID,
+			&i.EventGroup.ActivityID,
+			&i.EventGroup.NotificationEventID,
+			&i.EventGroup.EnteredBy,
+			&i.EventGroup.Uuid,
+			&i.EventGroup.Mode,
+			&i.EventGroup.AutoForced,
+			&i.EventGroup.Reasons,
+			&i.EventGroup.OriginalDurationMs,
+			&i.EventGroup.SentHash,
+			&i.EventGroup.PumpID,
+			&i.EventGroup.PumpSerial,
+			&i.EventGroup.PumpType,
+			&i.EventGroup.EndingPumpID,
+			&i.EventGroup.SensorCode,
+			&i.EventGroup.TransmitterID,
+			&i.EventGroup.BolusCalculatorResultJson,
+			&i.EventGroup.SyncIdentifier,
+			&i.EventGroup.ClientCreatedAt,
+			&i.EventGroup.EmulatedTreatmentJson,
+			&i.EventGroup.Notes,
+			&i.EventGroup.Reason,
+			&i.EventGroup.DurationMinutes,
+			&i.EventGroup.DurationMs,
+			&i.EventGroup.DeletedAt,
+			&i.EventGroup.UtcOffsetMinutes,
+			&i.EventGroup.OccurredAt,
+			&i.EventGroup.CreatedAt,
+			&i.EventGroup.UpdatedAt,
+			&i.EventGroup.CreatedByAppName,
+			&i.EventGroup.CreatedByDeviceName,
+			&i.EventGroup.UpdatedByIdentityID,
+			&i.EventGroup.UpdatedByIdentityName,
+			&i.EventGroup.CreatedByIdentityID,
+			&i.EventGroup.CreatedByIdentityName,
+			&i.GlucoseReadingsVw.ID,
+			&i.GlucoseReadingsVw.Mgdl,
+			&i.GlucoseReadingsVw.ReadingType,
+			&i.GlucoseReadingsVw.Units,
+			&i.GlucoseReadingsVw.MeasurementMethod,
+			&i.GlucoseReadingsVw.Delta,
+			&i.GlucoseReadingsVw.Trend,
+			&i.GlucoseReadingsVw.Noise,
+			&i.GlucoseReadingsVw.Filtered,
+			&i.GlucoseReadingsVw.Unfiltered,
+			&i.GlucoseReadingsVw.Rssi,
+			&i.GlucoseReadingsVw.IsCalibration,
+			&i.GlucoseReadingsVw.SensorMgdlAtPairing,
+			&i.GlucoseReadingsVw.Notes,
+			&i.GlucoseReadingsVw.Reason,
+			&i.GlucoseReadingsVw.DeletedAt,
+			&i.GlucoseReadingsVw.UtcOffsetMinutes,
+			&i.GlucoseReadingsVw.OccurredAt,
+			&i.GlucoseReadingsVw.CreatedAt,
+			&i.GlucoseReadingsVw.UpdatedAt,
+			&i.GlucoseReadingsVw.CreatedByAppName,
+			&i.GlucoseReadingsVw.CreatedByDeviceName,
+			&i.GlucoseReadingsVw.UpdatedByIdentityID,
+			&i.GlucoseReadingsVw.UpdatedByIdentityName,
+			&i.GlucoseReadingsVw.CreatedByIdentityID,
+			&i.GlucoseReadingsVw.CreatedByIdentityName,
+			&i.InsulinDosesVw.ID,
+			&i.InsulinDosesVw.Dose,
+			&i.InsulinDosesVw.DoseType,
+			&i.InsulinDosesVw.ExtendedDose,
+			&i.InsulinDosesVw.ExtendedDurationMs,
+			&i.InsulinDosesVw.Automatic,
+			&i.InsulinDosesVw.IsBasalInsulin,
+			&i.InsulinDosesVw.InsulinType,
+			&i.InsulinDosesVw.Unabsorbed,
+			&i.InsulinDosesVw.IcfgJson,
+			&i.InsulinDosesVw.Notes,
+			&i.InsulinDosesVw.Reason,
+			&i.InsulinDosesVw.DeletedAt,
+			&i.InsulinDosesVw.UtcOffsetMinutes,
+			&i.InsulinDosesVw.OccurredAt,
+			&i.InsulinDosesVw.CreatedAt,
+			&i.InsulinDosesVw.UpdatedAt,
+			&i.InsulinDosesVw.CreatedByAppName,
+			&i.InsulinDosesVw.CreatedByDeviceName,
+			&i.InsulinDosesVw.UpdatedByIdentityID,
+			&i.InsulinDosesVw.UpdatedByIdentityName,
+			&i.InsulinDosesVw.CreatedByIdentityID,
+			&i.InsulinDosesVw.CreatedByIdentityName,
+			&i.FoodIntakesVw.ID,
+			&i.FoodIntakesVw.Name,
+			&i.FoodIntakesVw.FoodType,
+			&i.FoodIntakesVw.AbsorptionTimeMinutes,
+			&i.FoodIntakesVw.Carbs,
+			&i.FoodIntakesVw.Category,
+			&i.FoodIntakesVw.Subcategory,
+			&i.FoodIntakesVw.Fat,
+			&i.FoodIntakesVw.Protein,
+			&i.FoodIntakesVw.Fibre,
+			&i.FoodIntakesVw.Energy,
+			&i.FoodIntakesVw.Portions,
+			&i.FoodIntakesVw.PreBolus,
+			&i.FoodIntakesVw.UserEnteredAt,
+			&i.FoodIntakesVw.Notes,
+			&i.FoodIntakesVw.Reason,
+			&i.FoodIntakesVw.DeletedAt,
+			&i.FoodIntakesVw.UtcOffsetMinutes,
+			&i.FoodIntakesVw.OccurredAt,
+			&i.FoodIntakesVw.CreatedAt,
+			&i.FoodIntakesVw.UpdatedAt,
+			&i.FoodIntakesVw.CreatedByAppName,
+			&i.FoodIntakesVw.CreatedByDeviceName,
+			&i.FoodIntakesVw.UpdatedByIdentityID,
+			&i.FoodIntakesVw.UpdatedByIdentityName,
+			&i.FoodIntakesVw.CreatedByIdentityID,
+			&i.FoodIntakesVw.CreatedByIdentityName,
+			&i.TempBasalsVw.ID,
+			&i.TempBasalsVw.DurationMinutes,
+			&i.TempBasalsVw.Rate,
+			&i.TempBasalsVw.Multiplier,
+			&i.TempBasalsVw.Type,
+			&i.TempBasalsVw.InsulinType,
+			&i.TempBasalsVw.Automatic,
+			&i.TempBasalsVw.Notes,
+			&i.TempBasalsVw.Reason,
+			&i.TempBasalsVw.DeletedAt,
+			&i.TempBasalsVw.UtcOffsetMinutes,
+			&i.TempBasalsVw.OccurredAt,
+			&i.TempBasalsVw.CreatedAt,
+			&i.TempBasalsVw.UpdatedAt,
+			&i.TempBasalsVw.CreatedByAppName,
+			&i.TempBasalsVw.CreatedByDeviceName,
+			&i.TempBasalsVw.UpdatedByIdentityID,
+			&i.TempBasalsVw.UpdatedByIdentityName,
+			&i.TempBasalsVw.CreatedByIdentityID,
+			&i.TempBasalsVw.CreatedByIdentityName,
+			&i.TempTargetsVw.ID,
+			&i.TempTargetsVw.DurationMinutes,
+			&i.TempTargetsVw.HighTargetMgdl,
+			&i.TempTargetsVw.LowTargetMgdl,
+			&i.TempTargetsVw.InsulinNeedsScaleFactor,
+			&i.TempTargetsVw.DurationType,
+			&i.TempTargetsVw.Notes,
+			&i.TempTargetsVw.Reason,
+			&i.TempTargetsVw.DeletedAt,
+			&i.TempTargetsVw.UtcOffsetMinutes,
+			&i.TempTargetsVw.OccurredAt,
+			&i.TempTargetsVw.CreatedAt,
+			&i.TempTargetsVw.UpdatedAt,
+			&i.TempTargetsVw.CreatedByAppName,
+			&i.TempTargetsVw.CreatedByDeviceName,
+			&i.TempTargetsVw.UpdatedByIdentityID,
+			&i.TempTargetsVw.UpdatedByIdentityName,
+			&i.TempTargetsVw.CreatedByIdentityID,
+			&i.TempTargetsVw.CreatedByIdentityName,
+			&i.ProfileSwitchesVw.ID,
+			&i.ProfileSwitchesVw.Name,
+			&i.ProfileSwitchesVw.DurationMinutes,
+			&i.ProfileSwitchesVw.Multiplier,
+			&i.ProfileSwitchesVw.Timeshift,
+			&i.ProfileSwitchesVw.OriginalProfileName,
+			&i.ProfileSwitchesVw.OriginalCustomizedName,
+			&i.ProfileSwitchesVw.OriginalTimeshiftMs,
+			&i.ProfileSwitchesVw.OriginalPercentage,
+			&i.ProfileSwitchesVw.OriginalDurationMs,
+			&i.ProfileSwitchesVw.OriginalEnd,
+			&i.ProfileSwitchesVw.IcfgJson,
+			&i.ProfileSwitchesVw.Dia,
+			&i.ProfileSwitchesVw.Units,
+			&i.ProfileSwitchesVw.Timezone,
+			&i.ProfileSwitchesVw.CarbsHr,
+			&i.ProfileSwitchesVw.Delay,
+			&i.ProfileSwitchesVw.CarbRatiosJson,
+			&i.ProfileSwitchesVw.InsulinSensitivitiesJson,
+			&i.ProfileSwitchesVw.BasalRatesJson,
+			&i.ProfileSwitchesVw.TargetsHighJson,
+			&i.ProfileSwitchesVw.TargetsLowJson,
+			&i.ProfileSwitchesVw.Notes,
+			&i.ProfileSwitchesVw.Reason,
+			&i.ProfileSwitchesVw.DeletedAt,
+			&i.ProfileSwitchesVw.UtcOffsetMinutes,
+			&i.ProfileSwitchesVw.OccurredAt,
+			&i.ProfileSwitchesVw.CreatedAt,
+			&i.ProfileSwitchesVw.UpdatedAt,
+			&i.ProfileSwitchesVw.CreatedByAppName,
+			&i.ProfileSwitchesVw.CreatedByDeviceName,
+			&i.ProfileSwitchesVw.UpdatedByIdentityID,
+			&i.ProfileSwitchesVw.UpdatedByIdentityName,
+			&i.ProfileSwitchesVw.CreatedByIdentityID,
+			&i.ProfileSwitchesVw.CreatedByIdentityName,
+			&i.ActivitiesVw.ID,
+			&i.ActivitiesVw.Name,
+			&i.ActivitiesVw.ActivityType,
+			&i.ActivitiesVw.DurationMinutes,
+			&i.ActivitiesVw.Calories,
+			&i.ActivitiesVw.Steps,
+			&i.ActivitiesVw.HeartRate,
+			&i.ActivitiesVw.Notes,
+			&i.ActivitiesVw.Reason,
+			&i.ActivitiesVw.DeletedAt,
+			&i.ActivitiesVw.UtcOffsetMinutes,
+			&i.ActivitiesVw.OccurredAt,
+			&i.ActivitiesVw.CreatedAt,
+			&i.ActivitiesVw.UpdatedAt,
+			&i.ActivitiesVw.CreatedByAppName,
+			&i.ActivitiesVw.CreatedByDeviceName,
+			&i.ActivitiesVw.UpdatedByIdentityID,
+			&i.ActivitiesVw.UpdatedByIdentityName,
+			&i.ActivitiesVw.CreatedByIdentityID,
+			&i.ActivitiesVw.CreatedByIdentityName,
+			&i.NotificationEventsVw.ID,
+			&i.NotificationEventsVw.NotificationType,
+			&i.NotificationEventsVw.Title,
+			&i.NotificationEventsVw.Severity,
+			&i.NotificationEventsVw.Content,
+			&i.NotificationEventsVw.Notes,
+			&i.NotificationEventsVw.Reason,
+			&i.NotificationEventsVw.DeletedAt,
+			&i.NotificationEventsVw.UtcOffsetMinutes,
+			&i.NotificationEventsVw.OccurredAt,
+			&i.NotificationEventsVw.CreatedAt,
+			&i.NotificationEventsVw.UpdatedAt,
+			&i.NotificationEventsVw.CreatedByAppName,
+			&i.NotificationEventsVw.CreatedByDeviceName,
+			&i.NotificationEventsVw.UpdatedByIdentityID,
+			&i.NotificationEventsVw.UpdatedByIdentityName,
+			&i.NotificationEventsVw.CreatedByIdentityID,
+			&i.NotificationEventsVw.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const hardDeleteEventGroup = `-- name: HardDeleteEventGroup :one

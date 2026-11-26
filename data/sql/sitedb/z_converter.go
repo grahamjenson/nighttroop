@@ -447,6 +447,19 @@ func EventGroupToEventGroupsBundle(source EventGroup) EventGroupsBundle {
 	sitedbEventGroupsBundle.EventGroup = sitedbEventGroupToSitedbEventGroup(source)
 	return sitedbEventGroupsBundle
 }
+func EventGroupsByIDsToGetEventGroup(source GetEventGroupsByIDsRow) GetEventGroupRow {
+	var sitedbGetEventGroupRow GetEventGroupRow
+	sitedbGetEventGroupRow.EventGroup = sitedbEventGroupToSitedbEventGroup(source.EventGroup)
+	sitedbGetEventGroupRow.GlucoseReadingsVw = sitedbGlucoseReadingsVwToSitedbGlucoseReadingsVw(source.GlucoseReadingsVw)
+	sitedbGetEventGroupRow.InsulinDosesVw = sitedbInsulinDosesVwToSitedbInsulinDosesVw(source.InsulinDosesVw)
+	sitedbGetEventGroupRow.FoodIntakesVw = sitedbFoodIntakesVwToSitedbFoodIntakesVw(source.FoodIntakesVw)
+	sitedbGetEventGroupRow.TempBasalsVw = sitedbTempBasalsVwToSitedbTempBasalsVw(source.TempBasalsVw)
+	sitedbGetEventGroupRow.TempTargetsVw = sitedbTempTargetsVwToSitedbTempTargetsVw(source.TempTargetsVw)
+	sitedbGetEventGroupRow.ProfileSwitchesVw = sitedbProfileSwitchesVwToSitedbProfileSwitchesVw(source.ProfileSwitchesVw)
+	sitedbGetEventGroupRow.ActivitiesVw = sitedbActivitiesVwToSitedbActivitiesVw(source.ActivitiesVw)
+	sitedbGetEventGroupRow.NotificationEventsVw = sitedbNotificationEventsVwToSitedbNotificationEventsVw(source.NotificationEventsVw)
+	return sitedbGetEventGroupRow
+}
 func FoodIntakeFromView(source FoodIntakesVw) FoodIntake {
 	var sitedbFoodIntake FoodIntake
 	if source.ID != nil {

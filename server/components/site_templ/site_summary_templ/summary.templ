@@ -44,6 +44,11 @@ func otherTreatments(ctx context.Context, s *sitemodels.Summary) []treatment {
 	for _, t := range s.TempTargets {
 		detail := i18n.T(ctx, "site.summary.treatments.temp_target_detail", i18n.Data{"Low": display.Glucose(ctx, t.LowTarget, t.Units), "High": display.Glucose(ctx, t.HighTarget, t.Units),
 			"Units": display.Units(t.Units), "Minutes": t.DurationMinutes})
+		// A temp target of no duration cancels the one before, as AAPS's and T1D Carer's cancel send, and has no target
+		// of its own
+		if t.DurationMinutes == 0 {
+			detail = i18n.T(ctx, "site.summary.treatments.temp_target_cancelled")
+		}
 		list = append(list, treatment{t.OccurredAt, i18n.T(ctx, "site.summary.treatments.temp_target"), "/data/temp-targets", detail})
 	}
 	for _, b := range s.TempBasals {
@@ -72,15 +77,48 @@ type intake struct {
 func insulinAndCarbs(ctx context.Context, s *sitemodels.Summary) []intake {
 	list := []intake{}
 	for _, d := range s.InsulinDoses {
-		list = append(list, intake{At: d.OccurredAt, Insulin: display.Value(ctx, &d.Dose, " U"), SMB: isSMB(d)})
+		list = append(list, intake{At: d.OccurredAt, Insulin: doseText(ctx, d, " U"), SMB: isSMB(d)})
 	}
 	for _, f := range s.FoodIntakes {
 		if f.Carbs != nil {
-			list = append(list, intake{At: f.OccurredAt, Carbs: display.Value(ctx, f.Carbs, " g")})
+			carbs := display.Value(ctx, f.Carbs, " g")
+			// Carbs given over a time, as AAPS's extended carbs are, say how long, as an extended dose does
+			if f.DurationMinutes != nil {
+				carbs = i18n.T(ctx, "site.summary.intake.extended_only", i18n.Data{"Extended": carbs, "Duration": display.Duration(ctx, *f.DurationMinutes*60_000)})
+			}
+			list = append(list, intake{At: f.OccurredAt, Carbs: carbs})
 		}
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].At > list[j].At })
 	return list
+}
+
+// doseText is a dose's units, with a combo or extended bolus's extended units and the time they are given over, as
+// "1.2 U + 1.8 U over 2 h", or "2 U over 2 h" when none is given at once, each followed by unit, as " U" in a table or
+// "U" on the graph. An extended dose with no time is given at once, as the daily dose counts it.
+func doseText(ctx context.Context, d *sitemodels.SiteInsulinDose, unit string) string {
+	if d.IsBasalInsulin != nil && *d.IsBasalInsulin {
+		// Basal insulin, as long acting insulin injected, says so, as it counts as basal, not as a bolus
+		return i18n.T(ctx, "site.summary.intake.basal_insulin", i18n.Data{"Dose": doseAmount(ctx, d, unit)})
+	}
+	return doseAmount(ctx, d, unit)
+}
+
+// doseAmount is a dose's units, with its extended dose and how long that is given over
+func doseAmount(ctx context.Context, d *sitemodels.SiteInsulinDose, unit string) string {
+	dose := display.Value(ctx, &d.Dose, unit)
+	if d.ExtendedDose == nil || *d.ExtendedDose <= 0 {
+		return dose
+	}
+	if d.ExtendedDurationMinutes == nil || *d.ExtendedDurationMinutes <= 0 {
+		return display.Value(ctx, new(d.Dose+*d.ExtendedDose), unit)
+	}
+	data := i18n.Data{"Dose": dose, "Extended": display.Value(ctx, d.ExtendedDose, unit),
+		"Duration": display.Duration(ctx, *d.ExtendedDurationMinutes*60_000)}
+	if d.Dose == 0 {
+		return i18n.T(ctx, "site.summary.intake.extended_only", data)
+	}
+	return i18n.T(ctx, "site.summary.intake.extended", data)
 }
 
 // plannedAhead is how far after now an intake is planned, as carbs a loop expects from fat and protein, rather than
@@ -214,12 +252,10 @@ templ summaryContent(summary *sitemodels.Summary) {
 }
 
 // staleAfterMinutes is how old the latest reading can be before the summary says there is none: the no data alarm's
-// minutes, from the settings in effect, or 15 without them
+// minutes, from the settings in effect, or 15 without a site
 func staleAfterMinutes(ctx context.Context) int64 {
 	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
-		if minutes := siteContext.GetSettings().GetAlarmNoDataMinutes(); minutes != nil {
-			return *minutes
-		}
+		return siteContext.GetSettings().GetAlarmNoDataMinutes()
 	}
 	return 15
 }
@@ -259,6 +295,27 @@ func newerMeter(summary *sitemodels.Summary) *sitemodels.SiteCleanGlucoseReading
 	return nil
 }
 
+// staleHelp says, under a reading that is too old, where to look for why readings stopped: an admin gets links to the
+// three pages that say, and anyone else is told to ask an admin, as they cannot open those pages
+templ staleHelp() {
+	<p id="site--summary--glucose--stale-help" class="mt-2 flex max-w-md flex-wrap gap-x-3 gap-y-1 rounded-lg bg-amber-100 px-3 py-2 text-sm text-amber-800">
+		if isAdmin(ctx) {
+			<span class="font-medium">{ i18n.T(ctx, "site.summary.glucose.stale_help") }</span>
+			@nav.Link("site--summary--stale--connectors", "/settings/connectors", "font-medium underline") {
+				{ i18n.T(ctx, "site.settings.connectors.title") }
+			}
+			@nav.Link("site--summary--stale--identities", "/settings/identities", "font-medium underline") {
+				{ i18n.T(ctx, "site.settings.identities.title") }
+			}
+			@nav.Link("site--summary--stale--errors", "/logs/errors", "font-medium underline") {
+				{ i18n.T(ctx, "site.logs.errors.title") }
+			}
+		} else {
+			{ i18n.T(ctx, "site.summary.glucose.stale_ask") }
+		}
+	</p>
+}
+
 templ glucoseHero(summary *sitemodels.Summary) {
 	<div id="site--summary--glucose" class="panel col-span-2 flex flex-wrap items-center p-4 sm:col-span-4 lg:col-span-2 lg:row-span-2">
 		if summary.CurrentGlucose != nil {
@@ -293,6 +350,9 @@ templ glucoseHero(summary *sitemodels.Summary) {
 						{ i18n.T(ctx, "site.summary.glucose.all_readings") }
 					}
 				</div>
+				if stale != "" {
+					@staleHelp()
+				}
 			</div>
 		} else {
 			<div>
@@ -306,9 +366,12 @@ templ glucoseHero(summary *sitemodels.Summary) {
 	</div>
 }
 
-// previous is a day tile's value for yesterday, or the mean day of last week or month, under today's
+// previous is a day tile's value for yesterday, or the mean day of last week or month, under today's. A time with no
+// data, as each is on a new site, has no line, not four that each say only a dash.
 templ previous(id, label, text string) {
-	<div id={ id } class="text-xs text-gray-500">{ label } { text }</div>
+	if text != "–" {
+		<div id={ id } class="text-xs text-gray-500">{ label } { text }</div>
+	}
 }
 
 // deviceCard is a device's latest status; clicking it opens all its details
@@ -356,7 +419,8 @@ templ treatmentsTable(list []treatment) {
 				@table.Empty("", 1, i18n.T(ctx, "site.summary.treatments.none"))
 			}
 			for _, t := range list {
-				@table.Row() {
+				// On a phone its detail is a line of its own under when and what it was, not a column a word wide
+				@table.Row(table.RowProps{Class: "max-sm:flex max-sm:flex-wrap"}) {
 					@table.Cell() {
 						<span title={ site_data_templ.FormatDate(ctx, t.At) }>{ display.RoundedAgo(ctx, t.At, time.Now()) }</span>
 					}
@@ -365,7 +429,7 @@ templ treatmentsTable(list []treatment) {
 							{ t.Kind }
 						}
 					}
-					@table.Cell(table.CellProps{Class: "whitespace-normal"}) {
+					@table.Cell(table.CellProps{Class: "whitespace-normal max-sm:basis-full max-sm:pt-0 max-sm:text-gray-600"}) {
 						{ t.Detail }
 					}
 				}

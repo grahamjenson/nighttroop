@@ -39,6 +39,11 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		// Only an admin can change the server, its sites, its push credentials and its admins, send a test push, or
 		// download or upload a DB, not a read only identity
 		admin := r.With(controlcollections.AdminOnly)
+		// The emails the server last sent, as Resend has them, and for an admin the whole address of one
+		r.Get("/sent-emails", controlapi.SentEmailsHandler)
+		admin.Get("/sent-emails/{id}/address", controlapi.SentEmailAddressHandler)
+		// One of the pre-built emails, to the site's verified email
+		admin.Post("/sites/{id}/email", controlapi.SendSiteEmailHandler)
 		admin.Post("/sites", (&controlcollections.SitesCollection{}).CreateHandler)
 		admin.Post("/settings", (&controlcollections.SitesCollection{}).SettingsHandler)
 		admin.Post("/sites/{id}/truncate", (&controlcollections.SitesCollection{}).TruncateHandler)
@@ -65,6 +70,10 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		admin.Post("/push-credentials", (&controlcollections.PushCredentialsCollection{}).CreateHandler)
 		admin.Delete("/push-credentials/{id}", (&controlcollections.PushCredentialsCollection{}).DeleteHandler)
 		// Control's admins, which an admin manages, never itself
+		// Messages sites show at the top of their pages, which an admin adds and deletes
+		r.Get("/banners", controlapi.SiteBannersHandler)
+		admin.Post("/banners", controlapi.CreateSiteBannerHandler)
+		admin.Delete("/banners/{id}", controlapi.DeleteSiteBannerHandler)
 		r.Get("/admins", controlapi.ControlAdminsHandler)
 		admin.Post("/admins", controlapi.CreateControlAdminHandler)
 		admin.Post("/admins/{id}/role", controlapi.SetControlAdminRoleHandler)

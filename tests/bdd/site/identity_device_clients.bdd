@@ -74,6 +74,23 @@ SCREENSHOT device_client_guide_t1dcarer
 CLICK "I Have Saved These"
 CLICK #site--identities--close
 
+// A device whose app lost its token gets a new one from its Manage menu, named for that, with the app's setup steps
+// again and the new token filled in
+CLICK #site--identities--watch--manage
+ASSERT_VISIBLE #site--identities--watch--reset-password >> text=New token & setup steps
+CLICK #site--identities--watch--reset-password
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Setting up Nightguard
+ASSERT_VISIBLE #site--identities--created--guide code >> text=/\.ns\.localhost:\d+\/\?token=/
+SCREENSHOT device_reset_guide
+SAVE_TEXT #site--identities--created--ns-token watch_token
+CLICK "I Have Saved These"
+CLICK #site--identities--close
+// A person's is still named for their password
+CLICK #site--identities--admin--manage
+ASSERT_DRAWN #site--identities--admin--reset-password >> text=Reset password
+PRESS Escape
+
 // The Nightscout API gives the Nightguard device the site's mmol/L, and the xDrip4iOS device mg/dL
 GOTO {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/status.json?token={{ .watch_token }}
 ASSERT_STATUS 200

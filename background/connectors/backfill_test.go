@@ -1,6 +1,7 @@
 package connectors
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -200,6 +201,32 @@ func TestNightscoutBackfillCopiesOlderDocuments(t *testing.T) {
 	require.Equal(t, int64(2), *s.LastBackfillRecords)
 }
 
+// A site far over its storage has nothing synced or backfilled into it, as its own writes are refused
+func TestNightscoutBackfillSkipsASiteOverItsStorage(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
+	enc := func(s string) *string {
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
+		require.NoError(t, err)
+		return &v
+	}
+	nightscout_client.TestDocuments = map[string][]any{
+		"entries": {map[string]any{"type": "sgv", "sgv": 140, "date": float64(time.Now().Add(-72 * time.Hour).UnixMilli())}},
+	}
+	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
+	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
+	model, err := q.GetSite(ctx, controldb.GetSiteParams{ID: siteID})
+	require.NoError(t, err)
+	require.NoError(t, q.UpdateSiteDBSize(ctx, controldb.UpdateSiteDBSizeParams{ID: siteID, EstimatedDbSizeKb: new(4**model.MaxDbSizeKbLimit + 1)}))
+
+	backfill, err := BackfillRange(ctx, site.SiteDB, typ, 7, time.UTC)
+	require.NoError(t, err)
+	require.NoError(t, SetupConnectorJobManager(cfg, controlDB).RunConnector(ctx, ConnectorJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
+	readings, err := site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, readings)
+}
+
 func TestOldestDate(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -343,4 +370,74 @@ func TestBackfillCopiesNoDeviceStatusOlderThan30Days(t *testing.T) {
 	readings, err = site.SiteDB.Queries().AllGlucoseReadings(ctx, sitedb.AllGlucoseReadingsParams{Limit: 10})
 	require.NoError(t, err)
 	require.Greater(t, len(readings), 1)
+}
+
+// A backfill copies only the device statuses the site's truncation keeps, rather than writing each one for the next
+// truncation to delete: of each device, the newest in every 20 minutes 10 days ago, in every 10 minutes 3 days ago,
+// and every one from the last hour
+func TestNightscoutBackfillCopiesOnlyTheDeviceStatusesTruncationKeeps(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
+	enc := func(s string) *string {
+		v, err := cfg.Security.EncryptFor(security.PurposeConnector, siteID, s)
+		require.NoError(t, err)
+		return &v
+	}
+	now, minute, hour := time.Now(), time.Minute.Milliseconds(), time.Hour.Milliseconds()
+	status := func(device string, date int64) any {
+		return map[string]any{"device": device, "date": float64(date), "openaps": map[string]any{"iob": map[string]any{"iob": 1.5}}}
+	}
+	// Each set starts on the hour, so its buckets are whole: 2 hours every 5 minutes 10 days ago, 1 hour 3 days ago,
+	// and 4 statuses in the last 20 minutes, newest first as Nightscout returns them, under one page of 50
+	tenDaysAgo, threeDaysAgo := now.Add(-240*time.Hour).UnixMilli()/hour*hour, now.Add(-72*time.Hour).UnixMilli()/hour*hour
+	statuses := []any{}
+	for i := 1; i <= 4; i++ {
+		statuses = append(statuses, status("openaps://phone", now.UnixMilli()-int64(i)*5*minute))
+	}
+	for i := 11; i >= 0; i-- {
+		statuses = append(statuses, status("loop://iPhone", threeDaysAgo+int64(i)*5*minute))
+	}
+	for i := 23; i >= 0; i-- {
+		statuses = append(statuses, status("openaps://phone", tenDaysAgo+int64(i)*5*minute))
+	}
+	nightscout_client.TestDocuments = map[string][]any{"devicestatus": statuses}
+	t.Cleanup(func() { nightscout_client.TestDocuments = map[string][]any{} })
+	require.NoError(t, q.CreateConnector(ctx, controldb.CreateConnectorParams{SiteID: siteID, Type: typ, UrlOrUsernameEnc: enc(nightscout_client.TestValidURL), PasswordEnc: enc("token"), Enabled: true}))
+
+	backfill := BackfillParams{From: now.Add(-14 * 24 * time.Hour).UnixMilli(), To: now.UnixMilli()}
+	require.NoError(t, QueueBackfill(ctx, controlDB, siteID, typ, backfill))
+	require.NoError(t, SetupConnectorJobManager(cfg, controlDB).RunConnector(ctx, ConnectorJobParams{SiteID: siteID, Type: typ, Backfill: &backfill}))
+
+	copied := func() []int64 {
+		reports, err := site.SiteDB.Queries().AllDeviceReports(ctx, sitedb.AllDeviceReportsParams{Limit: 100})
+		require.NoError(t, err)
+		dates := []int64{}
+		for _, report := range reports {
+			dates = append(dates, report.OccurredAt)
+		}
+		slices.Sort(dates)
+		return dates
+	}
+	want := []int64{}
+	for i := 0; i < 6; i++ {
+		// The newest of each 20 minutes: its third 5 minutes
+		want = append(want, tenDaysAgo+int64(i)*20*minute+15*minute)
+	}
+	for i := 0; i < 6; i++ {
+		// The newest of each 10 minutes: its second 5 minutes
+		want = append(want, threeDaysAgo+int64(i)*10*minute+5*minute)
+	}
+	for i := 4; i >= 1; i-- {
+		want = append(want, now.UnixMilli()-int64(i)*5*minute)
+	}
+	got := copied()
+	require.Len(t, got, len(want), "16 of the 40 statuses")
+	for i := range want {
+		require.Equal(t, want[i]/1000, got[i]/1000, "status %d", i)
+	}
+
+	// Truncating the site now deletes none of them: the backfill copied what it keeps
+	_, err := controlDB.TruncateSite(ctx, siteID)
+	require.NoError(t, err)
+	require.Len(t, copied(), len(want))
 }

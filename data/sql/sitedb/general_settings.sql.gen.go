@@ -56,6 +56,22 @@ func (q *Queries) DeleteGeneralSettingsBefore(ctx context.Context, arg DeleteGen
 	return err
 }
 
+const generalSettingsBytes = `-- name: GeneralSettingsBytes :one
+SELECT CAST(COALESCE(SUM(LENGTH(value_json)), 0) AS INTEGER) FROM general_settings WHERE key != ?
+`
+
+type GeneralSettingsBytesParams struct {
+	Key string
+}
+
+// The size of every document's JSON but the one at the key, which a save replaces
+func (q *Queries) GeneralSettingsBytes(ctx context.Context, arg GeneralSettingsBytesParams) (int64, error) {
+	row := q.queryRow(ctx, q.generalSettingsBytesStmt, generalSettingsBytes, arg.Key)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const getGeneralSetting = `-- name: GetGeneralSetting :one
 SELECT "key", type, value_json, created_by_identity_name, created_at, updated_at FROM general_settings WHERE key = ?
 `

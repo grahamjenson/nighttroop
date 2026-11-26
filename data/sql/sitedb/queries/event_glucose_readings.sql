@@ -65,6 +65,12 @@ SELECT * FROM glucose_readings WHERE
 (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 AND id = sqlc.arg('ID');
 
+-- name: GetGlucoseReadingsByIDs :many
+-- The readings with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+SELECT * FROM glucose_readings
+WHERE id IN (SELECT value FROM json_each(CAST(sqlc.narg('IDs') AS TEXT)))
+    AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
+
 -- name: OldestGlucoseReadingAt :one
 -- When the oldest reading not deleted was, or 0 when there are none
 SELECT CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) FROM glucose_readings WHERE deleted_at IS NULL;
@@ -100,6 +106,16 @@ WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0)
     AND MIN(COALESCE(CAST(sqlc.narg('DateLTE') AS INTEGER), 253402300799999), COALESCE(CAST(sqlc.narg('DateLT') AS INTEGER) - 1, 253402300799999), COALESCE(sqlc.narg('DateEQ'), 253402300799999))
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
+
+-- name: GlucoseReadingSortedIDs :many
+-- The readings in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or srvCreated
+SELECT id FROM (
+    SELECT id, CASE CAST(sqlc.arg('SortOrder') AS INTEGER) WHEN 3 THEN updated_at WHEN -3 THEN -updated_at WHEN 2 THEN created_at ELSE -created_at END AS sort_key
+    FROM glucose_readings
+    WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0), COALESCE(CAST(sqlc.narg('DateGT') AS INTEGER) + 1, 0), COALESCE(CAST(sqlc.narg('DateEQ') AS INTEGER), 0))
+        AND MIN(COALESCE(CAST(sqlc.narg('DateLTE') AS INTEGER), 253402300799999), COALESCE(CAST(sqlc.narg('DateLT') AS INTEGER) - 1, 253402300799999), COALESCE(sqlc.narg('DateEQ'), 253402300799999))
+        AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
+) ORDER BY sort_key, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GlucoseReadingHistoryIDs :many
 -- The readings changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3

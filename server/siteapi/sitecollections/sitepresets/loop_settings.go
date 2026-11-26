@@ -1,11 +1,11 @@
 package sitepresets
 
 import (
+	"slices"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"slices"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/sitedb"
@@ -13,7 +13,6 @@ import (
 	"nighttroop.t1d.nz/server/components/site_templ/site_presets_templ"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
 	"nighttroop.t1d.nz/utils/apiutils"
-	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -45,29 +44,29 @@ func (s *LoopSettingsCollection) GetRow(ctx context.Context, collectionTx *sitea
 		return nil, err
 	default:
 		model.PreviousID = &previous.ID
-		before := sitemodels.LoopSettingsFor(siteContext.IdentityModel, json.RawMessage(previous.SettingsJson))
+		before := sitemodels.WithoutDeviceToken(json.RawMessage(previous.SettingsJson))
 		model.Changes = sitemodels.LoopSettingsChanges(row.App, before, model.Settings, model.Units)
 	}
 	return model, nil
 }
 
-// fromDB is the model of the settings as the identity may see them, with the site's units, which glucose in their
+// fromDB is the model of the settings, without a deviceToken, with the site's units, which glucose in their
 // changes is in
 func (s *LoopSettingsCollection) fromDB(row *sitedb.LoopSetting, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
 	model := sitemodels.LoopSettingsFromDB(row)
-	model.Settings = sitemodels.LoopSettingsFor(siteContext.IdentityModel, model.Settings)
-	model.Units = siteContext.GetSettings().GetUnits()
+	model.Settings = sitemodels.WithoutDeviceToken(model.Settings)
+	model.Units = new(siteContext.GetSettings().GetUnits())
 	return model
 }
 
-// ToModel is the settings as the identity may see them. A row read for another identity, as a deleted one streamed to
-// every identity watching is, can have the deviceToken this one may not see, in its settings and its changes.
+// ToModel is the settings without a deviceToken, in them or their changes, for every identity. Rows from fromDB have
+// none; a row published another way, as one kept before tokens were left out could be, loses it here.
 func (s *LoopSettingsCollection) ToModel(row *sitemodels.SiteLoopSettings, siteContext *httputils.SiteContext) *sitemodels.SiteLoopSettings {
-	if row == nil || can.IdentitySeeDeviceTokens(siteContext.IdentityModel) {
+	if row == nil {
 		return row
 	}
 	model := *row
-	model.Settings = sitemodels.LoopSettingsFor(siteContext.IdentityModel, row.Settings)
+	model.Settings = sitemodels.WithoutDeviceToken(row.Settings)
 	if row.Changes != nil {
 		model.Changes = slices.DeleteFunc(slices.Clone(row.Changes), func(change *sitemodels.LoopSettingsChange) bool {
 			return change.Field == "deviceToken"

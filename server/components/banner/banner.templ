@@ -1,0 +1,74 @@
+package banner
+
+import (
+	"fmt"
+
+	"nighttroop.t1d.nz/utils/i18n"
+)
+
+// levelClasses are how a line of each level is coloured: blue for information, amber for a warning, red for an error
+var levelClasses = map[Level]string{
+	Info:    "border-blue-200 bg-blue-50 text-blue-700",
+	Warning: "border-amber-500/20 bg-amber-500/10 text-amber-800",
+	Error:   "border-red-200 bg-red-50 text-red-700",
+}
+
+// hiddenFor is how long a banner a person hid stays hidden in that browser, in days
+const hiddenFor = 7
+
+// Strip is the banners of a page, one line each, under its header. With none it is nothing. With canHide, a banner
+// whose level can be hidden has a button that hides it in this browser for hiddenFor days.
+templ Strip(id string, banners []Banner, canHide bool) {
+	if len(banners) > 0 {
+		<div id={ id } role="alert" class="text-sm">
+			for _, banner := range banners {
+				<div data-banner={ banner.ID } class={ "border-b", levelClasses[banner.Level] }>
+					<div class="mx-auto flex max-w-7xl items-start gap-2 px-4 py-1.5 sm:px-6 lg:px-8">
+						<p id={ banner.ID } class="flex-1">
+							if banner.Title != "" {
+								<strong>{ banner.Title }</strong>
+							}
+							{ " " + banner.Text }
+							for _, link := range banner.Links {
+								{ " " }
+								<a id={ link.ID } href={ templ.SafeURL(link.Href) } class="underline">{ link.Text }</a>{ link.After }
+							}
+							{ " " + banner.After }
+						</p>
+						if canHide && banner.Level.CanHide() {
+							<button id={ banner.ID + "--hide" } type="button" data-banner-hide class="shrink-0 rounded px-1 underline hover:no-underline">
+								{ i18n.T(ctx, "site.banner.hide") }
+							</button>
+						}
+					</div>
+				</div>
+			}
+			if canHide {
+				@hideScript()
+			}
+		</div>
+	}
+}
+
+// hideScript takes out, before the page is drawn, the banners this browser hid in the last hiddenFor days, and
+// makes each Hide button hide its banner. What is hidden is kept in the browser, for this site only.
+templ hideScript() {
+	<script data-days={ fmt.Sprint(hiddenFor) }>
+		(() => {
+			const script = document.currentScript, strip = script.parentElement, key = "nighttroop-hidden-banners"
+			const lasts = Number(script.dataset.days) * 24 * 60 * 60 * 1000
+			let hidden = {}
+			try { hidden = JSON.parse(localStorage.getItem(key)) || {} } catch (e) {}
+			const take = (row) => { row.remove(); if (!strip.querySelector("[data-banner]")) strip.remove() }
+			strip.querySelectorAll("[data-banner-hide]").forEach((button) => {
+				const row = button.closest("[data-banner]"), id = row.dataset.banner
+				if (hidden[id] > Date.now() - lasts) return take(row)
+				button.addEventListener("click", () => {
+					hidden[id] = Date.now()
+					try { localStorage.setItem(key, JSON.stringify(hidden)) } catch (e) {}
+					take(row)
+				})
+			})
+		})()
+	</script>
+}

@@ -64,7 +64,7 @@ func (s *AlarmsCollection) DeleteRow(ctx context.Context, collectionTx *siteapiu
 	return nil
 }
 
-// DeleteHTMXResponse is the alarm's row in the banner, snoozed
+// DeleteHTMXResponse is the alarm's row in the banner, snoozed until the snooze DeleteRow gave it ends
 func (s *AlarmsCollection) DeleteHTMXResponse(model *sitemodels.SiteAlarm) templ.Component {
-	return site_templ.AlarmRow(&sitemodels.SiteAlarm{ID: model.ID, Urgent: model.Urgent})
+	return site_templ.AlarmRow(&sitemodels.SiteAlarm{ID: model.ID, Urgent: model.Urgent, SnoozedUntil: new(time.Now().Add(snoozeFor).UnixMilli())})
 }

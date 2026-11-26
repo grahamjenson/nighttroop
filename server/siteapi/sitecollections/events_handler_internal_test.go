@@ -61,9 +61,14 @@ func newStreams(t *testing.T) streams {
 
 // eventStream serves the handler for the site as role, and reads its stream
 func eventStream(t *testing.T, streams streams, site string, role consts.IdentityRole, handler http.HandlerFunc) (*http.Response, *bufio.Reader) {
+	return eventStreamOf(t, streams, site, &controldb.SiteIdentity{Role: role}, handler)
+}
+
+// eventStreamOf serves the handler for the site as the identity, and reads its stream
+func eventStreamOf(t *testing.T, streams streams, site string, identity *controldb.SiteIdentity, handler http.HandlerFunc) (*http.Response, *bufio.Reader) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := httputils.CreateSiteContext(r.Context(), &config.ServerConfig{Events: streams.bus}, streams.controlDB, nil, nil, site, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
-		handler(w, r.WithContext(httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{Role: role})))
+		handler(w, r.WithContext(httputils.SetIdentityModelInSiteContext(ctx, identity)))
 	}))
 	t.Cleanup(server.Close)
 	resp, err := http.Get(server.URL)
@@ -124,28 +129,40 @@ func TestEventsHandlerStreamsTheCollectionsChanges(t *testing.T) {
 	}
 }
 
-// An identity that may not search a collection cannot stream it, and a site can hold only so many streams open
+// An identity that may not search a collection cannot stream it, and a site can hold only so many streams open, one
+// identity only its share of them
 func TestEventsHandlerLimits(t *testing.T) {
 	streams := newStreams(t)
 	resp, _ := eventStream(t, streams, "site-a", consts.IdentityRoleUser, EventsHandler[eventRow, eventModel](eventsCollection{name: "site_logs"}))
 	require.Equal(t, http.StatusForbidden, resp.StatusCode)
 
 	handler := EventsHandler[eventRow, eventModel](eventsCollection{name: "glucose_readings"})
-	for range maxEventStreamsPerSite {
-		resp, _ := eventStream(t, streams, "site-a", consts.IdentityRoleUser, handler)
+	identity := func(id int64) *controldb.SiteIdentity {
+		return &controldb.SiteIdentity{ID: id, Role: consts.IdentityRoleUserReadOnly}
+	}
+	// One identity, as a read only one whose token is out, cannot take all of the site's streams
+	for range maxEventStreamsPerIdentity {
+		resp, _ := eventStreamOf(t, streams, "site-a", identity(1), handler)
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 	}
-	resp, _ = eventStream(t, streams, "site-a", consts.IdentityRoleUser, handler)
+	resp, _ = eventStreamOf(t, streams, "site-a", identity(1), handler)
+	require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+	// The site's other identities open the rest, and then no more
+	for id := range int64(maxEventStreamsPerSite - maxEventStreamsPerIdentity) {
+		resp, _ := eventStreamOf(t, streams, "site-a", identity(2+id), handler)
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+	}
+	resp, _ = eventStreamOf(t, streams, "site-a", identity(100), handler)
 	require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
 
 	// A stream that ends is closed, so another can open
-	open, _ := eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
-	for range maxEventStreamsPerSite - 1 {
-		eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
+	open, _ := eventStreamOf(t, streams, "site-c", identity(1), handler)
+	for id := range int64(maxEventStreamsPerSite - 1) {
+		eventStreamOf(t, streams, "site-c", identity(2+id), handler)
 	}
 	open.Body.Close()
 	require.Eventually(t, func() bool {
-		resp, _ := eventStream(t, streams, "site-c", consts.IdentityRoleUser, handler)
+		resp, _ := eventStreamOf(t, streams, "site-c", identity(1), handler)
 		return resp.StatusCode == http.StatusOK
 	}, 5*time.Second, 50*time.Millisecond)
 
@@ -259,16 +276,17 @@ func TestEventsHandlerStreamsSettingsToWhoseTheyAre(t *testing.T) {
 	}
 }
 
-// Loop settings are read as the identity that changed them, so one deleted by an identity that may see Loop's and
-// Trio's device tokens has them; they are streamed without them to an identity that may not see them
-func TestEventsHandlerStreamsLoopSettingsWithoutDeviceTokensToReadOnly(t *testing.T) {
+// Loop settings are kept without Loop's and Trio's device tokens. A row published with one, as one kept before they
+// were left out could be, is streamed without it to every identity, as the site's pages give no one a device token
+func TestEventsHandlerStreamsLoopSettingsWithoutDeviceTokens(t *testing.T) {
 	tests := []struct {
 		role  consts.IdentityRole
 		shown bool
 	}{
 		{consts.IdentityRoleUserReadOnly, false},
 		{consts.IdentityRoleDeviceRead, false},
-		{consts.IdentityRoleUser, true},
+		{consts.IdentityRoleUser, false},
+		{consts.IdentityRoleAdmin, false},
 	}
 	for _, test := range tests {
 		t.Run(string(test.role), func(t *testing.T) {

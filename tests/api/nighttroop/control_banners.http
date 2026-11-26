@@ -1,0 +1,121 @@
+INCLUDE steps/control_login.steps
+
+// A control admin adds a banner for sites to show: a message, how it is shown, the sites it is for and its days
+NAME add_banner
+POST http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "  Sites that are not used are archived on 1 March.  ", "level": "warning", "sites": "bbbbbbbb, aaaaaaaa aaaaaaaa", "days": 14}
+ASSERT_STATUS 201
+ASSERT_EQUALS "Sites that are not used are archived on 1 March." "@result.message"
+ASSERT_EQUALS "warning" "@result.level"
+ASSERT_LENGTH 2 "@result.site_ids"
+ASSERT_EQUALS "aaaaaaaa" "@result.site_ids.0"
+ASSERT_EQUALS "admin" "@result.created_by_identity_name"
+ASSERT_EXISTS "@result.expires_at"
+SET banner_id {{ .add_banner.result.id }}
+
+// With no sites it is for every site, and with no level it is information
+NAME add_banner_for_every_site
+POST http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "Nighttroop is down for an hour on Sunday.", "days": "1"}
+ASSERT_STATUS 201
+ASSERT_EQUALS "info" "@result.level"
+ASSERT_LENGTH 0 "@result.site_ids"
+
+NAME list_banners
+GET http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@result"
+ASSERT_EQUALS "Nighttroop is down for an hour on Sunday." "@result.0.message"
+
+// A banner needs a message, a level there is, 1 to 90 days, and sites named as a site is
+NAME no_message
+POST http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "   ", "days": 1}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "needs a message" "@message"
+
+NAME long_message
+POST http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "{{ repeat "a" 501 }}", "days": 1}
+ASSERT_STATUS 400
+
+NAME unknown_level
+POST http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "Hello", "level": "<script>", "days": 1}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "information or as a warning" "@message"
+
+NAME no_days
+POST http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "Hello"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "from 1 to 90 days" "@message"
+
+NAME too_many_days
+POST http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "Hello", "days": 91}
+ASSERT_STATUS 400
+
+NAME not_a_site_id
+POST http://control.localhost/banners
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "Hello", "days": 1, "sites": "../etc"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "each by its site ID" "@message"
+
+// An admin deletes a banner, once
+NAME delete_banner
+DELETE http://control.localhost/banners/{{ .banner_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+
+NAME delete_banner_again
+DELETE http://control.localhost/banners/{{ .banner_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME delete_not_a_banner
+DELETE http://control.localhost/banners/everything
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+// Not signed in, the banners are not shown or changed
+NAME list_not_signed_in
+GET http://control.localhost/banners
+H Accept: application/json
+ASSERT_STATUS 401
+
+NAME add_not_signed_in
+POST http://control.localhost/banners
+H Accept: application/json
+H Content-Type: application/json
+B {"message": "Hello", "days": 1}
+ASSERT_STATUS 401

@@ -61,7 +61,8 @@ ASSERT_EQUALS "admin" "@result.1.name"
 SET carol_id {{ (index .list_admins.result 0).id }}
 SET admin_id {{ (index .list_admins.result 1).id }}
 
-// The new admin signs in, but read only it cannot manage the admins
+// The new admin signs in, but read only it cannot manage the admins. TestControlReadOnlyIdentityCannotChangeTheServer
+// checks each other route only an admin uses
 NAME carol_login
 POST http://control.localhost/login
 H Accept: application/json
@@ -75,124 +76,6 @@ H Accept: application/json
 H Content-Type: application/json
 B {"name": "api_dave", "role": "admin"}
 ASSERT_STATUS 403
-
-NAME read_only_cannot_delete
-DELETE http://control.localhost/admins/{{ .admin_id }}
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-// Nor can it change the server or its sites, or download a DB, though it can see them
-NAME read_only_cannot_reset_totp
-POST http://control.localhost/admins/{{ .admin_id }}/totp
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_create_site
-POST http://control.localhost/sites
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_change_settings
-POST http://control.localhost/settings
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_update_site
-POST http://control.localhost/sites/abcdefgh
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_truncate_site
-POST http://control.localhost/sites/abcdefgh/truncate
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_download_site_db
-GET http://control.localhost/sites/abcdefgh/db
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_reset_site_password
-POST http://control.localhost/sites/abcdefgh/identities/1/password
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_reset_site_totp
-POST http://control.localhost/sites/abcdefgh/identities/1/totp
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_assume_site_identity
-POST http://control.localhost/sites/abcdefgh/identities/1/assume
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_set_rate_limits
-POST http://control.localhost/rate-limits
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_download_logs_db
-GET http://control.localhost/logs-db
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-// Nor can it add or delete push credentials, or open the form to add one, or send a test push, though it can see them
-NAME read_only_cannot_open_push_credential_form
-GET http://control.localhost/push-credentials/new
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_add_push_credential
-POST http://control.localhost/push-credentials
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-H Content-Type: application/json
-B {"site_id": "abcdefgh", "name": "My Loop", "provider": "apns", "team_or_project_id": "TEAM123456", "key_id": "ABC123DEFG", "apps": ["loop"], "secret": "not a key"}
-ASSERT_STATUS 403
-
-NAME read_only_cannot_delete_push_credential
-DELETE http://control.localhost/push-credentials/1
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_cannot_send_test_push
-POST http://control.localhost/push-devices/1/test
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 403
-
-NAME read_only_can_see_push_credentials
-GET http://control.localhost/push-credentials
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 200
-
-NAME read_only_can_see_push_devices
-GET http://control.localhost/push-devices
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 200
-
-NAME read_only_can_see_rate_limits
-GET http://control.localhost/rate-limits
-H Authorization: Bearer {{ .carol_login.token }}
-H Accept: application/json
-ASSERT_STATUS 200
 
 // An admin cannot delete, demote or reset themselves, so control always has an admin who can sign in
 NAME cannot_delete_yourself

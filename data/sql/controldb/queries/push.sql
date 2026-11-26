@@ -19,7 +19,7 @@ WHERE id = sqlc.arg('ID') AND site_id IS sqlc.narg('SiteID');
 -- name: SearchPushCredentials :many
 -- A site's credentials, or with no SiteID those for every site, newest first
 SELECT * FROM push_credentials
-WHERE site_id IS sqlc.narg('SiteID')
+WHERE site_id IS CAST(sqlc.narg('SiteID') AS TEXT)
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
@@ -49,7 +49,7 @@ DELETE FROM push_credentials WHERE site_id = sqlc.arg('SiteID');
 -- pushes to the app and allows its bundle ID. Apps and bundle IDs have no quotes, so each is found in its JSON list
 -- as itself in quotes.
 SELECT * FROM push_credentials
-WHERE (site_id = sqlc.arg('SiteID') OR site_id IS NULL) AND provider = sqlc.arg('Provider')
+WHERE (site_id = CAST(sqlc.arg('SiteID') AS TEXT) OR site_id IS NULL) AND provider = CAST(sqlc.arg('Provider') AS TEXT)
   AND instr(apps_json, '"' || CAST(sqlc.arg('App') AS TEXT) || '"') > 0
   AND (bundle_ids_json IS NULL OR instr(bundle_ids_json, '"' || CAST(sqlc.arg('BundleID') AS TEXT) || '"') > 0)
 ORDER BY site_id IS NULL, id DESC
@@ -61,7 +61,9 @@ LIMIT 1;
 
 -- name: UpsertPushRegistration :one
 -- Registers a token, moving it to this identity if another of the site's had it, as the app was signed in again. The
--- same registration again, as each upload of a Loop or Trio profile is, keeps its last push's error.
+-- same registration again, as each upload of a Loop or Trio profile is, keeps its last push's error. Another
+-- identity's Loop or Trio token only moves as Loop or Trio, else no row is returned, so an identity that may register
+-- neither cannot take the token remote commands go to.
 INSERT INTO push_registrations (site_id, identity_id, app, provider, bundle_id, production, token_enc, token_hash)
 VALUES (
     sqlc.arg('SiteID'), sqlc.arg('IdentityID'), sqlc.arg('App'), sqlc.arg('Provider'), sqlc.arg('BundleID'),
@@ -78,6 +80,8 @@ ON CONFLICT (site_id, token_hash) DO UPDATE SET
         AND push_registrations.provider = excluded.provider AND push_registrations.bundle_id = excluded.bundle_id
         AND push_registrations.production = excluded.production THEN push_registrations.last_error END,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE push_registrations.identity_id = excluded.identity_id OR push_registrations.app NOT IN ('loop', 'trio')
+    OR excluded.app IN ('loop', 'trio')
 RETURNING *;
 
 -- name: GetPushRegistration :one
@@ -88,7 +92,7 @@ WHERE id = sqlc.arg('ID') AND site_id = sqlc.arg('SiteID') AND identity_id = COA
 -- name: SearchPushRegistrations :many
 -- A site's registrations, or with IdentityID only that identity's, newest first
 SELECT * FROM push_registrations
-WHERE site_id = sqlc.arg('SiteID') AND identity_id = COALESCE(sqlc.narg('IdentityID'), identity_id)
+WHERE site_id = CAST(sqlc.arg('SiteID') AS TEXT) AND identity_id = COALESCE(CAST(sqlc.narg('IdentityID') AS INTEGER), identity_id)
 ORDER BY id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
@@ -96,8 +100,8 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 -- A site's registrations with their identities' names, or with IdentityID only that identity's, newest first
 SELECT sqlc.embed(push_registrations), site_identities.name AS identity_name
 FROM push_registrations JOIN site_identities ON site_identities.id = push_registrations.identity_id
-WHERE push_registrations.site_id = sqlc.arg('SiteID')
-  AND push_registrations.identity_id = COALESCE(sqlc.narg('IdentityID'), push_registrations.identity_id)
+WHERE push_registrations.site_id = CAST(sqlc.arg('SiteID') AS TEXT)
+  AND push_registrations.identity_id = COALESCE(CAST(sqlc.narg('IdentityID') AS INTEGER), push_registrations.identity_id)
 ORDER BY push_registrations.id DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
@@ -114,7 +118,7 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 -- by an enabled identity with one of the Roles, so one that cannot change the site's data cannot take its commands
 SELECT push_registrations.* FROM push_registrations
 JOIN site_identities ON site_identities.id = push_registrations.identity_id
-WHERE push_registrations.site_id = sqlc.arg('SiteID') AND push_registrations.app = sqlc.arg('App')
+WHERE push_registrations.site_id = CAST(sqlc.arg('SiteID') AS TEXT) AND push_registrations.app = CAST(sqlc.arg('App') AS TEXT)
   AND site_identities.enabled AND site_identities.role IN (sqlc.slice('Roles'))
 ORDER BY push_registrations.updated_at DESC, push_registrations.id DESC
 LIMIT 1;

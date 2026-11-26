@@ -118,6 +118,18 @@ func ErrorFromDB(source *logsdb.Error) *Error {
 			xstring3 := *(*source).JobID
 			controlmodelsError.JobID = &xstring3
 		}
+		if (*source).IdentityID != nil {
+			xint64 := *(*source).IdentityID
+			controlmodelsError.IdentityID = &xint64
+		}
+		if (*source).IdentityName != nil {
+			xstring4 := *(*source).IdentityName
+			controlmodelsError.IdentityName = &xstring4
+		}
+		if (*source).ControlIdentityID != nil {
+			xint642 := *(*source).ControlIdentityID
+			controlmodelsError.ControlIdentityID = &xint642
+		}
 		controlmodelsError.Message = (*source).Message
 		controlmodelsError.Attributes = AttributesJSON((*source).Attributes)
 		controlmodelsError.CreatedAt = (*source).CreatedAt
@@ -142,12 +154,24 @@ func EventFromDB(source *logsdb.Event) *Event {
 			xstring3 := *(*source).JobID
 			controlmodelsEvent.JobID = &xstring3
 		}
+		if (*source).IdentityID != nil {
+			xint64 := *(*source).IdentityID
+			controlmodelsEvent.IdentityID = &xint64
+		}
+		if (*source).IdentityName != nil {
+			xstring4 := *(*source).IdentityName
+			controlmodelsEvent.IdentityName = &xstring4
+		}
+		if (*source).ControlIdentityID != nil {
+			xint642 := *(*source).ControlIdentityID
+			controlmodelsEvent.ControlIdentityID = &xint642
+		}
 		controlmodelsEvent.Name = (*source).Name
 		controlmodelsEvent.Attributes = AttributesJSON((*source).Attributes)
 		controlmodelsEvent.StartedAt = (*source).StartedAt
 		if (*source).FinishedAt != nil {
-			xint64 := *(*source).FinishedAt
-			controlmodelsEvent.FinishedAt = &xint64
+			xint643 := *(*source).FinishedAt
+			controlmodelsEvent.FinishedAt = &xint643
 		}
 		pControlmodelsEvent = &controlmodelsEvent
 	}
@@ -212,6 +236,18 @@ func LogFromDB(source *logsdb.Log) *Log {
 			xstring3 := *(*source).JobID
 			controlmodelsLog.JobID = &xstring3
 		}
+		if (*source).IdentityID != nil {
+			xint64 := *(*source).IdentityID
+			controlmodelsLog.IdentityID = &xint64
+		}
+		if (*source).IdentityName != nil {
+			xstring4 := *(*source).IdentityName
+			controlmodelsLog.IdentityName = &xstring4
+		}
+		if (*source).ControlIdentityID != nil {
+			xint642 := *(*source).ControlIdentityID
+			controlmodelsLog.ControlIdentityID = &xint642
+		}
 		controlmodelsLog.Level = (*source).Level
 		controlmodelsLog.Message = (*source).Message
 		controlmodelsLog.Attributes = AttributesJSON((*source).Attributes)
@@ -251,6 +287,14 @@ func QueryToSearchErrors(source *apiquery.Query) logsdb.SearchErrorsParams {
 			xstring5 := *(*source).JobID
 			logsdbSearchErrorsParams.JobID = &xstring5
 		}
+		if (*source).IdentityID != nil {
+			xint64 := *(*source).IdentityID
+			logsdbSearchErrorsParams.IdentityID = &xint64
+		}
+		if (*source).ControlIdentityID != nil {
+			xint642 := *(*source).ControlIdentityID
+			logsdbSearchErrorsParams.ControlIdentityID = &xint642
+		}
 		logsdbSearchErrorsParams.Skip = (*source).Skip
 		logsdbSearchErrorsParams.Limit = (*source).Limit
 	}
@@ -278,6 +322,14 @@ func QueryToSearchEvents(source *apiquery.Query) logsdb.SearchEventsParams {
 		if (*source).JobID != nil {
 			xstring5 := *(*source).JobID
 			logsdbSearchEventsParams.JobID = &xstring5
+		}
+		if (*source).IdentityID != nil {
+			xint64 := *(*source).IdentityID
+			logsdbSearchEventsParams.IdentityID = &xint64
+		}
+		if (*source).ControlIdentityID != nil {
+			xint642 := *(*source).ControlIdentityID
+			logsdbSearchEventsParams.ControlIdentityID = &xint642
 		}
 		logsdbSearchEventsParams.Skip = (*source).Skip
 		logsdbSearchEventsParams.Limit = (*source).Limit
@@ -318,6 +370,14 @@ func QueryToSearchLogs(source *apiquery.Query) logsdb.SearchLogsParams {
 		if (*source).JobID != nil {
 			xstring4 := *(*source).JobID
 			logsdbSearchLogsParams.JobID = &xstring4
+		}
+		if (*source).IdentityID != nil {
+			xint64 := *(*source).IdentityID
+			logsdbSearchLogsParams.IdentityID = &xint64
+		}
+		if (*source).ControlIdentityID != nil {
+			xint642 := *(*source).ControlIdentityID
+			logsdbSearchLogsParams.ControlIdentityID = &xint642
 		}
 		logsdbSearchLogsParams.Skip = (*source).Skip
 		logsdbSearchLogsParams.Limit = (*source).Limit
@@ -368,17 +428,21 @@ func SiteFromDB(source *controldb.Site) *Site {
 			xint647 := *(*source).DeletedAt
 			controlmodelsSite.DeletedAt = &xint647
 		}
+		if (*source).EmailVerifiedAt != nil {
+			xint648 := *(*source).EmailVerifiedAt
+			controlmodelsSite.EmailVerifiedAt = &xint648
+		}
 		if (*source).BackedUpAt != nil {
-			xint648 := *(*source).BackedUpAt
-			controlmodelsSite.BackedUpAt = &xint648
+			xint649 := *(*source).BackedUpAt
+			controlmodelsSite.BackedUpAt = &xint649
 		}
 		if (*source).BackupSizeKb != nil {
-			xint649 := *(*source).BackupSizeKb
-			controlmodelsSite.BackupSizeKb = &xint649
+			xint6410 := *(*source).BackupSizeKb
+			controlmodelsSite.BackupSizeKb = &xint6410
 		}
 		if (*source).BackupUploadedAt != nil {
-			xint6410 := *(*source).BackupUploadedAt
-			controlmodelsSite.BackupUploadedAt = &xint6410
+			xint6411 := *(*source).BackupUploadedAt
+			controlmodelsSite.BackupUploadedAt = &xint6411
 		}
 		pControlmodelsSite = &controlmodelsSite
 	}

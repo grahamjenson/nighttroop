@@ -33,6 +33,7 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/login", sitelogin.GETLoginPageHandler())
 		// A new or recovered site's credentials are shown once on its own address, which checks the admin's TOTP code too
 		r.Get("/welcome", publicapi.GETWelcomeHandler())
+		r.Get("/settings/account/email/verify", sitecollections.VerifySiteEmailHandler)
 		r.Post("/welcome", publicapi.POSTWelcomeHandler(config))
 		r.Post("/site/totp", publicapi.POSTCheckTOTPHandler(config))
 		// The browser shown them adds the admin a passkey, and signs in with it
@@ -54,7 +55,6 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Use(siteapiutils.JWTAuthMiddleware(controlDB, config)) // Checks for JWT Login and Token to Auth
 		// Checks read and write rates and makes sure not over limit, once the site's own identity has signed in
 		r.Use(httputils.SiteRateLimitMiddleware(config))
-		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 		r.Use(httputils.CountRoutes(config.Usage, "site"))
 		r.Use(clinicianReportOnly)
@@ -90,12 +90,18 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// The site's collections, each at its route in its section: data, settings, presets or logs
 		for _, section := range httputils.SiteSections {
 			routes := store.Section(section)
+			// The data and presets are in the site's DB, so a write adding to them is refused while it is far over its
+			// storage. The settings and logs are in the control and logs DBs, so a site over it can still be managed.
+			writes := r.With()
+			if section == "data" || section == "presets" {
+				writes = r.With(httputils.RefuseWritesOverStorage)
+			}
 			r.Get("/"+section+"/{collection}", routes.Search)
 			r.Get("/"+section+"/{collection}/events", routes.Events)
 			r.Get("/"+section+"/{collection}/new", routes.New)
 			r.Get("/"+section+"/{collection}/{id}", routes.Get)
-			r.Post("/"+section+"/{collection}", routes.Create)
-			r.Post("/"+section+"/{collection}/{id}", routes.Update)
+			writes.Post("/"+section+"/{collection}", routes.Create)
+			writes.Post("/"+section+"/{collection}/{id}", routes.Update)
 			r.Delete("/"+section+"/{collection}/{id}", routes.Delete)
 		}
 
@@ -105,6 +111,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/settings/connectors/{id}/backfill", sitecollections.BackfillHandler)
 		r.Get("/settings/push-devices", sitecollections.PushDevicesHandler)
 		r.Get("/settings/account", sitelogin.GETAccount(controlDB))
+		r.Post("/settings/account/email", sitecollections.SaveSiteEmailHandler)
+		r.Delete("/settings/account/email", sitecollections.RemoveSiteEmailHandler)
 		r.Post("/settings/account/passkeys/begin", sitelogin.POSTAccountPasskeyBegin(controlDB, config))
 		r.Post("/settings/account/passkeys/finish", sitelogin.POSTAccountPasskeyFinish(controlDB, config))
 		r.Delete("/settings/account/passkeys/{id}", sitelogin.DELETEAccountPasskey(controlDB))

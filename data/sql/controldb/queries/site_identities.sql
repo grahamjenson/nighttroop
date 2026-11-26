@@ -34,7 +34,7 @@ INSERT INTO site_identities (
 
 
 -- name: AllSiteIdentities :many
-SELECT * FROM site_identities WHERE site_id = sqlc.arg('SiteID') ORDER BY created_at DESC, id DESC; -- id breaks ties, as identities made together can share a millisecond
+SELECT * FROM site_identities WHERE site_id = CAST(sqlc.arg('SiteID') AS TEXT) ORDER BY created_at DESC, id DESC; -- id breaks ties, as identities made together can share a millisecond
 
 -- name: CountSiteIdentities :one
 SELECT COUNT(*) FROM site_identities WHERE site_id = sqlc.arg('SiteID');
@@ -116,6 +116,12 @@ WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
 -- name: DeleteSiteIdentity :exec
 DELETE FROM site_identities
 WHERE site_id = sqlc.arg('SiteID') AND id = sqlc.arg('ID');
+
+-- A recovery makes the site's admin again under its name, so an identity that is not an admin and took the name of a
+-- deleted admin goes, with its credentials, and cannot block the recovery
+-- name: DeleteSiteIdentityNamedNotAdmin :exec
+DELETE FROM site_identities
+WHERE site_id = sqlc.arg('SiteID') AND name = sqlc.arg('Name') AND role != 'admin';
 
 -- name: DeleteAllSiteIdentities :exec
 -- Hard deletes all a site's identities, with their credentials and push registrations, as when it is deleted for good

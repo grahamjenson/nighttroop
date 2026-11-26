@@ -18,6 +18,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - The server does not start, and says what to set, when `MODE` is not set, unknown, or `test` outside `go test`.
 - `development`: all passwords `password`, all TOTP codes `123123`. Does not start over `https`.
+- Not test mode: does not start if `KEY_SETS` is empty, does not have four key sets, or has one that cannot be read.
+  Prints `cannot create server config` with why, and does not panic.
 - Production or staging: does not start if `KEY_SETS` holds a public key from `.env.dev` or `.env.test`. Says to make
   new keys with `cmd/keysets/create_keysets.go`.
 - If the jobs DB or the logs DB does not open, the server removes it, makes an empty one, logs an error, and starts.
@@ -25,9 +27,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - It removes its local copies of the backups. If the disk is still short, it removes the logs DB.
   - It pages the admin with an SMS, with the space free before and after.
   - It never removes the control DB, a site's DB or the jobs DB.
+  - It keeps the backup of a site with no DB on the server: that backup is the archive of an archived site.
+  - If there is no backup folder, the server still removes the logs DB when the disk is short.
   - If the disk still has less than 100 MB free, the server does not start, and says how much is free.
 - The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
-- Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`.
+- Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`. A button or form on a page (an htmx request) gets an error toast instead: "The server is starting. Try again in a few seconds."
 
 #### First control admin
 
@@ -67,12 +71,17 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Password and TOTP
 
-- Sign in with username, password and TOTP code. Sign out.
+- Sign in with username, password and TOTP code.
+- Sign out.
 - Tab order: username, password, code (skips the show password button).
-- As on a site, the sixth code digit (typed or pasted) sends the sign in, if username and password are in. A code typed
-  first waits for Sign In. A wrong code is not sent again.
-- A failed sign in shows an error toast, "Wrong username, password or code. Codes change every 30 seconds, so use the newest
-  one." or too many sign in attempts. Inputs are invalid only from then to the next send, and have no placeholders.
+- As on a site, the sixth code digit (typed or pasted) sends the sign in, if username and password are in.
+  - A code typed first waits for Sign In.
+  - A wrong code is not sent again.
+- A failed sign in shows an error toast:
+  - "Wrong username, password or code. Codes change every 30 seconds, so use the newest one.";
+  - or too many sign in attempts.
+- Inputs are invalid only from a failed sign in to the next send.
+- Inputs have no placeholders.
 
 #### Passkeys
 
@@ -105,8 +114,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     missing, DB does not open, migration failed, or schema differs) and a link to its page, then how many more.
 - An unavailable site has a red Unavailable badge in the sites list and on its page.
 - An unavailable site's actions start with what fixes it, Upload DB then New Empty DB. Open Site, Download DB,
-  Truncate and Archive need its DB, so in place of their buttons they say "Its DB is unavailable. Fix it first,
-  above." Disable is still offered as for any site.
+  Truncate and Archive need its DB, so in place of their buttons they say "Its DB is unavailable. Fix it first, in
+  Actions." Disable is still offered as for any site.
 - An unavailable site's page offers a control admin New Empty DB, as for a site created just before a crash, which has
   no backup. It asks first, then:
   - makes the site's DB again, empty, so the site is served again; its identities are kept, its data is not;
@@ -176,42 +185,61 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Site page
 
-- `/sites/{id}` opens on a click, laid out like a site's summary. Back returns to the sites. An API client gets the
-  site.
-- Top: ID, state badge, Inactive and Over limit badges, abuse level badge with its score; created, and disabled, archived or deleted times; Open
-  Site link (new tab) while live.
+- `/sites/{id}` opens on a click, laid out like a site's summary.
+  - Back returns to the sites.
+  - An API client gets the site.
+- Top:
+  - ID and state badge;
+  - Inactive and Over limit badges;
+  - abuse level badge with its score;
+  - created, and disabled, archived or deleted times;
+  - Open Site link (new tab) while live.
 - DB size:
   - measured on disk when the page opens, kept on the site's record;
   - large, against its limit, with a bar: amber from 80%, red with a warning icon over it;
   - not on disk: from its tables. Neither: not measured yet.
 - DB size bar:
   - the five largest tables (with their indexes), darkest first, then Other;
-  - a key: name, records in thousands, MB and share (for example, `7.9k · 6.11 MB · 54%`). Other sums its tables'
-    records. Hover names a part;
+  - a key: name, records in the number format, MB and share (for example, `7,912 records · 6.11 MB · 54%`). Other
+    sums its tables' records. Hover names a part;
+  - a site table has the name of the page that shows it (for example, Device Status for `device_reports`), with its
+    table name on hover. A table with no page keeps its table name;
   - table sizes as last measured (at creation, by the 5-minute site measurement after a size change, at truncate), not
     read from the whole DB.
 - Tiles: last seen, last written to, identities (people and devices), time since last error.
-- Backup tiles: backup size in MB (`-` if no backup), time since the last backup copy, and time since the last upload
-  to S3. A time that did not occur is Never.
-- A Migration tile: the migration the site's DB is at of the latest (`3 of 3`). For a site unavailable as its migration
-  failed, the migration that failed (`2 failed, of 3`). For another unavailable site, Unknown.
-- Identities, and the latest 10 events and 10 errors (no site column). Each opens its details. A link shows all for
-  the site.
-- On a phone: no wider than the window, all identity actions tappable. Role, TOTP and last seen are a line under the
-  name. Actions stack.
+- Backup tiles:
+  - backup size in MB (`-` if no backup);
+  - time since the last backup copy;
+  - time since the last upload to S3;
+  - a time that did not occur is Never.
+- A Migration tile:
+  - the migration the site's DB is at of the latest (`3 of 3`);
+  - for a site unavailable as its migration failed, the migration that failed (`2 failed, of 3`);
+  - for another unavailable site, Unknown.
+- Identities, and the latest 10 events and 10 errors (no site column).
+  - Each opens its details.
+  - A link shows all for the site.
+- On a phone:
+  - no wider than the window;
+  - all identity actions tappable, and stacked;
+  - role, TOTP and last seen are a line under the name.
 
 #### Site actions
 
 - Actions list, one action a row with its button at its right (under its words on a phone): Open Site, and for an admin the actions below. Each says what it does, and has its button or says when
   it is offered. The page shows the change.
+- Actions, at the top, has the actions that do not stop the site or remove its data: Open Site, Download DB and
+  Enable.
+- Dangerous Actions, the last card of the page in red, has Disable, Truncate and Archive, in that order. Only an admin
+  sees it.
 
 | Action | When | Result |
 | --- | --- | --- |
 | Download DB | Live or disabled (DB here) | See below. |
 | Disable | Any live site, however recently used, after a confirmation | Not served. Socket.IO connections close. |
 | Enable | A disabled site, after a confirmation | Served again. Its data is as it was. |
-| Archive | After disable. Needs S3. | Uploaded to S3. |
-| Restore | From the archived sites page | Live again. |
+| Archive | After disable. S3 not needed. | A compressed copy of its DB is kept in the backup folder here (`data/backup/site/<letter>/<site>.sqlite.lz4`), and uploaded to S3 when S3 is connected. Its DB here is deleted. |
+| Restore | From the archived sites page | Restored from the copy in the backup folder here first, else from S3, migrated, and live again. A restored DB that does not open or migrate still makes it live, but unavailable, its DB kept here, with a toast saying so, and its page offers the fixes. Without S3 and without a copy here, it is refused and stays archived. |
 | Truncate | Live or disabled, any size | Truncates all device statuses (as each backup does the newest), deletes old loop settings no record refers to, shrinks the DB. |
 
 - Download DB (`/sites/{id}/db`):
@@ -224,6 +252,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - If an unavailable site has no DB here, or its DB is being restored at that moment, the download is 404.
 - Permanent delete (for example, of a site never used) deletes its identities (with passwords, TOTP secrets and push
   tokens) and push credentials. Archive keeps them for restore.
+- Permanent delete of an unavailable site also stops its restore and deletes its DB files.
 
 ### A site's identities
 
@@ -244,6 +273,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Job stats page: each day, newest first, with totals, errors, and mean and spread of durations in suitable units.
 - A failed job, and each day's stats, link to the logs of failed runs (the day's last 16), filtered by `job_id`.
 - Each cron or queued run logs its name and own `job_id`, plus `queued_job_id` if queued and `site_id` for site work.
+- If a cron or queued run panics, the run fails with the panic as its error, and the server continues.
 
 ### Connectors
 
@@ -290,8 +320,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - Events: every site's and the server's, newest first, with readable names, start time and duration. Filter by type,
   search ignores case.
-- Errors and logs have their own pages. Narrow all three to one site, request or job run by ID. Details link to
-  their request and job.
+- Errors and logs have their own pages. Narrow all three to one site, request, job run, site identity or control
+  admin by ID. Details link to their request, job, identity and control admin.
 - The logs table has fixed column widths. A long message is cut short, and shown whole on hover.
 - Each log's level is a coloured badge: grey for debug, blue for info, amber for warn, red for error.
 - On control, a button at the right of each log narrows the logs to its request, or else its job. The log's details
@@ -313,8 +343,19 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - At most 100 keys of a reason are counted apart; the rest are `other`, so a sweep of every subdomain cannot grow
     the server's memory.
 - Logs, events and errors keep their `request_id` or `job_id`.
+- Logs, events and errors keep the identity of their request: `identity_id` for an identity of the site,
+  `control_identity_id` for a control admin, and `identity_name` for its name. A row of a background job has none.
+  - A sign in is an event of the identity that signs in.
+  - The site API returns `identity_id` and `identity_name`. The control API returns `control_identity_id` too.
+  - `GET /logs/events`, `/logs/errors` and `/logs/logs` with `identity_id`: only the rows of that identity, from the
+    newest 10,000 rows of the site.
+  - The control `GET /events`, `/errors` and `/logs` take `identity_id` and `control_identity_id`.
+  - An ID that is not a number matches no row. A blank ID matches all rows.
+  - The details of an event, error or log show **Identity** (the name) and **Identity ID** or **Control admin ID**.
 - Logs waiting to be written are capped at 1 MB. Past that, they are dropped and the logs say how many.
 - Request logs and Sentry show `REDACTED` for the query's `token`, `secret` and Socket.IO `sid`.
+- The log of a request refused before its router (server busy, site unavailable, country not allowed) or of a
+  Nightscout 404 shows `REDACTED` for the token at the end of a `/authorization/request/` path.
 
 #### Client errors
 
@@ -333,7 +374,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A client error or 5xx keeps the first 8 KB of its request body, sent to Sentry as `request_body` with any error
   reported during the request.
 - JSON or form only, with credentials, also connectors', `REDACTED` (tokens, secrets, passwords, keys, TOTP codes,
-  usernames, emails, URLs).
+  the `otp` of a Loop remote command, usernames, emails, URLs).
 - Other bodies, or one cut at 8 KB (for example, JSON that did not parse): size and content type only.
 
 #### Sentry error reports
@@ -357,6 +398,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   message, so a server that fails each time Docker starts it again is one incident.
   - A server whose S3 lock another server took stops with an error, so it pages.
   - A server told to stop, or one that restarts to use S3 again, does not page.
+  - If a server is told to stop while it opens its DBs, it stops when the DBs are open. It does not serve, turn S3
+    off or page.
   - A server whose settings stop it starting does not page: it prints the error.
 - On the admins page, an admin selects a level and clicks **Test Admin Page** to page through PagerDuty.
   - Each test is a new incident. Its message names the admin and the time.
@@ -382,7 +425,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   not.
 - Each: site, identity, IP address, status, time, headers, and bodies up to 64 KB.
 - `REDACTED` in headers, query, path and JSON or form bodies: authorization, cookies, API secrets, tokens, Socket.IO
-  session IDs, passwords, keys, TOTP codes, usernames, emails, URLs.
+  session IDs, passwords, keys, TOTP codes, the `otp` of a Loop remote command, usernames, emails, URLs.
 - Other bodies (a page, text, past 64 KB): size and content type only (so no new site credentials).
 - Not kept: page styles, scripts, images and fonts; bodies of event streams, Socket.IO connections and logs DB
   downloads.
@@ -403,6 +446,75 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   admin only. A read only admin gets 403. A CPU profile or trace must end in under 30 seconds (example: `?seconds=20`).
 - At the top of the usage page, a control admin has two buttons, Profiles (pprof) and Runtime stats (vars). Each opens
   its page in a new tab. A read only admin does not see them.
+
+### Site banners
+
+- Site Banners (user menu) lists every banner, newest first: its message, how it is shown, its sites and when it
+  expires. A banner is a message for sites to show at the top of their pages until it expires.
+- An admin adds a banner: a message, **Information** or **Warning**, the IDs of its sites, and its days.
+  - With no site IDs, the banner is for every site.
+  - Site IDs have commas or spaces between. A site ID given two times is kept one time.
+  - Refused (400), with why: no message or one over 500 characters, a level that is not one of the two, days not
+    from 1 to 90, more than 100 sites, a site ID that is not shaped as one, or a 21st banner.
+- An admin deletes a banner, after a confirmation. A banner that is not there is 404.
+- A read-only admin sees the list, with no form and no Delete.
+- A job deletes the banners that are past the time they expire at, each 10 minutes.
+- A site shows its banners below the header of each page, to a person who is signed in. One line for each banner:
+  - **Storage full** (red), with why: the site is far over its storage limit, or the disk of the server is almost
+    full, and writes are refused.
+  - **Over the storage limit** (amber), with the size and the limit: the site is over its storage limit and writes
+    are not refused.
+  - **Near the storage limit** (blue), with the size and the limit: the site is at 90% or more of its storage limit,
+    and not over it.
+  - Each banner an admin added for the site or for every site, oldest first, that is not expired: blue for
+    **Information**, amber for **Warning**. The message shows as text, not as HTML.
+- A banner that is information has a **Hide** button. A warning or an error has none.
+  - Hide removes the banner in that browser, on every page of the site, for 7 days. Then it shows again if it still applies.
+  - Each level has a rank (information 2, warning 5, error 8). A banner can be hidden only if its rank is under 5.
+  - The banners of the control pages have no Hide.
+- A site does not show a banner added for other sites. A site with no banner shows no strip.
+- One package (`server/components/banner`) decides the banners of the control pages and of the site pages, and
+  draws them.
+
+### Site emails
+
+- A site's page (Sites, then the site) has an action, **Email this site**, for an admin.
+- The action never shows the address of the site. The API gives `email_verified_at` and no address.
+- The action says why it is not available:
+  - the server has no `RESEND_API_KEY` or no `RESEND_FROM`;
+  - the site is not live;
+  - the site has no verified email.
+- An admin picks one email from a list and sends it, after a confirmation. There is no text to write.
+
+  | Email | Subject |
+  | --- | --- |
+  | `archive` | Your Nighttroop site will be archived |
+  | `storage` | Your Nighttroop site is over its storage limit |
+  | `contact` | A question about your Nighttroop site |
+
+- Each email has the URL of the site. Text sent with the request is not used.
+- A sent email shows a toast and records a "Site emailed" event for the site, with the admin and the name of the email.
+- Refused, with why:
+  - 400: the server sends no email, the email is not one of the list, or Resend did not accept the email.
+  - 404: the site is not live, has no email, or its email is not verified.
+  - 429: the site was sent an email in the last 24 hours. An email that was not sent does not count.
+- A read-only admin does not see the action (403 from the API).
+
+### Sent emails
+
+- Sent Emails (user menu) lists the last 50 emails the server sent, newest first, read from the Resend API: the
+  verification links and the emails to sites.
+- Each email shows when it was sent, its subject, its status from Resend (example: `delivered`, `bounced`), its site
+  and its address.
+  - The site is a link to the site's page. It shows when a live site has that address as its email. If not, it shows `-`.
+  - The address shows only the first letter of the name, the first letter of the domain, and the end of the domain
+    (example: `s•••@e•••.com`). The page and the list API do not have the full address.
+- An admin clicks **Show** to see the full address of one email. The server reads it from Resend
+  (`GET /sent-emails/{id}/address`) and logs who asked, without the address.
+- A read-only admin sees the list, with no Show (403 from the API).
+- If the server has no `RESEND_API_KEY` or no `RESEND_FROM`, the page says the server sends no email, and the list
+  is empty.
+- If Resend does not answer, the list is refused (400). An email Resend does not have is 404.
 
 ### Rate limits
 
@@ -434,6 +546,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A site's reads and writes have 4 times an identity's limit. Test: one identity spends all its own (for example, a
   day's backlog upload). A carer's carbs and AAPSClient's commands still go through.
 - Over a site's or identity's limit: 429, with `Retry-After` the seconds until one is accepted, at least 1.
+- If an identity is over its own limit, its request does not use the site's limit. The site's other apps get no 429.
 - A site flagged for abuse also spends its flagged writes limit (`SITE_POST_FLAGGED_PER_MINUTE_LIMIT`). See
   [Abuse flag](#abuse-flag).
 
@@ -456,6 +569,12 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - The banner shows an alert until a check finds it back under, with memory used and disk free in bytes of their
   totals (for example, "Disk high: 12.0 GB free of 954.0 GB."), and CPU seconds at 100%.
 - Events: "Resource high" when over, "Resource recovered" when back under.
+- When a check finds less than `DISK_REFUSE_FREE_MB` (256 MB) free on the DBs' disk, until one finds more:
+  - The admin is paged (SMS) once, when it is first found.
+  - No site is created through `POST /site`: 507, `Full: the server's disk is nearly full`.
+  - Each site's writes that add data are refused, as for a site far over its storage limit, with the message
+    `The server's disk is nearly full, so nothing more is stored until its admin frees space`, and its connectors
+    store nothing. Deletes, Truncate, settings and sign in still work.
 - The last 3 days of checks are kept while the server runs, and reset at restart.
 - The usage page graphs the CPU, memory, goroutines and DB disk of each check. Hovering a graph shows the check nearest
   the pointer, and how long ago it was.
@@ -518,6 +637,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Only for the browser shown the credentials, for 15 minutes, one time. Its cookie sent again adds nothing once the
     admin has a passkey.
   - Later passkeys are added on My Account.
+  - With no answer from the server, as while it restarts, it says "The server could not be reached. Try again in a few
+    seconds." (every passkey button does), not the browser's own words, such as Safari's "Load failed".
 
 #### Recover page
 
@@ -525,6 +646,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   site a new backup key, and removes the admin's passkeys (a lost device cannot sign in).
 - A recovery disables every other admin identity of the site, so an admin that an attacker added cannot take the
   site back.
+- If the admin `admin` is deleted, a recovery makes it again. It first deletes an identity of that name that is not an
+  admin, so that identity cannot stop the recovery.
 - A key works one time. A wrong key is refused with no reason.
 - Rate limited for each IP, and for each site from all IPs at a much higher limit.
 - It opens `/welcome` on the site's address with the new credentials, as for a new site, less the phone and read only
@@ -558,6 +681,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Footer and legal notes
 
 - Every footer links (each in a new tab) to contact, terms of service, privacy policy and API docs.
+- The footer's links have a dot between each. On a phone they wrap and have no dots, so no line starts with one.
 - With `FEEDBACK_URL` set (a Google Form or GitHub issues), the footer links "feedback" and the home page asks for it
   under its features, each in a new tab. Unset, neither shows.
 - Pages with estimated locations (events pages) also link DB-IP, whose free databases make the estimates.
@@ -606,12 +730,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 |---|---|---|
 | Data | Header | Side groups: **Readings & treatments** (Glucose Readings, Insulin Doses, Food Intakes, Temp Targets, Temp Basals, Profile Switches), **Events** (Activities, Notifications, Event Groups), **Devices** (Device Status), **Presets** (Food Presets, Profiles, Loop Settings) |
 | Reports | Header | Summaries (first), Overview, AGP, TDD |
-| Settings | User menu | Side groups: **This site** (General), **People & devices** (Users & Devices, also another identity's settings), **Push** (Push Devices, Push Credentials) |
-| Connectors | User menu | None (`/settings/connectors`) |
-| Alarms | User menu | None (`/settings/alarms`) |
+| Settings | User menu | Side groups: **This site** (General, Connectors, Alarms, Usage), **People & devices** (Users & Devices, also another identity's settings), **Push** (Push Devices, Push Credentials) |
+| Connectors | User menu | The Settings side groups (`/settings/connectors`) |
+| Alarms | User menu | The Settings side groups (`/settings/alarms`) |
+| Usage | User menu | The Settings side groups (`/usage`) |
 | Logs & Events | User menu | A row: Events (first), Errors, Logs |
 
 - The shown page's tab is marked. Each tab keeps its URL, so links, back and forward work.
+- General, Connectors, Alarms and Usage show the same side groups, so each page the site is set up on is one click
+  from the others. The user menu still opens each, and marks the one shown.
 
 #### User menu and access
 
@@ -622,7 +749,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Not found page
 
-- An address the site has nothing at shows **Not found**, with what was not there.
+- An address the site has nothing at shows **Not found** and the address, as "There is no page at /data/nope".
 - It says that the search at the top of the page finds any page by name, and links to the summary, Data, Reports and
   Getting Started.
 
@@ -642,10 +769,13 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 #### Phone layout and history
 
-- On a phone: hub links and search are icons, the search opening a box across the page. Reports and Logs & Events tabs
-  scroll sideways; Data and Settings tabs wrap above the page. No page gets wider. The user menu is unchanged.
-- Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns. Quick clicks show the
-  last one clicked.
+- On a phone:
+  - Hub links and search are icons. The search opens a box across the page.
+  - Each hub's tabs are one row above the page that scrolls sideways, with the tab of the page shown in view.
+  - No page gets wider.
+  - The user menu is unchanged.
+- Links and buttons that replace the page (tabs, pagers, filters) keep its URL, so back returns.
+- Quick clicks show the last one clicked.
 - A box that has focus keeps its value when the page changes, for example a date picked or a search sent with Enter.
 
 ### Summary
@@ -664,9 +794,19 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - In a wide window, the latest glucose is beside the two rows of tiles. On a phone it is above them.
 - Under the graph, **Insulin and carbs** lists doses and meals' carbs, newest first, with age, in Insulin and Carbs
   columns. Beside it, **Other treatments** lists temp targets and temp basals.
+  - On a phone, each treatment's detail is on a line of its own, under when it was and its name.
 - A suspended pump (`PUMP_SUSPEND`) shows in **Other treatments** as **Suspended**, "Pump suspended until it
   resumes". After the pump resumes, it shows "Pump suspended for" its minutes.
+- A temp target of no duration, as AAPS and T1D Carer send to cancel one, shows in **Other treatments** as
+  **Temp Target**, "Cancelled", not its range for 0 minutes.
 - SMBs (a loop's SMBs, Trio's `SMB` doses, Loop's automatic boluses) are marked SMB.
+- A dose of basal insulin, as long acting insulin injected, says "basal" after its units ("14 U basal"), in the table
+  and on the graph.
+- A combo bolus shows its dose given at once, then its extended dose and its time ("1.2 U + 1.8 U over 2 h").
+  - If no dose is given at once, it shows only the extended dose and its time ("2 U over 2 h").
+  - If the extended dose has no time, it shows the total dose, as it is given at once.
+- Carbs given over a time, as AAPS's extended carbs (a Carb Correction with a duration), show their time too ("10 g
+  over 2 h"). The summary's food intake has it as `duration_minutes`.
 - Links: latest glucose to all readings; each other treatment's kind (Temp Basal) to its page; with no readings in its
   time, to Connectors.
 
@@ -684,6 +824,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     schedules read in the site's, for all viewers.
   - Carbs as labelled up triangles above insulin as labelled down triangles; on overlap the latest label stays. SMBs
     smaller, fainter, unlabelled.
+  - A combo or extended bolus's label has its extended part, as in Insulin and carbs ("2U over 2 h"). A faint line
+    below its triangle shows the time of the extended part.
+  - If a label goes past the right edge, it shows left of its triangle.
 - Legend, as drawn: insulin and SMB (down), carbs (up), basal (outlined area), target (line).
 - On a phone: fewer times on the time axis, and the legend below them, so no time or legend item covers another.
 - Pointing shows the time, nearest reading within 5 minutes and its time, basal and targets in force, and treatments
@@ -698,9 +841,12 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Periods and time in range
 
 - Today, yesterday, last week, last month: time in range, total daily dose, last sensor and site change.
+  - A tile shows a line for yesterday, last week, last fortnight or last month only when that time has data.
   - No data: "–" for time in range and daily dose, not 0. No insulin: 0 U.
   - Total daily dose: a combo bolus adds its dose given at once immediately. Its extended dose adds as it is given,
     by the share of its minutes that are complete.
+  - A dose of basal insulin (long acting insulin injected, `is_basal_insulin`) is in the total daily dose as basal,
+    not as a bolus.
 - Time in range, on the summary, Summaries page, overviews, AGP reports and readings' glucose days: whole percent,
   "<1%" above 0 that rounds to 0, "–" for none.
 
@@ -710,6 +856,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - Latest glucose older than the no data alarm's minutes (default 20) is grey, with an amber badge ("No reading for 45
   min"). An open summary changes when it becomes old, with no data change or reload, reading the summary one time then,
   not every few seconds.
+  - Under the old reading, an admin sees "Readings stopped. See why on:" with links to Connectors, Users & Devices
+    and Errors.
+  - An identity that is not an admin sees "Readings stopped. Tell an admin of this site." with no links.
 - Ages in words, nearest hour after one hour: "45 minutes ago", "2 days 1 hour ago".
 - In Insulin and carbs, an intake more than 10 minutes ahead, as carbs Trio expects from fat and protein, says how
   long until it: "in 58 minutes". One less ahead, as from a phone's clock running fast, is "just now".
@@ -840,21 +989,27 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### TDD report
 
 - Says which days it covers, dated in the site's timezone.
-- ‹ and ›: the 30 days before and after. › disabled for the latest month, ‹ past one year ago. A last day after today,
-  or over one year before yesterday, is refused. Back and forward work.
+- ‹ and ›: the 30 days before and after.
+  - › is disabled for the latest month, ‹ past one year ago.
+  - A last day after today, or over one year before yesterday, is refused.
+  - Back and forward work.
 - Chart: a bar of each day's total daily dose, oldest first, on an axis of every day, a few pixels apart.
   - A dose's extended part counts in each day by the share of its minutes in that day. Today has only the part given until now.
   - Basal (gold) under boluses, with a legend.
   - No insulin: no bar, not counted.
   - Hover: date and basal or boluses in U.
   - Today's bar is paler, "so far" on its right and in its tooltip date.
-- Statistics: days before today with insulin, and their mean, lowest and highest daily dose. Today is left out (not
-  over). Says so when none have insulin.
-- Table under the bars: every day, newest first, basal, boluses and total in U, or "–" with no insulin. Today marked
-  "so far", with or without insulin.
-- Note under the bars: basal is estimated from the basal rate in force each minute (scheduled or temp basal); the rest
-  is boluses. With today in it: today (paler, so far) is left out of the days with insulin and their daily dose, lowest
-  and highest.
+- Statistics: days before today with insulin, and their mean, lowest and highest daily dose.
+  - Today is left out (not over).
+  - Says so when none have insulin.
+- Table under the bars: every day, newest first, basal, boluses and total in U.
+  - A day with no insulin shows "–".
+  - Today is marked "so far", with or without insulin.
+- Note under the bars:
+  - Basal is estimated from the basal rate in force each minute (scheduled or temp basal). The rest is boluses.
+  - A dose of basal insulin is basal too.
+  - With today in it: today (paler, so far) is left out of the days with insulin and their daily dose, lowest and
+    highest.
 
 #### Printable report
 
@@ -900,6 +1055,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - An empty table of glucose readings, insulin doses, food intakes, temp basals, temp targets, profile switches,
   activities, notifications or event groups says that a new site has nothing until an app or a connector sends it,
   with a link to Getting Started. A table with a row does not.
+- The device status page with no device says the same, under "No device has reported in the last week."
 - Each main button has an icon before its words: save, add, delete, reset, backfill, filter, print and regenerate.
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.
@@ -914,7 +1070,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - Each delete asks first. All confirmations (site and control) are dialogs in the site's style, not the browser's.
 - Question, Cancel, and red Delete (also for the site), red Remove (a passkey) or Continue (others).
-- Cancel, Escape, or a click outside does nothing.
+- Cancel, Escape, or a click outside does nothing. Details that are open under the dialog stay open.
 
 #### Paging and record counts
 
@@ -955,11 +1111,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Above page one: small graphs of the last 10 days, same scale, oldest first, each with the range shaded and time in
     range. The last is today so far, from clean readings. Title: "Last N days", or "Today" on a new site's first day.
   - A day with no readings shows "No readings" in place of its graph, and no time in range.
+  - Click a day to open its AGP report. A note under the title says so.
 - **Insulin doses**
   - Dose: the units given at once. A combo or extended bolus also has an extended dose (U) and the minutes it is given
     over. A dose of 0 is refused, except when it has an extended dose.
   - `automatic`: if a loop gave it. `true`/`false` as Loop uploaded, `null` if the app does not tell. Site API
     returns it, ignores it on create or update.
+  - `is_basal_insulin`: if it is basal insulin, as long acting insulin injected. `true`/`false` as AAPS uploaded,
+    `true` for Juggluco's Long-Acting, `null` if the app does not tell. Site API returns it, ignores it on create or
+    update.
 - **Food intakes**
 - **Temp basals**: rate in U/hr, and a multiplier of the scheduled basal (0 for a zero temp).
   - `follows_basal`: `true` if a Nightscout client sent it as a `percent` with no `absolute`. Site API returns it,
@@ -1032,6 +1192,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     `insulin must be between -500 and 500 (was 8882.5)`, `sgv must be a number (was "high")`).
   - Not as their column: a treatment's `glucose` is left out. A treatment's `carbs`, a temp basal's `percent`, a
     profile switch's `timeshift` and an activity's heart rate are refused.
+  - A profile's or a profile switch's schedule (basal, carb ratio, sensitivity, low target, high target) can be 8,192
+    characters as stored. A schedule with 48 entries, one each half hour, is kept whole.
+  - A schedule over 8,192 characters: the profile or the profile switch is refused (400), with the schedule's name.
   - Text is kept whole, not cut to 64 characters. Only notes are cut, at 1024 characters.
 
 #### Add modal
@@ -1052,6 +1215,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   reading's type and method, a temp target's insulin needs).
 - Emptied notes or reason: cleared. A blank number: not changed.
 - Save (Rename for a profile): at the foot by Close, as Add is. Enter also saves.
+- Delete: at the foot, on the side opposite Save and Close, red, with an icon. A profile, a device status and a
+  loop's settings have none.
+  - It asks the same question as the row's delete icon. Confirm deletes the record, closes the details, removes the
+    row, shows the toast and updates the "Showing" count.
+  - On a phone, the row's delete icon is past the side of the window. Delete, Save and Close are in the window.
 - Each field shows once. Below the form: only what it does not edit (a reading's type, a profile switch's DIA), not
   what it edits (a dose's split, type, notes, reason; a reading's trend).
 - Then the same Record section on all pages: ID, UTC offset, app, device, who created and last updated it, and
@@ -1073,6 +1241,10 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 
 - In the Data hub under Presets, with the data they help to enter.
 - **Food presets**: add (in a modal of all fields, as for data), view, edit, delete.
+  - Add Food Intake: a **Food Preset** dropdown above the fields, the first 100 by name, with carbs. Not shown with none.
+  - Type part of a name in **Search by name**: the dropdown shows only those presets. The case of letters is ignored.
+  - If no preset has that name, the dropdown says so. A search keeps the picked preset and its values.
+  - Pick one: its values fill in the fields, and the time stays blank. Change them, then add.
 - **Profiles**: profile stores a loop uploaded. Read their schedules, rename, delete.
 
 #### Loop Settings
@@ -1091,7 +1263,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
     `overridePresets.Running.targetRange`). Old, then new ("not sent" if absent). Glucose in the site's units.
   - An app's first set tells there is no set before it.
   - API: `changes`, `previous_id` (the set before), `units`.
-- Read only identities (site API): no Loop or Trio `deviceToken`, in settings or `changes`.
+- The site API gives no identity a Loop or Trio `deviceToken`, in settings or `changes`: loop settings are kept
+  without it. Two profiles that differ only in their `deviceToken` are one set of settings.
 - The Nightscout API reads each profile and device status back with its settings. Deleting a set keeps them; they
   read back without it.
 
@@ -1100,15 +1273,53 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 Third party integrations, each syncing from one service: **Dexcom** and **LibreLinkUp** (each with its region),
 another **Nightscout** site, or the **virtual connector** (realistic test data).
 
+- A connector's region is checked when it is saved: Dexcom is `US` or `OUS`, LibreLinkUp is one of its known regions,
+  and the Nightscout and virtual connectors have none. Another region is refused (400) with the region sent.
+
 #### Connectors page help
 
-- The page says that a connector pulls glucose into Nighttroop from another service.
+- The page says that a connector pulls glucose into Nighttroop from another service, and to add the one you use.
 - A note says that AAPS, Trio, Loop and xDrip+ upload from the phone with no connector. Its link, **Add the phone as a
   device**, opens Users & Devices.
 - Each of the Nightscout, Dexcom Share and FreeStyle Libre connectors says what it needs before it is turned on:
   - Nightscout: the site's address, and its API secret or a token that can read it.
   - Dexcom Share: the username and password of the account that wears the sensor, with Share on and one follower.
   - FreeStyle Libre: the email and password of a LibreLinkUp account that the person with the sensor invited.
+- Each connector has a badge beside its title that says its state:
+  - **Not set up** (grey): it is not saved.
+  - **Off** (grey): it is saved and turned off.
+  - **Stopped** (red): its first sync failed, so it was turned off.
+  - **Waiting for first sync** (amber): it is on and has not synced yet.
+  - **Failing** (red): its last sync failed.
+  - **Working** (green): its last sync worked.
+  - Working and Failing also say when it last synced, for example "synced 2 min ago".
+  - The badge changes with no reload when a sync finishes.
+
+#### What to do about a failed sync
+
+- Under a connector's sync error, **What to do:** says in plain words how to fix it:
+  - The service refused the username, password or token: enter them again and save.
+  - The address cannot be reached, or has no Nightscout site: check the address, then save.
+  - The service did not answer in time, or had an error of its own: Nighttroop tries again; check the service if it
+    continues.
+  - LibreLinkUp needs an invite or its terms accepted: open the LibreLinkUp app, then save again.
+  - The Nightscout address is on a private network: use its public address.
+- If the error does not say why the sync failed, there is no **What to do:** line.
+
+#### Add a connector
+
+- The page shows each connector the site has, whole.
+- Under them, **Add a connector** has one tile for each kind of connector the site does not have. A tile has the
+  connector's icon, its name and what it connects. A site with no connector shows only the tiles.
+  - The Nightscout tile has the Nightscout icon. A kind with no icon in Nighttroop has a tile of its first letter.
+  - The tiles are in a grid, each the same width. One tile alone is not the width of the page.
+  - A site with no connector is told to choose the service its glucose comes from.
+  - A tile opens that connector's form in its place, and the tile goes. The form has the inputs, Enable Connector
+    (ticked), **Cancel** and **Add Connector**. The cursor is in its first input.
+  - **Cancel** makes the form a tile again. What was typed in it is gone.
+  - After the connector is added, its buttons are Delete, Backfill and Save.
+  - A connector that is deleted is a tile again.
+  - If the site has every kind of connector, the **Add a connector** heading does not show.
 
 #### Virtual connector
 
@@ -1124,10 +1335,11 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Connector form
 
-- Before a save: only Save. After, without a reload: also Backfill, and Delete (red outline, apart from Save).
+- Before a connector is added: only Cancel and Add Connector. After, without a reload: Save, Backfill, and Delete
+  (red outline, apart from Save).
 - While a backfill request is sent, the Backfill button is disabled.
-- Enable Connector: ticked by typing a new Dexcom, LibreLinkUp or Nightscout source's details. A click on it, before
-  or after, is kept. Never changed on a saved source.
+- Enable Connector: ticked when a connector's form is opened from its tile. A click on it after that is kept. Never
+  changed on a saved connector.
 - Save does not check details. A failed first sync turns syncing off and tells why.
 - A site's connector saves (add or change) share one rate limit (`SITE_UPDATE_CONNECTORS_PER_MINUTE_LIMIT`); over: 429.
 - Connector syncs, usual or timed, are limited by `CONNECTOR_SYNC_PER_MINUTE_LIMIT` (6 a minute, burst 1):
@@ -1137,6 +1349,10 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - a backfill is not limited.
 - A Nightscout connector's token is sent as one part of the request path. A `/`, `?` or `#` in it does not change
   the path or query of the request.
+- A change of a Nightscout connector's URL needs its token again, or the API returns 400 with "Enter the Nightscout
+  token again to change the Nightscout URL.": the saved token is never sent to another URL.
+- The reply to a connector save, and `/settings/connectors/events`, have `********` for the password or token, so
+  another admin or tab does not get it.
 - Password, API secret, token, username, email and URL are not offered to browsers or password managers. The password
   is a masked text box (not a password box) with an eye to show it.
 
@@ -1160,6 +1376,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Nightscout backfill device statuses drop the loop status (`openaps` or `loop`) and `pump` as sent, keeping IOB, COB,
   and the pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`. Existing ones
   are not changed.
+- A Nightscout backfill copies only the device statuses the truncation keeps (see Device status truncation): all from
+  the last hour, then each device's newest in each 10 minutes to 1 week old, each 20 minutes to 2 weeks, and each
+  hour after. It does not write the others, so the next truncation has none of them to delete.
 
 #### Connectors page status
 
@@ -1203,6 +1422,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   battery, low reservoir.
 - Site alarms are each identity's default, which it can change.
 - An active alarm shows live in a banner below the header on all pages, and can be snoozed.
+- A snoozed alarm's row in the banner says when the snooze ends, as "Snoozed: Urgent high until 14:35": in the
+  settings' timezone and time format, with no seconds.
 - Impossible settings are refused (for example a high below the low).
 - The alarms page says that every alarm is off until it is turned on, and that an alarm that goes off shows in a
   banner at the top of every page, where it can be snoozed for 30 minutes.
@@ -1212,7 +1433,20 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### General settings
 
 - Units, time zone, language, date and time format, week start, number format, insulin and carb defaults.
+- The language is typed. Under its box, the page says to type a language code, such as en or en-NZ, and that the
+  pages are in English only for now.
 - Admins set site settings. Identities can override them.
+- The settings of the site and of each identity are stored as one versioned document each. A stored value that is
+  out of its range, or of the wrong type, is not used: the site's value, then the fallback, shows. The other
+  settings of the document are used.
+- An admin sees two columns, on General and on Alarms. Under its title, **Site** says "For everyone on this site"
+  and **Yours** says "For you only".
+- Each column has its own Save button:
+  - It is off until a setting in its column changes, and says so on hover. This includes **Use this browser's
+    timezone**.
+  - A change in one column does not turn on the Save of the other column.
+  - After a save that works, it is off again.
+- The card to reset the password and TOTP of the identity signed in is **Your Password & TOTP**.
 - Identity value, then site value, then fallback:
 
   | Setting | Fallback | Notes |
@@ -1251,8 +1485,34 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 #### Events, errors and logs
 
 - Admins see events (for example created, alarms, recoveries, credential changes), errors and logs of their site
-  only, filtered by type and searched. They do not see the backups of all sites.
+  only.
+  - They filter them by type, and search them.
+  - They do not see the backups of all sites.
 - Errors include requests refused for what they sent (kind `client`), with why, and the identity and app.
+- The events table has a **Details** column, for example "mum · Wellington, NZ" or "dexcom · 12 records". It says,
+  when the event has them:
+  - the identity it was for;
+  - who did it ("by admin") when that is another identity;
+  - the connector;
+  - the count of records;
+  - the reason;
+  - the city and country of a sign in.
+- Details text too long for the column is cut short, and shows whole on hover.
+- A phone does not show the Details column; the event's details have the same.
+- The errors table has a **From** column:
+  - the identity, what it asked for, and its app (for example "watch · GET /api/v1/entries · Nightguard"), or the
+    connector;
+  - empty if the error does not say.
+- From text too long for the column is cut short, and shows whole on hover.
+- An error's details say **What it means:** in plain words, above the details to debug it by:
+  - a connector's sync failed: the Connectors page says what to do;
+  - a backup failed: Nighttroop tries again;
+  - 401: the app's token or password is wrong, or its identity is off;
+  - 403: the identity's role does not allow it;
+  - 404: the app asked for something that does not exist;
+  - 429: the identity sent too many requests;
+  - 500 and above: Nighttroop failed, not the app;
+  - other refusals: the site did not accept what was sent.
 - Each event, error and log shows its request or background job run.
 - A search, or a filter by error kind, reads only the newest 10,000 of each. Paging without one reaches all rows.
 
@@ -1272,6 +1532,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Each sign in, and each refused one, is an event with the IP address's estimated country, and city if the server has
   DB-IP's City Lite.
 - A refused one does not keep the name it tried.
+- A sign in that the server refuses before the sign in rate limit is not an event: a body that is not a sign in, a
+  username longer than an identity's, or a code with no password step before it.
 
 ### Nightscout API
 
@@ -1366,7 +1628,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Roles: a fixed list, `admin`, `readable`, `aaps-client` and `careportal` (a Caregiver device). A role sent is
     given back, and not kept.
   - Subjects: the site's identities, newest first, with their roles. Only the PWD phone can see, add or delete them.
-  - Add a subject: a device for AAPSClient, with mg/dL units written `mg/dl`. It reads everything and writes only
+  - Add a subject: a device for AAPSClient, with mg/dL units. It reads everything and writes only
     `settings` (client control). It cannot add treatments, entries, device statuses, profiles or food: 403.
   - A subject added in the last 10 minutes has its `accessToken`. Other subjects do not, as tokens are not kept.
   - A name over 32 characters: 400. A name the site has: refused. The identity limits and rate limits apply.
@@ -1379,8 +1641,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 #### Filters
 
-- Unknown field or operator: an empty list. v1 `find[...]` (e.g. `find[notes]=x`), v3 `field$operator` (e.g.
-  `notes$eq=x`).
+- Unknown field or operator: an empty list.
+  - v1: `find[...]` (e.g. `find[notes]=x`).
+  - v3: `field$operator` (e.g. `notes$eq=x`).
 - Other query parameters (e.g. xDrip+'s `rr` or `raw`) are ignored. A document is always returned as stored, not as
   the JSON sent.
 - A v1 `find[_id]` that finds nothing (e.g. a deleted treatment): an empty list, not 404.
@@ -1406,6 +1669,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 
 - v1 or v3 `sort` on the date (e.g. `sort=date`, `sort=created_at`): oldest first, paged with `limit` and `skip`.
   AAPS pages forward from its newest date and gets every document.
+- `sort` or `sort$desc` on `srvModified` or `srvCreated`: in that order, oldest or newest first, paged with `limit` and
+  `skip` by it, so `sort$desc=srvModified&limit=1` is the last document changed, however old its date.
 - Other searches: newest first.
 - A filter on a field other than the date: a page has the matches of the page the dates alone give, still in order,
   and can have fewer than `limit`.
@@ -1465,11 +1730,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - In a profile history, the last profile store is the newest changed.
 - A delete moves the document's `srvModified` and the v3 lastModified forward, so a history since a sync has later
   deletes.
-- A v3 delete of a document that is already deleted returns 200 and changes nothing. AAPS deletes a treatment again
-  after a follower deletes it. A v1 delete of it counts 0. A delete of an unknown document returns 404.
-- A v3 read of a deleted entry, treatment or device status returns 410 with only `status` and `message`, as in
-  Nightscout. A v1 read of it returns 404. A read of a document deleted permanently, or of an unknown document,
-  returns 404.
+- A delete of a document that is already deleted:
+  - v3 returns 200 and changes nothing. AAPS deletes a treatment again after a follower deletes it.
+  - v1 counts 0.
+- A delete of an unknown document returns 404.
+- A read of a deleted entry, treatment or device status:
+  - v3 returns 410 with only `status` and `message`, as in Nightscout.
+  - v1 returns 404.
+- A read of a document deleted permanently, or of an unknown document, returns 404.
 - A treatment or reading created with `isValid` false (AAPS uploads one it deleted while offline) stays deleted:
   - A v3 read returns 410. A search does not find it.
   - History has it with `isValid` false.
@@ -1482,26 +1750,20 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Each, a default too, has `srvCreated` and `date` in ms.
 - Replace or patch: answers with the setting as stored.
 - An identifier that is not a Nighttroop setting: 404 for read, replace, patch and delete; 400 for create.
-- Units labels (set only through the settings endpoint) choose how the API writes `units`:
-
-  | Setting            | Values             |
-  | ------------------ | ------------------ |
-  | `units_mgdl_label` | `mg/dL` or `mg/dl` |
-  | `units_mmol_label` | `mmol/L` or `mmol` |
-
-  - Default: Nighttroop's label. The API writes only mg/dL.
-  - If an identity without its own labels sends a document with `units`, its labels become that spelling's pair. The
-    response to that request uses them too.
-    - `mg/dl` or `mmol` (AAPS, Trio, xDrip4iOS): `mg/dl` and `mmol`.
-    - `mg/dL` or `mmol/L` (Loop): `mg/dL` and `mmol/L`.
-  - Units are stored Nighttroop's way. All labels are read.
+- A document's `units` are spelt for the identity's device (its client), as apps read only their own spelling:
+  - A device added for Loop: as Nighttroop does, `mg/dL` and `mmol/L`.
+  - Every other identity, a device for another app, Other, or none (the site's phone token, an admin): as Nightscout
+    does, `mg/dl` and `mmol`.
+  - The spelling a device sends does not change it. Units are stored Nighttroop's way, and every spelling is read.
+  - A profile's store keeps its `units` as stored.
 - AAPS documents, kept as sent and shared by all identities of the site:
   - `aaps`, `aaps-state`: the running config.
   - `aaps_clientcontrol_...`: AAPS and AAPSClient pairing and control messages.
   - All operations and `/storage` sockets work as for other documents. The settings' last modified is their last
     change.
 - Limits:
-  - Document over 256 KiB: refused.
+  - Document over 64 KiB: refused.
+  - Document that takes the settings documents of the site over 512 KiB in total: refused.
   - New document when the site has 100: refused.
   - Client control messages with no change for a week: deleted to make space.
   - Settings key: up to 128 characters, as its column (AAPS client control keys include the client UUID). Other
@@ -1510,16 +1772,22 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 ### Nightscout API: glucose units
 
 - Glucose is stored and always returned in mg/dL, whatever the identity or site units, over HTTP and Socket.IO:
-  - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`, profile targets.
-  - Entries, treatments, profiles and their `units`.
+  - `sgv`, `mbg`, treatment `glucose`, temp target `targetTop` and `targetBottom`.
+  - Entries and treatments, and their `units`.
+- A profile is the exception: its targets are stored in mg/dL, but it comes back in the units it was uploaded in, as
+  Nightscout gives it back. Apps that import it, such as Trio, take its units from it.
 - Input: in the units sent with it.
-  - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value. A low of 30 or less
-    stays low (e.g. 28), and 39 (a sensor's LOW) is kept as sent. Dexcom's error codes (1 to 12) are not kept.
+  - Entry `sgv` and `mbg` with no `units`: mg/dL, as in Nightscout, never guessed from the value.
+    - A low of 30 or less stays low (e.g. 28).
+    - 39 (a sensor's LOW) is kept as sent.
+    - Dexcom's error codes (1 to 12) are not kept.
   - Other glucose with no `units`: guessed from the value.
-- A profile, or a profile switch's `profileJson`, in mmol/L comes back in mg/dL in each glucose field:
-  - `sens`, `target_low`, `target_high`.
+- A profile in mmol/L comes back in mmol/L in each glucose field, with the values as sent:
+  - `units`, `sens`, `target_low`, `target_high`.
   - Loop's `loopSettings`: `minimumBGGuard`, `preMealTargetRange`, each override preset's `targetRange`, the running
     `scheduleOverride`'s `targetRange`.
+- A profile uploaded without `units` comes back in mg/dL.
+- A profile switch's `profileJson` in mmol/L comes back in mg/dL in `sens`, `target_low` and `target_high`.
 - Each treatment comes back with `units`, temp targets and therapy events (e.g. Note, Sensor Change) too.
 - v1 status `settings.units`: the identity's units, as Nightscout writes them (`mg/dl` or `mmol`). Followers,
   `/pebble`, `alexa` and `googlehome` use them.
@@ -1642,9 +1910,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Loop finds its own treatments by `syncIdentifier`, though an Omnipod dose's `_id` is a hash.
 - LoopFollow shows an `automatic` bolus as an SMB, and leaves it out of its bolus stats.
 - xDrip+ finds its own treatments by `uuid`. Trio needs a profile's `enteredBy` to import it.
-- `extendedEmulated` (the Combo Bolus an AAPS Temp Basal gives, a JSON object): kept and returned as sent. AAPS reads
-  a Temp Basal with `extendedEmulated` as its extended bolus. Its insulin is the temp basal's, so it is not counted
-  again. Over 4096 characters: left out, and the rest of the treatment kept.
+- `extendedEmulated` (the Combo Bolus an AAPS Temp Basal gives, a JSON object): kept and returned as sent.
+  - AAPS reads a Temp Basal with `extendedEmulated` as its extended bolus.
+  - Its insulin is the temp basal's, so it is not counted again.
+  - Over 4096 characters: left out, and the rest of the treatment kept.
 - `bolusCalculatorResult` (AAPS Bolus Wizard calculation, JSON text): kept exactly as sent. Not JSON, or over 4096
   characters: left out, and the rest of the treatment kept.
 - A treatment's `glucose`, `glucoseType` and `units` are kept on each type that can have a glucose (see Event groups),
@@ -1656,7 +1925,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - `sgv` for a CGM reading, `mbg` for a meter reading, never both.
 - `direction`: a Nightscout name (e.g. `Flat`, `RATE OUT OF RANGE`), from any letter case or an arrow (`↗`, `↓↓`).
-  Unknown: `NOT COMPUTABLE`. Empty: left out.
+  - Unknown: `NOT COMPUTABLE`.
+  - Empty: left out.
 - `trend`: Nightscout's number for the direction (`NONE` 0, `DoubleUp` 1 ... `DoubleDown` 7, `NOT COMPUTABLE` 8,
   `RATE OUT OF RANGE` 9).
   - Only the trend is stored. The `direction` given back is made from it.
@@ -1724,16 +1994,20 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Sent with no `duration`: the `duration` is the nearest minute.
 - A treatment with a duration always has both `duration` and `durationInMilliseconds`, the missing one calculated.
 - A `duration` with a fraction (e.g. a Loop bolus `1.6666666666666667`, or a suspend) is kept to the ms.
-- API v1 `duration`: whole minutes, the nearest to `durationInMilliseconds` (e.g. a Loop bolus of 1.6667 minutes
-  reads 2, an AAPS temp target ended at 120750 ms reads 2). A bolus or temp basal of under a minute, also under half
-  a minute (e.g. 12000 ms), reads 1, not 0: followers read a 0 minute temp basal as cancelled. Trio and xDrip4iOS read
-  `duration` as a whole number and drop the page with a fraction.
+- API v1 `duration`: whole minutes, the nearest to `durationInMilliseconds`.
+  - A Loop bolus of 1.6667 minutes reads 2. An AAPS temp target ended at 120750 ms reads 2.
+  - A bolus or temp basal of under a minute, also under half a minute (e.g. 12000 ms), reads 1, not 0. Followers read
+    a 0 minute temp basal as cancelled.
+  - Trio and xDrip4iOS read `duration` as a whole number and drop the page with a fraction.
 - Exception, for a device added for Loop only: API v1 `duration` is the minutes of `durationInMilliseconds`, with their
-  fraction (e.g. 1.6666666666666667, 0.2), as Loop sends and reads them. No other client gets this (see
-  `nsutils.ClientOverrides`). API v3 and the Socket.IO broadcasts stay in whole minutes.
-- API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds` (AAPS drops a
-  treatment, or a page, with a fractional `duration`). A duration of under a minute is 1, not 0: readers take 0 as a
-  cancelled temp basal, or an indefinite `Temporary Override`. AAPS reads `durationInMilliseconds` first.
+  fraction (e.g. 1.6666666666666667, 0.2), as Loop sends and reads them.
+  - No other client gets this (see `nsutils.ClientOverrides`).
+  - API v3 and the Socket.IO broadcasts stay in whole minutes.
+- API v3 and its storage socket `duration`: whole minutes (5), with the exact `durationInMilliseconds`.
+  - AAPS drops a treatment, or a page, with a fractional `duration`.
+  - A duration of under a minute is 1, not 0. Readers take 0 as a cancelled temp basal, or an indefinite
+    `Temporary Override`.
+  - AAPS reads `durationInMilliseconds` first.
 
 #### Temp basals
 
@@ -1760,8 +2034,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - Indefinite override: lasts a week. Has `durationType` `indefinite` while the override as sent is kept.
 - Also indefinite, not ended as it starts: `indefinite` with a `duration` of 0, or a `Temporary Override` of 0
   minutes (the careportal sends one until cancelled).
-- An override with a duration of under a minute (e.g. Loop's `0.28` when it is ended after 17 seconds) has ended. It
-  is not indefinite. Its exact time is in `durationInMilliseconds`.
+- An override with a duration of under a minute (e.g. Loop's `0.28` when it is ended after 17 seconds) has ended.
+  - It is not indefinite.
+  - Its exact time is in `durationInMilliseconds`.
 - A `Temporary Target` of 0 minutes cancels the running one.
 
 #### Profile switches
@@ -1850,8 +2125,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - A profile set with no profile in its `store`: refused (400).
 - Loop's `loopSettings.scheduleOverride` (override running when sent): kept as an override preset (its `duration` in
   seconds). Loop reads it back.
-- Trio's remote control settings (bundle, device token, APNS environment, team, expiry) and override presets: kept, for
-  LoopFollow's Trio Remote Control.
+- Trio's remote control settings (bundle, APNS environment, team, expiry) and override presets: kept, for
+  LoopFollow's Trio Remote Control. Its device token is kept as below.
 - A profile sent with no `loopSettings` and no Trio remote settings (e.g. AAPS, careportal), if it is not older than
   Loop's last `loopSettings`: comes back (v1, v3, socket) with Loop's last `loopSettings`. LoopFollow can then
   control Loop.
@@ -1864,9 +2139,15 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   token for pushes to the uploading identity.
   - Production, unless `isAPNSProduction` is false.
   - Not a token: not registered. The profile is still kept.
-- `deviceToken`: kept whole. Registered up to 256 characters (Trio's are 160 hex). Longer: not registered.
+- `deviceToken`: registered whole, up to 256 characters (Trio's are 160 hex). Longer: not registered.
+- A device token is kept in one place only: its app's push registration, encrypted. The site DB does not keep it,
+  with the profile or with the loop settings.
+  - Loop settings kept with one before this are not changed. They come back without it, as below.
+  - What is sent as a `deviceToken` and is not a token is not kept, and does not come back.
 - Device tokens come back (v1, v3, socket storage) only to an identity that can change the site's data (e.g.
   LoopFollow remote commands). Read only users and devices, and the socket's `dataUpdate` to all readers, get none.
+  - Each of an app's profiles comes back with the token of the app's newest registration, by an identity that may
+    register Loop or Trio, if its bundle ID is the profile's. An older profile thus has the app's token now.
 
 ### Nightscout API: food and activities
 
@@ -1889,8 +2170,18 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - No namespace joined in 45 seconds: closed.
 - No access in 30 seconds: the socket and its connection close. Access comes from an `authorize` that can read or
   write, or a `/storage` or `/alarm` `subscribe` that succeeds.
-- One IP (an IPv6 /64): maximum 10 of a site's live sessions with no access (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`). The
+- One IP (an IPv6 /64): maximum 30 of a site's live sessions with no access (`SOCKET_MAX_UNAUTH_SESSIONS_PER_IP`). The
   next gets 429.
+- A site with all its live sessions open (`SOCKET_MAX_SESSIONS_PER_SITE`):
+  - If one or more have no access, the oldest of them closes and the new session opens. Many IPs with no token
+    cannot keep a follower out.
+  - A session with access never closes for a new one.
+  - If every session has access, the next gets 429.
+- One identity: maximum half of a site's live sessions (`SOCKET_MAX_SESSIONS_PER_SITE`), 150 by default. On the
+  next, its `authorize` or `subscribe` is disconnected with no answer, and the connection closes a second later.
+  - The site's other identities can connect to the other half.
+  - A session counts for the identity that last got access on it, until it closes. A second namespace on the same
+    session does not count again.
 - When the server stops, every socket closes before the last backup. No socket write gets to a site DB after it.
 
 #### Authorize
@@ -1938,7 +2229,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Percent of readings, total 100: `time_very_low` (below 54 mg/dL), `time_low`, in range, `time_high` and
     `time_very_high` (above 250 mg/dL).
   - `cgm_active`: percent of its 5 minutes, up to now, with a CGM reading.
-  - `total_daily_basal`: the basal in force through a day. The rest of the daily dose is boluses.
+  - `total_daily_basal`: the basal in force through a day, plus its doses of basal insulin (`is_basal_insulin`). The
+    rest of the daily dose is boluses.
   - `loop_iob`, `loop_iob_basal`, `loop_iob_treatment` and `loop_cob` every 5 minutes from midnight.
 - A week, fortnight or month:
   - Readings and times: all readings of its days.
@@ -1960,6 +2252,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - the admin is paged with an SMS;
     - it tests S3 every 20 seconds. After 3 tests in a row work, it takes the lock, then stops and exits with an
       error, for Docker to start it again with S3.
+    - if S3 refuses the lock, it logs a warning and tests S3 again until 3 tests in a row work.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
@@ -1976,6 +2269,9 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     and it waits for the lock.
   - If S3 takes a write of the lock and does not answer, or refuses it because another write is in progress, the
     server keeps its lock: the lock holds the ID of the server that wrote it.
+  - If S3 refuses a write of the lock and the server cannot read the lock, the server keeps its lock and tries again.
+  - If another server takes the lock and the server stops before its next write of the lock, the server does not
+    delete the lock. It also does not delete a lock that it cannot read.
   - If S3 does not refuse a conditional write, there is no lock. The server logs an error and starts.
   - The server restarts by an exit with an error, when S3 works again and when its lock is taken. Its supervisor must
     start it again: the compose files set `restart: unless-stopped`.
@@ -1984,7 +2280,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 
 - Each site DB goes to S3 by itself. S3 keeps old versions for a retention period.
 - A site written to since its last backup is backed up once that backup is an hour old
-  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every tick (the interval / 26), and when the server stops.
+  (`SITE_BACKUP_INTERVAL_IN_SECONDS`), checked every minute (or each interval, if it is shorter), and when the server
+  stops.
 - With S3, the control DB is replicated by Litestream, with its defaults, as it is written: its writes are in S3 within
   about a second, at `<host>/litestream/control`. Its last writes are sent when the server stops.
   - Over HTTPS, S3 encrypts the replica with SSE-C, with a key made from the MAC key set. Production and staging
@@ -2004,6 +2301,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
     - If the control DB has a control admin, the server starts with S3 off, and logs an error that says how to keep
       one of the two.
     - If S3 gives an error to that check, the server starts with S3 off.
+  - If the control DB is missing and its write-ahead log is still there, the server moves the log to
+    `controldb.sqlite.replaced-<time>-wal` before the restore. The restored control DB has only the replica's data.
   - If the control DB's replication cannot start, the server starts with S3 off.
   - If the control DB does not open at start, as a file a disk damaged, the server restores it from its replica:
     - The one that does not open is kept as `controldb.sqlite.unopened-<time>`, with its write-ahead log.
@@ -2017,10 +2316,12 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   live update) changes it. Each is recorded at most every 10 minutes, so a write up to 10 minutes after the last
   recorded one counts as since it.
 - One tick backs up at most 500 sites, the longest waiting first. The rest wait for the next ticks.
+- When the server stops, it backs up every site written since its last backup, and every live site not uploaded yet,
+  with no such limit.
 - A DB's backup is a consistent copy, with the writes in its write-ahead log, compressed with LZ4 as it is made:
   `data/backup/site/<letter>/<site>.sqlite.lz4`. `<letter>` is the first letter
   of the site ID.
-  - A copy cut short does not replace the last copy.
+  - A copy cut short, or one that fails, does not replace or remove the last copy.
   - The backup deletes the uncompressed `.sqlite` copy kept there before.
 - An upload is a tar of the compressed copy, encrypted, and not compressed again: a site's `<host>/sites/<site>.tar.enc`,
   and an archived site's `<host>/archive/site/<letter>/<site>.tar.enc`.
@@ -2060,7 +2361,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   - Gives the control admin a "Site DB missing" event: restored, or why not (S3 not working, not in the backup,
     restore failed). One not restored is also logged as an error, and stays unavailable.
 - The sites still unavailable are tried again after 1, 2, 4, 8, 16 and 32 minutes, each try logged the same way.
-  After the last, the admin is paged once, with the sites. Paging is not set up yet, so a page is logged as an error.
+  - After the last, the admin is paged once with a Call, with the sites.
 - A site DB that cannot be opened is moved aside while its backup is restored, and put back if the restored DB cannot
   be opened either.
 - If the server cannot listen on `HOST_PORT`, it stops as on SIGTERM, with a last backup, then gives the error.
@@ -2087,9 +2388,11 @@ Before it backs up a site written to, at most every hour, the server truncates i
   - All other fields stay as sent, e.g. `name`, `timestamp`, `iob`, `cob`, `recommendedBolus`, `enacted`,
     `predicted.startDate`, and `suggested.bg`, `ISF`, `eventualBG`.
   - The status does not get a new `srvModified`.
-- Pump as sent: kept only on each device's newest status with one. A newer status without one does not change this.
-  The others keep their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`.
-  The Nightscout API returns them as `pump`.
+- Pump as sent: kept only on each device's newest status with one.
+  - A newer status without one does not change this.
+  - The others keep their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and
+    `bolusing`.
+  - The Nightscout API returns them as `pump`.
 - Statuses kept for each device: all of the last hour, then the newest in each 10 minutes to 1 week old, each 20
   minutes to 2 weeks, and each hour to 30 days.
   - The device's newest and deleted statuses are kept.
@@ -2126,7 +2429,7 @@ harder:
 
 #### Rate limits
 
-- Reads and writes are rate limited for each site, identity and IP. Live sessions are capped for each site.
+- Reads and writes are rate limited for each site, identity and IP. Live sessions are capped for each site and identity.
 - A Nightscout request that fails auth, or needs none, uses its IP's budget on the site
   (`SITE_UNAUTH_PER_MINUTE_LIMIT`). One with a valid token does not.
   - An IP with no budget left is refused before its token is checked.
@@ -2144,6 +2447,14 @@ harder:
   - Over it: 429, with `Retry-After` and the message `Too many writes: this site's data is far over its storage limit`.
   - Live updates: the write is refused with that message.
 - Reads of a flagged site, and sites that are not flagged, do not change.
+- Over 4 times its DB size limit (80 MB for a 20 MB limit), each write that adds to the site's DB is refused, however
+  many flagged writes it has left, by its DB size on disk then:
+  - The Nightscout API's writes, and the site's data and presets created or changed: 429, with `Retry-After: 3600`
+    (the hour truncation takes) and the message `This site's data is far over its storage limit, so nothing more is
+    stored until some is deleted or the site is truncated`.
+  - Live updates (`dbAdd`, `dbUpdate`, `dbUpdateUnset`): refused with that message.
+  - Its connectors' syncs and backfills store nothing.
+  - Deletes, Truncate, its settings, identities and sign in and out still work, so the site can be made smaller.
 - A request's IP is its TCP peer.
   - Behind a trusted proxy (`TRUSTED_PROXIES`): the hop before it in `X-Forwarded-For`, or on Fly.io `Fly-Client-IP`.
   - Any other peer that sets these headers keeps its own IP's limits.
@@ -2170,8 +2481,10 @@ harder:
 | Abusive  | 0.6 to < 0.8 |
 | Blocked  | 0.8 or more  |
 
-- Control admins see each site's level and score on the sites list and the site page. Grey: Good and Fair. Amber:
-  Over use. Red: Abusive and Blocked.
+- Control admins see each site's level and score on the sites list and the site page.
+  - Grey: Good and Fair.
+  - Amber: Over use.
+  - Red: Abusive and Blocked.
 - The server does not treat a site differently by its level yet. The [abuse flag](#abuse-flag) and the
   [truncation of a site far over its size limit](#truncation-of-a-site-far-over-its-size-limit) still use the DB size.
 
@@ -2199,6 +2512,8 @@ harder:
 - A v1 upload holds at most 5000 records. Each 100 past the first costs a write against the site's and identity's
   limits.
 - A live update upload holds at most 100.
+- A site holds at most 20 live update streams (`/<section>/<collection>/events`) open, and one identity at most 10.
+  Past either: 429.
 - A Nightscout API delete of a treatment or entry type deletes at most 1000, newest first, and says how many.
 - A body over `MAX_REQUEST_BODY_BYTES`: 413. With no length given, reading stops at the limit and it is a bad body.
 - A site DB uploaded to the control site (`POST /sites/{id}/db`) can be up to 512 MB.
@@ -2231,6 +2546,8 @@ harder:
   - It reads everything.
   - It adds, changes and deletes treatments, adds a device status, and reads and writes settings.
   - It cannot add readings or profiles, or change or delete readings, profiles or device statuses: 403.
+  - If its treatment has a `glucose`, the reading is a meter reading (`mbg`), also with `glucoseType` `Sensor` or with
+    no `glucoseType`. The treatment is returned as sent. Alarms and loops do not use it as a CGM reading.
   - If it sends a device status with the `_id` of a stored one to API v1 `POST`, the stored one does not change and is
     the answer.
   - On the socket, `authorize` gives it `write` false and `write_treatment` true. Its `dbAdd`, `dbUpdate`,
@@ -2241,12 +2558,17 @@ harder:
   - Adds, changes and deletes event groups, insulin, food, temp basals, temp targets, profile switches, activities and
     notifications.
   - Cannot add, change or delete glucose readings, device statuses, profiles, food presets or loop settings: 403.
+  - Cannot put a glucose reading in an event group, as the delete of a group also deletes its events: 403.
   - Changes its own settings, alarms and push registrations.
 - The Users & Devices page names it "Caregiver".
 - The Users & Devices page has a table, "What each role can do", with a row for each role:
   - what it can do, in plain words;
   - whether it signs in to the site;
   - its permissions on the Nightscout API, as the server gives them (for example `api:*:read`), or None.
+  - On a phone, each role is a block, not a row: its name, what it can do, then the other two with their headings
+    before them. Nothing is cut off.
+- On a phone, each identity's switch and Manage menu stay at the right edge of its table's card, in reach, while
+  the table's other columns scroll sideways under them.
 - A new site has an admin, a PWD phone and a read only device.
 - A site has at most `MAX_IDENTITIES_PER_USER` identities.
 - An admin adds a clinician as a user with the Clinician role:
@@ -2330,9 +2652,27 @@ harder:
   - Step 1: User, Read-only user, Clinician or Admin, each with a line in plain words. User is picked to start with.
   - Step 2: the name. Its hint says to use who they are, such as mum or nurse, and not an email address.
   - The whole modal shows with no scrolling, on a phone too.
+- Under a new device's credentials and setup steps, a line says that Nighttroop waits for the device to connect.
+  - When the device's app first uses its token, the line turns green and says that the device connected. No reload
+    is necessary.
+  - The device's Last Seen in the table changes at the same time.
+  - The page checks every 3 seconds, for at most 10 minutes, and only while the credentials show.
+  - A new user's credentials do not have the line.
 - If the server refuses the person or the device, such as for a name the site has, the modal stays open to fix it.
+- `/settings/identities/events` sends a new identity as `{}`, so another admin or tab does not get its credentials.
 - The server refuses an identity with no role.
 - Identity creation is rate limited.
+
+#### How each identity is used
+
+- A badge after each identity's name says how it is used:
+  - **Not connected yet** (amber): a device that no app has used.
+  - **Not signed in yet** (amber): a person who has not signed in.
+  - **Active** (green): it was seen in the last 30 minutes.
+  - **Quiet for over a day** (amber): a device that was not seen for more than 24 hours.
+  - No badge: a person or a device seen between 30 minutes and 24 hours ago, or a person seen before that.
+- An identity that is turned off has no badge. The badge goes as its switch is turned off, and comes back as it is
+  turned on.
 
 #### Device clients
 
@@ -2351,8 +2691,8 @@ harder:
   Other starts as `device`. A name that is typed is kept when another app is picked.
 - Credentials show numbered setup steps for the client: menus and fields in bold, the Nightscout URL and token filled
   in, each with a copy button.
-- Any client but Nightguard and Other sets the device's own units to mg/dL. For xDrip4iOS and AAPS, the Nightscout
-  API also writes mg/dL as `mg/dl`.
+- Any client but Nightguard and Other sets the device's own units to mg/dL. The Nightscout API writes them `mg/dl`
+  for every client but Loop, which reads `mg/dL`.
 - Nightguard and Other follow the site's units. Nightguard reads `sgv` as mg/dL and shows the status's
   `settings.units`.
 - A device keeps its client (e.g. `loop`, `other`), returned as `client`. Users and a site's first devices have none.
@@ -2363,6 +2703,8 @@ harder:
 - A row's Manage menu has Settings, Reset password, Reset TOTP and Delete, each with its icon. Delete is red and
   apart.
 - Actions that do not apply (e.g. to reset or delete yourself) are greyed out. An identity cannot lock itself out.
+- Each identity's Manage menu has **Its events** and **Its errors**. Each opens the site's Events or Errors page
+  searched for the identity's name, to see what it did and what was refused it.
 - Each identity lists the clients (browsers and apps) that used it. It shows as shared when several did.
 - A shared device says to give each device its own identity, with a link that opens the Add Device modal.
 - From a row, an admin changes the identity's own settings and alarms. A device's units go to followers in its
@@ -2373,6 +2715,9 @@ harder:
 #### Credential resets
 
 - An admin resets a device's password. A new Nightscout token comes with it.
+  - In a device's Manage menu the reset is **New token & setup steps**. In a person's it is **Reset password**.
+  - If the device was added for an app, its new credentials show that app's setup steps again, with the new token
+    in them.
 - An identity resets its own password on the settings page, the admin its own TOTP. Both sign it out.
 - Each reset is an event, with who made it.
 - The site's backup key, on the recover page, recovers a lost admin password or TOTP.
@@ -2387,11 +2732,30 @@ harder:
   - Not added again if the browser already has one for the identity. At most 10.
 - "Remove", after a confirmation, removes a passkey. It no longer signs in.
 
+#### Site email
+
+- A site needs no email. A site's admin can give the site one, to be told about the site by.
+- If the server sends email (`RESEND_API_KEY` and `RESEND_FROM` are set), My Account shows an admin a **Site email**
+  card. If it does not, or the identity is not an admin, the card is not shown and the API refuses (400, 403).
+- **Save and send link** keeps the email, encrypted, as **Not verified**, and sends it a link.
+  - The email is one address of at most 254 characters. Other text is refused (400).
+  - A site is sent one link each hour. Another save in that hour is refused (429), also after the email is removed.
+  - If the email cannot be sent, the email is kept as not verified, and the page says to try again.
+- The link verifies the email it was sent to, and opens My Account, which shows **Verified**.
+  - It needs no sign in. It works one time, for 24 hours.
+  - If the server restarts, a link sent before no longer works. Send a new one.
+  - A link with another key, a used link, or the link of an email that was changed since is refused (400).
+- **Remove**, after a confirmation, removes the email.
+- The email is not in logs, events or errors. A not verified email is never written to again.
+- Getting Started shows an admin, on a server that sends email, **Add an email for the site**, which opens My Account.
+
 ### Usage
 
 - Usage (`/usage`) is in the user menu, for an admin only. My Account and the General settings do not show it.
 - As control's page of the site, it shows the DB size (measured on open) against its limit, and a bar and key of
   the largest tables with records, size and share, the rest as Other, as last measured.
+- The key names each table by the page that shows it, such as Glucose Readings or Device Status, not by its table name.
+- On a phone the key fits the window, with no sideways scroll.
 - "Truncate", after a confirmation, does as control's Truncate:
   - Removes the predictions from loop statuses over 1 day old.
   - Clears the pump as sent from all but each device's newest status.
@@ -2422,13 +2786,15 @@ harder:
 #### Push registrations
 
 - Each identity, of any role, registers the apps on its devices for pushes at `/settings/push-registrations` (JSON
-  API). If it is read only or a clinician, it cannot register `loop` or `trio` (403). Each registration has:
+  API). Only an admin, a user or a PWD phone registers `loop` or `trio`. Another role gets 403. Each registration has:
   - App: `loop`, `trio`, `loopfollow` or `t1dcarer`.
   - Provider: `apns` or `fcm`.
   - Bundle ID, and if it is a production build.
   - Token: kept encrypted, never returned.
 - A token registered again is updated, or moved from another identity of the site. Another site gets its own, and
   cannot take or change this one.
+- If another identity registered a token as `loop` or `trio`, the token moves only as `loop` or `trio`. Another app is
+  refused (400), so a Caregiver device cannot stop the remote commands.
 - An APNs token has 64 to 256 hex characters, in upper or lower case.
 - At most 10 an identity, also from profiles uploaded at once. Registering one of them again always works.
 - An identity sees, streams (`/settings/push-registrations/events`) and deletes only its own. An admin also gets and
@@ -2463,7 +2829,7 @@ harder:
 - Only an identity that can write treatments sends one. Its sender is that identity, not its IP address.
 - Pushed as Nightscout does, to the Loop that last uploaded its profile, with the site's push credential for its
   bundle ID, expiring in 5 minutes. Answer: 200 `OK`.
-- Only a Loop registered by an enabled identity that can change the site's data gets the command.
+- Only a Loop registered by an enabled admin, user or PWD phone gets the command.
 - Remote carbs with a `foodType` (e.g. 🍕) are pushed with it as Loop's `food-type`.
 - Refused (400), saying which:
   - A bolus over 30 U.

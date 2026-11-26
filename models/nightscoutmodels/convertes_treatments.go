@@ -341,7 +341,7 @@ func ToProfileJSON(source interface {
 		profile.Timezone = new(types.Timezone(*source.GetTimezone()))
 	}
 
-	profile.Units = siteContext.GetSettings().GetUnits()
+	profile.Units = new(siteContext.GetSettings().GetUnits())
 
 	if source.GetCarbRatiosJson() != nil {
 		profile.CarbRatio = JSONToScheduleValueSlice(source.GetCarbRatiosJson())

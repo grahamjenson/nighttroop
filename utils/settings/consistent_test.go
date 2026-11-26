@@ -27,14 +27,14 @@ func TestConsistent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			site, identity := &SettingMap{}, &SettingMap{}
+			c := &ContextSettings{DefaultSettings: DefaultValues()}
 			for name, value := range tt.site {
-				require.NoError(t, site.SetSettingByName(name, value, nil, nil))
+				require.NoError(t, c.Site.Set(name, value))
 			}
 			for name, value := range tt.identity {
-				require.NoError(t, identity.SetSettingByName(name, value, nil, nil))
+				require.NoError(t, c.Identity.Set(name, value))
 			}
-			err := (&CombinedSettingsMap{SiteSettingsMap: site, IdentitySettingsMap: identity, DefaultSettingsMap: DefaultSettingsMap}).Consistent()
+			err := c.Consistent()
 			if tt.want == "" {
 				require.NoError(t, err)
 			} else {
@@ -46,18 +46,17 @@ func TestConsistent(t *testing.T) {
 
 // TestNoNumberSettingIsNegative checks every number setting refuses a negative value, such as minutes before now
 func TestNoNumberSettingIsNegative(t *testing.T) {
-	for _, name := range allSettingNames {
-		setting := DefaultSettingsMap.GetSettingAnyTypeByName(name)
-		if setting == nil || setting.TypeString != "number" {
+	for _, setting := range (&ContextSettings{DefaultSettings: DefaultValues()}).All() {
+		if setting.TypeString != "number" {
 			continue
 		}
-		t.Run(name, func(t *testing.T) {
-			require.Error(t, (&SettingMap{}).SetSettingByName(name, "-1", nil, nil))
+		t.Run(setting.Identifier, func(t *testing.T) {
+			require.Error(t, (&Settings{}).Set(setting.Identifier, "-1"))
 		})
 	}
 }
 
 func TestNoDataAlarmIsAtLeastTenMinutes(t *testing.T) {
-	require.Error(t, (&SettingMap{}).SetSettingByName("alarm_no_data_minutes", "5", nil, nil))
-	require.NoError(t, (&SettingMap{}).SetSettingByName("alarm_no_data_minutes", "10", nil, nil))
+	require.Error(t, (&Settings{}).Set("alarm_no_data_minutes", "5"))
+	require.NoError(t, (&Settings{}).Set("alarm_no_data_minutes", "10"))
 }

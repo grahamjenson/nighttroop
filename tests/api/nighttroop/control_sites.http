@@ -149,21 +149,24 @@ ASSERT_STATUS 404
 // ARCHIVE
 //////
 
-// Archiving uploads the site to S3 before deleting it here, so without S3 it is refused and the site is kept
+// Archiving keeps the site's DB as its backup here, and uploads it to S3 when S3 is connected, so without S3, as on
+// staging, it archives too
 NAME archive_site_without_s3
 POST http://control.localhost/sites/{{ .site_id }}
 H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 B {"state": "archived"}
-ASSERT_STATUS 400
-ASSERT_CONTAINS "a site can only be archived when S3 is connected" "@message"
+ASSERT_STATUS 200
+ASSERT_EQUALS "archived" "@result.state"
 
-NAME site_kept_without_s3
-GET http://control.localhost/sites/{{ .site_id }}
+// It is restored from its archive here, without S3, live again
+NAME restore_site_without_s3
+POST http://control.localhost/archived-sites/{{ .site_id }}
 H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
+B {"state": "live"}
 ASSERT_STATUS 200
-ASSERT_EQUALS "disabled" "@result.state"
+ASSERT_EQUALS "live" "@result.state"
 
 NAME disable_unknown_site
 POST http://control.localhost/sites/not-a-site

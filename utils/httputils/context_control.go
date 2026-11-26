@@ -57,7 +57,7 @@ func SetAdminControlContext(ctx context.Context, identity *controldb.ControlIden
 	controlContext.IdentityModel = identity
 	controlContext.ServerStatus = status
 	if identity != nil {
-		aslog.AddAttrs(ctx, slog.Int64("identity_id", identity.ID), slog.String("identity_name", identity.Name), slog.String("role", string(identity.Role)))
+		aslog.AddAttrs(ctx, slog.Int64("control_identity_id", identity.ID), slog.String("identity_name", identity.Name), slog.String("role", string(identity.Role)))
 	}
 	return context.WithValue(ctx, controlContextKey, controlContext)
 }

@@ -40,10 +40,75 @@ templ FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, lim
 	}
 }
 
-// FoodIntakeNew adds a food intake with all its fields, putting its row at the top of the table
-templ FoodIntakeNew() {
+// FoodIntakeNew adds a food intake with all its fields, putting its row at the top of the table. Its fields start at
+// the picked food preset's, if there is one, from the food presets with the name searched for in them.
+templ FoodIntakeNew(presets []*sitemodels.SiteFoodPreset, picked *sitemodels.SiteFoodPreset, search string) {
+	{{ fields := foodIntakeFields(ctx) }}
+	if picked != nil {
+		{{ fields = addmodal.Fill(fields, picked, nil) }}
+	}
 	@addmodal.Modal(addmodal.Props{ID: "site--food--create", Title: i18n.T(ctx, "site.data.food_intakes.add"), Path: "/data/food", Target: "#foodIntakesTable tbody",
-		Submit: i18n.T(ctx, "site.data.food_intakes.add"), Fields: foodIntakeFields(ctx)})
+		Submit: i18n.T(ctx, "site.data.food_intakes.add"), Fields: fields, Above: foodPresetPicker(presets, picked, search)})
+}
+
+// foodPresetPicker loads the add modal's form again with a food preset's values once one is picked. Typing in its
+// search loads again only its list, of the food presets with that name, keeping the one picked. It is left out when
+// the site has no food presets.
+templ foodPresetPicker(presets []*sitemodels.SiteFoodPreset, picked *sitemodels.SiteFoodPreset, search string) {
+	if len(presets) > 0 || search != "" {
+		<div class="pt-4">
+			<label for="site--food--create--preset" class="mb-1 block text-sm font-medium text-gray-700">{ i18n.T(ctx, "site.data.food_intakes.preset") }</label>
+			<div class="flex flex-col gap-2 sm:flex-row">
+				<input
+					id="site--food--create--preset-search"
+					name="preset_search"
+					type="search"
+					value={ search }
+					aria-label={ i18n.T(ctx, "site.data.food_intakes.preset_search") }
+					placeholder={ i18n.T(ctx, "site.data.food_intakes.preset_search") }
+					maxlength="64"
+					autocomplete="off"
+					class="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-sm sm:w-48"
+					hx-get="/data/food/new"
+					hx-trigger="input changed delay:300ms"
+					hx-include="#site--food--create--preset"
+					hx-target="#site--food--create--preset"
+					hx-select="#site--food--create--preset"
+					hx-swap="outerHTML"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
+				/>
+				<select
+					id="site--food--create--preset"
+					name="preset"
+					class="h-9 w-full min-w-0 rounded-md border border-gray-200 bg-white px-3 text-sm"
+					hx-get="/data/food/new"
+					hx-target="#site--food--create"
+					hx-select="#site--food--create"
+					hx-swap="outerHTML"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
+				>
+					<option value="">{ i18n.T(ctx, "common.add_modal.none") }</option>
+					if len(presets) == 0 {
+						<option value="" disabled>{ i18n.T(ctx, "site.data.food_intakes.preset_not_found") }</option>
+					}
+					for _, preset := range presets {
+						<option value={ preset.ID } selected?={ picked != nil && picked.ID == preset.ID }>{ presetOption(ctx, preset) }</option>
+					}
+				</select>
+			</div>
+			<p class="mt-1 text-xs text-gray-500">{ i18n.T(ctx, "site.data.food_intakes.preset_help") }</p>
+		</div>
+	}
+}
+
+// presetOption is a food preset as the picker shows it, its name and, if it has them, its carbs
+func presetOption(ctx context.Context, preset *sitemodels.SiteFoodPreset) string {
+	if preset.Carbs == nil {
+		return orDash(preset.Name)
+	}
+	return orDash(preset.Name) + " (" + i18n.T(ctx, "site.data.common.carbs", i18n.Data{"Carbs": orDash(preset.Carbs)}) + ")"
 }
 
 // foodIntakeFields are what a food intake has that a person can type in
@@ -90,7 +155,7 @@ templ foodIntakeRow(foodIntake *sitemodels.SiteFoodIntake) {
 
 templ FoodIntakeModal(foodIntake *sitemodels.SiteFoodIntake) {
 	{{ edit := addmodal.Props{ID: "site--food--edit", Path: "/data/food/" + foodIntake.ID, Target: "#site--food--" + foodIntake.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-		Fields: addmodal.Edit(foodIntakeFields(ctx), foodIntake, nil)} }}
+		Fields: addmodal.Edit(foodIntakeFields(ctx), foodIntake, nil), Delete: i18n.T(ctx, "site.data.food_intakes.delete_confirm")} }}
 	@modal.Modal(modal.Props{ID: "site--food--details", Title: i18n.T(ctx, "site.data.common.carbs", i18n.Data{"Carbs": orDash(foodIntake.Carbs)}), Subtitle: formatReadingDate(ctx, foodIntake.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

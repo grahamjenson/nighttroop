@@ -13,8 +13,8 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// TestSiteActionsTruncate checks the Truncate button shows for a site whose DB is here, whatever its size, and not for
-// an archived one
+// TestSiteActionsTruncate checks the Truncate button, in the dangerous actions, shows for a site whose DB is here,
+// whatever its size, and not for an archived one
 func TestSiteActionsTruncate(t *testing.T) {
 	size := func(kb int64) *int64 { return &kb }
 	for _, test := range []struct {
@@ -33,7 +33,7 @@ func TestSiteActionsTruncate(t *testing.T) {
 			site := &controlmodels.Site{ID: "site", State: test.state, EstimatedDbSizeKb: test.sizeKB, MaxDbSizeKbLimit: size(3000)}
 			admin := httputils.SetAdminControlContext(httputils.CreateControlContext(context.Background(), nil, "", 0),
 				&controldb.ControlIdentity{Role: consts.ControlRoleAdmin}, config.ServerStatus{})
-			require.NoError(t, siteActions(site).Render(admin, &buf))
+			require.NoError(t, dangerousActions(site).Render(admin, &buf))
 			require.Equal(t, test.truncate, bytes.Contains(buf.Bytes(), []byte(`id="control--site--truncate"`)), buf.String())
 		})
 	}

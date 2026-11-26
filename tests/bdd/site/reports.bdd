@@ -1,6 +1,6 @@
-// The report is of today, which must have more than the first minutes of the virtual connector's last 30, so a run
-// that starts near midnight UTC (the site's timezone) waits until a quarter past
-AVOID_MIDNIGHT 15
+// The report is of today, which must have more than the first minutes of the virtual connector's last 30, so the site
+// is in a time zone where it is midday-ish, and date is its days
+MIDDAY_TIMEZONE
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
@@ -34,7 +34,7 @@ SCREENSHOT report_no_data
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated

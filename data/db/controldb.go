@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -32,6 +33,7 @@ import (
 
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/security"
+	"nighttroop.t1d.nz/utils/thin"
 )
 
 type ControlDB struct {
@@ -54,7 +56,16 @@ type ControlDB struct {
 	measured sync.Map
 	// replica replicates the control DB once Replicate starts it. Nil, as without S3 or in tests, replicates nothing.
 	replica *replica.Replica
+	// diskFull is whether the DBs' disk had less than DiskRefuseFreeMB free at the last check of the server's resources
+	diskFull atomic.Bool
 }
+
+// DiskFull is whether the DBs' disk was nearly full at the last check, so sites are not created and their writes that
+// add data are refused, as a full disk would stop every site
+func (db *ControlDB) DiskFull() bool { return db.diskFull.Load() }
+
+// SetDiskFull keeps whether the DBs' disk is nearly full, and is whether that changed
+func (db *ControlDB) SetDiskFull(full bool) bool { return db.diskFull.Swap(full) != full }
 
 // Replicate replicates the control DB to S3 with control, as it is written
 func (db *ControlDB) Replicate(ctx context.Context, control *replica.Replica) error {
@@ -340,9 +351,8 @@ func (db *ControlDB) createSite(ctx context.Context, subdomain string) (*SiteCre
 // Delete USER methods
 ////
 
-// DeleteSites marks the sites deleted, then closes and removes each one's DB files. A site missing from the map stops
-// the rest being closed, and a file that cannot be removed is only logged, so a failure part way leaves the sites
-// marked deleted with some files left behind.
+// DeleteSites marks the sites deleted, then closes and removes each one's DB files. A file that cannot be removed is
+// only logged, so a failure part way leaves the sites marked deleted with some files left behind.
 func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error {
 	// Set the deleted at timestammp in the control DB
 	if len(subdomains) == 0 {
@@ -370,15 +380,16 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 		}
 	}
 
-	// Close the DB and remove from the map
+	// Close the DB and remove from the map. An unavailable site has no open DB: it is not restored any more, and
+	// the DB files it has go too
 	for _, subdomain := range deletedSubdomains {
-		site := db.sites.remove(subdomain)
-		if site == nil {
-			return fmt.Errorf("site not found")
+		files := append(dbFiles(sitedb.GetPath(subdomain, db.ServerConfig)), sitedb.GetBackupPath(subdomain, db.ServerConfig))
+		if site := db.sites.remove(subdomain); site != nil {
+			site.Close()
 		}
-		site.Close()
+		db.unavailable.remove(subdomain)
 
-		err := utils.DeleteFiles([]string{site.Path, site.BackupPath})
+		err := utils.DeleteFiles(files)
 		if err != nil {
 			slog.Error("Failed to delete site db files", "subdomain", subdomain, "error", err)
 		} else {
@@ -390,7 +401,8 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 }
 
 // ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
-// deletes its local files, so it is no longer served or backed up but can be restored from the archive
+// deletes its DB, so it is no longer served or backed up. The copy is kept as its backup here, which HydrateSite
+// restores from first, so a server without S3 archives with a nil upload, keeping only that copy.
 func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s3utils.UploadFunc) error {
 	site := db.sites.get(subdomain)
 	if site == nil {
@@ -410,8 +422,10 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 	if err := backup.CompressedBackup(ctx, site.SQLiteDB, path); err != nil {
 		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
 	}
-	if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {
-		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
+	if upload != nil {
+		if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {
+			return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
+		}
 	}
 	bytes, _ := json.Marshal([]string{subdomain})
 	if _, err := db.Queries.ArchiveSites(ctx, controldb.ArchiveSitesParams{JsonEach: string(bytes)}); err != nil {
@@ -420,32 +434,44 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 
 	db.sites.remove(subdomain)
 	site.Close()
-	if err := utils.DeleteFiles([]string{site.Path, site.BackupPath}); err != nil {
+	if err := os.Rename(path, site.BackupPath); err != nil {
+		slog.ErrorContext(ctx, "Failed to keep the archive of a site here", "subdomain", subdomain, "error", err)
+	}
+	if err := utils.DeleteFiles(dbFiles(site.Path)); err != nil {
 		slog.ErrorContext(ctx, "Failed to delete archived site db files", "subdomain", subdomain, "error", err)
 	}
 	return nil
 }
 
-// HydrateSite brings an archived site back: it downloads, with download, the site's archive into its DB's folder, opens
-// it and makes the site live again
+// HydrateSite brings an archived site back: it restores the site's DB from its backup here, kept when it was archived,
+// or else downloads, with download, its archive from S3, opens it, migrating it, and makes the site live again. A nil
+// download, as without S3, restores only from the backup here. A DB that does not open or migrate makes it live but
+// unavailable, see MakeSiteUnavailableFor.
 func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download s3utils.DownloadFunc) error {
 	db.createSiteLock.Lock()
 	defer db.createSiteLock.Unlock()
 	if db.sites.get(subdomain) != nil {
 		return fmt.Errorf("site %s is already open", subdomain)
 	}
-	path := sitedb.GetPath(subdomain, db.ServerConfig)
-	if _, found, err := download(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), filepath.Dir(path)); err != nil {
-		return fmt.Errorf("cannot download the archive of site %s: %w", subdomain, err)
-	} else if !found || !utils.FileExists(path) {
-		return fmt.Errorf("site %s has no archive", subdomain)
+	path, backupPath := sitedb.GetPath(subdomain, db.ServerConfig), sitedb.GetBackupPath(subdomain, db.ServerConfig)
+	switch {
+	case utils.FileExists(backupPath):
+		if err := backup.Decompress(backupPath, path); err != nil {
+			return fmt.Errorf("cannot restore site %s from its backup here: %w", subdomain, err)
+		}
+	case download == nil:
+		return fmt.Errorf("site %s has no archive here, and S3 is off", subdomain)
+	default:
+		if _, found, err := download(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), filepath.Dir(path)); err != nil {
+			return fmt.Errorf("cannot download the archive of site %s: %w", subdomain, err)
+		} else if !found || !utils.FileExists(path) {
+			return fmt.Errorf("site %s has no archive", subdomain)
+		}
 	}
-	siteDB, err := NewSiteDB(ctx, subdomain, db.ServerConfig)
-	if err != nil {
-		// The archive is still in S3, so the copy downloaded from it goes
-		_ = utils.DeleteFiles([]string{path})
-		return err
-	}
+	// A DB restored that does not open or migrate, as one archived long ago, still makes the site live again, but
+	// unavailable, with its DB kept here, so its page offers the fixes: download, fix and upload it, restore a backup or
+	// make a new empty DB
+	siteDB, openErr := NewSiteDB(ctx, subdomain, db.ServerConfig)
 	result, err := db.Queries.HydrateSite(ctx, controldb.HydrateSiteParams{ID: subdomain})
 	if err == nil {
 		if rows, _ := result.RowsAffected(); rows == 0 {
@@ -453,9 +479,17 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 		}
 	}
 	if err != nil {
-		siteDB.Close()
-		_ = utils.DeleteFiles([]string{path})
+		if siteDB != nil {
+			siteDB.Close()
+		}
+		// The archive is still here or in S3, so the copy restored from it goes
+		_ = utils.DeleteFiles(dbFiles(path))
 		return err
+	}
+	if openErr != nil {
+		slog.ErrorContext(ctx, "Restored site's DB does not open, so the site is unavailable", "site_id", subdomain, "error", openErr)
+		db.MakeSiteUnavailableFor(subdomain, openErr)
+		return nil
 	}
 
 	db.sites.add(siteDB)
@@ -595,6 +629,14 @@ const truncateLooksBack = 24 * time.Hour
 // deviceReportsKeptFor is how long a device report is kept at all
 const deviceReportsKeptFor = 30 * 24 * time.Hour
 
+// ThinParams are ThinOldDeviceReports's, for the reports written since since, at now, both in ms, with utils/thin's
+// ages and buckets, which a backfill keeps to as well
+func ThinParams(since, now int64) sitedb.ThinOldDeviceReportsParams {
+	return sitedb.ThinOldDeviceReportsParams{Since: since, Now: now, KeepAllMs: thin.KeepAll.Milliseconds(),
+		WeekMs: thin.Week.Milliseconds(), FortnightMs: thin.Fortnight.Milliseconds(), SmallMs: thin.Small.Milliseconds(),
+		MediumMs: thin.Medium.Milliseconds(), LargeMs: thin.Large.Milliseconds()}
+}
+
 // truncateSite clears the predictions from each device's loop statuses over a day old, keeps its pump as sent only on
 // its newest report with one, thins its reports from before the last hour to fewer the older they are, and deletes
 // those over 30 days old, looking at those written since since, 0 for all of them
@@ -606,7 +648,7 @@ func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 	if err := site.Queries().ClearOldPumps(ctx, sitedb.ClearOldPumpsParams{Since: since}); err != nil {
 		return fmt.Errorf("cannot truncate site %s: %w", site.Subdomain, err)
 	}
-	if err := site.Queries().ThinOldDeviceReports(ctx, sitedb.ThinOldDeviceReportsParams{Since: since, Now: now.UnixMilli()}); err != nil {
+	if err := site.Queries().ThinOldDeviceReports(ctx, ThinParams(since, now.UnixMilli())); err != nil {
 		return fmt.Errorf("cannot thin the device reports of site %s: %w", site.Subdomain, err)
 	}
 	before := now.Add(-deviceReportsKeptFor).UnixMilli()

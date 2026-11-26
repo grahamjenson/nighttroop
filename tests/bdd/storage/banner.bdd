@@ -1,0 +1,21 @@
+// A site that holds 90% or more of its storage limit says so at the top of its pages
+HTTP
+NAME login_admin
+POST {{ .scheme }}://nearlimt.{{ .host }}/login
+H Accept: application/json
+B {"name": "admin", "password": "{{ .admin_password }}", "totp": "123123"}
+ASSERT_STATUS 200
+
+BROWSE
+GOTO {{ .scheme }}://nearlimt.{{ .host }}/logo.svg
+SET_COOKIE user_token {{ .login_admin.token }}
+GOTO {{ .scheme }}://nearlimt.{{ .host }}/
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--banner--near-storage >> text=Near the storage limit:
+ASSERT_VISIBLE #site--banner--near-storage >> text=This site's data is 18.6 MB of its limit of 20.0 MB.
+ASSERT_VISIBLE #site--banners .text-blue-700
+SCREENSHOT near_storage
+
+// It is information, so it can be hidden
+CLICK #site--banner--near-storage--hide
+ASSERT_NOT_VISIBLE #site--banners

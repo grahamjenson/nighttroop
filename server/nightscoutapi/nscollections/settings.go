@@ -146,7 +146,7 @@ func (c SettingsCollection) Get(ctx context.Context, siteContext *httputils.Site
 		return getGeneralSetting(ctx, siteContext, identifier)
 	}
 
-	found, err := siteContext.GetOwnSettings().GetSettingAnyTypeByName(identifier)
+	found, err := siteContext.GetOwnSettings().Get(identifier)
 	if err != nil {
 		return nil, nsutils.ErrNotFound
 	}
@@ -169,7 +169,7 @@ func (c SettingsCollection) withOwn(ctx context.Context, siteContext *httputils.
 	if herr != nil {
 		return nil, herr
 	}
-	for _, each := range siteContext.GetOwnSettings().GetAllSettingAnyTypes() {
+	for _, each := range siteContext.GetOwnSettings().All() {
 		docs = append(docs, settingDocument(each))
 	}
 	return docs, nil
@@ -188,25 +188,23 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 	if !settings.IsSetting(identifier) {
 		return nil, nsutils.ErrNotFound
 	}
-	settingsMap := siteContext.GetOwnSettings()
-	identitySettingsMap := settingsMap.IdentitySettingsMap
-
-	err := identitySettingsMap.SetSettingByName(identifier, value, &siteContext.IdentityModel.CreatedAt, ptr("identity"))
+	// A copy, so the request's own settings change only once the change is saved
+	changed := *siteContext.GetOwnSettings()
+	err := changed.Identity.Set(identifier, value)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to set setting in identity settings map", "error", err, "collection", "settings")
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
-	if err := settingsMap.Consistent(); err != nil {
+	if err := changed.Consistent(); err != nil {
 		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
 
-	params := &controldb.UpdateSiteIdentitySettingsParams{
-		ID:     siteContext.IdentityModel.ID,
-		SiteID: siteContext.IdentityModel.SiteID,
+	stored, err := changed.Identity.JSON()
+	if err != nil {
+		return nil, nsutils.BadDataBodyErrorWithHint(err.Error())
 	}
-	settings.SetSettings(params, identitySettingsMap)
-
-	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, *params)
+	err = siteContext.ControlDB.Queries.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{
+		ID: siteContext.IdentityModel.ID, SiteID: siteContext.IdentityModel.SiteID, SettingsJson: stored})
 	if err != nil {
 		if nsErr := nsutils.GetSQLTranslatedError(err); nsErr != nil {
 			return nil, nsErr
@@ -215,5 +213,7 @@ func UpdateIndividualSetting(ctx context.Context, siteContext *httputils.SiteCon
 		return nil, nsutils.ErrInternal
 	}
 
-	return identitySettingsMap.GetSettingAnyTypeByName(identifier), nil
+	// The request's own settings follow what was saved
+	siteContext.GetOwnSettings().Identity = changed.Identity
+	return changed.Own(&changed.Identity, identifier), nil
 }

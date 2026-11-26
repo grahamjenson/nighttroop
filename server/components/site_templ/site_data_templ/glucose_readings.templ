@@ -78,7 +78,7 @@ var GlucoseColours = map[string]GlucoseColour{
 // RangeBounds are the range settings, low and high, in the settings' units, for this and other pages' graphs
 func RangeBounds(ctx context.Context) (float64, float64) {
 	settings, units := httputils.GetSiteContext(ctx).GetSettings(), glucoseUnits(ctx)
-	return units.FromMGDL(float64(*settings.GetRangeLowMgdl())), units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
+	return units.FromMGDL(float64(settings.GetRange().LowMgdl)), units.FromMGDL(float64(settings.GetRange().HighMgdl))
 }
 
 // glucoseRange is "Low" or "High" for a reading, in the settings' units, below or above the range settings
@@ -212,7 +212,7 @@ templ glucoseReadingRow(reading *sitemodels.SiteGlucoseReading) {
 
 templ GlucoseReadingModal(reading *sitemodels.SiteGlucoseReading) {
 	{{ edit := addmodal.Props{ID: "site--glucose--edit", Path: "/data/glucose/" + reading.ID, Target: "#site--glucose--" + reading.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-		Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": display.GlucoseValue(reading.Reading, reading.Units)}, "reading_type", "measurement_method")} }}
+		Fields: addmodal.Edit(glucoseFields(ctx), reading, map[string]string{"reading": display.GlucoseValue(reading.Reading, reading.Units)}, "reading_type", "measurement_method"), Delete: i18n.T(ctx, "site.data.glucose_readings.delete_confirm")} }}
 	@modal.Modal(modal.Props{ID: "site--glucose--details", Title: formatGlucose(ctx, reading.Reading, reading.Units) + " " + orDash(reading.Units), Subtitle: formatReadingDate(ctx, reading.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">

@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+
 	"net/http"
+	"nighttroop.t1d.nz/utils/aslog"
 	"strings"
 	"time"
 
@@ -79,7 +81,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 		siteID := siteContext.SiteID
 
 		if err := r.ParseForm(); err != nil {
-			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.failed_to_parse"), fmt.Errorf("failed to parse form: %w", err))
+			malformedLoginHTMX(w, r, i18n.T(r.Context(), "site.login.failed_to_parse"), fmt.Errorf("failed to parse form: %w", err))
 			return
 		}
 
@@ -88,7 +90,7 @@ func POSTLogin(controlDB *db.ControlDB, config *config.ServerConfig) http.Handle
 
 		// Reject names no identity can have before they reach the rate limiter, which keys on them
 		if !nameLimit.Takes(formName) {
-			identityLoginErrorHTMX(w, r, i18n.T(r.Context(), "site.login.invalid_name_or_password"), fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
+			malformedLoginHTMX(w, r, i18n.T(r.Context(), "site.login.invalid_name_or_password"), fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
 			return
 		}
 
@@ -148,7 +150,7 @@ func POSTLoginTOTP(controlDB *db.ControlDB, config *config.ServerConfig) http.Ha
 		// 1. Fetch And Validate Pre-Auth Token
 		identityNameFromToken, issuedAtMs, err := fetchVerifyPreAuthToken(config, r, siteContext.SiteID)
 		if err != nil {
-			identityLoginErrorHTMX(w, r, "", fmt.Errorf("failed to fetch and verify pre-auth token: %w", err))
+			malformedLoginHTMX(w, r, "", fmt.Errorf("failed to fetch and verify pre-auth token: %w", err))
 			return
 		}
 
@@ -286,13 +288,13 @@ func PostLoginFromAPI(controlDB *db.ControlDB, config *config.ServerConfig, r *h
 
 	var creds LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		identityLoginErrorAPI(w, r, fmt.Errorf("invalid login attempt: %w", err))
+		malformedLoginAPI(w, r, fmt.Errorf("invalid login attempt: %w", err))
 		return
 	}
 
 	// Reject names no identity can have before they reach the rate limiter, which keys on them
 	if !nameLimit.Takes(creds.Name) {
-		identityLoginErrorAPI(w, r, fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
+		malformedLoginAPI(w, r, fmt.Errorf("username longer than %d characters", nameLimit.MaxLength))
 		return
 	}
 
@@ -348,6 +350,8 @@ func recordSignIn(r *http.Request, identity *controldb.SiteIdentity) {
 		siteContext.ControlDB.Logs.SignInFailedEvent(r.Context(), siteContext.SiteID, from)
 		return
 	}
+	// The sign in is the identity's own event, though the request had no identity
+	aslog.AddAttrs(r.Context(), slog.Int64("identity_id", identity.ID), slog.String("identity_name", identity.Name))
 	siteContext.ControlDB.Logs.SignedInEvent(r.Context(), siteContext.SiteID, identity.Name, from)
 }
 
@@ -387,15 +391,20 @@ func rateLimitErrorHTMX(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// loginFailed records a refused sign in and logs why, which the answer does not say
-func loginFailed(r *http.Request, err error) {
-	recordSignIn(r, nil)
+// malformedLogin logs a sign in refused before the login rate limit, as one with no name an identity can have. It is
+// answered as any failed sign in, but is not an event: anyone can send many, and they would push out the kept events.
+func malformedLogin(r *http.Request, err error) {
 	slog.InfoContext(r.Context(), "Identity Login Failed", "error", err, "stack", errors.LocalStack())
 }
 
 // We have a very generic error to not give any hints about how far through it was rejected
 func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg string, err error) {
-	loginFailed(r, err)
+	recordSignIn(r, nil)
+	malformedLoginHTMX(w, r, usrMsg, err)
+}
+
+func malformedLoginHTMX(w http.ResponseWriter, r *http.Request, usrMsg string, err error) {
+	malformedLogin(r, err)
 	if usrMsg == "" {
 		usrMsg = i18n.T(r.Context(), "site.login.invalid_attempt")
 	}
@@ -408,7 +417,12 @@ func identityLoginErrorHTMX(w http.ResponseWriter, r *http.Request, usrMsg strin
 
 // We have a very generic error to not give any hints about how far through it was rejected
 func identityLoginErrorAPI(w http.ResponseWriter, r *http.Request, err error) {
-	loginFailed(r, err)
+	recordSignIn(r, nil)
+	malformedLoginAPI(w, r, err)
+}
+
+func malformedLoginAPI(w http.ResponseWriter, r *http.Request, err error) {
+	malformedLogin(r, err)
 	http.Error(w, "Invalid login attempt", http.StatusUnauthorized)
 }
 

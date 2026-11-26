@@ -9,6 +9,7 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/server/components/ui/table"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/i18n"
 )
@@ -73,6 +74,11 @@ type Props struct {
 	Swap string
 	// Extra is more of the form after its fields, such as inputs loaded for what is typed in them
 	Extra templ.Component
+	// Above is in the add modal above its form, such as a preset to start its fields at
+	Above templ.Component
+	// Delete is the question an edit form's Delete button asks, e.g. "Delete this insulin dose?", before it deletes
+	// the record at Path and removes its row, Target. A form with none, as an add modal's, has no Delete button.
+	Delete string
 }
 
 // Open is the button opening the add modal at path in #modal-container, beside its page's title
@@ -87,6 +93,9 @@ templ Open(id string, path string, label string) {
 // is added, and an error goes to the toaster, leaving it open to fix.
 templ Modal(p Props) {
 	@modal.Modal(modal.Props{ID: p.ID + "--modal", Title: p.Title, Subtitle: i18n.T(ctx, "common.add_modal.subtitle"), Actions: SubmitButton(p)}) {
+		if p.Above != nil {
+			@p.Above
+		}
 		@Form(p)
 	}
 }
@@ -137,12 +146,26 @@ func formHandlers(p Props) templ.Attributes {
 	return handlers
 }
 
-// SubmitButton submits the form, from outside it, as in a modal's actions
+// SubmitButton submits the form, from outside it, as in a modal's actions. A form with a Delete question has a Delete
+// button first, at the far side of the actions from Save and Close, as a row's delete button is out of view on a phone.
 templ SubmitButton(p Props) {
+	if p.Delete != "" {
+		@button.Button(button.Props{ID: p.ID + "--delete", Variant: button.VariantOutline, Class: "mr-auto border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700", Attributes: deleteAttributes(p)}) {
+			@icon.Trash2()
+			{ i18n.T(ctx, "common.table.delete") }
+		}
+	}
 	@button.Button(button.Props{ID: p.ID + "--submit", Type: button.TypeSubmit, Attributes: templ.Attributes{"form": p.ID}}) {
 		@icon.Save()
 		{ p.Submit }
 	}
+}
+
+// deleteAttributes delete the record once confirmed, then remove its row, whose ID Target has, and close its details
+func deleteAttributes(p Props) templ.Attributes {
+	attributes := table.DeleteAttributes(p.Path, p.Delete, "document.getElementById(this.dataset.row)?.remove(); document.getElementById('modal-container').innerHTML = ''")
+	attributes["data-row"] = strings.TrimPrefix(p.Target, "#")
+	return attributes
 }
 
 // Detail is a record's field, by its JSON name, in its details modal's list below the edit form p, left out when p

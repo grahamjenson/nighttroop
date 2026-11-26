@@ -24,7 +24,7 @@ NAME create_profile_null_schedule_entry_v1
 POST http://{{ site }}/api/v1/profile?token={{ token }}
 B {"defaultProfile":"Default","startDate":"{{ time 2 }}","store":{"Default":{"units":"mmol/L","target_low":[null],"target_high":[null,{"value":7,"time":"00:00","timeAsSeconds":0}]}}}
 ASSERT_STATUS 200
-ASSERT_EQUALS 126.126 "@0.store.Default.target_high.1.value"
+ASSERT_EQUALS 7 "@0.store.Default.target_high.1.value"
 
 // A null body is refused by a replace
 NAME put_null_setting_v1

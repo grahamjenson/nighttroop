@@ -23,10 +23,11 @@ ASSERT_VISIBLE "Nighttroop"
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--submit
 ASSERT_TEXT_VISIBLE Connector Updated
 // A Nightscout connector with details that do not work, so a source has failed
+CLICK #site--settings--nightscout-connector--add
 INPUT #site--settings--nightscout-connector--url         http://will_not_pass_the_test.test
 INPUT #site--settings--nightscout-connector--password    not_a_token
 // Typing a new source's details turns it on

@@ -121,7 +121,7 @@ func columnUnits(ctx context.Context, column settingsColumn) string {
 		}
 		return column.Model.Inherited["units"]
 	}
-	return settingValue(httputils.GetSiteContext(ctx).GetSettings().GetUnits().Stringp())
+	return string(httputils.GetSiteContext(ctx).GetSettings().GetUnits())
 }
 
 // optionLabels are the messages of the week's days, named as days are, and of an alarm's On or Off
@@ -158,6 +158,22 @@ func settingsColumns(ctx context.Context, page settingsPage, site *sitemodels.Se
 	}
 	return columns
 }
+
+// columnScope says who a column's settings are for, under its title, as the site's and yours are side by side and
+// alike: "" for another identity's, which is alone on its page
+func columnScope(ctx context.Context, column settingsColumn) string {
+	switch column.Path {
+	case "/settings/site":
+		return i18n.T(ctx, "site.settings.columns.site_scope")
+	case "/settings/identity":
+		return i18n.T(ctx, "site.settings.columns.yours_scope")
+	}
+	return ""
+}
+
+// unsavedSettings turns on the Save button of the column a setting was changed in, each off until then, so a change
+// in one column cannot be lost by pressing the other column's Save, and the button that is on says what is not saved
+const unsavedSettings = `const form = event.target.form; if (form) document.querySelector('button[form="' + form.id + '"]').disabled = false`
 
 // SettingsPage shows the site's settings beside an admin's own, or just the signed in identity's.
 // Each column saves with its own form. A setting left empty follows the level above:
@@ -274,14 +290,20 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 				hx-swap="beforeend"
 				hx-status:4xx="target:#toaster swap:beforeend"
 				hx-status:5xx="target:#toaster swap:beforeend"
+				hx-on::after:request={ templ.JSUnsafeFuncCall("if (ctx.response.status < 400) document.querySelector('button[form=\"' + this.id + '\"]').disabled = true") }
 			></form>
 		}
 		// On a phone each setting's label is above its controls, the site's and yours each named, and from sm up the
 		// columns are side by side under their titles
-		<div class={ "panel grid grid-cols-1 gap-2 p-4 sm:items-center sm:gap-4", templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1) }>
+		<div oninput={ templ.JSUnsafeFuncCall(unsavedSettings) } class={ "panel grid grid-cols-1 gap-2 p-4 sm:items-center sm:gap-4", templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]", len(columns) == 2), templ.KV("sm:grid-cols-[8rem_minmax(0,1fr)]", len(columns) == 1) }>
 			<span class="hidden sm:block"></span>
 			for _, column := range columns {
-				<span class={ "text-sm font-semibold", templ.KV("hidden sm:block", len(columns) == 2) }>{ column.Title }</span>
+				<span class={ "text-sm font-semibold", templ.KV("hidden sm:block", len(columns) == 2) }>
+					{ column.Title }
+					if scope := columnScope(ctx, column); scope != "" {
+						<span id={ column.IDPrefix + "scope" } class="block text-xs font-normal text-gray-500">{ scope }</span>
+					}
+				</span>
 			}
 			for _, field := range page.Fields {
 				if field.Section != "" {
@@ -310,7 +332,8 @@ templ settingsPageOf(page settingsPage, site *sitemodels.Settings, yours *sitemo
 						ID:         column.IDPrefix + "save",
 						Type:       button.TypeSubmit,
 						Class:      "h-auto min-h-9 w-full whitespace-normal sm:w-auto",
-						Attributes: templ.Attributes{"form": column.FormID},
+						Disabled:   true,
+						Attributes: templ.Attributes{"form": column.FormID, "title": i18n.T(ctx, "site.settings.columns.no_changes")},
 					}) {
 						@icon.Save()
 						{ column.Save }
@@ -351,10 +374,14 @@ templ settingControl(column settingsColumn, field settingField) {
 					ID:         column.IDPrefix + "timezone--browser",
 					Variant:    button.VariantLink,
 					Class:      "h-auto justify-start whitespace-normal p-0 text-left text-xs",
-					Attributes: templ.Attributes{"hx-on:click": templ.JSUnsafeFuncCall("this.parentElement.querySelector('input').value = Intl.DateTimeFormat().resolvedOptions().timeZone")},
+					Attributes: templ.Attributes{"hx-on:click": templ.JSUnsafeFuncCall("const zone = this.parentElement.querySelector('input'); zone.value = Intl.DateTimeFormat().resolvedOptions().timeZone; zone.dispatchEvent(new Event('input', {bubbles: true}))")},
 				}) {
 					{ i18n.T(ctx, "site.settings.timezone.use_browser") }
 				}
+			}
+			if field.Name == "language" {
+				// What to type, as the box takes any text, and that it does not yet change the pages' words
+				<p id={ column.IDPrefix + "language--help" } class="text-xs text-gray-500">{ i18n.T(ctx, "site.settings.language_help") }</p>
 			}
 		</div>
 	}

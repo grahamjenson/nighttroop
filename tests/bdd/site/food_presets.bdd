@@ -96,3 +96,13 @@ GOTO /presets/food
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 1
 ASSERT_TEXT_VISIBLE Apple
+
+// A food preset's details delete it too, after the same question, and the table then says it is empty
+CLICK #foodPresetsTable tbody tr >> nth=0
+CLICK_ASKS #presets--food--edit--delete
+ASSERT_TEXT_EQUALS #confirm--message Delete this food preset?
+CLICK #confirm--ok
+ASSERT_TEXT_VISIBLE Food Preset Deleted
+ASSERT_NOT_VISIBLE #presets--food--details
+ASSERT_NOT_VISIBLE #foodPresetsTable >> text="Apple"
+ASSERT_VISIBLE #presets--food--empty

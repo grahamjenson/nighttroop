@@ -147,12 +147,20 @@ GET http://{{ site }}/api/v3/treatments/{{ repeat "x" 37 }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 400
 
-// A document over 256 KiB is refused
+// A document over 64 KiB is refused
 NAME put_too_large
 PUT http://{{ site }}/api/v3/settings/aaps
 H Authorization: Bearer {{ jwt }}
-B {"app":"AAPS","date":946684800001,"signed":"{{ repeat "x" 262144 }}"}
+B {"app":"AAPS","date":946684800001,"signed":"{{ repeat "x" 65536 }}"}
 ASSERT_STATUS 400
+ASSERT_CONTAINS "settings document too large" "@message"
+
+// One just under it is kept
+NAME put_nearly_too_large
+PUT http://{{ site }}/api/v3/settings/aaps
+H Authorization: Bearer {{ jwt }}
+B {"app":"AAPS","date":946684800001,"signed":"{{ repeat "x" 65000 }}"}
+ASSERT_STATUS 201
 
 // Any other key is still one of the site's own settings, which needs a value
 NAME put_other_key

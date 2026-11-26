@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 )
 
 // Builder builds each live site's yesterday, remembering what it last built for each, so a site's DB is only opened
@@ -164,9 +165,9 @@ func (b *Builder) Build(ctx context.Context, now time.Time) error {
 
 // yesterdayOf is the site's yesterday from its own settings, which are in the control DB, so its DB is not opened
 func yesterdayOf(site *controldb.Site, now time.Time) built {
-	settings := &httputils.SiteContext{SiteID: site.ID, SiteModel: site}
-	location := settings.GetSiteTimezone()
-	return built{date: sitedata.LocalDate(now, location, -1), timezone: location.String(), weekStart: settings.GetSiteWeekStartDay()}
+	own := settings.NewContextSettings(site, nil)
+	location := own.SiteLocation()
+	return built{date: sitedata.LocalDate(now, location, -1), timezone: location.String(), weekStart: own.GetSiteWeekStartDay()}
 }
 
 func (b *Builder) isBuilt(siteID string, yesterday built) bool {
@@ -243,7 +244,29 @@ func (b *Builder) dueNow(siteID string) {
 // more, or waited staleWait, and every site's on the first run since the server started, leaving out today, which is
 // built as it is read. A site with only today's data written is not opened.
 func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
+	var errs []error
+	for siteID, data := range b.takeDue(now) {
+		site, err := b.controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		if site.State != "live" {
+			continue
+		}
+		if err := b.rebuildStaleSite(ctx, site, now); err != nil {
+			b.restale(siteID, data)
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// takeDue takes out the sites whose data has gone staleQuiet without more, or waited staleWait, and on the first run
+// since the server started, every site
+func (b *Builder) takeDue(now time.Time) map[string]*staleData {
 	b.staleLock.Lock()
+	defer b.staleLock.Unlock()
 	due := map[string]*staleData{}
 	for siteID, data := range b.stale {
 		if now.Sub(data.last) >= staleQuiet || now.Sub(data.first) >= staleWait {
@@ -259,63 +282,66 @@ func (b *Builder) RebuildStale(ctx context.Context, now time.Time) error {
 		}
 		b.checked = true
 	}
-	b.staleLock.Unlock()
+	return due
+}
 
-	var errs []error
-	for siteID, data := range due {
-		site, err := b.controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		today := sitedata.PeriodStart("day", now, (&httputils.SiteContext{SiteID: siteID, SiteModel: site}).GetSiteTimezone(), "monday")
-		if site.State != "live" {
-			continue
-		}
-		// Taken before its stale days are read, so one marked as they are built is not cleared unbuilt
-		began := time.Now()
-		siteDB, _, err := b.controlDB.GetSite(ctx, siteID)
-		since := began.Add(-restartSince).UnixMilli()
-		if site.SummariesCheckedAt != nil {
-			since = *site.SummariesCheckedAt - sitedata.SummariesCheckedOverlap.Milliseconds()
-		}
-		var stale, written []int64
-		if err == nil {
-			stale, err = siteDB.Queries().StaleSummaryDays(ctx)
-		}
-		if err == nil {
-			written, err = siteDB.Queries().SummaryDataWrittenSince(ctx, sitedb.SummaryDataWrittenSinceParams{Since: since, Before: today.UnixMilli()})
-		}
-		if err != nil {
-			b.restale(siteID, data)
-			errs = append(errs, err)
-			continue
-		}
-		var times []time.Time
-		for _, at := range append(stale, written...) {
-			if at := time.UnixMilli(at); at.Before(today) {
-				times = append(times, at)
-			}
-		}
-		if len(times) > 0 {
-			siteCtx := aslog.WithSite(ctx, siteID)
-			var siteContext *httputils.SiteContext
-			if siteContext, err = b.site(siteCtx, siteID); err == nil {
-				err = sitedata.RebuildSummaryDays(siteCtx, siteContext.SiteDB.Queries(), siteContext, times, now)
-			}
-			if err == nil {
-				err = siteDB.Queries().ClearStaleSummaries(siteCtx, sitedb.ClearStaleSummariesParams{Before: new(began.UnixMilli())})
-			}
-		}
-		if err == nil {
-			err = b.controlDB.Queries.UpdateSiteSummariesCheckedAt(ctx, controldb.UpdateSiteSummariesCheckedAtParams{SummariesCheckedAt: new(began.UnixMilli()), ID: siteID})
-		}
-		if err != nil {
-			b.restale(siteID, data)
-		}
-		errs = append(errs, err)
+// rebuildStaleSite builds again the site's stale days, then keeps when it was checked, so the next run only looks
+// through the data written since
+func (b *Builder) rebuildStaleSite(ctx context.Context, site *controldb.Site, now time.Time) error {
+	// Taken before its stale days are read, so one marked as they are built is not cleared unbuilt
+	began := time.Now()
+	siteDB, _, err := b.controlDB.GetSite(ctx, site.ID)
+	if err != nil {
+		return err
 	}
-	return errors.Join(errs...)
+	days, err := staleDays(ctx, siteDB.Queries(), site, now, began)
+	if err != nil {
+		return err
+	}
+	if len(days) > 0 {
+		if err := b.rebuildDays(aslog.WithSite(ctx, site.ID), site.ID, days, began, now); err != nil {
+			return err
+		}
+	}
+	return b.controlDB.Queries.UpdateSiteSummariesCheckedAt(ctx, controldb.UpdateSiteSummariesCheckedAtParams{SummariesCheckedAt: new(began.UnixMilli()), ID: site.ID})
+}
+
+// staleDays are the times, before today, of the site's days marked stale in its DB, and of its data written since it
+// was last checked, or, if never checked, since restartSince before began
+func staleDays(ctx context.Context, q *sitedb.Queries, site *controldb.Site, now, began time.Time) ([]time.Time, error) {
+	today := sitedata.PeriodStart("day", now, settings.NewContextSettings(site, nil).SiteLocation(), "monday")
+	since := began.Add(-restartSince).UnixMilli()
+	if site.SummariesCheckedAt != nil {
+		since = *site.SummariesCheckedAt - sitedata.SummariesCheckedOverlap.Milliseconds()
+	}
+	stale, err := q.StaleSummaryDays(ctx)
+	if err != nil {
+		return nil, err
+	}
+	written, err := q.SummaryDataWrittenSince(ctx, sitedb.SummaryDataWrittenSinceParams{Since: since, Before: today.UnixMilli()})
+	if err != nil {
+		return nil, err
+	}
+	var times []time.Time
+	for _, at := range append(stale, written...) {
+		if at := time.UnixMilli(at); at.Before(today) {
+			times = append(times, at)
+		}
+	}
+	return times, nil
+}
+
+// rebuildDays builds the site's days at times again, then clears the days marked stale before began
+func (b *Builder) rebuildDays(ctx context.Context, siteID string, times []time.Time, began, now time.Time) error {
+	siteContext, err := b.site(ctx, siteID)
+	if err != nil {
+		return err
+	}
+	q := siteContext.SiteDB.Queries()
+	if err := sitedata.RebuildSummaryDays(ctx, q, siteContext, times, now); err != nil {
+		return err
+	}
+	return q.ClearStaleSummaries(ctx, sitedb.ClearStaleSummariesParams{Before: new(began.UnixMilli())})
 }
 
 // restale keeps a site whose summaries could not be built to be built on a later run, with any written since

@@ -34,6 +34,9 @@ ASSERT_TEXT_VISIBLE Site created
 ASSERT_NOT_VISIBLE #siteEventsTable >> text=site_created
 // The admin signing in is an event, with where from by DB-IP's estimate, so the footer links to DB-IP
 ASSERT_VISIBLE #siteEventsTable >> text=Signed in
+// Each event says in a few words who or what it was for, with no need to open it
+ASSERT_VISIBLE #siteEventsTable th >> text=Details
+ASSERT_VISIBLE #siteEventsTable tr:has-text("Signed in") td >> nth=1 >> text=admin
 ASSERT_VISIBLE #footer--dbip-link[target="_blank"]
 // Each event is the site's own, so no column says who it was for
 ASSERT_NOT_VISIBLE #siteEventsTable th >> text=/^For$/
@@ -71,6 +74,20 @@ ASSERT_VISIBLE #site--event--request-id
 SCREENSHOT event_request
 CLICK #site--event--details--close
 ASSERT_NOT_VISIBLE #site--event--details
+
+// An event shows the identity whose request it was for: the admin's sign in
+INPUT #site--events--filter--type signed_in
+CLICK #site--events--filter--submit
+ASSERT_NOT_VISIBLE #siteEventsTable >> text=Site created
+CLICK #siteEventsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--event--identity-id
+ASSERT_VISIBLE #site--event--details dd >> text=admin >> nth=0
+SCREENSHOT event_identity
+CLICK #site--event--details--close
+ASSERT_NOT_VISIBLE #site--event--details
+INPUT #site--events--filter--type site_created
+CLICK #site--events--filter--submit
+ASSERT_VISIBLE #siteEventsTable td >> text=Site created >> nth=0
 
 // Events can be searched too, ignoring case, keeping the type chosen
 INPUT #site--events--filter--search CREATED

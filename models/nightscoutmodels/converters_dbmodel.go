@@ -144,8 +144,7 @@ func UnitsToValue(mgdl float64, siteContext *httputils.SiteContext) *consts.Unit
 func GetUnitsAndValue(mgdl float64, siteContext *httputils.SiteContext) (*consts.Units, *types.FlexibleFloat64) {
 
 	units := siteContext.GetSettings().GetUnits()
-	value := units.FromMGDL(mgdl)
-	return units, new(types.FlexibleFloat64(value))
+	return &units, new(types.FlexibleFloat64(units.FromMGDL(mgdl)))
 }
 
 func JSONToScheduleValueSlice(jsonStr *string) []*ScheduleValue {
@@ -173,7 +172,7 @@ func JSONToScheduleValueSliceWithUnitConversionFromMGDL(jsonStr *string, siteCon
 	if jsonStr == nil {
 		return nil
 	}
-	units := siteContext.GetSettings().GetUnits()
+	units := new(siteContext.GetSettings().GetUnits())
 
 	var result []*ScheduleValue
 	err := json.Unmarshal([]byte(*jsonStr), &result)

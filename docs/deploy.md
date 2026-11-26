@@ -171,6 +171,8 @@ Only if `data/db/controldb.sqlite` is not there, the server restores it from its
 (`go run cmd/keysets/restore_replica.go <path>` does the same by hand, also while the server runs).
 
 - **Failure:** The restore fails. The start stops.
+- If `controldb.sqlite-wal` or `controldb.sqlite-shm` is there without the file, the server moves it to
+  `controldb.sqlite.replaced-<time>-wal` or `-shm` before the restore. SQLite does not write it into the restored DB.
 - If the file is there, but was made while S3 was off or was another bucket or host, the server does not replicate it
   over the replica in S3. `controldb.sqlite.replica` next to the file has the address of the replica it belongs to.
   - With no replica in S3, the server replicates the file.
@@ -304,7 +306,7 @@ again.
 
 | Problem | Result | Fix |
 | --- | --- | --- |
-| `KEY_SETS` is changed, cut short or lost | Encrypted credentials (Dexcom, Nightscout) and S3 backups cannot be decrypted | Put back the old value from the password manager. **Gap:** No way to move to new keys yet (TODOs: *Testing deploy with rolling to a new keyset*). |
+| `KEY_SETS` is changed, cut short or lost | Encrypted credentials (Dexcom, Nightscout) and S3 backups cannot be decrypted | Put back the old value from the password manager. **Gap:** No way to move to new keys yet (TODOs: *Test rolling a new keyset*). |
 | A migration on `main` was edited, not added, after the first production deploy | DBs past it never get the change. Old and new DBs differ. | CI refuses it when `data/sql/MIGRATIONS_FROZEN` exists. **Gap:** It does not exist yet (TODOs P0). |
 | A migration is slow on big tables | The start takes more than `HEALTH_TIMEOUT` (1800 seconds) and rolls back | Increase `HEALTH_TIMEOUT`, or make the migration cheaper. **Gap:** Nothing measures a migration on a large DB before it ships. |
 | The VPS stops during a deploy | The current step is half done | Start the VPS, then `docker compose up -d`. If `./data` is damaged, put back the newest `backups/data-*.tar.gz`. |

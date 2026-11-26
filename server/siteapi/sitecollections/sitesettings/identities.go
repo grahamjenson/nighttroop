@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/utils/i18n"
 
 	"github.com/a-h/templ"
+	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
@@ -37,11 +38,6 @@ var mgdlClients = []string{"aaps", consts.AAPSClient, "trio", "loop", "xdrip", "
 // Nightscout status, so a device added for one follows the site: Nightguard reads sgv as mg/dL and shows it in
 // settings.units
 var followClients = []string{"nightguard"}
-
-// clientMgdlLabels are how a client needs the Nightscout API to write mg/dL, where it is not mg/dL: xDrip4iOS reads a
-// BG check's glucose as mg/dL only when its units are exactly mg/dl, and otherwise uploads it again, and AAPS writes
-// them mg/dl, the only spelling of mg/dL its NsUnits reads exactly
-var clientMgdlLabels = map[string]string{"xdrip4ios": "mg/dl", "aaps": "mg/dl", consts.AAPSClient: "mg/dl"}
 
 // ////
 // Shared
@@ -112,7 +108,7 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 		return nil, herr
 	}
 	if slices.Contains(mgdlClients, model.Client) {
-		if err := setUnitsMGDL(ctx, q, siteContext, created.ID, model.Client); err != nil {
+		if err := setUnitsMGDL(ctx, q, siteContext, created.ID); err != nil {
 			return nil, err
 		}
 	}
@@ -122,25 +118,19 @@ func (s *IdentitiesCollection) CreateRow(ctx context.Context, collectionTx *site
 	return created, nil
 }
 
-// setUnitsMGDL sets the identity's own units to mg/dL, written as client needs, for a client that needs them, keeping
-// its other settings
-func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, identityID int64, client string) error {
+// setUnitsMGDL sets the identity's own units to mg/dL, for a client that needs them, keeping its other settings
+func setUnitsMGDL(ctx context.Context, q *controldb.Queries, siteContext *httputils.SiteContext, identityID int64) error {
 	identity, err := q.GetSiteIdentityByID(ctx, controldb.GetSiteIdentityByIDParams{SiteID: siteContext.SiteID, ID: identityID})
 	if err != nil {
 		return err
 	}
-	level := settings.NewSettingsMap(identity, &identity.CreatedAt, new("identity"))
-	if err := level.SetSettingByName("units", string(consts.UnitsMGDL), nil, new("identity")); err != nil {
+	own := settings.SettingsFromJSON(identity.SettingsJson)
+	own.Units = new(consts.UnitsMGDL)
+	stored, err := own.JSON()
+	if err != nil {
 		return err
 	}
-	if label, ok := clientMgdlLabels[client]; ok {
-		if err := level.SetSettingByName("units_mgdl_label", label, nil, new("identity")); err != nil {
-			return err
-		}
-	}
-	params := &controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID}
-	settings.SetSettings(params, level)
-	return q.UpdateSiteIdentitySettings(ctx, *params)
+	return q.UpdateSiteIdentitySettings(ctx, controldb.UpdateSiteIdentitySettingsParams{ID: identity.ID, SiteID: siteContext.SiteID, SettingsJson: stored})
 }
 
 func (s *IdentitiesCollection) CreateHTMXResponse(model *sitemodels.UserIdentity) templ.Component {
@@ -194,6 +184,13 @@ func (s *IdentitiesCollection) GetRow(ctx context.Context, collectionTx *siteapi
 // ToModel is the identity: it is converted as it is read, so its row is its model
 func (s *IdentitiesCollection) ToModel(row *sitemodels.UserIdentity, _ *httputils.SiteContext) *sitemodels.UserIdentity {
 	return row
+}
+
+// Hides a change with an identity's credentials, as a new identity's row has, from the identities' stream, which
+// another admin or tab may have open: they are shown once, to whoever made the identity, so it is sent as {}
+func (s *IdentitiesCollection) Hides(event events.Event, _ *httputils.SiteContext) bool {
+	identity, ok := event.Model.(*sitemodels.UserIdentity)
+	return ok && (identity.Password != "" || identity.TotpSecret != nil || identity.NSToken != nil)
 }
 
 func (s *IdentitiesCollection) GetHTMXResponse(model *sitemodels.UserIdentity) templ.Component {

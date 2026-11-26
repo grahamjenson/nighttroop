@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/utils/consts"
 )
@@ -72,30 +71,24 @@ func TestLoopSettingsChanges(t *testing.T) {
 	}
 }
 
-// LoopSettingsFor leaves the device token out of the settings for every identity that cannot change the site's data
-func TestLoopSettingsFor(t *testing.T) {
-	loop := `{"bundleIdentifier":"com.X.loopkit.Loop","deviceToken":"abcd","maximumBolus":10}`
-	hidden := `{"bundleIdentifier":"com.X.loopkit.Loop","maximumBolus":10}`
+// WithoutDeviceToken leaves the device token out of an app's settings, and the rest as it was
+func TestWithoutDeviceToken(t *testing.T) {
 	tests := []struct {
 		name     string
-		identity *controldb.SiteIdentity
 		settings string
 		want     string // "" for none
 	}{
-		{name: "an admin sees it", identity: &controldb.SiteIdentity{Role: consts.IdentityRoleAdmin}, settings: loop, want: loop},
-		{name: "a user sees it", identity: &controldb.SiteIdentity{Role: consts.IdentityRoleUser}, settings: loop, want: loop},
-		{name: "the PWD phone sees it", identity: &controldb.SiteIdentity{Role: consts.IdentityRoleDevicePWDPhone}, settings: loop, want: loop},
-		{name: "a read and write device sees it", identity: &controldb.SiteIdentity{Role: consts.IdentityRoleDeviceReadWrite}, settings: loop, want: loop},
-		{name: "a read only user does not", identity: &controldb.SiteIdentity{Role: consts.IdentityRoleUserReadOnly}, settings: loop, want: hidden},
-		{name: "a read only device does not", identity: &controldb.SiteIdentity{Role: consts.IdentityRoleDeviceRead}, settings: loop, want: hidden},
-		{name: "a clinician does not", identity: &controldb.SiteIdentity{Role: consts.IdentityRoleClinician}, settings: loop, want: hidden},
-		{name: "no identity does not", settings: loop, want: hidden},
+		{name: "Loop's settings lose it", settings: `{"bundleIdentifier":"com.X.loopkit.Loop","deviceToken":"abcd","maximumBolus":10}`,
+			want: `{"bundleIdentifier":"com.X.loopkit.Loop","maximumBolus":10}`},
+		{name: "Trio's settings lose it", settings: `{"deviceToken":"abcd","isAPNSProduction":false,"teamID":"T"}`, want: `{"isAPNSProduction":false,"teamID":"T"}`},
+		{name: "settings of only a token are empty", settings: `{"deviceToken":"abcd"}`, want: `{}`},
+		{name: "a token deeper in the settings is not the app's, and stays", settings: `{"overridePresets":[{"deviceToken":"x"}]}`, want: `{"overridePresets":[{"deviceToken":"x"}]}`},
 		{name: "settings without one are as they were", settings: `{"maximumBolus":10, "dosingEnabled":true}`, want: `{"maximumBolus":10, "dosingEnabled":true}`},
 		{name: "settings that cannot be read are none", settings: `[{"deviceToken":"abcd"}]`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := sitemodels.LoopSettingsFor(tt.identity, json.RawMessage(tt.settings))
+			got := sitemodels.WithoutDeviceToken(json.RawMessage(tt.settings))
 			if tt.want == "" {
 				require.Nil(t, got)
 				return

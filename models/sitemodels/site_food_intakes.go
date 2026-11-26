@@ -24,4 +24,7 @@ type SiteFoodIntake struct {
 	CreatedByDeviceName   *string  `json:"created_by_device_name"`
 	CreatedByIdentityName string   `json:"created_by_identity_name"`
 	UpdatedByIdentityName *string  `json:"updated_by_identity_name"`
+	// DurationMinutes is how long the food is given over, as AAPS's extended carbs are, from its treatment, on the
+	// summary only
+	DurationMinutes *int64 `json:"duration_minutes,omitempty"`
 }

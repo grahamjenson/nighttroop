@@ -33,6 +33,7 @@ ASSERT_NEW_URL
 ASSERT_PATH /settings/connectors
 
 
+CLICK #site--settings--libre-connector--add
 ASSERT_VISIBLE #site--settings--libre-connector--enable
 ASSERT_VISIBLE #site--settings--libre-connector--email
 ASSERT_VISIBLE #site--settings--libre-connector--password
@@ -46,7 +47,7 @@ ASSERT_VISIBLE #site--settings--libre-connector--submit
 INPUT #site--settings--libre-connector--email follower@example.com
 INPUT #site--settings--libre-connector--password libre-pass
 INPUT #site--settings--libre-connector--region EU
-// Typing a new source's details turns it on, as it is easy to forget
+// A connector opened from its tile is on, as it is added to be used
 CLICK #site--settings--libre-connector--email
 ASSERT_VISIBLE #site--settings--libre-connector--enable:checked
 CLICK #site--settings--libre-connector--submit
@@ -86,9 +87,11 @@ ASSERT_TEXT_VISIBLE Fetching records from
 SCREENSHOT libre_backfill_started
 RUN_BACKGROUND_JOBS
 
-// Deleting leaves the page in place, with the Libre form rendered unset again
+// Deleting leaves the page in place, with Libre a tile to add again, its form unset
 CLICK #site--settings--libre-connector--delete
 ASSERT_TEXT_VISIBLE Connector Deleted
 ASSERT_PATH /settings/connectors
+ASSERT_NOT_VISIBLE #site--settings--libre-connector--email
+CLICK #site--settings--libre-connector--add
 ASSERT_VISIBLE #site--settings--libre-connector--email:not([value*="valid-libre"])
 ASSERT_VISIBLE #site--settings--libre-connector--region:has(option[value="GLOBAL"]:checked)

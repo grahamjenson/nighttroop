@@ -1,0 +1,84 @@
+package control_sent_emails_templ
+
+import (
+	"time"
+
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
+)
+
+// SentEmails is the emails the server last sent, as Resend has them, the newest first. An address is mostly hidden,
+// and an admin shows one with its button. A server that sends no email says so.
+templ SentEmails(emails []*controlmodels.SentEmail, working bool) {
+	<div id="control--sent-emails" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page(i18n.T(ctx, "control.sent_emails.title")) {
+			{ i18n.T(ctx, "control.sent_emails.intro") }
+		}
+		if !working {
+			<p id="control--sent-emails--off" class="rounded-md border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-800">
+				{ i18n.T(ctx, "control.sent_emails.off") }
+			</p>
+		} else if len(emails) == 0 {
+			<p id="control--sent-emails--none" class="text-sm text-muted-foreground">{ i18n.T(ctx, "control.sent_emails.none") }</p>
+		} else {
+			@table.Table(table.Props{ID: "control--sent-emails--table"}) {
+				@table.Header() {
+					@table.Row() {
+						for _, head := range []string{"control.sent_emails.sent", "control.sent_emails.subject", "control.sent_emails.status", "control.sent_emails.site", "control.sent_emails.to"} {
+							@table.Head() {
+								{ i18n.T(ctx, head) }
+							}
+						}
+					}
+				}
+				@table.Body() {
+					for _, email := range emails {
+						@table.Row(table.RowProps{ID: "control--sent-email--" + email.ID}) {
+							@table.Cell() {
+								<span title={ display.DateTime(&email.SentAt) }>{ display.Ago(ctx, &email.SentAt, time.Now()) }</span>
+							}
+							@table.Cell(table.CellProps{Class: "whitespace-normal break-words"}) {
+								{ email.Subject }
+							}
+							@table.Cell() {
+								{ email.Status }
+							}
+							@table.Cell() {
+								if email.SiteID != nil {
+									@nav.Link("control--sent-email--"+email.ID+"--site", "/sites/"+*email.SiteID, "underline") {
+										{ *email.SiteID }
+									}
+								} else {
+									-
+								}
+							}
+							@table.Cell() {
+								<span id={ "control--sent-email--" + email.ID + "--to" } class="inline-flex items-center gap-2">
+									{ email.To }
+									if httputils.IsControlAdmin(ctx) {
+										@button.Button(button.Props{ID: "control--sent-email--" + email.ID + "--show", Variant: button.VariantOutline, Size: button.SizeSm,
+											Attributes: templ.Attributes{"hx-get": "/sent-emails/" + email.ID + "/address", "hx-target": "closest span", "hx-swap": "innerHTML",
+												"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend"}}) {
+											{ i18n.T(ctx, "control.sent_emails.show") }
+										}
+									}
+								</span>
+							}
+						}
+					}
+				}
+			}
+		}
+	</div>
+}
+
+// Address is the whole address of a sent email, in place of its hidden one
+templ Address(to string) {
+	{ to }
+}

@@ -27,7 +27,7 @@ type UserIdentity struct {
 
 	// Client is the app a device was added for, such as aaps or nightguard, or other, kept so its credentials say how to
 	// set it up and its settings can be changed by app; empty for a user or a site's first devices. NSURL is the site's
-	// Nightscout URL it is set up with, only set when it is created.
+	// Nightscout URL it is set up with, only set when it is created or its credentials are reset.
 	Client string `json:"client,omitempty"`
 	NSURL  string `json:"-"`
 }

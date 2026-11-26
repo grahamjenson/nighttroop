@@ -3,7 +3,6 @@ package settings
 import (
 	"fmt"
 	"slices"
-	"time"
 
 	"golang.org/x/text/language"
 	"nighttroop.t1d.nz/data/types"
@@ -18,14 +17,6 @@ type SettingDefinition[T any] struct {
 	ParseFunc    func(any) (T, error)
 }
 
-func (s *SettingDefinition[T]) GetIdentifier() string {
-	return s.Identifier
-}
-
-func (s *SettingDefinition[T]) Parse(value any) (any, error) {
-	return s.ParseFunc(value)
-}
-
 func (s *SettingDefinition[T]) ParseValidate(value any) (*T, error) {
 	v, err := s.ParseFunc(value)
 	if err != nil {
@@ -38,6 +29,16 @@ func (s *SettingDefinition[T]) ParseValidate(value any) (*T, error) {
 	return &v, err
 }
 
+// numberSetting is a setting of a number, def by default, that must be from min to max
+func numberSetting[T int64 | float64](identifier string, def, min, max T, parse func(any) (T, error)) *SettingDefinition[T] {
+	return &SettingDefinition[T]{Identifier: identifier, TypeString: "number", Default: def, ValidateFunc: Range(min, max), ParseFunc: parse}
+}
+
+// onOffSetting is a setting that is on or off, and off by default
+func onOffSetting(identifier string) *SettingDefinition[bool] {
+	return &SettingDefinition[bool]{Identifier: identifier, TypeString: "boolean", Default: false, ParseFunc: ParseBool}
+}
+
 // The values the date, time and week start settings accept, in the order the settings pages offer them
 var (
 	DateFormats   = []string{"YYYY/MM/DD", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "DD-MM-YYYY", "MM-DD-YYYY"}
@@ -45,10 +46,6 @@ var (
 	WeekStartDays = []string{"monday", "sunday"}
 	// NumberFormats write a thousand and a half with each thousands separator and decimal mark
 	NumberFormats = []string{"1,234.5", "1.234,5", "1 234,5"}
-	// The ways the Nightscout API can write each units, as a client may read only one: xDrip4iOS reads a BG check's
-	// glucose as mg/dL only when its units are exactly mg/dl
-	UnitsMgdlLabels = []string{"mg/dL", "mg/dl"}
-	UnitsMmolLabels = []string{"mmol/L", "mmol"}
 )
 
 var Units = &SettingDefinition[consts.Units]{
@@ -73,7 +70,8 @@ var Timezone = &SettingDefinition[string]{
 		if value == "" {
 			return fmt.Errorf("timezone cannot be empty")
 		}
-		_, err := time.LoadLocation(value)
+		// Loaded once and then kept, as a request's settings validate the timezone of each level
+		_, err := LoadLocation(value)
 		if err != nil {
 			return fmt.Errorf("invalid timezone: %v - must be a valid IANA timezone", value)
 		}
@@ -96,22 +94,6 @@ var Language = &SettingDefinition[string]{
 		}
 		return nil
 	},
-}
-
-var UnitsMgdlLabel = &SettingDefinition[string]{
-	Identifier:   "units_mgdl_label",
-	TypeString:   "string",
-	Default:      string(consts.UnitsMGDL),
-	ParseFunc:    ParseString,
-	ValidateFunc: oneOf("mg/dL label", UnitsMgdlLabels),
-}
-
-var UnitsMmolLabel = &SettingDefinition[string]{
-	Identifier:   "units_mmol_label",
-	TypeString:   "string",
-	Default:      string(consts.UnitsMMOLL),
-	ParseFunc:    ParseString,
-	ValidateFunc: oneOf("mmol/L label", UnitsMmolLabels),
 }
 
 // oneOf validates a setting that must be one of options
@@ -182,276 +164,81 @@ var NumberFormat = &SettingDefinition[string]{
 	ValidateFunc: oneOf("number format", NumberFormats),
 }
 
-var BolusDIAHours = &SettingDefinition[float64]{
-	Identifier:   "bolus_dia_hours",
-	TypeString:   "number",
-	Default:      6.0,
-	ValidateFunc: Range(1.0, 10.0),
-	ParseFunc:    ParseFloat,
-}
+var BolusDIAHours = numberSetting("bolus_dia_hours", 6.0, 1.0, 10.0, ParseFloat)
 
-var BolusOnsetMinutes = &SettingDefinition[float64]{
-	Identifier:   "bolus_onset_minutes",
-	TypeString:   "number",
-	Default:      20.0,
-	ValidateFunc: Range(1.0, 120.0),
-	ParseFunc:    ParseFloat,
-}
+var BolusOnsetMinutes = numberSetting("bolus_onset_minutes", 20.0, 1.0, 120.0, ParseFloat)
 
-var BolusPeakMinutes = &SettingDefinition[float64]{
-	Identifier:   "bolus_peak_minutes",
-	TypeString:   "number",
-	Default:      60.0,
-	ValidateFunc: Range(1.0, 240.0),
-	ParseFunc:    ParseFloat,
-}
+var BolusPeakMinutes = numberSetting("bolus_peak_minutes", 60.0, 1.0, 240.0, ParseFloat)
 
-var BasalDIAHours = &SettingDefinition[float64]{
-	Identifier:   "basal_dia_hours",
-	TypeString:   "number",
-	Default:      24.0,
-	ValidateFunc: Range(1.0, 170.0),
-	ParseFunc:    ParseFloat,
-}
+var BasalDIAHours = numberSetting("basal_dia_hours", 24.0, 1.0, 170.0, ParseFloat)
 
-var BasalOnsetMinutes = &SettingDefinition[float64]{
-	Identifier:   "basal_onset_minutes",
-	TypeString:   "number",
-	Default:      60.0,
-	ValidateFunc: Range(1.0, 360.0),
-	ParseFunc:    ParseFloat,
-}
+var BasalOnsetMinutes = numberSetting("basal_onset_minutes", 60.0, 1.0, 360.0, ParseFloat)
 
-var BasalPeakMinutes = &SettingDefinition[float64]{
-	Identifier:   "basal_peak_minutes",
-	TypeString:   "number",
-	Default:      120.0,
-	ValidateFunc: Range(1.0, 240.0),
-	ParseFunc:    ParseFloat,
-}
+var BasalPeakMinutes = numberSetting("basal_peak_minutes", 120.0, 1.0, 240.0, ParseFloat)
 
-var DefaultInsulinSensitivity = &SettingDefinition[float64]{
-	Identifier:   "default_insulin_sensitivity",
-	TypeString:   "number",
-	Default:      10.0,
-	ValidateFunc: Range(1.0, 100.0),
-	ParseFunc:    ParseFloat,
-}
+var DefaultInsulinSensitivity = numberSetting("default_insulin_sensitivity", 10.0, 1.0, 100.0, ParseFloat)
 
-var DefaultCarbRatio = &SettingDefinition[float64]{
-	Identifier:   "default_carb_ratio",
-	TypeString:   "number",
-	Default:      10.0,
-	ValidateFunc: Range(1.0, 100.0),
-	ParseFunc:    ParseFloat,
-}
+var DefaultCarbRatio = numberSetting("default_carb_ratio", 10.0, 1.0, 100.0, ParseFloat)
 
-var DefaultBasalRate = &SettingDefinition[float64]{
-	Identifier:   "default_basal_rate",
-	TypeString:   "number",
-	Default:      1.0,
-	ValidateFunc: Range(0.1, 10.0),
-	ParseFunc:    ParseFloat,
-}
+var DefaultBasalRate = numberSetting("default_basal_rate", 1.0, 0.1, 10.0, ParseFloat)
 
-var CarbMaxAbsorptionHours = &SettingDefinition[float64]{
-	Identifier:   "carb_max_absorption_hours",
-	TypeString:   "number",
-	Default:      6.0,
-	ValidateFunc: Range(1.0, 24.0),
-	ParseFunc:    ParseFloat,
-}
+var CarbMaxAbsorptionHours = numberSetting("carb_max_absorption_hours", 6.0, 1.0, 24.0, ParseFloat)
 
-var CarbMin5mImpact = &SettingDefinition[float64]{
-	Identifier:   "carb_min_5m_impact",
-	TypeString:   "number",
-	Default:      10.0,
-	ValidateFunc: Range(1.0, 100.0),
-	ParseFunc:    ParseFloat,
-}
+var CarbMin5mImpact = numberSetting("carb_min_5m_impact", 10.0, 1.0, 100.0, ParseFloat)
 
-var AlarmUrgentLowEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_urgent_low_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmUrgentLowEnabled = onOffSetting("alarm_urgent_low_enabled")
 
-var RangeUrgentLowMgdl = &SettingDefinition[int64]{
-	Identifier:   "range_urgent_low_mgdl",
-	TypeString:   "number",
-	Default:      56,
-	ValidateFunc: Range(int64(20), 100),
-	ParseFunc:    ParseInt,
-}
+var RangeUrgentLowMgdl = numberSetting("range_urgent_low_mgdl", 56, 20, 100, ParseInt)
 
-var AlarmLowEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_low_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmLowEnabled = onOffSetting("alarm_low_enabled")
 
 // MaxAlarmMinutes is the most minutes an alarm can wait for, so a check of the alarms reads only the readings it needs
 const MaxAlarmMinutes = 120
 
-var RangeLowMgdl = &SettingDefinition[int64]{
-	Identifier:   "range_low_mgdl",
-	TypeString:   "number",
-	Default:      72,
-	ValidateFunc: Range(int64(20), 150),
-	ParseFunc:    ParseInt,
-}
+var RangeLowMgdl = numberSetting("range_low_mgdl", 72, 20, 150, ParseInt)
 
-var AlarmLowMinutes = &SettingDefinition[int64]{
-	Identifier:   "alarm_low_minutes",
-	TypeString:   "number",
-	Default:      5,
-	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
-	ParseFunc:    ParseInt,
-}
+var AlarmLowMinutes = numberSetting("alarm_low_minutes", 5, 0, MaxAlarmMinutes, ParseInt)
 
-var AlarmLowPredictionEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_low_prediction_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmLowPredictionEnabled = onOffSetting("alarm_low_prediction_enabled")
 
 // AlarmLowPredictionMinutes is how far ahead the predicted low alarm follows the current trend to the low alarm's glucose
-var AlarmLowPredictionMinutes = &SettingDefinition[int64]{
-	Identifier:   "alarm_low_prediction_minutes",
-	TypeString:   "number",
-	Default:      20,
-	ValidateFunc: Range(int64(5), 60),
-	ParseFunc:    ParseInt,
-}
+var AlarmLowPredictionMinutes = numberSetting("alarm_low_prediction_minutes", 20, 5, 60, ParseInt)
 
-var AlarmHighEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_high_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmHighEnabled = onOffSetting("alarm_high_enabled")
 
-var RangeHighMgdl = &SettingDefinition[int64]{
-	Identifier:   "range_high_mgdl",
-	TypeString:   "number",
-	Default:      180,
-	ValidateFunc: Range(int64(70), 600),
-	ParseFunc:    ParseInt,
-}
+var RangeHighMgdl = numberSetting("range_high_mgdl", 180, 70, 600, ParseInt)
 
-var AlarmHighMinutes = &SettingDefinition[int64]{
-	Identifier:   "alarm_high_minutes",
-	TypeString:   "number",
-	Default:      30,
-	ValidateFunc: Range(int64(0), MaxAlarmMinutes),
-	ParseFunc:    ParseInt,
-}
+var AlarmHighMinutes = numberSetting("alarm_high_minutes", 30, 0, MaxAlarmMinutes, ParseInt)
 
-var AlarmUrgentHighEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_urgent_high_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmUrgentHighEnabled = onOffSetting("alarm_urgent_high_enabled")
 
-var RangeUrgentHighMgdl = &SettingDefinition[int64]{
-	Identifier:   "range_urgent_high_mgdl",
-	TypeString:   "number",
-	Default:      270,
-	ValidateFunc: Range(int64(100), 600),
-	ParseFunc:    ParseInt,
-}
+var RangeUrgentHighMgdl = numberSetting("range_urgent_high_mgdl", 270, 100, 600, ParseInt)
 
-var AlarmFastRiseEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_fast_rise_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmFastRiseEnabled = onOffSetting("alarm_fast_rise_enabled")
 
-var AlarmFastRiseMgdl = &SettingDefinition[int64]{
-	Identifier:   "alarm_fast_rise_mgdl",
-	TypeString:   "number",
-	Default:      18,
-	ValidateFunc: Range(int64(5), 50),
-	ParseFunc:    ParseInt,
-}
+var AlarmFastRiseMgdl = numberSetting("alarm_fast_rise_mgdl", 18, 5, 50, ParseInt)
 
 // AlarmFastRiseMinutes is how far back the rise is measured, at least 5 minutes, as no change is seen over none
-var AlarmFastRiseMinutes = &SettingDefinition[int64]{
-	Identifier:   "alarm_fast_rise_minutes",
-	TypeString:   "number",
-	Default:      15,
-	ValidateFunc: Range(int64(5), MaxAlarmMinutes),
-	ParseFunc:    ParseInt,
-}
+var AlarmFastRiseMinutes = numberSetting("alarm_fast_rise_minutes", 15, 5, MaxAlarmMinutes, ParseInt)
 
-var AlarmFastDropEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_fast_drop_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmFastDropEnabled = onOffSetting("alarm_fast_drop_enabled")
 
-var AlarmFastDropMgdl = &SettingDefinition[int64]{
-	Identifier:   "alarm_fast_drop_mgdl",
-	TypeString:   "number",
-	Default:      18,
-	ValidateFunc: Range(int64(5), 50),
-	ParseFunc:    ParseInt,
-}
+var AlarmFastDropMgdl = numberSetting("alarm_fast_drop_mgdl", 18, 5, 50, ParseInt)
 
 // AlarmFastDropMinutes is how far back the drop is measured, at least 5 minutes, as no change is seen over none
-var AlarmFastDropMinutes = &SettingDefinition[int64]{
-	Identifier:   "alarm_fast_drop_minutes",
-	TypeString:   "number",
-	Default:      15,
-	ValidateFunc: Range(int64(5), MaxAlarmMinutes),
-	ParseFunc:    ParseInt,
-}
+var AlarmFastDropMinutes = numberSetting("alarm_fast_drop_minutes", 15, 5, MaxAlarmMinutes, ParseInt)
 
-var AlarmNoDataEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_no_data_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmNoDataEnabled = onOffSetting("alarm_no_data_enabled")
 
 // AlarmNoDataMinutes is at least 10 minutes, as a reading comes every 5 and fewer would alarm between them
-var AlarmNoDataMinutes = &SettingDefinition[int64]{
-	Identifier:   "alarm_no_data_minutes",
-	TypeString:   "number",
-	Default:      20,
-	ValidateFunc: Range(int64(10), MaxAlarmMinutes),
-	ParseFunc:    ParseInt,
-}
+var AlarmNoDataMinutes = numberSetting("alarm_no_data_minutes", 20, 10, MaxAlarmMinutes, ParseInt)
 
-var AlarmDeviceBatteryLowEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_device_battery_low_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmDeviceBatteryLowEnabled = onOffSetting("alarm_device_battery_low_enabled")
 
-var AlarmDeviceBatteryLowPercent = &SettingDefinition[int64]{
-	Identifier:   "alarm_device_battery_low_percent",
-	TypeString:   "number",
-	Default:      20,
-	ValidateFunc: Range(int64(5), 80),
-	ParseFunc:    ParseInt,
-}
+var AlarmDeviceBatteryLowPercent = numberSetting("alarm_device_battery_low_percent", 20, 5, 80, ParseInt)
 
 // AlarmDeviceBatteryLowMinutes is how long a listed device can go without a status before it is alarmed for too
-var AlarmDeviceBatteryLowMinutes = &SettingDefinition[int64]{
-	Identifier:   "alarm_device_battery_low_minutes",
-	TypeString:   "number",
-	Default:      30,
-	ValidateFunc: Range(int64(5), MaxAlarmMinutes),
-	ParseFunc:    ParseInt,
-}
+var AlarmDeviceBatteryLowMinutes = numberSetting("alarm_device_battery_low_minutes", 30, 5, MaxAlarmMinutes, ParseInt)
 
 // AlarmDeviceBatteryLowDevicesJson are the names of the devices whose batteries and statuses the alarm checks, as
 // their device statuses name them; none are checked by default
@@ -463,24 +250,8 @@ var AlarmDeviceBatteryLowDevicesJson = &SettingDefinition[types.DeviceNames]{
 	ParseFunc:    ParseDeviceNames,
 }
 
-var AlarmLowReservoirEnabled = &SettingDefinition[bool]{
-	Identifier: "alarm_low_reservoir_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var AlarmLowReservoirEnabled = onOffSetting("alarm_low_reservoir_enabled")
 
-var AlarmLowReservoirUnits = &SettingDefinition[int64]{
-	Identifier:   "alarm_low_reservoir_units",
-	TypeString:   "number",
-	Default:      25,
-	ValidateFunc: Range(int64(0), 200),
-	ParseFunc:    ParseInt,
-}
+var AlarmLowReservoirUnits = numberSetting("alarm_low_reservoir_units", 25, 0, 200, ParseInt)
 
-var NotificationsEnabled = &SettingDefinition[bool]{
-	Identifier: "notifications_enabled",
-	TypeString: "boolean",
-	Default:    false,
-	ParseFunc:  ParseBool,
-}
+var NotificationsEnabled = onOffSetting("notifications_enabled")

@@ -1,0 +1,87 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_VISIBLE "Nighttroop"
+
+// A site with no food presets has no food preset to pick when food is added
+GOTO /data/food
+ASSERT_STATUS 200
+CLICK #site--food--add
+ASSERT_VISIBLE #site--food--create--modal
+ASSERT_VISIBLE #site--food--create--carbs
+ASSERT_NOT_VISIBLE #site--food--create--preset
+ASSERT_NOT_VISIBLE #site--food--create--preset-search
+CLICK #site--food--create--modal--close
+ASSERT_NOT_VISIBLE #site--food--create--modal
+
+// A food preset is added
+GOTO /presets/food
+ASSERT_STATUS 200
+CLICK #presets--food--add
+INPUT #presets--food--create--name Toast
+INPUT #presets--food--create--carbs 20
+INPUT #presets--food--create--fat 2
+INPUT #presets--food--create--food-type snack
+CLICK #presets--food--create--submit
+ASSERT_STATUS 201
+
+// A second food preset is added after it, whose name comes after it
+CLICK #presets--food--add
+INPUT #presets--food--create--name Yoghurt
+INPUT #presets--food--create--carbs 12
+CLICK #presets--food--create--submit
+ASSERT_STATUS 201
+
+// Adding food offers the food presets, by name and carbs, sorted by name, above the fields
+GOTO /data/food
+ASSERT_STATUS 200
+CLICK #site--food--add
+ASSERT_VISIBLE #site--food--create--preset
+ASSERT_VISIBLE #site--food--create--preset-search
+ASSERT_TEXT_VISIBLE Pick a food preset to fill in its values.
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:nth-child(2) Toast (20 g carbs)
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:nth-child(3) Yoghurt (12 g carbs)
+
+// Typing part of a name shows only the food presets with that name, in any case
+INPUT #site--food--create--preset-search YOG
+WAIT_VISIBLE 5 #site--food--create--preset:not(:has(option:nth-child(3)))
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:nth-child(2) Yoghurt (12 g carbs)
+
+// A name no food preset has shows that none has it
+INPUT #site--food--create--preset-search pizza
+WAIT_VISIBLE 5 #site--food--create--preset:has(option:disabled)
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:nth-child(2) No food preset has this name
+
+// Picking one fills in its values, and keeps it picked
+INPUT #site--food--create--preset-search toa
+WAIT_VISIBLE 5 #site--food--create--preset:not(:has(option:disabled))
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:nth-child(2) Toast (20 g carbs)
+INPUT #site--food--create--preset Toast (20 g carbs)
+WAIT_VISIBLE 5 #site--food--create--name[value=Toast]
+ASSERT_TEXT_EQUALS #site--food--create--name Toast
+ASSERT_TEXT_EQUALS #site--food--create--preset-search toa
+ASSERT_VISIBLE #site--food--create--preset:not(:has(option:nth-child(3)))
+ASSERT_TEXT_EQUALS #site--food--create--carbs 20
+ASSERT_TEXT_EQUALS #site--food--create--fat 2
+ASSERT_TEXT_EQUALS #site--food--create--food-type snack
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:checked Toast (20 g carbs)
+SCREENSHOT food_intake_preset_picked
+
+// Searching again keeps the food preset picked, and its values
+INPUT #site--food--create--preset-search t
+WAIT_VISIBLE 5 #site--food--create--preset:has(option:nth-child(3))
+ASSERT_TEXT_EQUALS #site--food--create--preset>option:checked Toast (20 g carbs)
+ASSERT_TEXT_EQUALS #site--food--create--name Toast
+ASSERT_TEXT_EQUALS #site--food--create--carbs 20
+SCREENSHOT food_intake_preset_search
+
+// The values can be changed before the food is added, and the food intake keeps them
+INPUT #site--food--create--carbs 40
+INPUT #site--food--create--notes Two slices
+CLICK #site--food--create--submit
+ASSERT_STATUS 201
+ASSERT_NOT_VISIBLE #site--food--create--modal
+ASSERT_TEXT_VISIBLE Two slices
+CLICK #foodIntakesTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--food--details
+ASSERT_TEXT_VISIBLE 40 g carbs
+ASSERT_TEXT_EQUALS #site--food--edit--name Toast
+ASSERT_TEXT_EQUALS #site--food--edit--fat 2

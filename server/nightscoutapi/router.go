@@ -44,7 +44,8 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 	r.Group(func(r chi.Router) {
 		r.Use(NightscoutAuthMiddleware(controlDB, config))
 		r.Use(httputils.SiteRateLimitMiddleware(config))
-		r.Use(httputils.SiteIdentityRateLimitMiddleware(config))
+		// Every write here is to the site's DB, so one that adds to it is refused while it is far over its storage
+		r.Use(httputils.RefuseWritesOverStorage)
 		r.Use(httputils.SiteIdentitySeenFlagsUpdateMiddleware(controlDB)) // Updates user/identity flags
 		r.Use(httputils.CountRoutes(config.Usage, "nightscout"))
 
@@ -64,12 +65,12 @@ func NewNightscoutRouter(controlDB *db.ControlDB, config *config.ServerConfig) c
 		r.Get("/pebble", nsutils.Require("api:*:read", true, nsv2.Pebble()))
 
 		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-			slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", r.URL.Path)
+			slog.InfoContext(r.Context(), "Nightscout router 404 for path", "path", httputils.RedactPath(r.URL.Path))
 			http.Error(w, "Not Found", http.StatusNotFound)
 		})
 	})
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		aslog.Refuse(r.Context(), http.StatusNotFound, "", "Nightscout router 404 for path", "path", r.URL.Path)
+		aslog.Refuse(r.Context(), http.StatusNotFound, "", "Nightscout router 404 for path", "path", httputils.RedactPath(r.URL.Path))
 		http.Error(w, "Not Found", http.StatusNotFound)
 	})
 	return r

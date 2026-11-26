@@ -3,6 +3,7 @@ package nscollections
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -115,6 +116,11 @@ func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, iden
 	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
 }
 
+func (c EntriesCollection) GetModels(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*sitedb.GlucoseReading, error) {
+	idIn, _ := json.Marshal(ids)
+	return q.GetGlucoseReadingsByIDs(ctx, sitedb.GetGlucoseReadingsByIDsParams{IDs: new(string(idIn)), IncludeDeleted: includeDeleted})
+}
+
 func (c EntriesCollection) Delete(q *sitedb.Queries, ctx context.Context, identifier string, permanent bool) (sql.Result, error) {
 	if permanent {
 		return q.HardDeleteGlucoseReading(ctx, sitedb.HardDeleteGlucoseReadingParams{ID: identifier})
@@ -140,6 +146,10 @@ func (c EntriesCollection) RewriteModel(q *sitedb.Queries, ctx context.Context, 
 
 func (c EntriesCollection) AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
 	return q.GlucoseReadingAscendingIDs(ctx, nsquery.GlucoseAscending(query))
+}
+
+func (c EntriesCollection) SortedIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	return q.GlucoseReadingSortedIDs(ctx, nsquery.GlucoseSorted(query))
 }
 
 func (c EntriesCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error) {

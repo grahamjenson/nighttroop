@@ -6,8 +6,10 @@ import (
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/control_templ/control_sites_templ"
+	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
@@ -43,7 +45,8 @@ func (s *ArchivedSitesCollection) GetRow(ctx context.Context, id string, control
 	return controlContext.ControlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: id})
 }
 
-// UpdateRow hydrates an archived site, changed to live: its archive is downloaded from S3, so without S3 it is refused
+// UpdateRow hydrates an archived site, changed to live: from its backup here first, kept when it was archived, else
+// from its archive in S3, so without S3 one with no backup here is refused
 func (s *ArchivedSitesCollection) UpdateRow(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site, model *controlmodels.Site) (*controldb.Site, error) {
 	config := controlContext.ControlDB.ServerConfig
 	switch {
@@ -51,11 +54,15 @@ func (s *ArchivedSitesCollection) UpdateRow(ctx context.Context, controlContext 
 		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.hydrate_to_live"))
 	case oldModel.State != "archived":
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.hydrate_archived_only"))
-	case !config.Status.S3Working:
+	case !config.Status.S3Working && !utils.FileExists(sitedb.GetBackupPath(oldModel.ID, config)):
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.hydrate_needs_s3"))
 	}
+	var download s3utils.DownloadFunc
+	if config.Status.S3Working {
+		download = s3utils.NewS3Client(config).DownloadFilesFromS3
+	}
 	started := time.Now()
-	if err := controlContext.ControlDB.HydrateSite(ctx, oldModel.ID, s3utils.NewS3Client(config).DownloadFilesFromS3); err != nil {
+	if err := controlContext.ControlDB.HydrateSite(ctx, oldModel.ID, download); err != nil {
 		return nil, err
 	}
 	controlContext.ControlDB.Logs.SiteHydratedEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name, started)

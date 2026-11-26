@@ -67,6 +67,16 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 			return
 		}
 
+		// No site is created while the DBs' disk is nearly full, as a full disk stops every site
+		if controlDB.DiskFull() {
+			if httputils.GetAcceptType(r).API() {
+				apiutils.WriteJSON(w, http.StatusInsufficientStorage, map[string]string{"error": "Full: the server's disk is nearly full"})
+				return
+			}
+			http.Error(w, "Full: the server's disk is nearly full", http.StatusInsufficientStorage)
+			return
+		}
+
 		// MAX_SITES is a hard limit on the public creating sites, though not on a control admin
 		if controlDB.GetNSitesDBs() >= config.MaxSites {
 			if httputils.GetAcceptType(r).API() {
@@ -86,9 +96,11 @@ func POSTCreateSiteHandler(controlDB *db.ControlDB, config *config.ServerConfig)
 		}
 
 		// The site starts in the time zone and language of the browser that created it, with its country's formats
-		params := &controldb.UpdateSitesSettingsParams{ID: siteCreateResult.SiteDB.Subdomain}
-		settings.SetSettings(params, settings.BrowserSettings(r.FormValue("timezone"), r.FormValue("language")))
-		if err := controlDB.Queries.UpdateSitesSettings(r.Context(), *params); err != nil {
+		stored, err := settings.BrowserSettings(r.FormValue("timezone"), r.FormValue("language")).JSON()
+		if err == nil {
+			err = controlDB.Queries.UpdateSiteSettings(r.Context(), controldb.UpdateSiteSettingsParams{ID: siteCreateResult.SiteDB.Subdomain, SettingsJson: stored})
+		}
+		if err != nil {
 			slog.ErrorContext(r.Context(), "Unable to set the new site's settings", "error", err)
 		}
 

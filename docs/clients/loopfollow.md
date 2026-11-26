@@ -36,6 +36,8 @@
   `POST /api/v2/authorization/subjects`).
   - Nighttroop takes the SHA-1 of a device's token (#512). A token that got a 401 is not one, so this is a 401.
 - The profile's device token for remote commands goes only to an identity that can change the site's data.
+  - Nighttroop keeps it only in the app's push registration, encrypted, and puts it back in the profile from there.
+  - Each of the app's profiles thus has the app's token now.
 - Socket.IO sends the token as the `token` connect param, and as `secret` in `authorize`.
 
 ## Units and dates

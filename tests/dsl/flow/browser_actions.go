@@ -592,43 +592,32 @@ func (r *RunBackgroundJobs) Execute(t *testing.T, page playwright.Page, ctx map[
 	return page, nil
 }
 
-// AvoidMidnight waits, from 2 minutes before midnight UTC to After past it, until After past it
-type AvoidMidnight struct {
-	After time.Duration
-
+// MiddayTimezone gives the site the steps after it create a time zone where it is from 06:00 to 18:00 now, so a test of
+// today's data is never run across the site's midnight, and never waits for it
+type MiddayTimezone struct {
 	TestPath string
 	TestLine int
 }
 
-func (r *AvoidMidnight) AddAssert(BrowserAssert) {}
+func (r *MiddayTimezone) AddAssert(BrowserAssert) {}
 
-func (r *AvoidMidnight) ToFlatString() string {
-	return fmt.Sprintf("AVOID_MIDNIGHT %d", int(r.After.Minutes()))
-}
+func (r *MiddayTimezone) ToFlatString() string { return "MIDDAY_TIMEZONE" }
 
-func (r *AvoidMidnight) ToErrorLine(msg string) string {
+func (r *MiddayTimezone) ToErrorLine(msg string) string {
 	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
 }
 
-func (r *AvoidMidnight) Execute(t *testing.T, page playwright.Page, _ map[string]any) (playwright.Page, error) {
-	if wait := midnightWait(time.Now().UTC(), r.After); wait > 0 {
-		t.Logf("%s: waiting %s, until %s past midnight UTC", r.ToErrorLine("AVOID_MIDNIGHT"), wait.Round(time.Second), r.After)
-		time.Sleep(wait)
-	}
+func (r *MiddayTimezone) Execute(_ *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	ctx["site_timezone"] = middayTimezone(time.Now())
 	return page, nil
 }
 
-// midnightWait is how long from now until after past midnight UTC, when now is from 2 minutes before midnight to
-// then, and 0 otherwise
-func midnightWait(now time.Time, after time.Duration) time.Duration {
-	midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	if sinceMidnight := now.Sub(midnight); sinceMidnight < after {
-		return after - sinceMidnight
+// middayTimezone is UTC from 06:00 to 18:00 UTC, and else Pacific/Auckland, where it is then from 06:00 to 19:00
+func middayTimezone(now time.Time) string {
+	if hour := now.UTC().Hour(); hour >= 6 && hour < 18 {
+		return "UTC"
 	}
-	if untilMidnight := midnight.AddDate(0, 0, 1).Sub(now); untilMidnight <= 2*time.Minute {
-		return untilMidnight + after
-	}
-	return 0
+	return "Pacific/Auckland"
 }
 
 // WaitVisible waits up to Seconds for Locator to be visible, failing if it is not, for what a timer on the page shows
@@ -824,6 +813,44 @@ func (r *Media) Execute(t *testing.T, page playwright.Page, ctx map[string]any) 
 		media = playwright.MediaPrint
 	}
 	if err := page.EmulateMedia(playwright.PageEmulateMediaOptions{Media: media}); err != nil {
+		return nil, err
+	}
+	for _, assert := range r.Asserts {
+		if err := assert.Execute(t, ctx, page, nil); err != nil {
+			t.Fatalf("\n\n ASSERT FAILED \n %s: %v \n\n", r.ToErrorLine("Error with ASSERT"), err)
+		}
+	}
+	return page, nil
+}
+
+// Offline takes the browser off the network, as a lost connection or a server restarting does, until ONLINE
+type Offline struct {
+	Offline bool
+
+	Asserts []BrowserAssert
+
+	TestPath string
+	TestLine int
+}
+
+func (r *Offline) ToFlatString() string {
+	if r.Offline {
+		return "OFFLINE"
+	}
+	return "ONLINE"
+}
+
+func (r *Offline) ToErrorLine(msg string) string {
+	return fmt.Sprintf("%s:%d: %s: %s", r.TestPath, r.TestLine, msg, r.ToFlatString())
+}
+
+func (r *Offline) AddAssert(assert BrowserAssert) {
+	r.Asserts = append(r.Asserts, assert)
+}
+
+// Execute takes the browser off or back on the network, then runs its asserts
+func (r *Offline) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (playwright.Page, error) {
+	if err := page.Context().SetOffline(r.Offline); err != nil {
 		return nil, err
 	}
 	for _, assert := range r.Asserts {

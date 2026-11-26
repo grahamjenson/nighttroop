@@ -39,6 +39,13 @@ type Config struct {
 	// are not yet authorized (see Session.Authorize), MaxSessions by default, so it cannot take every session.
 	ClientKey       func(*http.Request) string
 	MaxUnauthorized int
+	// MaxPerHolder is how many sessions one holder, as the identity they are authorized as (see Session.Hold), may have
+	// open, MaxSessions by default, so it cannot take every session.
+	MaxPerHolder int
+	// ReplaceUnauthorized has a server with MaxSessions open close its oldest session not yet authorized to open a new
+	// one, so clients from many IPs that never authorize cannot keep out one that would. A server whose sessions are
+	// all authorized still refuses a new one.
+	ReplaceUnauthorized bool
 }
 
 func (c Config) withDefaults() Config {
@@ -56,6 +63,9 @@ func (c Config) withDefaults() Config {
 	}
 	if c.MaxUnauthorized <= 0 {
 		c.MaxUnauthorized = c.MaxSessions
+	}
+	if c.MaxPerHolder <= 0 {
+		c.MaxPerHolder = c.MaxSessions
 	}
 	if c.MaxBuffered <= 0 {
 		c.MaxBuffered = 1_000
@@ -172,14 +182,21 @@ func (s *Server) open(r *http.Request, version int, upgrades []string) (*Session
 			unauthorized++
 		}
 	}
-	if len(s.sessions) >= s.config.MaxSessions || unauthorized >= s.config.MaxUnauthorized {
+	replaced := s.replaceable()
+	if unauthorized >= s.config.MaxUnauthorized || (len(s.sessions) >= s.config.MaxSessions && replaced == nil) {
 		s.mu.Unlock()
 		return nil, Packet{}, false
+	}
+	if replaced != nil {
+		delete(s.sessions, replaced.id)
 	}
 	session := newSession(s, r, version)
 	session.client = client
 	s.sessions[session.id] = session
 	s.mu.Unlock()
+	if replaced != nil {
+		replaced.Close("replaced by a newer session")
+	}
 	// A session ends as the HTTP server shuts down, as Shutdown does not wait for or close websockets
 	if closing, ok := r.Context().Value(closingKey{}).(context.Context); ok {
 		stop := context.AfterFunc(closing, func() { session.Close("server shutting down") })
@@ -199,6 +216,21 @@ func (s *Server) open(r *http.Request, version int, upgrades []string) (*Session
 	}
 	data, _ := json.Marshal(open)
 	return session, Packet{Type: Open, Data: string(data)}, true
+}
+
+// replaceable is the session a full server closes to open a new one, under mu: with Config.ReplaceUnauthorized, its
+// oldest not yet authorized. It is nil when the server is not full, or has none to close.
+func (s *Server) replaceable() *Session {
+	if !s.config.ReplaceUnauthorized || len(s.sessions) < s.config.MaxSessions {
+		return nil
+	}
+	var oldest *Session
+	for _, session := range s.sessions {
+		if !session.authorized.Load() && (oldest == nil || session.opened.Before(oldest.opened)) {
+			oldest = session
+		}
+	}
+	return oldest
 }
 
 // started runs once a session's open packet is sent
@@ -230,7 +262,7 @@ func (s *Server) serveWebSocket(w http.ResponseWriter, r *http.Request, version 
 			writeError(w, http.StatusBadRequest, errSessionUnknown)
 			return
 		}
-	} else if s.Count() >= s.config.MaxSessions {
+	} else if !s.hasRoom() {
 		http.Error(w, "Too many sessions", http.StatusTooManyRequests)
 		return
 	}
@@ -281,6 +313,13 @@ func (s *Server) Count() int {
 	return len(s.sessions)
 }
 
+// hasRoom is whether the server can open another session: it is not full, or has one it would close for it
+func (s *Server) hasRoom() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.sessions) < s.config.MaxSessions || s.replaceable() != nil
+}
+
 func (s *Server) remove(id string) {
 	s.mu.Lock()
 	delete(s.sessions, id)
@@ -301,9 +340,11 @@ type Session struct {
 	version int
 	server  *Server
 	request *http.Request
-	client  string // the Config's ClientKey of the handshake
+	client  string    // the Config's ClientKey of the handshake
+	opened  time.Time // when its handshake opened it, for Config.ReplaceUnauthorized
 	// authorized is set once the session is authorized, so it no longer counts against its client
 	authorized atomic.Bool
+	holder     string // who holds the session (see Hold), under the server's mu
 
 	limiter  *rate.Limiter // paces the client's packets
 	handling sync.Mutex    // handles one packet at a time, even from a POST in flight as the session upgrades
@@ -336,6 +377,7 @@ func newSession(server *Server, r *http.Request, version int) *Session {
 		version: version,
 		server:  server,
 		request: r.Clone(context.WithoutCancel(r.Context())),
+		opened:  time.Now(),
 		limiter: rate.NewLimiter(rate.Limit(server.config.MaxPacketRate), max(1, int(5*server.config.MaxPacketRate))),
 		notify:  make(chan struct{}, 1),
 		upgrade: make(chan struct{}),
@@ -354,6 +396,24 @@ func (s *Session) Request() *http.Request { return s.request }
 
 // Authorize marks the session as given access, so it no longer counts against its client's Config.MaxUnauthorized
 func (s *Session) Authorize() { s.authorized.Store(true) }
+
+// Hold makes holder, as the identity the session is authorized as, the one who holds it. It is false, and the session
+// is held as it was, when holder holds Config.MaxPerHolder other sessions already.
+func (s *Session) Hold(holder string) bool {
+	s.server.mu.Lock()
+	defer s.server.mu.Unlock()
+	held := 0
+	for _, session := range s.server.sessions {
+		if session != s && session.holder == holder {
+			held++
+		}
+	}
+	if held >= s.server.config.MaxPerHolder {
+		return false
+	}
+	s.holder = holder
+	return true
+}
 
 // OnMessage sets the handler for the client's messages; it runs in order, one at a time, so must not block
 func (s *Session) OnMessage(handler func(data string)) {

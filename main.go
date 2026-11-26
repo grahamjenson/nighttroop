@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 
 	"syscall"
@@ -28,14 +29,17 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
 	"nighttroop.t1d.nz/data/sql/migrateup"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/data/sql/sqltiming"
 	"nighttroop.t1d.nz/server"
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/socketio/engineio"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/aslog"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/i18n"
 	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/restore"
 	"nighttroop.t1d.nz/utils/s3utils"
@@ -199,15 +203,20 @@ const minFreeDisk = 100 << 20
 
 // makeRoom frees space on the DBs' disk when a start finds less than minFreeDisk free, as a server on a full disk
 // cannot open its DBs. It removes only what the server makes again, the lesser loss first: the local copies of the
-// backups, which are made again from the DBs, then the logs DB, and pages the admin. With too little free after that
-// the server does not start, and says so.
+// backups, which are made again from the DBs, then the logs DB, and pages the admin. The backup of a site with no DB
+// here is kept: it is an archived site's archive, the only one with S3 off. With too little free after that the server
+// does not start, and says so.
 func makeRoom(serverConfig *config.ServerConfig, admin page.Func, free func() (float64, bool)) error {
 	before, ok := free()
 	if !ok || before >= minFreeDisk {
 		return nil
 	}
 	_ = filepath.WalkDir(serverConfig.BackupDir(), func(path string, entry fs.DirEntry, err error) error {
-		if err == nil && entry.Type().IsRegular() {
+		if err != nil { // a folder that cannot be read, or no backup folder at all, which has no entry
+			return nil
+		}
+		site, isBackup := strings.CutSuffix(entry.Name(), ".sqlite.lz4")
+		if entry.Type().IsRegular() && !(isBackup && site != "" && !utils.FileExists(sitedb.GetPath(site, serverConfig))) {
 			_ = os.Remove(path)
 		}
 		return nil
@@ -239,6 +248,13 @@ func (s *startingHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Retry-After", "5")
+	// An htmx request puts the reply in a toast, so it gets one to read rather than the JSON
+	if httputils.GetAcceptType(r) == httputils.AcceptTypeHTMX {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_ = errortoast.Toast("", i18n.T(r.Context(), "errors.server_starting")).Render(r.Context(), w)
+		return
+	}
 	apiutils.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "starting"})
 }
 
@@ -332,6 +348,11 @@ func openControlDB(ctx context.Context, serverConfig *config.ServerConfig, s3Cli
 	controlDB, err := db.NewControlDB(context.Background(), serverConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create control db: %w", err)
+	}
+	// Told to stop while every site was opened: it stops here, not once it serves. Its replication would not start, and
+	// that would turn S3 off, page the admin and leave the last backup out.
+	if ctx.Err() != nil {
+		return nil, errors.Join(ctx.Err(), controlDB.Close())
 	}
 	if err := controlDB.Replicate(ctx, control); err != nil {
 		// The control DB is open, so the sites are served from it, without S3

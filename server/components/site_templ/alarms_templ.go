@@ -10,9 +10,12 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"context"
 	"slices"
+	"strings"
+	"time"
 
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
@@ -29,6 +32,16 @@ func alarmName(ctx context.Context, id string) string {
 		return i18n.T(ctx, name)
 	}
 	return ""
+}
+
+// snoozeEnd is when a snooze ends, in ms, as the identity's, site's or default settings show a time, with no seconds:
+// 14:35, or 02:35 PM on a 12 hour clock
+func snoozeEnd(ctx context.Context, until int64) string {
+	location, layout := time.UTC, time.TimeOnly
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil {
+		location, layout = siteContext.GetSettings().Location(), siteContext.GetSettings().TimeLayout()
+	}
+	return time.UnixMilli(until).In(location).Format(strings.Replace(layout, ":05", "", 1))
 }
 
 // Alarms holds the signed in identity's alarm banner under the header on every page. The alarms collection's stream
@@ -92,7 +105,7 @@ func AlarmBanner(models []*sitemodels.SiteAlarm) templ.Component {
 }
 
 // AlarmRow is one alarm in the banner: alerting, red when urgent and amber otherwise, with a button that deletes it
-// to snooze it for 30 minutes, or snoozed
+// to snooze it for 30 minutes, or snoozed, with when its snooze ends
 func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -122,7 +135,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--alarms--alarm-" + alarm.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 57, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 70, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 				if templ_7745c5c3_Err != nil {
@@ -168,7 +181,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.alarm", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID)}))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 62, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 75, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -193,7 +206,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.snooze"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 75, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 88, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -228,7 +241,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--alarms--alarm-" + alarm.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 79, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 92, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {
@@ -238,14 +251,26 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.snoozed", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID)}))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 80, Col: 89}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			if alarm.SnoozedUntil != nil {
+				var templ_7745c5c3_Var11 string
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.snoozed_until", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID), "Until": snoozeEnd(ctx, *alarm.SnoozedUntil)}))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 94, Col: 142}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else {
+				var templ_7745c5c3_Var12 string
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.snoozed", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID)}))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 96, Col: 90}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div>")
 			if templ_7745c5c3_Err != nil {

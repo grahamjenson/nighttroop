@@ -1,0 +1,32 @@
+// An admin's stream of the connectors' changes never has a connector's password or token, which no admin is shown
+// once saved, as another admin, or another tab, may be streaming them
+INCLUDE steps/new_site_admin.steps
+
+NAME connectors_stream
+STREAM http://{{ site }}/settings/connectors/events
+H Authorization: Bearer {{ jwt }}
+
+NAME create_dexcom
+POST http://{{ site }}/settings/connectors/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "valid-dexcom-user", "password": "dex-pass-secret", "region": "US", "enabled": false}
+ASSERT_STATUS 200
+ASSERT_EQUALS "********" "@result.password"
+
+NAME dexcom_created
+WAIT created
+ASSERT_EQUALS "valid-dexcom-user" "@url_or_username"
+ASSERT_EQUALS "********" "@password"
+
+NAME update_dexcom
+POST http://{{ site }}/settings/connectors/dexcom
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"password": "another-dex-pass", "enabled": false}
+ASSERT_STATUS 200
+ASSERT_EQUALS "********" "@result.password"
+
+NAME dexcom_updated
+WAIT updated
+ASSERT_EQUALS "********" "@password"

@@ -187,6 +187,7 @@ Every amount has `eventType` `<none>` (Nightscout careportal's "no event type").
 - **Long-acting insulin:**
   - v1 and v3: an amount with `"notes":"Long-Acting"` is a Correction Bolus with `isBasalInsulin` true, as AAPS
     marks a bolus of basal insulin. It was a bolus with no `isBasalInsulin`, so followers counted it as a bolus.
+  - Nighttroop's summary and reports count it as basal of the daily dose, and the summary says "basal" after it.
   - Only the notes are used. `insulinType` is the label the user typed, not always the insulin's name.
   - Nighttroop summaries still count it as a bolus (TODO P3).
   - Test: `long_acting.http`.

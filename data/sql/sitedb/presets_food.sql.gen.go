@@ -298,6 +298,123 @@ func (q *Queries) FoodPresetHistoryIDs(ctx context.Context, arg FoodPresetHistor
 	return items, nil
 }
 
+const foodPresetSortedIDs = `-- name: FoodPresetSortedIDs :many
+SELECT id FROM (
+    SELECT id, CASE CAST(?1 AS INTEGER) WHEN 3 THEN updated_at WHEN -3 THEN -updated_at WHEN 2 THEN created_at ELSE -created_at END AS sort_key
+    FROM food_presets
+    WHERE created_at BETWEEN MAX(COALESCE(CAST(?2 AS INTEGER), 0), COALESCE(CAST(?3 AS INTEGER) + 1, 0), COALESCE(CAST(?4 AS INTEGER), 0))
+        AND MIN(COALESCE(CAST(?5 AS INTEGER), 253402300799999), COALESCE(CAST(?6 AS INTEGER) - 1, 253402300799999), COALESCE(?4, 253402300799999))
+) ORDER BY sort_key, id LIMIT CAST(?8 AS INTEGER) OFFSET CAST(?7 AS INTEGER)
+`
+
+type FoodPresetSortedIDsParams struct {
+	SortOrder int64
+	DateGTE   *int64
+	DateGT    *int64
+	DateEQ    *int64
+	DateLTE   *int64
+	DateLT    *int64
+	Skip      int64
+	Limit     int64
+}
+
+// The foods in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or srvCreated
+func (q *Queries) FoodPresetSortedIDs(ctx context.Context, arg FoodPresetSortedIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.foodPresetSortedIDsStmt, foodPresetSortedIDs,
+		arg.SortOrder,
+		arg.DateGTE,
+		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
+		arg.DateLT,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const foodPresetsNamed = `-- name: FoodPresetsNamed :many
+SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, unit, gi, hidden, hide_after_use, position, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets
+WHERE instr(lower(name), lower(CAST(?1 AS TEXT))) > 0
+ORDER BY name COLLATE NOCASE, id
+LIMIT CAST(?2 AS INTEGER)
+`
+
+type FoodPresetsNamedParams struct {
+	Name  string
+	Limit int64
+}
+
+// The food presets whose name has Name in it, ignoring the case of ASCII letters, by name, for the Add Food Intake modal
+// to pick from. An empty Name has every food preset.
+func (q *Queries) FoodPresetsNamed(ctx context.Context, arg FoodPresetsNamedParams) ([]*FoodPreset, error) {
+	rows, err := q.query(ctx, q.foodPresetsNamedStmt, foodPresetsNamed, arg.Name, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*FoodPreset
+	for rows.Next() {
+		var i FoodPreset
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.FoodType,
+			&i.AbsorptionTimeMinutes,
+			&i.Carbs,
+			&i.Category,
+			&i.Subcategory,
+			&i.Fat,
+			&i.Protein,
+			&i.Fibre,
+			&i.Energy,
+			&i.Portions,
+			&i.PreBolus,
+			&i.Unit,
+			&i.Gi,
+			&i.Hidden,
+			&i.HideAfterUse,
+			&i.Position,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFoodPreset = `-- name: GetFoodPreset :one
 SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, unit, gi, hidden, hide_after_use, position, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets WHERE id = ?
 `
@@ -338,6 +455,65 @@ func (q *Queries) GetFoodPreset(ctx context.Context, arg GetFoodPresetParams) (*
 		&i.CreatedByIdentityName,
 	)
 	return &i, err
+}
+
+const getFoodPresetsByIDs = `-- name: GetFoodPresetsByIDs :many
+SELECT id, name, food_type, absorption_time_minutes, carbs, category, subcategory, fat, protein, fibre, energy, portions, pre_bolus, unit, gi, hidden, hide_after_use, position, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM food_presets WHERE id IN (SELECT value FROM json_each(CAST(?1 AS TEXT)))
+`
+
+type GetFoodPresetsByIDsParams struct {
+	IDs *string
+}
+
+// The presets with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+func (q *Queries) GetFoodPresetsByIDs(ctx context.Context, arg GetFoodPresetsByIDsParams) ([]*FoodPreset, error) {
+	rows, err := q.query(ctx, q.getFoodPresetsByIDsStmt, getFoodPresetsByIDs, arg.IDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*FoodPreset
+	for rows.Next() {
+		var i FoodPreset
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.FoodType,
+			&i.AbsorptionTimeMinutes,
+			&i.Carbs,
+			&i.Category,
+			&i.Subcategory,
+			&i.Fat,
+			&i.Protein,
+			&i.Fibre,
+			&i.Energy,
+			&i.Portions,
+			&i.PreBolus,
+			&i.Unit,
+			&i.Gi,
+			&i.Hidden,
+			&i.HideAfterUse,
+			&i.Position,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const hardDeleteFoodPreset = `-- name: HardDeleteFoodPreset :execresult

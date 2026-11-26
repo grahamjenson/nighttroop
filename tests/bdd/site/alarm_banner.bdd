@@ -33,14 +33,17 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #site--alarms--snooze-urgent_high
 
 // Snoozing it deletes it from the identity's alarms, which quiets it for this identity only, and it stays quiet as
-// the readings are checked again
+// the readings are checked again. Its row says when the snooze ends: the time is checked in alarms_test.go, as it is
+// 30 minutes from the click.
 CLICK #site--alarms--snooze-urgent_high
 ASSERT_STATUS 200
 ASSERT_NOT_VISIBLE #site--alarms--snooze-urgent_high
-ASSERT_TEXT_EQUALS #site--alarms--alarm-urgent_high Snoozed: Urgent high
+ASSERT_VISIBLE #site--alarms--alarm-urgent_high
+ASSERT_TEXT_VISIBLE Snoozed: Urgent high until
 RUN_BACKGROUND_JOBS
 GOTO /
 ASSERT_STATUS 200
-ASSERT_TEXT_EQUALS #site--alarms--alarm-urgent_high Snoozed: Urgent high
+ASSERT_VISIBLE #site--alarms--alarm-urgent_high
+ASSERT_TEXT_VISIBLE Snoozed: Urgent high until
 ASSERT_NOT_VISIBLE #site--alarms--snooze-urgent_high
 SCREENSHOT alarm_banner_snoozed

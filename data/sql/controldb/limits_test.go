@@ -25,8 +25,7 @@ func TestControlDataLimits(t *testing.T) {
 	require.NoError(t, err)
 	// A site's and an identity's settings, a site's abuse score and a connector's sync are written by their updates, not
 	// checked here
-	settings := []string{"Timezone", "Language", "DateFormat", "TimeFormat", "WeekStartDay", "NumberFormat",
-		"AlarmDeviceBatteryLowDevicesJson"}
+	settings := []string{"SettingsJson"}
 	testutils.CheckColumnLimits(t, controldb.ColumnLimits, map[string]testutils.LimitRecipe{
 		"control_identities": testutils.Recipe(func(i int) controldb.CreateControlIdentityParams {
 			return controldb.CreateControlIdentityParams{Name: id(i), PasswordHash: "hash", TotpSecretEnc: "secret",
@@ -35,6 +34,9 @@ func TestControlDataLimits(t *testing.T) {
 		"passkeys": testutils.Recipe(func(i int) controldb.CreateControlPasskeyParams {
 			return controldb.CreateControlPasskeyParams{ControlIdentityID: admin.ID, CredentialID: id(i), CredentialJson: "{}"}
 		}, q.CreateControlPasskey),
+		"site_banners": testutils.Recipe(func(i int) controldb.CreateSiteBannerParams {
+			return controldb.CreateSiteBannerParams{Message: id(i), Level: "info", SiteIdsJson: "[]", ExpiresAt: 1, CreatedByIdentityName: by}
+		}, testutils.NoResult(q.CreateSiteBanner)),
 		"push_credentials": testutils.Recipe(func(i int) controldb.CreatePushCredentialParams {
 			return controldb.CreatePushCredentialParams{Name: id(i), Provider: "apns", TeamOrProjectID: "team",
 				AppsJson: `["loop"]`, CreatedByIdentityName: by}
@@ -59,6 +61,6 @@ func TestControlDataLimits(t *testing.T) {
 		}, q.CreateSiteIdentity, append(settings, "UpdatedByIdentityName")...),
 		"sites": testutils.Recipe(func(i int) controldb.CreateSiteParams {
 			return controldb.CreateSiteParams{ID: id(i), BackupKeyHash: "hash"}
-		}, testutils.NoResult(q.CreateSite), append(settings, "TableSizesJson", "AbuseScore")...),
+		}, testutils.NoResult(q.CreateSite), append(settings, "TableSizesJson", "AbuseScore", "EmailEnc")...),
 	})
 }

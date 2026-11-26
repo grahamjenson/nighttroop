@@ -176,6 +176,17 @@ func (l *LogsDB) SiteTruncatedEvent(ctx context.Context, siteID string, by strin
 	l.finishedEvent(ctx, siteID, events.SiteTruncated, started, SiteTruncatedAttributes{By: by, BeforeSizeKB: beforeSizeKB, AfterSizeKB: afterSizeKB})
 }
 
+type SiteEmailedAttributes struct {
+	By    string `json:"by"`
+	Email string `json:"email"`
+}
+
+// SiteEmailedEvent records by, a control identity, sending the pre-built email named email to a site's verified
+// email. The address is not recorded.
+func (l *LogsDB) SiteEmailedEvent(ctx context.Context, siteID string, by string, email string) {
+	l.event(ctx, siteID, events.SiteEmailed, SiteEmailedAttributes{By: by, Email: email})
+}
+
 type SiteDeletedAttributes struct {
 	Reason string `json:"reason"`
 }

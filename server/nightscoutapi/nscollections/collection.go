@@ -49,6 +49,8 @@ type CollectionDB[NS, DM any] interface {
 	SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error)
 	// AscendingIDs are the identifiers of the models in the query's dates, the oldest first, paged as it asks
 	AscendingIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error)
+	// SortedIDs are the identifiers of the models in the query's dates, in its sort by srvModified or srvCreated
+	SortedIDs(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error)
 	// HistoryIDs are the identifiers of at most limit models changed since, deleted too, the oldest change first
 	HistoryIDs(q *sitedb.Queries, ctx context.Context, since, limit int64) ([]string, error)
 	// Delete deletes a model, softly or, when permanent, for good
@@ -510,8 +512,10 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 
 func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
 	search := c.db.SearchModels
-	if query.SortOrder != nil && *query.SortOrder == nsquery.SortOccurredAtAsc {
-		search = c.ascending
+	if sortedIDs := c.sortedIDs(query.SortOrder); sortedIDs != nil {
+		search = func(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error) {
+			return c.inOrder(q, ctx, query, sortedIDs)
+		}
 	}
 	models, err := search(siteContext.SiteDB.Queries(), ctx, query)
 	if err != nil {
@@ -558,12 +562,26 @@ func (c Collection[NS, DM]) documents(models []*DM, siteContext *httputils.SiteC
 	return docs
 }
 
-// ascending is what a search sorted by date finds, the oldest first, as AAPS pages forward by date. The identifiers in
-// the dates searched are read from the date's index, the oldest first, then each by its primary key. A query with
-// other filters searches for those identifiers with them instead, so a page has fewer than its limit when some of
-// them do not match.
-func (c Collection[NS, DM]) ascending(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error) {
-	ids, err := c.db.AscendingIDs(q, ctx, query)
+// sortedIDs reads the identifiers of a search in a sort the date's descending index does not give: by date, the oldest
+// first, as AAPS pages forward by date, or, as in Nightscout, by srvModified or srvCreated, as a client after the
+// latest changes asks. It is nil for a search the newest first.
+func (c Collection[NS, DM]) sortedIDs(sort *nsquery.QuerySort) func(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error) {
+	switch {
+	case sort == nil:
+		return nil
+	case *sort == nsquery.SortOccurredAtAsc:
+		return c.db.AscendingIDs
+	case *sort == nsquery.SortUpdatedAtAsc || *sort == nsquery.SortUpdatedAtDesc || *sort == nsquery.SortCreatedAtAsc || *sort == nsquery.SortCreatedAtDesc:
+		return c.db.SortedIDs
+	}
+	return nil
+}
+
+// inOrder is what a search finds in the order of its identifiers sortedIDs reads, each read by its primary key. A
+// query with other filters searches for those identifiers with them instead, so a page has fewer than its limit when
+// some of them do not match.
+func (c Collection[NS, DM]) inOrder(q *sitedb.Queries, ctx context.Context, query nsquery.Query, sortedIDs func(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]string, error)) ([]*DM, error) {
+	ids, err := sortedIDs(q, ctx, query)
 	if err != nil || len(ids) == 0 {
 		return nil, err
 	}
@@ -571,15 +589,34 @@ func (c Collection[NS, DM]) ascending(q *sitedb.Queries, ctx context.Context, qu
 		idIn, _ := json.Marshal(ids)
 		query.IDIn, query.Skip, query.HasFilters = new(string(idIn)), 0, true
 		models, err := c.db.SearchModels(q, ctx, query)
-		slices.SortStableFunc(models, func(a, b *DM) int { return cmp.Compare((*a).GetOccurredAt(), (*b).GetOccurredAt()) })
-		return models, err
+		return inIDsOrder(models, ids), err
 	}
 	return c.byKey(q, ctx, ids, query.IncludeDeleted)
+}
+
+// CollectionKeysReader is a CollectionDB that reads the models with many identifiers in one query, in any order, which
+// is faster than one query for each
+type CollectionKeysReader[DM any] interface {
+	GetModels(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*DM, error)
+}
+
+// inIDsOrder is the models in the order of their identifiers in ids
+func inIDsOrder[DM SharedDBFields](models []*DM, ids []string) []*DM {
+	order := make(map[string]int, len(ids))
+	for i, id := range ids {
+		order[id] = i
+	}
+	slices.SortFunc(models, func(a, b *DM) int { return cmp.Compare(order[(*a).GetID()], order[(*b).GetID()]) })
+	return models
 }
 
 // byKey are the models with identifiers ids, in their order, each read by its primary key. One deleted for good since
 // its identifier was read is left out.
 func (c Collection[NS, DM]) byKey(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*DM, error) {
+	if reader, ok := any(c.db).(CollectionKeysReader[DM]); ok {
+		models, err := reader.GetModels(q, ctx, ids, includeDeleted)
+		return inIDsOrder(models, ids), err
+	}
 	models := make([]*DM, 0, len(ids))
 	for _, id := range ids {
 		model, err := c.db.GetModel(q, ctx, id, includeDeleted)

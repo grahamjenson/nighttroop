@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
 	"nighttroop.t1d.nz/background/onevent"
 	"nighttroop.t1d.nz/data/events"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils/httputils"
+	"nighttroop.t1d.nz/utils/settings"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -94,7 +96,7 @@ func TestBuildOpensASiteAgainAfterItsSettingsChange(t *testing.T) {
 	require.Equal(t, 3, r.opened)
 
 	// A new timezone is a new yesterday, even before its rebuild runs
-	require.NoError(t, r.control.UpdateSitesSettings(ctx, controldb.UpdateSitesSettingsParams{ID: r.siteID, Timezone: new("Pacific/Auckland")}))
+	require.NoError(t, r.control.UpdateSiteSettings(ctx, controldb.UpdateSiteSettingsParams{ID: r.siteID, SettingsJson: settings.StoredOf(settings.Settings{Timezone: new("Pacific/Auckland")})}))
 	require.NoError(t, r.builder.Build(ctx, now))
 	require.Equal(t, 4, r.opened)
 	require.True(t, r.built("2026-10-28"))
@@ -204,10 +206,26 @@ func TestRebuildStaleBuildsAfterTheLongestWait(t *testing.T) {
 	require.True(t, r.built(day.Format(time.DateOnly)))
 }
 
+// A site whose written days cannot be built is kept, so a later run builds them
+func TestRebuildStaleTriesASiteAgainAfterAnError(t *testing.T) {
+	r := newRig(t)
+	ctx, now := t.Context(), time.Now().UTC()
+	day := now.AddDate(0, 0, -3)
+	r.reading("reading", day, now)
+	r.fail = errors.New("site cannot open")
+	require.Error(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.False(t, r.built(day.Format(time.DateOnly)))
+
+	r.fail = nil
+	require.NoError(t, r.builder.RebuildStale(ctx, now.Add(staleQuiet)))
+	require.True(t, r.built(day.Format(time.DateOnly)))
+}
+
 // Only today's data, which is built as it is read, and data not of a day's summary, open no site
 func TestRebuildStaleLeavesToday(t *testing.T) {
 	r := newRig(t)
-	now := time.Now().UTC()
+	// Midday, so the run staleQuiet later is still today, as just before midnight it is tomorrow
+	now := time.Now().UTC().Truncate(24 * time.Hour).Add(12 * time.Hour)
 	r.reading("now", now, now)
 	activity, err := r.site.CreateActivity(t.Context(), sitedb.CreateActivityParams{ID: "walk", ActivityType: "walk", OccurredAt: now.AddDate(0, 0, -3).UnixMilli(), CreatedByIdentityName: "phone"})
 	require.NoError(t, err)

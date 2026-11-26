@@ -112,11 +112,11 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	}
 	since := time.Now().Add(-time.Duration(hours) * time.Hour).UnixMilli()
 	summary := &sitemodels.Summary{Hours: hours, Since: since, Units: sitemodels.ContextUnits(siteContext)}
-	settings := siteContext.GetSettings()
-	summary.RangeLow = summary.Units.FromMGDL(float64(*settings.GetRangeLowMgdl()))
-	summary.RangeHigh = summary.Units.FromMGDL(float64(*settings.GetRangeHighMgdl()))
-	summary.RangeUrgentLow = summary.Units.FromMGDL(float64(*settings.GetRangeUrgentLowMgdl()))
-	summary.RangeUrgentHigh = summary.Units.FromMGDL(float64(*settings.GetRangeUrgentHighMgdl()))
+	glucose := siteContext.GetSettings().GetRange()
+	summary.RangeLow = summary.Units.FromMGDL(float64(glucose.LowMgdl))
+	summary.RangeHigh = summary.Units.FromMGDL(float64(glucose.HighMgdl))
+	summary.RangeUrgentLow = summary.Units.FromMGDL(float64(glucose.UrgentLowMgdl))
+	summary.RangeUrgentHigh = summary.Units.FromMGDL(float64(glucose.UrgentHighMgdl))
 	// A false IncludeDeleted leaves out deleted rows in these searches
 	excludeDeleted := false
 
@@ -138,6 +138,17 @@ func getSummary(ctx context.Context, tx *siteapiutils.CollectionTx, hours int64,
 	food, err := q.SearchFoodIntakes(ctx, sitedb.SearchFoodIntakesParams{DateGTE: &since, IncludeDeleted: &excludeDeleted, Limit: maxRows})
 	if summary.FoodIntakes, herr = apiutils.Searched(food, err, "summary food intakes", sitemodels.FoodIntakeFromDB); herr != nil {
 		return nil, herr
+	}
+	// Each food is given over its treatment's duration, as AAPS's extended carbs are
+	durations, err := q.FoodIntakeDurations(ctx, sitedb.FoodIntakeDurationsParams{Since: since, Limit: maxRows})
+	if err != nil {
+		slog.ErrorContext(ctx, "Error finding summary food durations", "error", err)
+		return nil, apiutils.ErrInternalServerError
+	}
+	for _, f := range summary.FoodIntakes {
+		if i := slices.IndexFunc(durations, func(d *sitedb.FoodIntakeDurationsRow) bool { return d.FoodIntakeID == f.ID }); i >= 0 {
+			f.DurationMinutes = &durations[i].DurationMinutes
+		}
 	}
 	targets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &since, IncludeDeleted: &excludeDeleted, Limit: maxRows})
 	if summary.TempTargets, herr = apiutils.Searched(targets, err, "summary temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext)); herr != nil {
@@ -213,8 +224,9 @@ func addMinutes(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summ
 
 // summaryMinutes are the targets and basal in force each minute from since until until, in location's time, from the
 // profiles, profile switches, temp targets and temp basals in force through it. The temp targets and basals from since
-// are given, and those that started before it are looked up; without a site context only the basal is wanted, so
-// earlier temp targets are not.
+// are given. Of those that started before it only the newest of each is looked up, as it replaced the ones before it,
+// so a loop's week of temp basals is not read for one of them; without a site context only the basal is wanted, so an
+// earlier temp target is not.
 func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, units *consts.Units, location *time.Location, siteContext *httputils.SiteContext, targets []*sitemodels.SiteTempTarget, basals []*sitemodels.SiteTempBasal) ([]sitemodels.SummaryMinute, *apiutils.HTTPError) {
 	excludeDeleted := false
 	defaults, err := q.SearchSummaryDefaultProfiles(ctx, sitedb.SearchSummaryDefaultProfilesParams{Since: since, Until: until, Limit: maxRows})
@@ -230,13 +242,13 @@ func summaryMinutes(ctx context.Context, q *sitedb.Queries, since, until int64, 
 	targetsSince, basalsSince, before := since-maxTempTargetMinutes*60_000, since-maxTempBasalMinutes*60_000, since-1
 	var earlier []*sitemodels.SiteTempTarget
 	if siteContext != nil {
-		earlierTargets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &targetsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+		earlierTargets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &targetsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: 1})
 		var herr *apiutils.HTTPError
 		if earlier, herr = apiutils.Searched(earlierTargets, err, "summary temp targets", apiutils.WithContext(sitemodels.TempTargetFromDB, siteContext)); herr != nil {
 			return nil, herr
 		}
 	}
-	earlierBasals, err := q.SearchTempBasals(ctx, sitedb.SearchTempBasalsParams{DateGTE: &basalsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: maxRows})
+	earlierBasals, err := q.SearchTempBasals(ctx, sitedb.SearchTempBasalsParams{DateGTE: &basalsSince, DateLTE: &before, IncludeDeleted: &excludeDeleted, Limit: 1})
 	earlierBasal, herr := apiutils.Searched(earlierBasals, err, "summary temp basals", sitemodels.TempBasalFromDB)
 	if herr != nil {
 		return nil, herr

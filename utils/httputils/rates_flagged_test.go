@@ -104,3 +104,48 @@ func TestSiteFlaggedForAbuseUsesLiveSize(t *testing.T) {
 	require.True(t, httputils.SiteFlaggedForAbuse(siteContext))
 	require.Equal(t, int64(10), *siteContext.SiteModel.EstimatedDbSizeKb)
 }
+
+// A site over 4 times its size limit has each write that adds to its DB refused, whatever writes it has left, told to
+// try again in an hour; its deletes and reads are let through, and a site at 4 times is not refused
+func TestSiteOverStorageWritesRefused(t *testing.T) {
+	cfg := testutils.GetTestServerConfig()
+	refusing := httputils.RefuseWritesOverStorage(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	serve := func(method string, sizeKB int64) *httptest.ResponseRecorder {
+		r := flaggedTestRequest(cfg, "fullzzzz", sizeKB, httputils.HTTPActionWrite, nil)
+		r.Method = method
+		w := httptest.NewRecorder()
+		refusing.ServeHTTP(w, r)
+		return w
+	}
+	refused := serve(http.MethodPost, 4*20480+1)
+	require.Equal(t, http.StatusTooManyRequests, refused.Code)
+	require.Equal(t, "3600", refused.Header().Get("Retry-After"))
+	require.Equal(t, httputils.SiteStorageFullMessage, refused.Body.String())
+	require.Equal(t, http.StatusTooManyRequests, serve(http.MethodPut, 4*20480+1).Code)
+
+	require.Equal(t, http.StatusOK, serve(http.MethodDelete, 4*20480+1).Code)
+	require.Equal(t, http.StatusOK, serve(http.MethodGet, 4*20480+1).Code)
+	require.Equal(t, http.StatusOK, serve(http.MethodPost, 4*20480).Code)
+}
+
+// While the server's disk is nearly full, each write that adds to any site's DB is refused, saying so, however small the
+// site; its deletes go through
+func TestWritesRefusedWhileDiskFull(t *testing.T) {
+	cfg, controlDB := testutils.NewControlDB(t)
+	refusing := httputils.RefuseWritesOverStorage(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	serve := func(method string) *httptest.ResponseRecorder {
+		limit, size := int64(20480), int64(1)
+		site := &controldb.Site{ID: "diskfullz", MaxDbSizeKbLimit: &limit, EstimatedDbSizeKb: &size}
+		ctx := httputils.CreateSiteContext(context.Background(), cfg, controlDB, nil, site, site.ID, "10.0.0.3", httputils.HTTPActionWrite, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)
+		w := httptest.NewRecorder()
+		refusing.ServeHTTP(w, httptest.NewRequest(method, "/api/v1/entries", nil).WithContext(ctx))
+		return w
+	}
+	require.Equal(t, http.StatusOK, serve(http.MethodPost).Code)
+
+	controlDB.SetDiskFull(true)
+	refused := serve(http.MethodPost)
+	require.Equal(t, http.StatusTooManyRequests, refused.Code)
+	require.Equal(t, httputils.ServerDiskFullMessage, refused.Body.String())
+	require.Equal(t, http.StatusOK, serve(http.MethodDelete).Code)
+}

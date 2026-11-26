@@ -77,6 +77,10 @@ var StaticLoopPngETag = generateETag([]byte(StaticLoopPng))
 var StaticNightguardPng []byte
 var StaticNightguardPngETag = generateETag([]byte(StaticNightguardPng))
 
+//go:embed logos/nightscout.png
+var StaticNightscoutPng []byte
+var StaticNightscoutPngETag = generateETag([]byte(StaticNightscoutPng))
+
 //go:embed logos/t1dcarer.png
 var StaticT1dcarerPng []byte
 var StaticT1dcarerPngETag = generateETag([]byte(StaticT1dcarerPng))
@@ -143,6 +147,7 @@ var versions = map[string]string{
 	"/logos/aaps.png":                  strings.Trim(StaticAapsPngETag, "\""),
 	"/logos/loop.png":                  strings.Trim(StaticLoopPngETag, "\""),
 	"/logos/nightguard.png":            strings.Trim(StaticNightguardPngETag, "\""),
+	"/logos/nightscout.png":            strings.Trim(StaticNightscoutPngETag, "\""),
 	"/logos/t1dcarer.png":              strings.Trim(StaticT1dcarerPngETag, "\""),
 	"/logos/trio.png":                  strings.Trim(StaticTrioPngETag, "\""),
 	"/logos/xdrip.png":                 strings.Trim(StaticXdripPngETag, "\""),
@@ -210,6 +215,9 @@ func AddStaticRoutes(r chi.Router) error {
 	})
 	r.Get("/logos/nightguard.png", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "logos/nightguard.png", "image/png", StaticNightguardPngETag, StaticNightguardPng)
+	})
+	r.Get("/logos/nightscout.png", func(w http.ResponseWriter, r *http.Request) {
+		serve(w, r, "logos/nightscout.png", "image/png", StaticNightscoutPngETag, StaticNightscoutPng)
 	})
 	r.Get("/logos/t1dcarer.png", func(w http.ResponseWriter, r *http.Request) {
 		serve(w, r, "logos/t1dcarer.png", "image/png", StaticT1dcarerPngETag, StaticT1dcarerPng)

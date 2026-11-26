@@ -1,0 +1,28 @@
+INCLUDE steps/new_site_admin.steps
+
+// A reading, so the summary is shown and not the guide to setting it up, AAPS's extended carbs, 10 g over 2 hours, and
+// carbs eaten at once, both uploaded through the Nightscout API
+HTTP
+NAME reading_for_summary
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 120, "date": {{ itime 2 }}, "device": "xDrip-DexcomG6"}]
+ASSERT_STATUS 200
+
+NAME aaps_extended_carbs
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v3/treatments?token={{ .create_new_site.pwd_nstoken }}
+B {"eventType": "Carb Correction", "carbs": 10, "duration": 120, "durationInMilliseconds": 7200000, "date": {{ itime 0 }}, "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME carbs_at_once
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Carb Correction", "carbs": 15, "created_at": "{{ time 5 }}"}]
+ASSERT_STATUS 200
+BROWSE
+
+// The insulin and carbs table shows the extended carbs with the time they are given over, as an extended dose does,
+// and the carbs eaten at once alone
+GOTO /
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*10\sg over 2\sh$/
+ASSERT_VISIBLE #site--summary--insulin-carbs td >> text=/^\s*15\sg$/
+SCREENSHOT summary_extended_carbs

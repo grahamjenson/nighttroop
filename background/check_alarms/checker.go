@@ -169,9 +169,12 @@ func (c *Checker) alarmsToCheck(ctx context.Context, siteID string, site *contro
 	if err != nil {
 		return nil, err
 	}
-	turnedOn := map[int64][]alarms.Alarm{}
+	// The site's settings are read once, and each identity's over them
+	turnedOn, ofSite := map[int64][]alarms.Alarm{}, settings.NewContextSettings(site, nil)
 	for _, identity := range identities {
-		on := alarms.FromSettings(settings.NewCombinedSettingsMap(site, identity))
+		ofIdentity := *ofSite
+		ofIdentity.Identity = settings.SettingsFromJSON(identity.SettingsJson)
+		on := alarms.FromSettings(ofIdentity.Values())
 		if identity.Enabled && (len(on) > 0 || kept[identity.ID] != nil) {
 			turnedOn[identity.ID] = on
 		}

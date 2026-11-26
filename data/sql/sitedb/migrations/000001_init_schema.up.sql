@@ -290,11 +290,11 @@ CREATE TABLE profile_switches (
     carbs_hr REAL CHECK(carbs_hr BETWEEN 0 AND 500),
     delay REAL CHECK(delay BETWEEN 0 AND 1440),
 
-    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048                     AND json_valid(carb_ratios_json)), -- 
-    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
-    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048                     AND json_valid(basal_rates_json)), -- {"value": "110", "time": "00:00"},
-    targets_high_json TEXT CHECK(length(targets_high_json) <= 2048                   AND json_valid(targets_high_json)), -- { [high, low] }
-    targets_low_json TEXT CHECK(length(targets_low_json) <= 2048                     AND json_valid(targets_low_json)), -- { [high, low] }
+    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 8192                     AND json_valid(carb_ratios_json)), -- 
+    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 8192 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
+    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 8192                     AND json_valid(basal_rates_json)), -- {"value": "110", "time": "00:00"},
+    targets_high_json TEXT CHECK(length(targets_high_json) <= 8192                   AND json_valid(targets_high_json)), -- { [high, low] }
+    targets_low_json TEXT CHECK(length(targets_low_json) <= 8192                     AND json_valid(targets_low_json)), -- { [high, low] }
     
     -- Default Stuff
     notes TEXT CHECK(length(notes) <= 1024),
@@ -530,11 +530,11 @@ CREATE TABLE profile_presets (
     carbs_hr REAL CHECK(carbs_hr BETWEEN 0 AND 500),
     delay REAL CHECK(delay BETWEEN 0 AND 1440),
 
-    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 2048 AND json_valid(carb_ratios_json)), -- 
-    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 2048 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
-    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 2048 AND json_valid(basal_rates_json)), -- {"value": "110", "time": "00:00"},
-    targets_high_json TEXT CHECK(length(targets_high_json) <= 2048 AND json_valid(targets_high_json)), -- { [high, low] }
-    targets_low_json TEXT CHECK(length(targets_low_json) <= 2048 AND json_valid(targets_low_json)), -- { [high, low] }
+    carb_ratios_json TEXT CHECK(length(carb_ratios_json) <= 8192 AND json_valid(carb_ratios_json)), -- 
+    insulin_sensitivities_json TEXT CHECK(length(insulin_sensitivities_json) <= 8192 AND json_valid(insulin_sensitivities_json)), -- { [1,2] },
+    basal_rates_json TEXT CHECK(length(basal_rates_json) <= 8192 AND json_valid(basal_rates_json)), -- {"value": "110", "time": "00:00"},
+    targets_high_json TEXT CHECK(length(targets_high_json) <= 8192 AND json_valid(targets_high_json)), -- { [high, low] }
+    targets_low_json TEXT CHECK(length(targets_low_json) <= 8192 AND json_valid(targets_low_json)), -- { [high, low] }
 
     -- loop settings
     -- The loop_settings the profile was sent with: Loop's settings, and Trio's remote control settings
@@ -571,8 +571,8 @@ CREATE TABLE profile_presets (
 -- sent it
 CREATE TABLE general_settings (
     key TEXT PRIMARY KEY CHECK(length(key) <= 128),
-    type TEXT NOT NULL CHECK(type IN ('aaps', 'aaps_clientcontrol')),
-    value_json TEXT NOT NULL CHECK(length(value_json) <= 262144 AND json_valid(value_json)),
+    type TEXT NOT NULL CHECK(length(type) <= 32), -- the kind of document its key is, from the code's generalSettingType
+    value_json TEXT NOT NULL CHECK(length(value_json) <= 65536 AND json_valid(value_json)),
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 32),
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))

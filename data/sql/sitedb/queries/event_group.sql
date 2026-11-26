@@ -166,6 +166,31 @@ LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
 
 WHERE eg.id = CAST(sqlc.arg('ID') AS TEXT) AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR eg.deleted_at IS NULL);
 
+-- name: GetEventGroupsByIDs :many
+-- The groups with the identifiers in IDs, a JSON array, with their events, in no order, each found by its primary key in
+-- one query
+SELECT
+    sqlc.embed(eg),
+    sqlc.embed(gr),
+    sqlc.embed(idose),
+    sqlc.embed(fi),
+    sqlc.embed(tb),
+    sqlc.embed(tt),
+    sqlc.embed(ps),
+    sqlc.embed(a),
+    sqlc.embed(n)
+FROM event_groups eg
+LEFT JOIN glucose_readings_vw gr ON eg.glucose_reading_id = gr.id
+LEFT JOIN insulin_doses_vw idose ON eg.insulin_dose_id = idose.id
+LEFT JOIN food_intakes_vw fi ON eg.food_intake_id = fi.id
+LEFT JOIN temp_basals_vw tb ON eg.temp_basal_id = tb.id
+LEFT JOIN temp_targets_vw tt ON eg.temp_target_id = tt.id
+LEFT JOIN profile_switches_vw ps ON eg.profile_switch_id = ps.id
+LEFT JOIN activities_vw a ON eg.activity_id = a.id
+LEFT JOIN notification_events_vw n ON eg.notification_event_id = n.id
+WHERE eg.id IN (SELECT value FROM json_each(CAST(sqlc.narg('IDs') AS TEXT)))
+    AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR eg.deleted_at IS NULL);
+
 
 
 -- name: EventGroupAscendingIDs :many
@@ -175,6 +200,16 @@ WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0)
     AND MIN(COALESCE(CAST(sqlc.narg('DateLTE') AS INTEGER), 253402300799999), COALESCE(CAST(sqlc.narg('DateLT') AS INTEGER) - 1, 253402300799999), COALESCE(sqlc.narg('DateEQ'), 253402300799999))
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
 ORDER BY occurred_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
+
+-- name: EventGroupSortedIDs :many
+-- The treatments in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or srvCreated
+SELECT id FROM (
+    SELECT id, CASE CAST(sqlc.arg('SortOrder') AS INTEGER) WHEN 3 THEN updated_at WHEN -3 THEN -updated_at WHEN 2 THEN created_at ELSE -created_at END AS sort_key
+    FROM event_groups
+    WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0), COALESCE(CAST(sqlc.narg('DateGT') AS INTEGER) + 1, 0), COALESCE(CAST(sqlc.narg('DateEQ') AS INTEGER), 0))
+        AND MIN(COALESCE(CAST(sqlc.narg('DateLTE') AS INTEGER), 253402300799999), COALESCE(CAST(sqlc.narg('DateLT') AS INTEGER) - 1, 253402300799999), COALESCE(sqlc.narg('DateEQ'), 253402300799999))
+        AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
+) ORDER BY sort_key, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: EventGroupHistoryIDs :many
 -- The treatments changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3

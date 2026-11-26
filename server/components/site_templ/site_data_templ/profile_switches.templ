@@ -89,7 +89,7 @@ templ ProfileSwitchModal(profileSwitch *sitemodels.SiteProfileSwitch) {
 	{{ siteContext, units := httputils.GetSiteContext(ctx), glucoseUnits(ctx) }}
 	{{ unitsLabel := orEmpty(units.Stringp()) }}
 	{{ edit := addmodal.Props{ID: "site--profile-switch--edit", Path: "/data/profile-switches/" + profileSwitch.ID, Target: "#site--profile-switch--" + profileSwitch.ID, Swap: "outerHTML", Submit: i18n.T(ctx, "site.data.common.save"),
-		Fields: addmodal.Edit(profileSwitchFields(ctx), profileSwitch, nil)} }}
+		Fields: addmodal.Edit(profileSwitchFields(ctx), profileSwitch, nil), Delete: i18n.T(ctx, "site.data.profile_switches.delete_confirm")} }}
 	@modal.Modal(modal.Props{ID: "site--profile-switch--details", Title: i18n.T(ctx, "site.data.profile_switches.details_title", i18n.Data{"Name": profileSwitch.Name, "Percent": percentOr(profileSwitch.Multiplier, "-")}), Subtitle: formatReadingDate(ctx, profileSwitch.OccurredAt), Actions: addmodal.SubmitButton(edit)}) {
 		@addmodal.Form(edit)
 		<div id="site--profile-switch--details--schedules" class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">

@@ -53,7 +53,10 @@ func (ws *Websocket) onConnect(main *socketio.Namespace, socket *socketio.Socket
 func (ws *Websocket) handleAuthorize(s *mainSocket, message authorizeMessage) any {
 	ctx, authorized, found := ws.authorize(s.socket, message.Token, message.Secret)
 	if !found && message.Token != "" {
-		s.socket.Disconnect()
+		// An identity that holds its share of the site's sessions is disconnected already
+		if s.socket.Connected() {
+			s.socket.Disconnect()
+		}
 		return nil
 	}
 	s.auth, s.ctx = &authorized, ctx

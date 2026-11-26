@@ -22,18 +22,18 @@ var (
 // BrowserSettings are a new site's settings from the browser that created it: its time zone, its language, or en-NZ,
 // and the units, date and time formats and week start day most used in the language's country. The country is only
 // known from a language that names one, e.g. en-US but not en; a value that is not valid is left out.
-func BrowserSettings(timezone string, browserLanguage string) *SettingMap {
-	m := &SettingMap{}
-	m.Timezone, _ = NewSettingAndParseValidate(Timezone, timezone, nil, nil)
+func BrowserSettings(timezone string, browserLanguage string) Settings {
+	var s Settings
+	_ = s.Set(Timezone.Identifier, timezone)
 	tag, err := language.Parse(browserLanguage)
 	if err != nil {
-		m.SetLanguage(new(Language.Default))
-		return m
+		s.Language = new(Language.Default)
+		return s
 	}
-	m.SetLanguage(new(tag.String()))
+	s.Language = new(tag.String())
 	region, confidence := tag.Region()
 	if confidence != language.Exact {
-		return m
+		return s
 	}
 	country := region.String()
 
@@ -55,9 +55,6 @@ func BrowserSettings(timezone string, browserLanguage string) *SettingMap {
 	if slices.Contains(sundayCountries, country) {
 		weekStart = "sunday"
 	}
-	m.SetUnits(&units)
-	m.SetDateFormat(&date)
-	m.SetTimeFormat(&clock)
-	m.SetWeekStartDay(&weekStart)
-	return m
+	s.Units, s.DateFormat, s.TimeFormat, s.WeekStartDay = &units, &date, &clock, &weekStart
+	return s
 }

@@ -57,6 +57,6 @@ CLICK #site--identities--pwd_phone--settings
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--identity-settings--identity--units
 ASSERT_VISIBLE #site--identity-settings--identity--alarm_no_data_minutes
-ASSERT_VISIBLE #site--identity-settings--identity--save
+ASSERT_DRAWN #site--identity-settings--identity--save:disabled
 ASSERT_FITS
 SCREENSHOT identity_settings_phone

@@ -329,6 +329,7 @@ type SiteConverter interface {
 	// App's text is shown without its tags
 	// goverter:map Notes | StripTags
 	// goverter:map Reason | StripTags
+	// goverter:ignore DurationMinutes
 	FoodIntakeFromDB(source *sitedb.FoodIntake) *SiteFoodIntake
 
 	// goverter:context siteContext
@@ -533,7 +534,7 @@ func StringOrNil(value string) *string {
 // ContextUnits are the units glucose is shown and typed in, from the identity's, site's or default settings
 // goverter:context siteContext
 func ContextUnits(siteContext *httputils.SiteContext) *consts.Units {
-	return siteContext.GetSettings().GetUnits()
+	return new(siteContext.GetSettings().GetUnits())
 }
 
 // goverter:context siteContext

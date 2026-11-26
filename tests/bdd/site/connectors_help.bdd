@@ -4,9 +4,37 @@ INCLUDE steps/new_site_admin.steps
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
 ASSERT_PATH /settings/connectors
-ASSERT_TEXT_VISIBLE A connector pulls your glucose into Nighttroop from another service. Turn on the one you use.
+ASSERT_TEXT_VISIBLE A connector pulls your glucose into Nighttroop from another service. Add the one you use.
+// A new site has no connector, so the page is Add a connector with a tile for each kind, and no form
+ASSERT_VISIBLE #site--settings--connectors--add >> text=Add a connector
+ASSERT_VISIBLE #site--settings--nightscout-connector--add >> text=Nightscout Connector
+ASSERT_VISIBLE #site--settings--nightscout-connector--add img[src*="/logos/nightscout.png"]
+ASSERT_VISIBLE #site--settings--dexcom-connector--add >> text=Dexcom Share Connector
+ASSERT_VISIBLE #site--settings--libre-connector--add >> text=FreeStyle Libre Connector
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--username
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--submit
+// A site with no connector is told what to choose
+ASSERT_VISIBLE #site--settings--connectors--none >> text=Choose the service your glucose comes from
+SCREENSHOT connectors_add
+// A tile opens its connector's form, which says what it needs, and the tile goes. The connector is on, the cursor
+// is in its first input, and its button says it adds the connector
+CLICK #site--settings--nightscout-connector--add
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--add
+ASSERT_VISIBLE #site--settings--nightscout-connector--enable:checked
+ASSERT_VISIBLE #site--settings--nightscout-connector--url:focus
+ASSERT_VISIBLE #site--settings--nightscout-connector--submit >> text=Add Connector
+SCREENSHOT connector_opened
+// Cancel makes it a tile again, and what was typed is gone when it is opened again
+INPUT #site--settings--nightscout-connector--url https://typed-then-cancelled.test
+CLICK #site--settings--nightscout-connector--cancel
+ASSERT_VISIBLE #site--settings--nightscout-connector--add
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--url
+CLICK #site--settings--nightscout-connector--add
+ASSERT_VISIBLE #site--settings--nightscout-connector--url:placeholder-shown
 ASSERT_VISIBLE #site--settings--connectors--nightscout-needs >> text=its API secret or a token that can read it
+CLICK #site--settings--dexcom-connector--add
 ASSERT_VISIBLE #site--settings--connectors--dexcom-needs >> text=turn on Share and invite one follower
+CLICK #site--settings--libre-connector--add
 ASSERT_VISIBLE #site--settings--connectors--libre-needs >> text=a LibreLinkUp account, not the LibreLink one
 SCREENSHOT connectors_help
 

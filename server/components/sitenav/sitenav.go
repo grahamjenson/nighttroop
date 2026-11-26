@@ -88,17 +88,17 @@ var Pages = []Page{
 	{Hub: Settings, Group: "site.nav.groups.push", Label: "site.nav.pages.push_credentials", Path: "/settings/push-credentials", ID: "site--settings--push-button", Icon: icon.KeyRound, Store: "push_credentials"},
 
 	// Connectors is a hub of its own page, where the site's data comes from, for its admins
-	{Hub: Connectors, Label: "site.nav.pages.connectors", Path: "/settings/connectors", ID: "site--settings--connectors-button", Icon: icon.Plug, Store: "connector_settings"},
+	{Hub: Connectors, Group: "site.nav.groups.this_site", Label: "site.nav.pages.connectors", Path: "/settings/connectors", ID: "site--settings--connectors-button", Icon: icon.Plug, Store: "connector_settings"},
 
 	// Alarms is a hub of its own page, so it has no tabs
-	{Hub: Alarms, Label: "site.nav.pages.alarms", Path: "/settings/alarms", ID: "site--settings--alarms-button", Icon: icon.BellRing, Store: "alarm_settings"},
+	{Hub: Alarms, Group: "site.nav.groups.this_site", Label: "site.nav.pages.alarms", Path: "/settings/alarms", ID: "site--settings--alarms-button", Icon: icon.BellRing, Store: "alarm_settings"},
 
 	{Hub: Logs, Label: "site.nav.pages.events", Path: "/logs/events", ID: "site--logs--events-button", Icon: icon.Activity, Store: "site_events"},
 	{Hub: Logs, Label: "site.nav.pages.errors", Path: "/logs/errors", ID: "site--logs--errors-button", Icon: icon.TriangleAlert, Store: "site_errors"},
 	{Hub: Logs, Label: "site.nav.pages.logs", Path: "/logs/logs", ID: "site--logs--logs-button", Icon: icon.ScrollText, Store: "site_logs"},
 
 	// Usage is a hub of its own page, the site's DB size and a download of it, for its admins
-	{Hub: Usage, Label: "site.nav.pages.usage", Path: "/usage", ID: "site--usage-button", Icon: icon.HardDrive, Store: "site_settings"},
+	{Hub: Usage, Group: "site.nav.groups.this_site", Label: "site.nav.pages.usage", Path: "/usage", ID: "site--usage-button", Icon: icon.HardDrive, Store: "site_settings"},
 }
 
 // keywords are the headings and words on a page, by its path, that the search also finds it by, showing the one found:
@@ -195,6 +195,35 @@ func Visible(identity *controldb.SiteIdentity, hubs ...Hub) []Page {
 			pages = append(pages, page)
 		}
 	}
+	return pages
+}
+
+// settingsTabs are the hubs whose pages are all tabs beside each other, as Settings' side tabs: the site is set up on
+// every one of them, so each is one click from the others, though the account menu opens each too
+var settingsTabs = []Hub{Settings, Connectors, Alarms, Usage}
+
+// TabsHub is the hub whose tabs show beside a page of hub: Settings for each of settingsTabs, and otherwise its own
+func TabsHub(hub Hub) Hub {
+	if slices.Contains(settingsTabs, hub) {
+		return Settings
+	}
+	return hub
+}
+
+// Tabs are the pages the identity may open that show as tabs beside a page of hub: its own, and for Settings those of
+// each of settingsTabs, each group's pages together, the groups in the order of their first page
+func Tabs(identity *controldb.SiteIdentity, hub Hub) []Page {
+	if hub != Settings {
+		return Visible(identity, hub)
+	}
+	pages := Visible(identity, settingsTabs...)
+	first := map[string]int{}
+	for i, page := range pages {
+		if _, ok := first[page.Group]; !ok {
+			first[page.Group] = i
+		}
+	}
+	slices.SortStableFunc(pages, func(a, b Page) int { return first[a.Group] - first[b.Group] })
 	return pages
 }
 

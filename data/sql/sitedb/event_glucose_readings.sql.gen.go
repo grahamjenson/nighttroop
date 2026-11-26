@@ -345,6 +345,68 @@ func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingPa
 	return &i, err
 }
 
+const getGlucoseReadingsByIDs = `-- name: GetGlucoseReadingsByIDs :many
+SELECT id, mgdl, reading_type, units, measurement_method, delta, trend, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
+WHERE id IN (SELECT value FROM json_each(CAST(?1 AS TEXT)))
+    AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+`
+
+type GetGlucoseReadingsByIDsParams struct {
+	IDs            *string
+	IncludeDeleted bool
+}
+
+// The readings with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+func (q *Queries) GetGlucoseReadingsByIDs(ctx context.Context, arg GetGlucoseReadingsByIDsParams) ([]*GlucoseReading, error) {
+	rows, err := q.query(ctx, q.getGlucoseReadingsByIDsStmt, getGlucoseReadingsByIDs, arg.IDs, arg.IncludeDeleted)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*GlucoseReading
+	for rows.Next() {
+		var i GlucoseReading
+		if err := rows.Scan(
+			&i.ID,
+			&i.Mgdl,
+			&i.ReadingType,
+			&i.Units,
+			&i.MeasurementMethod,
+			&i.Delta,
+			&i.Trend,
+			&i.Noise,
+			&i.Filtered,
+			&i.Unfiltered,
+			&i.Rssi,
+			&i.IsCalibration,
+			&i.SensorMgdlAtPairing,
+			&i.Notes,
+			&i.Reason,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const glucoseReadingAscendingIDs = `-- name: GlucoseReadingAscendingIDs :many
 SELECT id FROM glucose_readings
 WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
@@ -411,6 +473,62 @@ type GlucoseReadingHistoryIDsParams struct {
 // history
 func (q *Queries) GlucoseReadingHistoryIDs(ctx context.Context, arg GlucoseReadingHistoryIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.glucoseReadingHistoryIDsStmt, glucoseReadingHistoryIDs, arg.Since, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const glucoseReadingSortedIDs = `-- name: GlucoseReadingSortedIDs :many
+SELECT id FROM (
+    SELECT id, CASE CAST(?1 AS INTEGER) WHEN 3 THEN updated_at WHEN -3 THEN -updated_at WHEN 2 THEN created_at ELSE -created_at END AS sort_key
+    FROM glucose_readings
+    WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?2 AS INTEGER), 0), COALESCE(CAST(?3 AS INTEGER) + 1, 0), COALESCE(CAST(?4 AS INTEGER), 0))
+        AND MIN(COALESCE(CAST(?5 AS INTEGER), 253402300799999), COALESCE(CAST(?6 AS INTEGER) - 1, 253402300799999), COALESCE(?4, 253402300799999))
+        AND (CAST(?7 AS BOOL) = TRUE OR deleted_at IS NULL)
+) ORDER BY sort_key, id LIMIT CAST(?9 AS INTEGER) OFFSET CAST(?8 AS INTEGER)
+`
+
+type GlucoseReadingSortedIDsParams struct {
+	SortOrder      int64
+	DateGTE        *int64
+	DateGT         *int64
+	DateEQ         *int64
+	DateLTE        *int64
+	DateLT         *int64
+	IncludeDeleted bool
+	Skip           int64
+	Limit          int64
+}
+
+// The readings in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or srvCreated
+func (q *Queries) GlucoseReadingSortedIDs(ctx context.Context, arg GlucoseReadingSortedIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.glucoseReadingSortedIDsStmt, glucoseReadingSortedIDs,
+		arg.SortOrder,
+		arg.DateGTE,
+		arg.DateGT,
+		arg.DateEQ,
+		arg.DateLTE,
+		arg.DateLT,
+		arg.IncludeDeleted,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

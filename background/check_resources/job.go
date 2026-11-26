@@ -4,6 +4,7 @@ package check_resources
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"runtime"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/utils/config"
+	"nighttroop.t1d.nz/utils/page"
 	"nighttroop.t1d.nz/utils/usage"
 )
 
@@ -45,8 +47,24 @@ func Check(ctx context.Context, cfg *config.ServerConfig, controlDB *db.ControlD
 	}
 	if ok {
 		reading.DiskPercent, reading.DiskTotalBytes = new(100*used/total), new(int64(total))
+		refuseDiskFull(ctx, cfg, controlDB, total-used)
 	}
 	return controlDB.RecordResources(ctx, reading)
+}
+
+// refuseDiskFull keeps whether the DBs' disk, with free bytes free, is under DiskRefuseFreeMB, so sites are not created
+// and site writes that add data are refused, and pages the admin when it becomes so, as only they can free space
+func refuseDiskFull(ctx context.Context, cfg *config.ServerConfig, controlDB *db.ControlDB, free float64) {
+	full := free < float64(cfg.DiskRefuseFreeMB)*(1<<20)
+	if !controlDB.SetDiskFull(full) {
+		return
+	}
+	if full {
+		page.New(cfg.PagerDutyRoutingKey, cfg.PagerDutyEventsURL, cfg.HostName).Admin(ctx, page.SMS,
+			"The DBs' disk is nearly full, so sites are not created and their writes are refused until space is freed", "free_mb", int(free)>>20)
+		return
+	}
+	slog.InfoContext(ctx, "The DBs' disk has room again, so sites are created and written to again", "free_mb", int(free)>>20)
 }
 
 // MeasureSites keeps each site DB's size and the size of each of its tables, and scores each site for abuse, and

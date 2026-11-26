@@ -24,8 +24,38 @@ ASSERT_VISIBLE #site--identities--role--device_pwd_phone td >> text=api:*:*
 ASSERT_VISIBLE #site--identities--role--device_read_write td >> text=api:treatments:create
 ASSERT_VISIBLE #site--identities--role--user_readonly td:text-is("No")
 ASSERT_VISIBLE #site--identities--role--user td:text-is("Yes")
+// A badge after each name says how it is used: the admin signed in is active, and a device no app has used yet is
+// not connected. Turning a device off hides its badge, as its switch says it is off
+ASSERT_VISIBLE #site--identities--admin--state[data-state="active"] >> text=Active
+ASSERT_VISIBLE #site--identities--pwd_phone--state[data-state="unused"] >> text=Not connected yet
 ASSERT_NOT_VISIBLE #identities_table .bg-red-50
 SCREENSHOT identities
+CLICK #site--identities--read_only--enabled
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE #site--identities--read_only--state
+CLICK #site--identities--read_only--enabled
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--identities--read_only--state
+
+// An identity's Manage menu opens the site's events and errors searched for its name, to see what it did and what
+// was refused it
+CLICK #site--identities--admin--manage
+ASSERT_VISIBLE #site--identities--admin--events >> text=Its events
+ASSERT_VISIBLE #site--identities--admin--errors >> text=Its errors
+SCREENSHOT identity_logs_menu
+CLICK #site--identities--admin--events
+ASSERT_PATH /logs/events
+ASSERT_TEXT_EQUALS #site--events--filter--search admin
+ASSERT_VISIBLE #siteEventsTable >> text=Signed in
+ASSERT_NOT_VISIBLE #siteEventsTable >> text=Site created
+GOTO /settings/identities
+CLICK #site--identities--pwd_phone--manage
+CLICK #site--identities--pwd_phone--errors
+ASSERT_PATH /logs/errors
+ASSERT_TEXT_EQUALS #site--errors--filter--search pwd_phone
+ASSERT_TEXT_VISIBLE No errors here.
+GOTO /settings/identities
+ASSERT_STATUS 200
 
 // A name longer than the database keeps is refused in its own words, which the toast leaves to the Errors page
 CLICK #site--identities--add-user-button
@@ -39,7 +69,13 @@ SCREENSHOT identity_error_recorded
 CLICK #toaster >> text=Errors page
 ASSERT_PATH /logs/errors
 ASSERT_VISIBLE #siteErrorsTable >> text=CHECK constraint failed
+// The error says who it came from and what they asked for, and its details what it means in plain words
+ASSERT_VISIBLE #siteErrorsTable td >> text=admin · POST /settings/{collection}
 SCREENSHOT identity_error_on_errors_page
+CLICK #siteErrorsTable >> text=CHECK constraint failed
+ASSERT_VISIBLE #site--error--meaning >> text=The site did not accept what was sent
+SCREENSHOT identity_error_meaning
+CLICK #site--error--details >> text=Close
 GOTO /settings/identities
 ASSERT_STATUS 200
 

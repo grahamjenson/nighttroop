@@ -29,9 +29,7 @@ How xDrip4iOS talks to Nightscout, and how each part works with Nighttroop.
 6. Set **Units** to mg/dL.
    - The follower reads `sgv` as mg/dL, whatever the `units`. The Nightscout API always gives mg/dL, whatever the
      identity's or site's units.
-   - A device added for xDrip4iOS also has the Nightscout API write mg/dL as `mg/dl`. An admin can set this for
-     another identity with `units_mgdl_label` through the settings endpoint.
-   - If you use another device, its first upload in `mg/dl` sets its label to `mg/dl`.
+   - The Nightscout API writes mg/dL as `mg/dl` for every device but Loop, so xDrip4iOS reads its BG checks as mg/dL.
 
 ## Authentication
 

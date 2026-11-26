@@ -30,10 +30,10 @@ ASSERT_VISIBLE #control--site--migration >> text=Unknown
 // What fixes it comes first in its actions, and those that need its DB say it is unavailable, without their buttons
 ASSERT_VISIBLE #control--site--actions .divide-y > #control--site--action-upload-db:first-child
 ASSERT_VISIBLE #control--site--actions .divide-y > #control--site--action-upload-db + #control--site--action-new-empty-db
-ASSERT_VISIBLE #control--site--action-open >> text=Its DB is unavailable. Fix it first, above.
-ASSERT_VISIBLE #control--site--action-download-db >> text=Its DB is unavailable. Fix it first, above.
-ASSERT_VISIBLE #control--site--action-truncate >> text=Its DB is unavailable. Fix it first, above.
-ASSERT_VISIBLE #control--site--action-archive >> text=Its DB is unavailable. Fix it first, above.
+ASSERT_VISIBLE #control--site--action-open >> text=Its DB is unavailable. Fix it first, in Actions.
+ASSERT_VISIBLE #control--site--action-download-db >> text=Its DB is unavailable. Fix it first, in Actions.
+ASSERT_VISIBLE #control--site--dangerous-actions #control--site--action-truncate >> text=Its DB is unavailable. Fix it first, in Actions.
+ASSERT_VISIBLE #control--site--dangerous-actions #control--site--action-archive >> text=Its DB is unavailable. Fix it first, in Actions.
 ASSERT_NOT_VISIBLE #control--site--open
 ASSERT_NOT_VISIBLE #control--site--download-db
 ASSERT_NOT_VISIBLE #control--site--truncate

@@ -5,7 +5,7 @@ ASSERT_VISIBLE "Nighttroop"
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
 ASSERT_STATUS 200
-CLICK #site--settings--virtual-connector--enable
+CLICK #site--settings--virtual-connector--add
 CLICK #site--settings--virtual-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
@@ -193,3 +193,28 @@ ASSERT_TEXT_VISIBLE Showing 1 to 6
 GOTO /data/glucose
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Showing 1 to 6
+
+// A reading's details delete it too: Delete is at their foot, across from Save and Close, and asks first
+CLICK #glucoseReadingsTable tbody tr >> nth=0
+ASSERT_VISIBLE #site--glucose--details div:has(> #site--glucose--details--close) > #site--glucose--edit--delete
+ASSERT_TEXT_EQUALS #site--glucose--edit--delete Delete
+SCREENSHOT glucose_reading_details_delete
+CLICK_ASKS #site--glucose--edit--delete
+ASSERT_TEXT_EQUALS #confirm--message Delete this glucose reading?
+ASSERT_TEXT_EQUALS #confirm--ok Delete
+// Escape closes the question alone: the details stay open with the reading kept, and the focus is back on Delete
+PRESS Escape
+ASSERT_NOT_VISIBLE #confirm
+ASSERT_VISIBLE #site--glucose--details
+ASSERT_VISIBLE #site--glucose--edit--delete:focus
+ASSERT_TEXT_VISIBLE Showing 1 to 6
+// Confirming deletes it (a plain CLICK confirms), closes its details and removes its row
+CLICK #site--glucose--edit--delete
+ASSERT_TEXT_VISIBLE Glucose Reading Deleted
+ASSERT_NOT_VISIBLE #site--glucose--details
+ASSERT_TEXT_VISIBLE Showing 1 to 5
+
+// The reading deleted from its details stays gone after a reload
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_TEXT_VISIBLE Showing 1 to 5

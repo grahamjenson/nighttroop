@@ -98,8 +98,9 @@ func PasskeyLogin(prefix string) templ.Component {
 
 // PasskeyScript makes each button with data-passkey-begin ask the browser for a passkey with the options the server
 // begins with, then send what it made or signed to finish, going where finish says once done. WebAuthn's binary
-// fields travel as base64url. A failure the browser gives no reason for says the passkey did not work, in the page's
-// language.
+// fields travel as base64url. A failure the browser gives no reason for says the passkey did not work, and a server
+// that does not answer, as while it restarts, says to try again, in the page's language rather than the browser's
+// own, such as Safari's "Load failed".
 func PasskeyScript() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -124,13 +125,26 @@ func PasskeyScript() templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.passkey.failed")).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/passkey.templ`, Line: 33, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/passkey.templ`, Line: 34, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\">\n\t\tfunction passkey(begin, finish, headers, errorID, failed) {\n\t\t\tconst decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));\n\t\t\tconst encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\n\t\t\tconst fail = message => document.getElementById(errorID).textContent = message;\n\t\t\tfetch(begin, {method: 'POST', headers}).then(r => r.json()).then(options => {\n\t\t\t\tconst o = options.publicKey;\n\t\t\t\tif (!o) throw new Error(options.error);\n\t\t\t\to.challenge = decode(o.challenge);\n\t\t\t\t(o.excludeCredentials || o.allowCredentials || []).forEach(c => c.id = decode(c.id));\n\t\t\t\tif (o.user) o.user.id = decode(o.user.id);\n\t\t\t\treturn o.user ? navigator.credentials.create({publicKey: o}) : navigator.credentials.get({publicKey: o});\n\t\t\t}).then(credential => {\n\t\t\t\tconst response = {};\n\t\t\t\tfor (const key of ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'userHandle']) {\n\t\t\t\t\tif (credential.response[key]) response[key] = encode(credential.response[key]);\n\t\t\t\t}\n\t\t\t\tconst body = JSON.stringify({id: credential.id, rawId: encode(credential.rawId), type: credential.type, response});\n\t\t\t\treturn fetch(finish, {method: 'POST', headers: {...headers, 'Content-Type': 'application/json'}, body});\n\t\t\t}).then(r => r.json()).then(done => {\n\t\t\t\tif (!done.redirect) throw new Error(done.error);\n\t\t\t\twindow.location = done.redirect;\n\t\t\t}).catch(e => fail(e.message || failed));\n\t\t}\n\t\t{\n\t\t\tconst failed = document.currentScript.dataset.passkeyFailed;\n\t\t\tdocument.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {\n\t\t\t\tpasskey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, {}, button.dataset.passkeyError, failed);\n\t\t\t}));\n\t\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "\" data-passkey-unreachable=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.NewAttributeExpression(i18n.T(ctx, "common.passkey.unreachable")).Resolve(ctx)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_login_templ/passkey.templ`, Line: 34, Col: 138}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\">\n\t\tfunction passkey(begin, finish, headers, errorID, failed, unreachable) {\n\t\t\tconst decode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));\n\t\t\tconst encode = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');\n\t\t\tconst fail = message => document.getElementById(errorID).textContent = message;\n\t\t\t// No answer, or one that is not the server's JSON, as a proxy's while it restarts, is the server not reached\n\t\t\tconst post = (url, init) => fetch(url, {method: 'POST', ...init}).then(r => r.json()).catch(() => { throw new Error(unreachable); });\n\t\t\tpost(begin, {headers}).then(options => {\n\t\t\t\tconst o = options.publicKey;\n\t\t\t\tif (!o) throw new Error(options.error || unreachable);\n\t\t\t\to.challenge = decode(o.challenge);\n\t\t\t\t(o.excludeCredentials || o.allowCredentials || []).forEach(c => c.id = decode(c.id));\n\t\t\t\tif (o.user) o.user.id = decode(o.user.id);\n\t\t\t\treturn o.user ? navigator.credentials.create({publicKey: o}) : navigator.credentials.get({publicKey: o});\n\t\t\t}).then(credential => {\n\t\t\t\tconst response = {};\n\t\t\t\tfor (const key of ['clientDataJSON', 'attestationObject', 'authenticatorData', 'signature', 'userHandle']) {\n\t\t\t\t\tif (credential.response[key]) response[key] = encode(credential.response[key]);\n\t\t\t\t}\n\t\t\t\tconst body = JSON.stringify({id: credential.id, rawId: encode(credential.rawId), type: credential.type, response});\n\t\t\t\treturn post(finish, {headers: {...headers, 'Content-Type': 'application/json'}, body});\n\t\t\t}).then(done => {\n\t\t\t\tif (!done.redirect) throw new Error(done.error || unreachable);\n\t\t\t\twindow.location = done.redirect;\n\t\t\t}).catch(e => fail(e.message || failed));\n\t\t}\n\t\t{\n\t\t\tconst {passkeyFailed, passkeyUnreachable} = document.currentScript.dataset;\n\t\t\tdocument.querySelectorAll('[data-passkey-begin]').forEach(button => button.addEventListener('click', () => {\n\t\t\t\tpasskey(button.dataset.passkeyBegin, button.dataset.passkeyFinish, {}, button.dataset.passkeyError, passkeyFailed, passkeyUnreachable);\n\t\t\t}));\n\t\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

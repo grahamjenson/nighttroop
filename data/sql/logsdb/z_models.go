@@ -5,33 +5,42 @@
 package logsdb
 
 type Error struct {
-	ID         int64
-	SiteID     *string
-	Message    string
-	Attributes *string
-	RequestID  *string
-	JobID      *string
-	CreatedAt  int64
+	ID                int64
+	SiteID            *string
+	Message           string
+	Attributes        *string
+	RequestID         *string
+	JobID             *string
+	CreatedAt         int64
+	IdentityID        *int64
+	IdentityName      *string
+	ControlIdentityID *int64
 }
 
 type Event struct {
-	ID         int64
-	SiteID     *string
-	Name       string
-	Attributes *string
-	StartedAt  int64
-	FinishedAt *int64
-	RequestID  *string
-	JobID      *string
+	ID                int64
+	SiteID            *string
+	Name              string
+	Attributes        *string
+	StartedAt         int64
+	FinishedAt        *int64
+	RequestID         *string
+	JobID             *string
+	IdentityID        *int64
+	IdentityName      *string
+	ControlIdentityID *int64
 }
 
 type Log struct {
-	ID         int64
-	SiteID     *string
-	Level      string
-	Message    string
-	Attributes *string
-	RequestID  *string
-	JobID      *string
-	CreatedAt  int64
+	ID                int64
+	SiteID            *string
+	Level             string
+	Message           string
+	Attributes        *string
+	RequestID         *string
+	JobID             *string
+	CreatedAt         int64
+	IdentityID        *int64
+	IdentityName      *string
+	ControlIdentityID *int64
 }

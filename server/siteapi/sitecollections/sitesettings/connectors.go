@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"slices"
 	"strings"
 
 	"nighttroop.t1d.nz/utils/apiutils"
@@ -88,9 +89,9 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 		if params.Region == nil || *params.Region == "" {
 			params.Region = new(consts.LibreRegionGlobal)
 		}
-		if err := libreRegionValidate(params.Region); err != nil {
-			return nil, err
-		}
+	}
+	if err := regionValidate(params.Type, params.Region); err != nil {
+		return nil, err
 	}
 
 	if params.PasswordEnc == nil || *params.PasswordEnc == "" {
@@ -111,6 +112,8 @@ func (s *ConnectorSettingsCollection) CreateRow(ctx context.Context, collectionT
 	}
 
 	model.Type = params.Type // so its response shows the buttons of that connector
+	// The saved one is never shown again: the model is also sent to each admin streaming the connectors' changes
+	model.Password = sitemodels.SetPasswordGarbage()
 	return model, nil
 }
 
@@ -147,15 +150,20 @@ func (s *ConnectorSettingsCollection) UpdateRow(ctx context.Context, collectionT
 		}
 	}
 
-	if params.Type == consts.ConnectorTypeLibre && params.Region != nil {
-		if err := libreRegionValidate(params.Region); err != nil {
-			return nil, err
-		}
+	if err := regionValidate(params.Type, params.Region); err != nil {
+		return nil, err
 	}
 
 	// A blank password, or the placeholder the form shows for the saved one, keeps the saved one
 	if params.PasswordEnc != nil && (strings.TrimSpace(*params.PasswordEnc) == "" || *params.PasswordEnc == consts.PASSWORD_GARBAGE_VALUE) {
 		params.PasswordEnc = nil
+	}
+
+	// The saved Nightscout token is for the saved URL only: sent to another, it is given to whoever can change the URL,
+	// who is never shown it
+	if params.Type == consts.ConnectorTypeNightscout && params.UrlOrUsernameEnc != nil && params.PasswordEnc == nil &&
+		(oldModel.UrlOrUsername == nil || *oldModel.UrlOrUsername != *params.UrlOrUsernameEnc) {
+		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.token_for_new_url"))
 	}
 
 	if err := encryptCredentials(siteContext.Config.Security, siteContext.SiteID, params.UrlOrUsernameEnc, params.PasswordEnc); err != nil {
@@ -172,6 +180,8 @@ func (s *ConnectorSettingsCollection) UpdateRow(ctx context.Context, collectionT
 	}
 
 	model.Type = params.Type // so its response shows the buttons of that connector
+	// The saved one is never shown again: the model is also sent to each admin streaming the connectors' changes
+	model.Password = sitemodels.SetPasswordGarbage()
 	return model, nil
 }
 
@@ -261,11 +271,11 @@ const recentConnectorLogs = 5
 // addRecentLogs adds the source's newest events and errors from the logs DB, the site's own only
 func addRecentLogs(ctx context.Context, siteContext *httputils.SiteContext, model *sitemodels.Connector) error {
 	logs, connectorType := siteContext.ControlDB.Logs.Queries, string(model.Type)
-	events, err := logs.RecentConnectorEvents(ctx, logsdb.RecentConnectorEventsParams{SiteID: &siteContext.SiteID, ConnectorType: &connectorType, Limit: recentConnectorLogs})
+	events, err := logs.RecentConnectorEvents(ctx, logsdb.RecentConnectorEventsParams{SiteID: siteContext.SiteID, ConnectorType: &connectorType, Limit: recentConnectorLogs})
 	if err != nil {
 		return err
 	}
-	syncErrors, err := logs.RecentConnectorErrors(ctx, logsdb.RecentConnectorErrorsParams{SiteID: &siteContext.SiteID, ConnectorType: &connectorType, Limit: recentConnectorLogs})
+	syncErrors, err := logs.RecentConnectorErrors(ctx, logsdb.RecentConnectorErrorsParams{SiteID: siteContext.SiteID, ConnectorType: &connectorType, Limit: recentConnectorLogs})
 	if err != nil {
 		return err
 	}
@@ -428,10 +438,21 @@ func nsURLNormalizeValidate(rawUrl *string, config *config.ServerConfig) (*strin
 	return new(normalizedUrl), nil
 }
 
-// libreRegionValidate refuses a region not in consts.LibreRegions, so a Libre connector only calls their hosts
-func libreRegionValidate(region *string) error {
-	if !consts.IsLibreRegion(*region) {
-		return apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_libre_region", i18n.Data{"Region": *region}))
+// regionValidate refuses a region its connector type does not have, as the column takes any text: a Libre connector
+// only calls the hosts of consts.LibreRegions, Dexcom is US or OUS, and the other types have no region
+func regionValidate(connectorType consts.ConnectorType, region *string) error {
+	if region == nil {
+		return nil
+	}
+	known := *region == ""
+	switch connectorType {
+	case consts.ConnectorTypeLibre:
+		known = consts.IsLibreRegion(*region)
+	case consts.ConnectorTypeDexcom:
+		known = known || slices.Contains(consts.DexcomRegions, *region)
+	}
+	if !known {
+		return apiutils.ErrBadBodyWithHint(i18n.NewError("errors.connectors.bad_region", i18n.Data{"Region": *region}))
 	}
 	return nil
 }

@@ -1,0 +1,49 @@
+INCLUDE steps/new_site_admin.steps
+
+// The saved Nightscout token is for the saved Nightscout URL. It is kept only while the URL stays the same, so it is
+// never sent to another URL: whoever can change the URL is not shown the token
+
+NAME create_nightscout_sync
+POST http://{{ site }}/settings/connectors/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://valid.nightscout.test", "password": "a-token", "enabled": true}
+ASSERT_STATUS 200
+
+NAME new_url_with_no_token_refused
+POST http://{{ site }}/settings/connectors/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://bad.nightscout.test", "enabled": true}
+ASSERT_STATUS 400
+ASSERT_EQUALS "Bad or missing request body: Enter the Nightscout token again to change the Nightscout URL." "@message"
+
+// The form shows this placeholder for the saved token
+NAME new_url_with_placeholder_token_refused
+POST http://{{ site }}/settings/connectors/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://bad.nightscout.test", "password": "********", "enabled": true}
+ASSERT_STATUS 400
+
+NAME url_not_changed
+GET http://{{ site }}/settings/connectors
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "http://valid.nightscout.test" "@result.items.0.url_or_username"
+
+NAME same_url_keeps_stored_token
+POST http://{{ site }}/settings/connectors/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://valid.nightscout.test", "password": "********", "enabled": false}
+ASSERT_STATUS 200
+
+NAME new_url_with_its_token
+POST http://{{ site }}/settings/connectors/nightscout
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"url_or_username": "http://bad.nightscout.test", "password": "another-token", "enabled": false}
+ASSERT_STATUS 200
+ASSERT_EQUALS "http://bad.nightscout.test" "@result.url_or_username"

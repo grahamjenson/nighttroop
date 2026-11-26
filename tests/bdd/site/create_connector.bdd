@@ -34,10 +34,12 @@ ASSERT_PATH /settings/connectors
 
 // A test server offers virtual connector, which makes up glucose; a production server does not, which
 // TestVirtualConnectorIsOnlyOnDevelopmentTestAndStaging checks
-ASSERT_VISIBLE #site--settings--virtual-connector--enable
-ASSERT_VISIBLE #site--settings--virtual-connector--submit
+ASSERT_VISIBLE #site--settings--virtual-connector--add
 SCREENSHOT virtual_connector_offered_on_test_server
 
+// A connector's tile opens its form, which says beside its title that it is not set up
+CLICK #site--settings--nightscout-connector--add
+ASSERT_VISIBLE #site--settings--nightscout-connector--state[data-state="not_set_up"] >> text=Not set up
 ASSERT_VISIBLE #site--settings--nightscout-connector--enable
 ASSERT_VISIBLE #site--settings--nightscout-connector--url
 ASSERT_VISIBLE #site--settings--nightscout-connector--password
@@ -51,7 +53,7 @@ ASSERT_VISIBLE #site--settings--nightscout-connector--submit
 INPUT #site--settings--nightscout-connector--url https://has-a-path.test/nightscout
 CLICK #site--settings--nightscout-connector--url
 ASSERT_VISIBLE #site--settings--nightscout-connector--url:invalid
-CLICK "Connect your Nightscout site"
+CLICK #site--settings--connectors--nightscout-needs
 ASSERT_VISIBLE #site--settings--nightscout-connector--url:valid
 
 // A pasted Nightscout link with its token is split into the base URL and the API secret or token, so both boxes are
@@ -59,11 +61,11 @@ ASSERT_VISIBLE #site--settings--nightscout-connector--url:valid
 ASSERT_TEXT_VISIBLE API Secret or Token
 ASSERT_VISIBLE #site--settings--nightscout-connector--password:invalid
 INPUT #site--settings--nightscout-connector--url https://split-me.test/api/v1/entries.json?token=pasted-token
-CLICK "Connect your Nightscout site"
+CLICK #site--settings--connectors--nightscout-needs
 ASSERT_VISIBLE #site--settings--nightscout-connector--password:valid
 SCREENSHOT nightscout_link_split
 
-// Typing a new source's details turns it on, as it is easy to forget; unticking it then keeps it off while typing on
+// A connector opened from its tile is on, as it is added to be used; unticking it then keeps it off while typing on
 INPUT #site--settings--nightscout-connector--url         http://will_not_pass_the_test.test
 CLICK #site--settings--nightscout-connector--url
 ASSERT_VISIBLE #site--settings--nightscout-connector--enable:checked
@@ -93,17 +95,36 @@ ASSERT_TEXT_VISIBLE The first sync failed, so syncing has been turned off
 ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--last-success Never
 ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--last-failure just now
 ASSERT_TEXT_EQUALS #site--settings--nightscout-connector--status--interval 2 min (Error response)
+// The site's connector shows whole, with no tile. The kinds it does not have are tiles under Add a connector, with
+// none of their inputs
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--add
+ASSERT_VISIBLE #site--settings--connectors--add >> text=Add a connector
+ASSERT_VISIBLE #site--settings--libre-connector--add
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--region
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--enable
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--submit
+SCREENSHOT connector_with_others_to_add
+CLICK #site--settings--dexcom-connector--add
+ASSERT_NOT_VISIBLE #site--settings--dexcom-connector--add
+ASSERT_VISIBLE #site--settings--dexcom-connector--enable
 // The Dexcom region looks like the inputs beside it, not greyed out as if it could not be changed
 ASSERT_VISIBLE #site--settings--dexcom-connector--region
 ASSERT_NOT_VISIBLE .bg-gray-100:has(#site--settings--dexcom-connector--region)
+// Its state says it stopped, and the others are still not set up
+ASSERT_VISIBLE #site--settings--nightscout-connector--state[data-state="stopped"] >> text=Stopped
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--state-synced
+// Under the error, plain words say what to do about it: the address cannot be reached
+ASSERT_VISIBLE #site--settings--nightscout-connector--advice >> text=Nighttroop cannot reach that address
 SCREENSHOT connector_first_sync_failed
 
-// Deleting a source leaves the page in place, with the source's form rendered unset again
+// Deleting a connector leaves the page in place, and the connector is a tile to add again
 CLICK #site--settings--nightscout-connector--delete
 ASSERT_TEXT_VISIBLE Connector Deleted
 ASSERT_PATH /settings/connectors
 ASSERT_TITLE Connectors · Nighttroop
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--errors
+ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--url
+CLICK #site--settings--nightscout-connector--add
 ASSERT_VISIBLE #site--settings--nightscout-connector--url:not([value*="will_not_pass"])
 // Unset again, it has no Delete or Backfill until it is saved
 ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--delete
@@ -111,7 +132,7 @@ ASSERT_NOT_VISIBLE #site--settings--nightscout-connector--backfill
 
 // A link with api_secret is split the same way, and the base URL is what is saved
 INPUT #site--settings--nightscout-connector--url https://split-me.test/api/v1?api_secret=another-secret
-CLICK "Connect your Nightscout site"
+CLICK #site--settings--connectors--nightscout-needs
 CLICK #site--settings--nightscout-connector--submit
 ASSERT_STATUS 200
 ASSERT_TEXT_VISIBLE Connector Updated
@@ -121,6 +142,9 @@ ASSERT_VISIBLE #site--settings--nightscout-connector--url[value="https://split-m
 CLICK #site--settings--nightscout-connector--delete
 ASSERT_TEXT_VISIBLE Connector Deleted
 
+// The site has no connector again, so each kind is a tile, and the heading shows
+ASSERT_VISIBLE #site--settings--nightscout-connector--add
+CLICK #site--settings--dexcom-connector--add
 // The Dexcom region is picked from a list like the Libre region, starting outside the United States
 ASSERT_VISIBLE #site--settings--dexcom-connector--enable
 ASSERT_VISIBLE #site--settings--dexcom-connector--username
@@ -144,8 +168,9 @@ ASSERT_VISIBLE #site--settings--dexcom-connector--username[value="valid-dexcom-u
 ASSERT_VISIBLE #site--settings--dexcom-connector--region:has(option[value="US"]:checked)
 SCREENSHOT dexcom_connector_saved
 
-// Deleting renders the Dexcom form unset again, back outside the United States
+// Deleting makes Dexcom a tile to add again, its form unset, back outside the United States
 CLICK #site--settings--dexcom-connector--delete
 ASSERT_TEXT_VISIBLE Connector Deleted
+CLICK #site--settings--dexcom-connector--add
 ASSERT_VISIBLE #site--settings--dexcom-connector--username:not([value*="valid-dexcom"])
 ASSERT_VISIBLE #site--settings--dexcom-connector--region:has(option[value="OUS"]:checked)

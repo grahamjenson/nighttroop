@@ -66,12 +66,10 @@ SELECT * FROM sites WHERE id = ?;
 -- name: GetSiteIDsWithAlarms :many
 -- The live sites with an alarm turned on, for the site or for one of its enabled identities, which are checked periodically
 SELECT id FROM sites WHERE state = 'live' AND (
-    alarm_urgent_low_enabled OR alarm_low_enabled OR alarm_urgent_high_enabled OR alarm_high_enabled OR alarm_no_data_enabled
-        OR alarm_device_battery_low_enabled
+    json_extract(settings_json, '$.alarms.urgent_low.enabled') OR json_extract(settings_json, '$.alarms.low.enabled') OR json_extract(settings_json, '$.alarms.urgent_high.enabled') OR json_extract(settings_json, '$.alarms.high.enabled') OR json_extract(settings_json, '$.alarms.no_data.enabled') OR json_extract(settings_json, '$.alarms.device_battery_low.enabled')
     OR id IN (
         SELECT site_id FROM site_identities WHERE enabled AND (
-            alarm_urgent_low_enabled OR alarm_low_enabled OR alarm_urgent_high_enabled OR alarm_high_enabled OR alarm_no_data_enabled
-        OR alarm_device_battery_low_enabled
+            json_extract(settings_json, '$.alarms.urgent_low.enabled') OR json_extract(settings_json, '$.alarms.low.enabled') OR json_extract(settings_json, '$.alarms.urgent_high.enabled') OR json_extract(settings_json, '$.alarms.high.enabled') OR json_extract(settings_json, '$.alarms.no_data.enabled') OR json_extract(settings_json, '$.alarms.device_battery_low.enabled')
         )
     )
 );
@@ -231,3 +229,16 @@ UPDATE sites SET table_sizes_json = sqlc.arg('TableSizesJson') WHERE id = sqlc.a
 
 -- name: UpdateSiteSummariesCheckedAt :exec
 UPDATE sites SET summaries_checked_at = sqlc.arg('SummariesCheckedAt') WHERE id = sqlc.arg('ID');
+
+-- name: GetSiteEmails :many
+-- Each live site's email, encrypted, to find the site an email was sent to
+SELECT id, email_enc FROM sites WHERE state = 'live' AND email_enc IS NOT NULL ORDER BY id LIMIT 1000;
+
+-- name: UpdateSiteEmail :exec
+-- A new email is not verified, and none takes the email away
+UPDATE sites SET email_enc = sqlc.narg('EmailEnc'), email_verified_at = NULL WHERE id = sqlc.arg('ID');
+
+-- name: VerifySiteEmail :execrows
+-- Only the email the link was sent to is verified, not one saved since
+UPDATE sites SET email_verified_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = sqlc.arg('ID') AND email_enc = sqlc.arg('EmailEnc');

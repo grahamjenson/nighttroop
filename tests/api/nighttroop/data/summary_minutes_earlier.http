@@ -1,0 +1,45 @@
+INCLUDE steps/new_site.steps
+
+// A temp basal or temp target that started before the summary's 6 hours is in force in its first minutes, if it is
+// the newest then: it replaced the ones before it, so they do not come back once it ends, though they would still
+// run. Each minute is since + its index in minutes, so index 0 is 6 hours ago and 360 now.
+NAME summary_earlier_units
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+// A temp basal of 9 U/hr 10 hours ago for 10 hours, replaced 6 hours 30 minutes ago by one of 2 U/hr for an hour
+// (to index 30)
+NAME summary_earlier_temp_basals
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Temp Basal", "created_at": "{{ time 600 }}", "duration": 600, "absolute": 9, "rate": 9},
+   {"eventType": "Temp Basal", "created_at": "{{ time 390 }}", "duration": 60, "absolute": 2, "rate": 2}]
+ASSERT_STATUS 200
+
+// A temp target of 150 to 160 8 hours ago for 10 hours, replaced 6 hours 30 minutes ago by one of 80 to 90 for an hour
+// (to index 30)
+NAME summary_earlier_temp_targets
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Temporary Target", "created_at": "{{ time 480 }}", "duration": 600, "targetBottom": 150, "targetTop": 160, "units": "mg/dL"},
+   {"eventType": "Temporary Target", "created_at": "{{ time 390 }}", "duration": 60, "targetBottom": 80, "targetTop": 90, "units": "mg/dL"}]
+ASSERT_STATUS 200
+
+NAME summary_earlier
+GET http://{{ site }}/summary?hours=6
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_LENGTH 361 "@result.items.0.minutes"
+// None of them started in the summary
+ASSERT_LENGTH 0 "@result.items.0.temp_basals"
+ASSERT_LENGTH 0 "@result.items.0.temp_targets"
+// The newest of each from before the summary
+ASSERT_EQUALS 2 "@result.items.0.minutes.10.basal"
+ASSERT_EQUALS 80 "@result.items.0.minutes.10.low_target"
+ASSERT_EQUALS 90 "@result.items.0.minutes.10.high_target"
+// Once it ends, the one it replaced does not come back, and the site has no profile
+ASSERT_EQUALS null "@result.items.0.minutes.50.basal"
+ASSERT_EQUALS null "@result.items.0.minutes.50.low_target"
+ASSERT_EQUALS null "@result.items.0.minutes.50.high_target"

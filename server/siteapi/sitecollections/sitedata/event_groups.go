@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/utils/apiutils"
+	"nighttroop.t1d.nz/utils/can"
 	utilerrors "nighttroop.t1d.nz/utils/errors"
 
 	"github.com/a-h/templ"
@@ -52,6 +53,9 @@ func (s *EventGroupsCollection) CreateRow(ctx context.Context, collectionTx *sit
 	if herr := checkEventsPicked(model.GroupType, model); herr != nil {
 		return nil, herr
 	}
+	if err := checkMayGroupReading(siteContext, nil, model); err != nil {
+		return nil, err
+	}
 	q, err := collectionTx.Site()
 	if err != nil {
 		return nil, err
@@ -83,6 +87,9 @@ func (s *EventGroupsCollection) UpdateRow(ctx context.Context, collectionTx *sit
 	}
 	if herr := checkEventsPicked(groupType, model); herr != nil {
 		return nil, herr
+	}
+	if err := checkMayGroupReading(siteContext, oldModel.GlucoseReadingID, model); err != nil {
+		return nil, err
 	}
 	model.ID = oldModel.ID
 	q, err := collectionTx.Site()
@@ -162,6 +169,18 @@ func (s *EventGroupsCollection) DeleteHTMXResponse(model *sitemodels.SiteEventGr
 ///////
 // UTIL METHODS
 ////////
+
+// checkMayGroupReading refuses a glucose reading newly picked (grouped is the one the group has) by an identity that
+// cannot delete readings, a Caregiver device: a group's delete also deletes its events, and its Nightscout treatment
+// rewrites them
+func checkMayGroupReading(siteContext *httputils.SiteContext, grouped *string, model *sitemodels.SiteEventGroup) error {
+	picked := model.GlucoseReadingID
+	if picked == nil || (grouped != nil && *grouped == *picked) ||
+		can.IdentityAccessStore(siteContext.IdentityModel, (&GlucoseReadingsCollection{}).GetName(), can.ActionDelete) {
+		return nil
+	}
+	return apiutils.ErrForbidden
+}
 
 // checkEventsPicked makes sure a group has an event, unless it is a change, which has none, and only of the kinds its
 // type can have

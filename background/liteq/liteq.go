@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -111,7 +112,7 @@ type WorkerFunc func(context.Context, *jobsdb.Job) error
 // link to its logs.
 func runJob(ctx context.Context, q *jobsdb.Queries, worker WorkerFunc, job *jobsdb.Job) {
 	runCtx := jobContext(ctx, job)
-	err := worker(runCtx, job)
+	err := runWorker(runCtx, worker, job)
 	// Stopping cancels ctx while a job may still be running: its outcome is still recorded, or the job would be
 	// fetched again after its visibility timeout and run twice
 	done := context.WithoutCancel(ctx)
@@ -121,6 +122,18 @@ func runJob(ctx context.Context, q *jobsdb.Queries, worker WorkerFunc, job *jobs
 		return
 	}
 	q.CompleteJob(done, jobsdb.CompleteJobParams{ID: job.ID})
+}
+
+// runWorker runs the worker, and gives a panic in it as the job's error: a job runs in a goroutine of its own, where
+// a panic would stop the whole server, with no last backup
+func runWorker(ctx context.Context, worker WorkerFunc, job *jobsdb.Job) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("job panicked: %v", r)
+			slog.ErrorContext(ctx, "Liteq: Job panicked", "stack", string(debug.Stack()), "error", err)
+		}
+	}()
+	return worker(ctx, job)
 }
 
 func jobContext(ctx context.Context, job *jobsdb.Job) context.Context {

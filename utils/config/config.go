@@ -119,6 +119,13 @@ type ServerConfig struct {
 	PagerDutyRoutingKey string
 	PagerDutyEventsURL  string
 
+	// ResendAPIKey is the API key of the Resend account emails are sent with, ResendFrom who they are from, an
+	// address of a domain verified in it, and ResendAPIURL where they are sent. Without the key and the address no
+	// email is sent, and a site cannot give one.
+	ResendAPIKey string
+	ResendFrom   string
+	ResendAPIURL string
+
 	// Deployment names this server among those running Nighttroop, e.g. one of several staging servers, as Sentry's
 	// environment its errors are reported under
 	Deployment string
@@ -229,6 +236,9 @@ type ServerConfig struct {
 	DiskAlertPercent      int
 	DiskAlertFreeGB       int
 	CPUPeggedAlertSeconds int
+	// DiskRefuseFreeMB is the free MB on the DBs' disk under which sites are not created and site writes that add data
+	// are refused, as a full disk stops every site
+	DiskRefuseFreeMB int
 
 	// Backup Config
 	// SiteBackupIntervalInSeconds is how old a written site's backup is before it is backed up again
@@ -320,6 +330,11 @@ func NewServerConfig() (*ServerConfig, error) {
 		return nil, err
 	}
 
+	// Before the keys are made from it, which panics
+	if err := security.CheckKeySets(serverConfig.RawKeySets, serverConfig.Mode); err != nil {
+		return nil, fmt.Errorf("KEY_SETS cannot be read: %w", err)
+	}
+
 	serverConfig.setHostURLs()
 	serverConfig.startServices()
 
@@ -382,6 +397,11 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		// pagerduty
 		PagerDutyRoutingKey: configStringSelect(dotenv, "PAGERDUTY_ROUTING_KEY", ""),
 		PagerDutyEventsURL:  configStringSelect(dotenv, "PAGERDUTY_EVENTS_URL", "https://events.pagerduty.com/v2/enqueue"),
+
+		// email
+		ResendAPIKey: configStringSelect(dotenv, "RESEND_API_KEY", ""),
+		ResendFrom:   configStringSelect(dotenv, "RESEND_FROM", ""),
+		ResendAPIURL: configStringSelect(dotenv, "RESEND_API_URL", "https://api.resend.com/emails"),
 		Deployment:          configStringSelect(dotenv, "DEPLOYMENT", "development"),
 
 		SupportEmail: configStringSelect(dotenv, "SUPPORT_EMAIL", supportEmail),
@@ -464,6 +484,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		MemoryAlertPercent:    configIntSelect(dotenv, "MEMORY_ALERT_PERCENT", 60),
 		DiskAlertPercent:      configIntSelect(dotenv, "DISK_ALERT_PERCENT", 60),
 		DiskAlertFreeGB:       configIntSelect(dotenv, "DISK_ALERT_FREE_GB", 100),
+		DiskRefuseFreeMB:      configIntSelect(dotenv, "DISK_REFUSE_FREE_MB", 256),
 		CPUPeggedAlertSeconds: configIntSelect(dotenv, "CPU_PEGGED_ALERT_SECONDS", 20),
 
 		// Backup Config
@@ -895,4 +916,9 @@ func MergeMaps(a, b map[string]string) map[string]string {
 	}
 
 	return result
+}
+
+// EmailWorking is whether emails can be sent: RESEND_API_KEY and RESEND_FROM are both set
+func (c *ServerConfig) EmailWorking() bool {
+	return c.ResendAPIKey != "" && c.ResendFrom != ""
 }

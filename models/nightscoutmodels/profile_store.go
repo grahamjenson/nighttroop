@@ -358,6 +358,20 @@ func (p *Profile) ConvertToMGDL() {
 	p.TargetHigh = ScheduleValuesToJSONWithUnitConversionToMGDL(p.TargetHigh, p.Units)
 }
 
+// ConvertUnits converts the profile's targets and sensitivities, in from, to units
+func (p *Profile) ConvertUnits(from, to *consts.Units) {
+	if from == nil || to == nil || *from == *to {
+		return
+	}
+	for _, schedule := range [][]*ScheduleValue{p.TargetLow, p.TargetHigh, p.Sens} {
+		for _, sv := range schedule {
+			if sv != nil && sv.Value != nil {
+				sv.Value = new(types.FlexibleFloat64(to.FromMGDL(from.ToMGDL(sv.Value.Float64()))))
+			}
+		}
+	}
+}
+
 // WithGlucose is a copy of Loop's settings with each glucose in them, its suspend threshold, pre-meal range, override
 // presets' ranges and running override's range, converted, as Loop sends them in its profile's units
 func (l *LoopSettings) WithGlucose(convert func(float64) float64) *LoopSettings {
