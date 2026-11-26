@@ -30,7 +30,7 @@ templ ControlBase() {
 			{{ signedIn := controlContext != nil && controlContext.IdentityModel != nil }}
 			if signedIn {
 				@Header()
-				@banner.Strip("control--status-banner", banner.ForControl(ctx, controlContext.ServerStatus))
+				@banner.Strip("control--status-banner", banner.ForControl(ctx, controlContext.ServerStatus), false)
 			}
 			// Signed out, the login and setup pages fill it, edge to edge
 			<div
