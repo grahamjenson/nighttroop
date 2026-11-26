@@ -24,6 +24,9 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.activeSiteBannersStmt, err = db.PrepareContext(ctx, activeSiteBanners); err != nil {
+		return nil, fmt.Errorf("error preparing query ActiveSiteBanners: %w", err)
+	}
 	if q.allControlIdentitiesStmt, err = db.PrepareContext(ctx, allControlIdentities); err != nil {
 		return nil, fmt.Errorf("error preparing query AllControlIdentities: %w", err)
 	}
@@ -371,6 +374,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.activeSiteBannersStmt != nil {
+		if cerr := q.activeSiteBannersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing activeSiteBannersStmt: %w", cerr)
+		}
+	}
 	if q.allControlIdentitiesStmt != nil {
 		if cerr := q.allControlIdentitiesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allControlIdentitiesStmt: %w", cerr)
@@ -980,6 +988,7 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db                                      DBTX
 	tx                                      *sql.Tx
+	activeSiteBannersStmt                   *sql.Stmt
 	allControlIdentitiesStmt                *sql.Stmt
 	allSiteBannersStmt                      *sql.Stmt
 	allSiteIdentitiesStmt                   *sql.Stmt
@@ -1100,6 +1109,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:                                      tx,
 		tx:                                      tx,
+		activeSiteBannersStmt:                   q.activeSiteBannersStmt,
 		allControlIdentitiesStmt:                q.allControlIdentitiesStmt,
 		allSiteBannersStmt:                      q.allSiteBannersStmt,
 		allSiteIdentitiesStmt:                   q.allSiteIdentitiesStmt,

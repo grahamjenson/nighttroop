@@ -145,6 +145,10 @@ site:
       profiles: "basal isf icr"
       settings: "preferences options mmol mgdl clock"
       device_status: "pump phone uploader loop"
+  banner:
+    storage_full: "Storage full:"
+    over_storage: "Over the storage limit:"
+    over_storage_text: "This site's data is {{.Size}}, over its limit of {{.Limit}}. Delete old data, or the site stops storing more."
   base:
     alpha: "Alpha"
     open_user_menu: "Open user menu"

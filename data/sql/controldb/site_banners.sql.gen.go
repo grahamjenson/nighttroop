@@ -9,6 +9,46 @@ import (
 	"context"
 )
 
+const activeSiteBanners = `-- name: ActiveSiteBanners :many
+SELECT id, message, level, site_ids_json, expires_at, created_by_identity_name, created_at FROM site_banners WHERE expires_at > ?1 ORDER BY id LIMIT 100
+`
+
+type ActiveSiteBannersParams struct {
+	Now int64
+}
+
+// The banners not yet expired, oldest first, for a site's pages to show those that are its own
+func (q *Queries) ActiveSiteBanners(ctx context.Context, arg ActiveSiteBannersParams) ([]*SiteBanner, error) {
+	rows, err := q.query(ctx, q.activeSiteBannersStmt, activeSiteBanners, arg.Now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*SiteBanner
+	for rows.Next() {
+		var i SiteBanner
+		if err := rows.Scan(
+			&i.ID,
+			&i.Message,
+			&i.Level,
+			&i.SiteIdsJson,
+			&i.ExpiresAt,
+			&i.CreatedByIdentityName,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const allSiteBanners = `-- name: AllSiteBanners :many
 SELECT id, message, level, site_ids_json, expires_at, created_by_identity_name, created_at FROM site_banners ORDER BY id DESC LIMIT 100
 `
