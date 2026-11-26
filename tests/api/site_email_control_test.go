@@ -121,3 +121,66 @@ func TestControlSendsAPreBuiltEmailToAVerifiedSite(t *testing.T) {
 	require.Equal(t, http.StatusTooManyRequests, status)
 	require.Len(t, sent, 1)
 }
+
+// Sent Emails lists what Resend has, each with its site when a live site has that address, and with the address
+// mostly hidden. Only an admin's request for one email gives its whole address.
+func TestControlListsSentEmailsWithHiddenAddresses(t *testing.T) {
+	resend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/emails":
+			_, _ = w.Write([]byte(`{"object": "list", "has_more": false, "data": [
+				{"id": "e2", "to": ["Sam@Example.com"], "subject": "Your Nighttroop site will be archived", "created_at": "2026-11-25 22:13:42.674981+00", "last_event": "delivered"},
+				{"id": "e1", "to": ["pat@other.example.org"], "subject": "Verify the email of your Nighttroop site", "created_at": "2026-11-24T10:00:00Z", "last_event": "bounced"}]}`))
+		case "/emails/e1":
+			_, _ = w.Write([]byte(`{"object": "email", "id": "e1", "to": ["pat@other.example.org"]}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	t.Cleanup(resend.Close)
+
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	t.Cleanup(func() { cfg.ResendAPIKey, cfg.ResendFrom, cfg.ResendAPIURL = "", "", "" })
+	router, siteID := server.GetMainHandler(controlDB, cfg), site.SiteDB.Subdomain
+	token := controlLogin(t, router)
+	call := func(path string) (int, string) {
+		req := httptest.NewRequest("GET", "http://control.localhost"+path, nil)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+		return rr.Code, rr.Body.String()
+	}
+	emailEnc, err := cfg.Security.EncryptFor(security.PurposeSiteEmail, siteID, "sam@example.com")
+	require.NoError(t, err)
+	require.NoError(t, controlDB.Queries.UpdateSiteEmail(t.Context(), controldb.UpdateSiteEmailParams{ID: siteID, EmailEnc: &emailEnc}))
+
+	// A server that sends no email lists none, and asks Resend nothing
+	status, body := call("/sent-emails")
+	require.Equal(t, http.StatusOK, status)
+	require.Contains(t, body, `"result":[]`)
+
+	// Each email has when, its subject, what happened to it, its site when one has the address, and a hidden address
+	cfg.ResendAPIKey, cfg.ResendFrom, cfg.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL+"/emails"
+	status, body = call("/sent-emails")
+	require.Equal(t, http.StatusOK, status, body)
+	var listed struct {
+		Result []map[string]any `json:"result"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(body), &listed))
+	require.Equal(t, []map[string]any{
+		{"id": "e2", "sent_at": float64(1795644822674), "subject": "Your Nighttroop site will be archived", "status": "delivered", "site_id": siteID, "to": "S•••@E•••.com"},
+		{"id": "e1", "sent_at": float64(1795514400000), "subject": "Verify the email of your Nighttroop site", "status": "bounced", "site_id": nil, "to": "p•••@o•••.org"},
+	}, listed.Result)
+	require.NotContains(t, strings.ToLower(body), "sam@example.com")
+	require.NotContains(t, body, "pat@other.example.org")
+
+	// An admin asks for the whole address of one email; one Resend does not have is not found
+	status, body = call("/sent-emails/e1/address")
+	require.Equal(t, http.StatusOK, status)
+	require.Contains(t, body, `"to":"pat@other.example.org"`)
+	status, _ = call("/sent-emails/e9/address")
+	require.Equal(t, http.StatusNotFound, status)
+	status, _ = call("/sent-emails/..%2Fdomains/address")
+	require.Equal(t, http.StatusNotFound, status)
+}

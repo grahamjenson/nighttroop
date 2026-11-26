@@ -1,0 +1,34 @@
+// Sent Emails lists the emails the server sent, as Resend has them, with each address mostly hidden
+GOTO {{ .control_url }}/login
+ASSERT_STATUS 200
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+CLICK #control--menu
+CLICK #control--sent-emails-button
+ASSERT_STATUS 200
+ASSERT_PATH /sent-emails
+ASSERT_TITLE Sent Emails · Nighttroop Control
+
+// An email to a site's address has a link to the site, and says what happened to it
+ASSERT_VISIBLE #control--sent-email--e2 >> text=Your Nighttroop site will be archived
+ASSERT_VISIBLE #control--sent-email--e2 >> text=delivered
+ASSERT_VISIBLE #control--sent-email--e2--site >> text=emailsit
+ASSERT_VISIBLE #control--sent-email--e2--to >> text=s•••@e•••.com
+// An email to an address no site has, such as a verification link not yet opened, has no site
+ASSERT_VISIBLE #control--sent-email--e1 >> text=bounced
+ASSERT_NOT_VISIBLE #control--sent-email--e1--site
+ASSERT_VISIBLE #control--sent-email--e1--to >> text=p•••@o•••.org
+ASSERT_NOT_VISIBLE #control--sent-emails >> text=pat@other.example.org
+SCREENSHOT sent_emails
+
+// Show reads the whole address of that one email
+CLICK #control--sent-email--e1--show
+ASSERT_STATUS 200
+ASSERT_VISIBLE #control--sent-email--e1--to >> text=pat@other.example.org
+ASSERT_NOT_VISIBLE #control--sent-emails >> text=sam@example.com
+
+// The link opens the site's page
+CLICK #control--sent-email--e2--site
+ASSERT_PATH /sites/emailsit
