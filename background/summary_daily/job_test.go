@@ -224,7 +224,8 @@ func TestRebuildStaleTriesASiteAgainAfterAnError(t *testing.T) {
 // Only today's data, which is built as it is read, and data not of a day's summary, open no site
 func TestRebuildStaleLeavesToday(t *testing.T) {
 	r := newRig(t)
-	now := time.Now().UTC()
+	// Midday, so the run staleQuiet later is still today, as just before midnight it is tomorrow
+	now := time.Now().UTC().Truncate(24 * time.Hour).Add(12 * time.Hour)
 	r.reading("now", now, now)
 	activity, err := r.site.CreateActivity(t.Context(), sitedb.CreateActivityParams{ID: "walk", ActivityType: "walk", OccurredAt: now.AddDate(0, 0, -3).UnixMilli(), CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
