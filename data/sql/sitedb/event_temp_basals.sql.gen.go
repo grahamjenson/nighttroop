@@ -107,7 +107,7 @@ RETURNING id, duration_minutes, rate, multiplier, type, insulin_type, automatic,
 type CreateTempBasalParams struct {
 	ID                    string
 	DurationMinutes       int64
-	Rate                  float64
+	Rate                  *float64
 	Multiplier            *float64
 	Type                  *string
 	InsulinType           *string
@@ -244,7 +244,7 @@ RETURNING id, duration_minutes, rate, multiplier, type, insulin_type, automatic,
 type RewriteTempBasalParams struct {
 	ID                    string
 	DurationMinutes       int64
-	Rate                  float64
+	Rate                  *float64
 	Multiplier            *float64
 	Type                  *string
 	InsulinType           *string
@@ -484,8 +484,8 @@ func (q *Queries) TempBasalTotals(ctx context.Context) (*TempBasalTotalsRow, err
 const updateTempBasal = `-- name: UpdateTempBasal :one
 UPDATE temp_basals SET
     duration_minutes = COALESCE(?1, duration_minutes),
-    rate = COALESCE(?2, rate),
-    multiplier = COALESCE(?3, multiplier),
+    rate = CASE WHEN CAST(?2 AS REAL) IS NULL THEN COALESCE(CAST(?3 AS REAL), rate) END,
+    multiplier = CASE WHEN CAST(?3 AS REAL) IS NULL THEN COALESCE(CAST(?2 AS REAL), multiplier) END,
     type = COALESCE(?4, type),
     insulin_type = COALESCE(NULLIF(CAST(?5 AS TEXT), ''), insulin_type),
     automatic = COALESCE(?6, automatic),
@@ -502,8 +502,8 @@ RETURNING id, duration_minutes, rate, multiplier, type, insulin_type, automatic,
 
 type UpdateTempBasalParams struct {
 	DurationMinutes       *int64
-	Rate                  *float64
 	Multiplier            *float64
+	Rate                  *float64
 	Type                  *string
 	InsulinType           *string
 	Automatic             *bool
@@ -514,11 +514,12 @@ type UpdateTempBasalParams struct {
 	ID                    string
 }
 
+// A rate sent makes it a rate, and a multiplier sent makes it a multiplier, as a temp basal is one or the other
 func (q *Queries) UpdateTempBasal(ctx context.Context, arg UpdateTempBasalParams) (*TempBasal, error) {
 	row := q.queryRow(ctx, q.updateTempBasalStmt, updateTempBasal,
 		arg.DurationMinutes,
-		arg.Rate,
 		arg.Multiplier,
+		arg.Rate,
 		arg.Type,
 		arg.InsulinType,
 		arg.Automatic,

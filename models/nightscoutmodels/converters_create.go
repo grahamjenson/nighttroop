@@ -138,17 +138,26 @@ func OrNow(d *types.DateInt) int64 {
 
 // Treatments
 
-func TempBasalValuePtr(t Treatment) *float64 {
-	if t.Rate != nil {
-		x := float64(*t.Rate)
-		return &x
+// TempBasalRate is the U/hr a temp basal is kept as: its absolute, or else its rate when it has no percent. A percent
+// sent with a rate, as AAPS on a percent pump sends one, is kept as the percent, as the rate is only its rate at its
+// start, and Nightscout (getTempBasal) reads one with a percent and no absolute as that percent of the basal.
+func TempBasalRate(t Treatment) *float64 {
+	switch {
+	case t.Absolute != nil:
+		return new(float64(*t.Absolute))
+	case t.Rate != nil && t.TempBasalPercent == nil:
+		return new(float64(*t.Rate))
 	}
-	if t.Absolute != nil {
-		x := float64(*t.Absolute)
-		return &x
-	}
-	// A temp basal sent only as a percent has no rate, as that needs the profile's basal rate at the time
 	return nil
+}
+
+// TempBasalMultiplier is the times the scheduled basal a temp basal is kept as, from its percent, when it has no
+// absolute, see TempBasalRate
+func TempBasalMultiplier(t Treatment) *float64 {
+	if t.Absolute != nil {
+		return nil
+	}
+	return PercentToMultiplier(t.TempBasalPercent)
 }
 
 // PercentToMultiplier is a temp basal's times the scheduled basal from Nightscout's percent change from it, so -50 is 0.5

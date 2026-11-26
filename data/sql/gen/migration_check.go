@@ -210,6 +210,9 @@ var (
 	atLeast       = `(?:^|[^\w.])%[1]s\s*(>=?)\s*(-?[\d.]+)`
 	atMost        = `(?:^|[^\w.])%[1]s\s*(<=?)\s*(-?[\d.]+)`
 	jsonValid     = `json_valid\(\s*%[1]s\s*\)`
+	// exactlyOne is a CHECK that one of two columns is set and the other is null, e.g. (rate IS NULL) <> (multiplier IS
+	// NULL), matched for any two columns
+	exactlyOne = regexp.MustCompile(`(?i)\(\s*(\w+)\s+IS\s+NULL\s*\)\s*(?:<>|!=)\s*\(\s*(\w+)\s+IS\s+NULL\s*\)`)
 )
 
 // column is a table's column and the limits its CHECKs set
@@ -222,10 +225,14 @@ type column struct {
 	equals              string
 	json                bool
 	parent, parentKey   string // what a foreign key references
+	// nullAt is the end, largest or not, of the row it is null in, as one of two columns a CHECK has exactly one of: the
+	// first is set in the largest row and the second in the smallest. It is nil for a column set in both.
+	nullAt *bool
 }
 
 // SeedLimits adds two rows to each table: one with each column at the largest value its CHECKs allow, the longest
-// text, the highest number, the last of a list, and one at the smallest. A text with no limit is short, and a number
+// text, the highest number, the last of a list, and one at the smallest. Of two columns a CHECK has exactly one of, the
+// first is set only in the largest row and the second only in the smallest. A text with no limit is short, and a number
 // with none is far from 0. A foreign key is a row of its parent at the same end, so parents are added first. A row a
 // table already has the key of, such as a table of one row, is left out.
 func SeedLimits(db *sql.DB) error {
@@ -285,6 +292,8 @@ func SeedLimits(db *sql.DB) error {
 // finished_at >= started_at compare one column with another.
 func (c column) limit(largest bool, i int) any {
 	switch {
+	case c.nullAt != nil && *c.nullAt == largest:
+		return nil
 	case c.equals != "":
 		return literal(c.equals)
 	case len(c.in) > 0 && largest:
@@ -488,6 +497,9 @@ func (c *column) readChecks(checks []string) {
 		}
 		if match(jsonValid, check) != nil {
 			c.json = true
+		}
+		if m := exactlyOne.FindStringSubmatch(check); m != nil && (m[1] == c.name || m[2] == c.name) {
+			c.nullAt = new(m[2] == c.name)
 		}
 	}
 }

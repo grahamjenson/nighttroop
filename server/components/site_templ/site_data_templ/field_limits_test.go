@@ -17,7 +17,7 @@ func TestFieldLimits(t *testing.T) {
 	ctx = httputils.SetIdentityModelInSiteContext(ctx, &controldb.SiteIdentity{})
 	forms := map[string][]addmodal.Field{
 		"glucose": glucoseFields(ctx), "insulin": insulinDoseFields(ctx), "food": foodIntakeFields(ctx),
-		"temp basal": tempBasalFields(ctx), "temp target": tempTargetFields(ctx), "profile switch": profileSwitchFields(ctx),
+		"temp basal": tempBasalFields(ctx, false), "temp basal of a multiplier": tempBasalFields(ctx, true), "temp target": tempTargetFields(ctx), "profile switch": profileSwitchFields(ctx),
 		"activity": activityFields(ctx), "notification": notificationEventFields(ctx),
 	}
 	for _, groupType := range sitemodels.EventGroupTypes {

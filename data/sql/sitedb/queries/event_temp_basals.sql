@@ -106,10 +106,11 @@ WHERE id = sqlc.arg('ID') AND deleted_at IS NULL
 RETURNING *;
 
 -- name: UpdateTempBasal :one
+-- A rate sent makes it a rate, and a multiplier sent makes it a multiplier, as a temp basal is one or the other
 UPDATE temp_basals SET
     duration_minutes = COALESCE(sqlc.narg('DurationMinutes'), duration_minutes),
-    rate = COALESCE(sqlc.narg('Rate'), rate),
-    multiplier = COALESCE(sqlc.narg('Multiplier'), multiplier),
+    rate = CASE WHEN CAST(sqlc.narg('Multiplier') AS REAL) IS NULL THEN COALESCE(CAST(sqlc.narg('Rate') AS REAL), rate) END,
+    multiplier = CASE WHEN CAST(sqlc.narg('Rate') AS REAL) IS NULL THEN COALESCE(CAST(sqlc.narg('Multiplier') AS REAL), multiplier) END,
     type = COALESCE(sqlc.narg('Type'), type),
     insulin_type = COALESCE(NULLIF(CAST(sqlc.narg('InsulinType') AS TEXT), ''), insulin_type),
     automatic = COALESCE(sqlc.narg('Automatic'), automatic),

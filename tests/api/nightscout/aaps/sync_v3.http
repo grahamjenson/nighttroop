@@ -282,13 +282,17 @@ ASSERT_STATUS 200
 ASSERT_LENGTH 6 "@result"
 ASSERT_EXISTS "#Etag.0"
 
-// A temp basal is read with absolute ahead of percent, so AAPS takes the rate it sent as an absolute rate
+// A temp basal is read with absolute ahead of percent, so one sent as a percent, and cut short, comes back with no
+// absolute, and AAPS takes it as the percent it sent. No profile is known at its start, the switch is after it, so it
+// has no rate.
 NAME get_temp_basal
 GET http://{{ site }}/api/v3/treatments/{{ .temp_basal_id }}
 H Authorization: Bearer {{ jwt }}
 ASSERT_STATUS 200
 ASSERT_EQUALS "Temp Basal" "@result.eventType"
-ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS null "@result.absolute"
+ASSERT_EQUALS null "@result.rate"
+ASSERT_EQUALS 20 "@result.percent"
 ASSERT_EQUALS 12 "@result.duration"
 ASSERT_EQUALS 720000 "@result.durationInMilliseconds"
 // pumpId comes back as a string, which AAPS still reads into its Long (NsSdkJson.kt: a quoted number is accepted)

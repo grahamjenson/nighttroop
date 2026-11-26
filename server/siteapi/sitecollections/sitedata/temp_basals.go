@@ -31,10 +31,14 @@ func (s *TempBasalsCollection) GetRoute() string {
 // ////
 // CREATE
 // ////
+// CreateRow adds a temp basal of a rate, as the site keeps one typed in
 func (s *TempBasalsCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
 	// A rate of 0 is sent, a suspended basal
 	if model.Rate == nil {
 		return nil, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.required", i18n.Data{"Field": "rate"}))
+	}
+	if err := rateOrMultiplier(model); err != nil {
+		return nil, err
 	}
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).CreateTempBasal, sitemodels.TempBasalToCreate(model, siteContext))
 }
@@ -52,10 +56,22 @@ func (s *TempBasalsCollection) CreateHTMXResponse(model *sitemodels.SiteTempBasa
 // UPDATE
 // ////
 
-// UpdateRow changes a temp basal's rate, duration, notes or reason; anything not sent stays as it is
+// UpdateRow changes a temp basal's rate or multiplier, duration, notes or reason; anything not sent stays as it is. A
+// rate sent makes it a rate, and a multiplier a multiplier.
 func (s *TempBasalsCollection) UpdateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, siteContext *httputils.SiteContext, oldModel *sitemodels.SiteTempBasal, model *sitemodels.SiteTempBasal) (*sitedb.TempBasal, error) {
+	if err := rateOrMultiplier(model); err != nil {
+		return nil, err
+	}
 	model.ID = oldModel.ID
 	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).UpdateTempBasal, sitemodels.TempBasalToUpdate(model, siteContext))
+}
+
+// rateOrMultiplier refuses a temp basal sent with both a rate and a multiplier, as it is one or the other
+func rateOrMultiplier(model *sitemodels.SiteTempBasal) error {
+	if model.Rate != nil && model.Multiplier != nil {
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.data.rate_or_multiplier"))
+	}
+	return nil
 }
 
 func (s *TempBasalsCollection) UpdateHTMXResponse(model *sitemodels.SiteTempBasal) templ.Component {
@@ -72,6 +88,15 @@ func (s *TempBasalsCollection) GetRow(ctx context.Context, collectionTx *siteapi
 // ToModel is the site model of a row
 func (s *TempBasalsCollection) ToModel(row *sitedb.TempBasal, siteContext *httputils.SiteContext) *sitemodels.SiteTempBasal {
 	return sitemodels.TempBasalFromDB(row)
+}
+
+// FillModels gives the temp basals their scheduled basal, so they show their rate and percent at their start
+func (s *TempBasalsCollection) FillModels(ctx context.Context, collectionTx *siteapiutils.CollectionTx, models []*sitemodels.SiteTempBasal, siteContext *httputils.SiteContext) error {
+	q, err := collectionTx.Site()
+	if err != nil {
+		return err
+	}
+	return sitemodels.FillScheduledBasals(ctx, q, siteContext.GetSiteTimezone(), models)
 }
 
 // GetHTMXResponse is the temp basal's details, shown in a modal

@@ -849,8 +849,9 @@
             "type": "object",
             "properties": {
               "duration_minutes": { "type": "integer", "format": "int64" },
-              "rate": { "type": "number", "format": "double", "nullable": true, "description": "U/hr while it runs; 0 is a suspended basal" },
-              "multiplier": { "type": "number", "format": "double", "nullable": true, "description": "Times the scheduled basal at its start, so 0.5 is half" },
+              "rate": { "type": "number", "format": "double", "nullable": true, "description": "U/hr while it runs, as an absolute rate; 0 is a suspended basal. Null when it is a multiplier. A create needs it; an update sets it or multiplier, not both" },
+              "multiplier": { "type": "number", "format": "double", "nullable": true, "description": "Times the scheduled basal each minute it runs, as a Nightscout client sends a percent, so 0.5 is half. Null when it is a rate. An update sets it or rate, not both" },
+              "scheduled_basal": { "type": "number", "format": "double", "nullable": true, "readOnly": true, "description": "The profile's basal in U/hr at its start, from the profile or profile switch then; null when there is none" },
               "type": { "type": "string", "nullable": true, "readOnly": true, "description": "The kind of temp basal a Nightscout client sent, e.g. NORMAL, or PUMP_SUSPEND for a suspended pump. The site does not set it." }
             }
           }

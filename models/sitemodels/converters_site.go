@@ -161,6 +161,8 @@ type SiteConverter interface {
 	// App's text is shown without its tags
 	// goverter:map Notes | StripTags
 	// goverter:map Reason | StripTags
+	// Its scheduled basal is read from the profiles, see FillScheduledBasals
+	// goverter:ignore ScheduledBasal
 	TempBasalFromDB(source *sitedb.TempBasal) *SiteTempBasal
 
 	// goverter:context siteContext

@@ -156,3 +156,28 @@ func TestSeedLimitsTableOfOnlyARowID(t *testing.T) {
 	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM ids`).Scan(&count))
 	require.Equal(t, 2, count)
 }
+
+// Of two columns a CHECK has exactly one of, the first is set at its largest and the second at its smallest
+func TestSeedLimitsExactlyOneOfTwo(t *testing.T) {
+	db := openTestDB(t)
+	_, err := db.Exec(`CREATE TABLE basals (
+	id INTEGER PRIMARY KEY,
+	rate REAL CHECK(rate BETWEEN 0 AND 100),
+	multiplier REAL CHECK(multiplier BETWEEN 0 AND 11),
+	CHECK((rate IS NULL) <> (multiplier IS NULL))
+) STRICT;`)
+	require.NoError(t, err)
+	require.NoError(t, SeedLimits(db))
+
+	type row struct{ rate, multiplier sql.NullFloat64 }
+	got := []row{}
+	rows, err := db.Query(`SELECT rate, multiplier FROM basals ORDER BY id`)
+	require.NoError(t, err)
+	for rows.Next() {
+		var r row
+		require.NoError(t, rows.Scan(&r.rate, &r.multiplier))
+		got = append(got, r)
+	}
+	require.NoError(t, rows.Close())
+	require.Equal(t, []row{{rate: sql.NullFloat64{Float64: 100, Valid: true}}, {multiplier: sql.NullFloat64{Float64: 0, Valid: true}}}, got)
+}

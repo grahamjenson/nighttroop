@@ -1,0 +1,159 @@
+INCLUDE steps/new_site.steps
+
+// AAPS on a percent pump sends a temp basal as its percent change from the basal, with its rate at its start and no
+// absolute (TB.toNSTemporaryBasal). Nightscout reads one with a percent and no absolute as that percent of the basal
+// in force each minute (getTempBasal), so it is kept as the percent and given back with no absolute, its rate worked
+// out from the profile at its start, and the summary's basal follows the basal.
+NAME percent_units
+POST http://{{ site }}/settings/identity
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"units": "mg/dL"}
+ASSERT_STATUS 200
+
+// The default profile, Base, uploaded two days ago: a basal of 1 U/hr
+NAME percent_default_profile
+POST http://{{ .ns_site }}/api/v1/profiles?token={{ token }}
+B {"defaultProfile": "Base", "startDate": "{{ time 2880 }}", "created_at": "{{ time 2880 }}", "units": "mg/dL", "store": {"Base": {"dia": 5, "units": "mg/dL", "timezone": "UTC", "sens": [{"time": "00:00", "timeAsSeconds": 0, "value": 50}], "carbratio": [{"time": "00:00", "timeAsSeconds": 0, "value": 10}], "basal": [{"time": "00:00", "timeAsSeconds": 0, "value": 1}], "target_low": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}], "target_high": [{"time": "00:00", "timeAsSeconds": 0, "value": 100}]}}}
+ASSERT_STATUS 200
+
+// A temporary switch to High, a basal of 2 U/hr, 30 minutes ago for 10 minutes (index 30 to 40 of the summary's hour)
+NAME percent_switch_to_high
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 30 }},
+    "utcOffset": 0,
+    "isValid": true,
+    "eventType": "Profile Switch",
+    "profileJson": "{\"units\":\"mg/dl\",\"dia\":5,\"timezone\":\"UTC\",\"sens\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":50}],\"carbratio\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":10}],\"basal\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":2}],\"target_low\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}],\"target_high\":[{\"time\":\"00:00\",\"timeAsSeconds\":0,\"value\":100}]}",
+    "profile": "High",
+    "originalProfileName": "High",
+    "originalDuration": 600000,
+    "duration": 10,
+    "durationInMilliseconds": 600000,
+    "timeshift": 0,
+    "percentage": 100,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+
+// 150% from 25 minutes ago for 30 minutes (index 35 to 65), 3 U/hr at its start on High. Its rate is sent as 2.9, to
+// show the rate given back is worked out from the profile, not kept.
+NAME percent_temp_basal
+POST http://{{ .ns_site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {
+    "date": {{ itime 25 }},
+    "utcOffset": 0,
+    "isValid": true,
+    "eventType": "Temp Basal",
+    "pumpId": 5101,
+    "pumpType": "ACCU_CHEK_COMBO",
+    "pumpSerial": "AAPS5101",
+    "rate": 2.9,
+    "percent": 50.0,
+    "type": "NORMAL",
+    "duration": 30,
+    "durationInMilliseconds": 1800000,
+    "app": "AAPS"
+ }
+ASSERT_STATUS 201
+SET percent_tb_id {{ .percent_temp_basal.identifier }}
+
+NAME percent_temp_basal_v3
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .percent_tb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 3 "@result.rate"
+ASSERT_EQUALS 50 "@result.percent"
+ASSERT_EQUALS null "@result.absolute"
+ASSERT_EQUALS null "@result.temp"
+
+NAME percent_temp_basal_v1
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[eventType]=Temp+Basal&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 3 "@0.rate"
+ASSERT_EQUALS 50 "@0.percent"
+ASSERT_EQUALS null "@0.absolute"
+ASSERT_EQUALS null "@0.temp"
+
+// The site keeps it as a multiplier, with no rate, and gives the scheduled basal at its start, High's 2 U/hr
+NAME percent_site_temp_basal
+GET http://{{ site }}/data/temp-basals
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS null "@result.items.0.rate"
+ASSERT_EQUALS 1.5 "@result.items.0.multiplier"
+ASSERT_EQUALS 2 "@result.items.0.scheduled_basal"
+
+// Each minute is an hour ago plus its index in minutes: 150% of High's 2 U/hr until the switch ends, then of Base's
+// 1 U/hr
+NAME percent_summary
+GET http://{{ site }}/summary?hours=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 2 "@result.items.0.minutes.32.basal"
+ASSERT_EQUALS 3 "@result.items.0.minutes.37.basal"
+ASSERT_EQUALS 1.5 "@result.items.0.minutes.50.basal"
+ASSERT_EQUALS 1.5 "@result.items.0.minutes.60.basal"
+
+// AAPS ends it early by sending its duration again, which is merged into it, so it stays a percent
+NAME percent_temp_basal_patch
+PATCH http://{{ .ns_site }}/api/v3/treatments/{{ .percent_tb_id }}
+H Authorization: Bearer {{ jwt }}
+B {"duration": 20, "durationInMilliseconds": 1200000}
+ASSERT_STATUS 200
+
+NAME percent_temp_basal_patched
+GET http://{{ .ns_site }}/api/v3/treatments/{{ .percent_tb_id }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 20 "@result.duration"
+ASSERT_EQUALS 3 "@result.rate"
+ASSERT_EQUALS 50 "@result.percent"
+ASSERT_EQUALS null "@result.absolute"
+ASSERT_EQUALS null "@result.temp"
+
+// It still follows the basal, and ends at index 55
+NAME percent_summary_patched
+GET http://{{ site }}/summary?hours=1
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 3 "@result.items.0.minutes.37.basal"
+ASSERT_EQUALS 1.5 "@result.items.0.minutes.50.basal"
+ASSERT_EQUALS 1 "@result.items.0.minutes.60.basal"
+
+// Loop's temp basal of an absolute rate, 5 minutes ago on Base, keeps its rate, and gives its percent from the profile
+NAME absolute_temp_basal
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B {"eventType": "Temp Basal", "created_at": "{{ time 5 }}", "absolute": 1.2, "rate": 1.2, "duration": 30, "enteredBy": "loop://iPhone"}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1.2 "@0.absolute"
+ASSERT_EQUALS "absolute" "@0.temp"
+ASSERT_EQUALS 1.2 "@0.rate"
+ASSERT_EQUALS 20 "@0.percent"
+
+NAME absolute_temp_basal_v3
+GET http://{{ .ns_site }}/api/v3/treatments/{{ dig "absolute_temp_basal.0._id" }}
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 1.2 "@result.absolute"
+ASSERT_EQUALS "absolute" "@result.temp"
+ASSERT_EQUALS 1.2 "@result.rate"
+ASSERT_EQUALS 20 "@result.percent"
+
+// The search gives both, each as it is kept
+NAME temp_basals_v1
+GET http://{{ .ns_site }}/api/v1/treatments.json?find[eventType]=Temp+Basal&token={{ token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 2 "@"
+ASSERT_EQUALS 1.2 "@0.absolute"
+ASSERT_EQUALS 20 "@0.percent"
+ASSERT_EQUALS 3 "@1.rate"
+ASSERT_EQUALS null "@1.absolute"
+ASSERT_EQUALS 50 "@1.percent"

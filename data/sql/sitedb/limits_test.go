@@ -1,6 +1,7 @@
 package sitedb_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -64,8 +65,14 @@ func TestSiteDataLimits(t *testing.T) {
 				GlucoseMgdlJson: "[]", LoopIobJson: "[]", LoopIobBasalJson: "[]", LoopIobTreatmentJson: "[]", LoopCobJson: "[]"}
 		}, testutils.NoResult(q.UpsertSummaryPeriod)),
 		"temp_basals": testutils.Recipe(func(i int) sitedb.CreateTempBasalParams {
-			return sitedb.CreateTempBasalParams{ID: id(i), DurationMinutes: 30, Rate: 1, OccurredAt: now, CreatedByIdentityName: by}
-		}, testutils.NoResult(q.CreateTempBasal), updatedBy),
+			return sitedb.CreateTempBasalParams{ID: id(i), DurationMinutes: 30, Rate: new(1.0), OccurredAt: now, CreatedByIdentityName: by}
+		}, func(ctx context.Context, p sitedb.CreateTempBasalParams) error {
+			// A temp basal is a rate or a multiplier, so one written with a multiplier has no rate
+			if p.Multiplier != nil {
+				p.Rate = nil
+			}
+			return testutils.NoResult(q.CreateTempBasal)(ctx, p)
+		}, updatedBy),
 		// A temp target lasts at most a week
 		"temp_targets": testutils.Recipe(func(i int) sitedb.CreateTempTargetParams {
 			return sitedb.CreateTempTargetParams{ID: id(i), DurationMinutes: 30, HighTargetMgdl: 140, LowTargetMgdl: 120, OccurredAt: now, CreatedByIdentityName: by}

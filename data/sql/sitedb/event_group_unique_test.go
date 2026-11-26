@@ -44,7 +44,7 @@ func TestEventGroupEventsUnique(t *testing.T) {
 			return err
 		}, func(p *sitedb.CreateEventGroupParams, id *string) { p.FoodIntakeID = id }},
 		{"temp_basal_id", func(id string) error {
-			_, err := q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: id, DurationMinutes: 30, Rate: 1, OccurredAt: 1, CreatedByIdentityName: by})
+			_, err := q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: id, DurationMinutes: 30, Rate: new(1.0), OccurredAt: 1, CreatedByIdentityName: by})
 			return err
 		}, func(p *sitedb.CreateEventGroupParams, id *string) { p.TempBasalID = id }},
 		{"temp_target_id", func(id string) error {

@@ -204,8 +204,8 @@ CREATE TABLE temp_basals (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
 
     duration_minutes INTEGER NOT NULL CHECK(duration_minutes BETWEEN 0 AND 10080), -- at most a week
-    rate REAL NOT NULL CHECK(rate BETWEEN 0 AND 100), -- the units an hour given while it runs
-    multiplier REAL CHECK(multiplier BETWEEN 0 AND 11), -- times the scheduled basal at its start, so 0.5 is half and 0 a zero temp; optional, but rate is not
+    rate REAL CHECK(rate BETWEEN 0 AND 100), -- the units an hour given while it runs, sent as an absolute rate; null when it is a multiplier
+    multiplier REAL CHECK(multiplier BETWEEN 0 AND 11), -- times the scheduled basal each minute it runs, sent as a percent, so 0.5 is half and 0 a zero temp; null when it is a rate
     type TEXT CHECK(length(type) <= 64), -- AAPS's kind of temp basal, e.g. NORMAL, or PUMP_SUSPEND for a suspended pump
     insulin_type TEXT CHECK(length(insulin_type) <= 64), -- the insulin it is of, Loop's, e.g. Novolog
     automatic INTEGER CHECK(automatic IN (0, 1)), -- whether the loop set it, Loop's, rather than the user
@@ -225,7 +225,10 @@ CREATE TABLE temp_basals (
     updated_by_identity_id INTEGER,
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_id INTEGER,
-    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
+    created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64),
+
+    -- a temp basal is a rate or a multiplier of the scheduled basal, not both
+    CHECK((rate IS NULL) <> (multiplier IS NULL))
 ) STRICT;
 
 CREATE VIEW temp_basals_vw AS SELECT temp_basals.* FROM (SELECT NULL WHERE FALSE) dummy FULL JOIN temp_basals ON TRUE;

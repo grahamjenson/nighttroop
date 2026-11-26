@@ -354,7 +354,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 	"temp_basals": {
 		"ID":                    {Column: "id", Required: true, MaxLength: 36},
 		"DurationMinutes":       {Column: "duration_minutes", Required: true, Min: new(0.0), Max: new(10080.0)},
-		"Rate":                  {Column: "rate", Required: true, Min: new(0.0), Max: new(100.0)},
+		"Rate":                  {Column: "rate", Min: new(0.0), Max: new(100.0)},
 		"Multiplier":            {Column: "multiplier", Min: new(0.0), Max: new(11.0)},
 		"Type":                  {Column: "type", MaxLength: 64},
 		"InsulinType":           {Column: "insulin_type", MaxLength: 64},
@@ -372,6 +372,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"UpdatedByIdentityName": {Column: "updated_by_identity_name", MaxLength: 64},
 		"CreatedByIdentityID":   {Column: "created_by_identity_id"},
 		"CreatedByIdentityName": {Column: "created_by_identity_name", Required: true, MaxLength: 64},
+		"CHECK((rate":           {Column: "CHECK((rate"},
 	},
 	"temp_targets": {
 		"ID":                      {Column: "id", Required: true, MaxLength: 36},

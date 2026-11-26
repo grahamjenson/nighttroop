@@ -10,6 +10,7 @@ import (
 
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/nightscoutmodels"
+	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/utils/apiutils/apiquery"
@@ -71,9 +72,6 @@ func (c TreatmentCollection) Rows(nsModel nightscoutmodels.Treatment) []sitedb.T
 func (c TreatmentCollection) CreateModel(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Treatment, cc nightscoutmodels.ConverterContext, overrideIdentifier *string) (*sitedb.EventGroupsBundle, error) {
 
 	tebg := TreatmentEventGroupBundle(ctx, nsModel)
-	if err := fillTempBasal(ctx, q, nsModel, tebg.TempBasal); err != nil {
-		return nil, err
-	}
 	err := createUpdateEventGroup(ctx, q, &tebg, cc)
 	if err != nil {
 		return nil, err
@@ -197,9 +195,6 @@ func (c TreatmentCollection) RewriteModel(q *sitedb.Queries, ctx context.Context
 	bundle := TreatmentEventGroupBundle(ctx, nsModel)
 	for _, event := range treatmentEvents {
 		event.keep(&bundle, stored)
-	}
-	if err := fillTempBasal(ctx, q, nsModel, bundle.TempBasal); err != nil {
-		return nil, err
 	}
 	if err := createUpdateEventGroup(ctx, q, &bundle, cc); err != nil {
 		return nil, err
@@ -362,7 +357,45 @@ func isAssigned(values ...any) bool {
 	return false
 }
 
+// DBModelToTreatment is the bundle as a treatment, see treatmentAt, with its temp basal's profile basal read from the
+// site's DB
 func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) nightscoutmodels.Treatment {
+	return treatmentAt(source, siteContext, scheduledBasals(siteContext, []*sitedb.EventGroupsBundle{source}))
+}
+
+// ToNSBatch is DBModelToTreatment for the bundles, with the profiles' basals at their temp basals read once for all of
+// them, as a search gives many temp basals
+func (c TreatmentCollection) ToNSBatch(bundles []*sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) func(*sitedb.EventGroupsBundle, *httputils.SiteContext) nightscoutmodels.Treatment {
+	basals := scheduledBasals(siteContext, bundles)
+	return func(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext) nightscoutmodels.Treatment {
+		return treatmentAt(source, siteContext, basals)
+	}
+}
+
+// scheduledBasals are the profiles' basals at the start of the bundles' temp basals, by their start, see
+// sitemodels.ScheduledBasals. There are none without the site's DB, as for a document read in a write's transaction,
+// see withoutSiteDB, so its temp basal is given as it is kept.
+func scheduledBasals(siteContext *httputils.SiteContext, bundles []*sitedb.EventGroupsBundle) map[int64]*float64 {
+	times := []int64{}
+	for _, bundle := range bundles {
+		if bundle != nil && bundle.TempBasal != nil {
+			times = append(times, bundle.TempBasal.OccurredAt)
+		}
+	}
+	if len(times) == 0 || siteContext == nil || siteContext.SiteDB == nil {
+		return nil
+	}
+	ctx := context.Background()
+	basals, err := sitemodels.ScheduledBasals(ctx, siteContext.SiteDB.Queries(), siteContext.GetSiteTimezone(), times)
+	if err != nil {
+		slog.WarnContext(ctx, "Cannot read the profiles' basals at temp basals", "error", err)
+	}
+	return basals
+}
+
+// treatmentAt is the bundle as a treatment, its temp basal's rate and percent at its start from basals, the profiles'
+// basals by time
+func treatmentAt(source *sitedb.EventGroupsBundle, siteContext *httputils.SiteContext, basals map[int64]*float64) nightscoutmodels.Treatment {
 	treatment := nightscoutmodels.EventGroupToTreatment(source.EventGroup)
 	// Every treatment says the units its glucose is in, as the API's, so a client does not read a temp target's or a
 	// therapy event's glucose in the site's units, as Nightscout's careportal sends units with every treatment
@@ -381,6 +414,17 @@ func DBModelToTreatment(source *sitedb.EventGroupsBundle, siteContext *httputils
 	// part as splitNow and splitExt; and the extended part's units an hour as relative, as Nightscout's careportal sends
 	if isCombo := treatment.EventType != nil && *treatment.EventType == nightscoutmodels.ComboBolus; treatment.Insulin != nil && (isCombo || amount(treatment.ExtendedDose) > 0) {
 		comboParts(treatment)
+	}
+	// A temp basal gives its rate and percent at its start, from the profile's basal then, and its absolute only when it
+	// is kept as a rate: Nightscout (getTempBasal) reads absolute ahead of percent, so one kept as a percent goes on
+	// following the basal, and AAPS reads it back as a percent. Without the profile's basal it gives only what it keeps.
+	if source.TempBasal != nil {
+		tempBasal, scheduled := sitemodels.TempBasalFromDB(source.TempBasal), basals[source.TempBasal.OccurredAt]
+		treatment.Rate = nil
+		if rate := tempBasal.RateAt(scheduled); rate != nil {
+			treatment.Rate = new(types.FlexibleFloat64(*rate))
+		}
+		treatment.TempBasalPercent = nightscoutmodels.MultiplierToPercent(tempBasal.MultiplierAt(scheduled))
 	}
 	// Nighttroop keeps the insulin given and a temp basal's absolute rate, so they are what was programmed
 	treatment.Programmed = treatment.Insulin
