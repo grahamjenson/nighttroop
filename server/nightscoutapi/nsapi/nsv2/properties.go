@@ -8,7 +8,9 @@ import (
 	"maps"
 	"math"
 	"net/http"
+	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -25,49 +27,63 @@ import (
 // gives {} as Nightscout does
 func PropertiesList(store nsutils.Store) func(http.ResponseWriter, *http.Request, *nsutils.Identity) {
 	return func(w http.ResponseWriter, r *http.Request, identity *nsutils.Identity) {
-		properties := Properties(r.Context(), httputils.GetSiteContext(r.Context()).SiteDB.Queries(), time.Now())
-		if names := chi.URLParam(r, "names"); names != "" {
-			asked := map[string]any{}
-			for _, name := range strings.Split(names, ",") {
-				if property, ok := properties[name]; ok {
-					asked[name] = property
-				}
-			}
-			properties = asked
+		var names []string
+		if asked := chi.URLParam(r, "names"); asked != "" {
+			names = strings.Split(asked, ",")
 		}
-		apiutils.WriteJSON(w, http.StatusOK, properties)
+		q := httputils.GetSiteContext(r.Context()).SiteDB.Queries()
+		apiutils.WriteJSON(w, http.StatusOK, Properties(r.Context(), q, time.Now(), names...))
 	}
 }
 
-// Properties are the Nightscout plugin properties Nighttroop has the data for, in the plugins' shapes
-func Properties(ctx context.Context, q *sitedb.Queries, now time.Time) map[string]any {
-	dr := LastDeviceStatusFromPWD(q, ctx)
+// Properties are the Nightscout plugin properties Nighttroop has the data for, in the plugins' shapes: all of them, or
+// only those named, which reads only what they are made from
+func Properties(ctx context.Context, q *sitedb.Queries, now time.Time, names ...string) map[string]any {
+	asked := func(name string) bool { return len(names) == 0 || slices.Contains(names, name) }
+	// The loop's newest device status, read once, and only when a property asked for is from it
+	dr := sync.OnceValue(func() *sitedb.DeviceReport { return LastDeviceStatusFromPWD(q, ctx) })
 	last := func(groupType string) *sitedb.EventGroup { return LastOfType(q, ctx, groupType) }
-	properties := map[string]any{
-		"upbat": GetUptimeBattery(LastBatteryStatus(q, ctx)),
-		"iob":   GetIOB(dr),
-		"cob":   GetCOB(dr),
-		"cage":  GetAge(last("Site Change"), now),
-		"iage":  GetAge(last("Insulin Change"), now),
-		"bage":  GetAge(last("Pump Battery Change"), now),
-		"sage":  GetSensorAge(last("Sensor Start"), last("Sensor Change"), now),
-		"bgnow": struct{}{},
+	readers := map[string]func() any{
+		"upbat": func() any { return GetUptimeBattery(LastBatteryStatus(q, ctx)) },
+		"iob":   func() any { return GetIOB(dr()) },
+		"cob":   func() any { return GetCOB(dr()) },
+		"cage":  func() any { return GetAge(last("Site Change"), now) },
+		"iage":  func() any { return GetAge(last("Insulin Change"), now) },
+		"bage":  func() any { return GetAge(last("Pump Battery Change"), now) },
+		"sage":  func() any { return GetSensorAge(last("Sensor Start"), last("Sensor Change"), now) },
+		// Watch faces show the pump and the loop, from the loop's newest device status
+		"pump":    func() any { return GetPump(ctx, dr(), now) },
+		"openaps": func() any { return GetOpenAPS(dr(), now) },
+		"loop":    func() any { return GetLoop(dr(), now) },
 	}
-	// Watch faces show the pump and the loop, from the loop's newest device status
-	properties["pump"], properties["openaps"], properties["loop"] = GetPump(ctx, dr, now), GetOpenAPS(dr, now), GetLoop(dr, now)
+	properties := map[string]any{}
+	for name, read := range readers {
+		if asked(name) {
+			properties[name] = read()
+		}
+	}
+	if !asked("bgnow") && !asked("delta") && !asked("direction") {
+		return properties
+	}
+	set := func(name string, property any) {
+		if asked(name) {
+			properties[name] = property
+		}
+	}
 
 	// Like Nightscout, bgnow is empty, and delta and direction left out, without a reading in the last 15 minutes
+	set("bgnow", struct{}{})
 	readings, err := q.AlarmGlucoseReadings(ctx, sitedb.AlarmGlucoseReadingsParams{Minutes: 15, Limit: 2})
 	if err != nil || len(readings) == 0 || readings[0].OccurredAt < now.Add(-15*time.Minute).UnixMilli() {
 		return properties
 	}
-	properties["bgnow"] = GetBucket(readings[0])
+	set("bgnow", GetBucket(readings[0]))
 	if direction := nightscoutmodels.TrendDirection(readings[0].Trend); direction != nil {
 		label := display.Direction(direction)
-		properties["direction"] = Direction{Value: *direction, Label: label, Entity: fmt.Sprintf("&#%d;", []rune(label)[0])}
+		set("direction", Direction{Value: *direction, Label: label, Entity: fmt.Sprintf("&#%d;", []rune(label)[0])})
 	}
 	if len(readings) > 1 {
-		properties["delta"] = GetDelta(readings[0], readings[1])
+		set("delta", GetDelta(readings[0], readings[1]))
 	}
 	return properties
 }
