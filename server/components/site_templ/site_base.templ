@@ -54,7 +54,7 @@ templ SiteBase(path string) {
 			@Header(path)
 			if identityName(ctx) != "" {
 				@Alarms()
-				@banner.Strip("site--banners", banner.ForSite(ctx))
+				@banner.Strip("site--banners", banner.ForSite(ctx), true)
 			}
 			<main id="main-content" class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
 				{ children... }

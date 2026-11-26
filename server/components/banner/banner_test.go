@@ -34,7 +34,7 @@ func TestStatusBanner(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			require.NoError(t, Strip("control--status-banner", ForControl(context.Background(), tt.status)).Render(context.Background(), &buf))
+			require.NoError(t, Strip("control--status-banner", ForControl(context.Background(), tt.status), false).Render(context.Background(), &buf))
 			html := buf.String()
 			require.Equal(t, tt.banner, bytes.Contains(buf.Bytes(), []byte(`id="control--status-banner"`)), html)
 			require.Equal(t, tt.s3, bytes.Contains(buf.Bytes(), []byte(`id="control--status-banner--s3"`)), html)
@@ -123,9 +123,23 @@ func TestOfSite(t *testing.T) {
 
 	// What an admin wrote is text on the page, never HTML
 	var buf bytes.Buffer
-	require.NoError(t, Strip("site--banners", OfSite(context.Background(), &controldb.Site{ID: "alicezzz"}, "", written)).Render(context.Background(), &buf))
+	require.NoError(t, Strip("site--banners", OfSite(context.Background(), &controldb.Site{ID: "alicezzz"}, "", written), true).Render(context.Background(), &buf))
 	require.Contains(t, buf.String(), "For alice &lt;b&gt;")
+	// Only the information can be hidden, not the warning, and nothing on a page that hides none
+	require.Contains(t, buf.String(), `id="site--banner--1--hide"`)
+	require.NotContains(t, buf.String(), `id="site--banner--2--hide"`)
 	buf.Reset()
-	require.NoError(t, Strip("site--banners", nil).Render(context.Background(), &buf))
+	require.NoError(t, Strip("site--banners", OfSite(context.Background(), &controldb.Site{ID: "alicezzz"}, "", written), false).Render(context.Background(), &buf))
+	require.NotContains(t, buf.String(), "--hide")
+	buf.Reset()
+	require.NoError(t, Strip("site--banners", nil, true).Render(context.Background(), &buf))
 	require.Empty(t, buf.String())
+}
+
+// A warning and an error stay: only a level under them can be hidden
+func TestCanHide(t *testing.T) {
+	require.True(t, Info.CanHide())
+	require.False(t, Warning.CanHide())
+	require.False(t, Error.CanHide())
+	require.False(t, Level("other").CanHide())
 }
