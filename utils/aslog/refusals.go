@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/go-chi/chi/v5"
+	"nighttroop.t1d.nz/utils/metrics"
 )
 
 // The most keys counted apart for each reason, past which they are counted together as other, so a sweep of every
@@ -54,6 +55,7 @@ func Refuse(ctx context.Context, status int, key, msg string, args ...any) {
 		key = routeContext.RoutePattern()
 	}
 	RefusedRequests.Add(msg, status, key)
+	metrics.Refused(msg, status)
 }
 
 // Add counts a request refused for reason with status, by key

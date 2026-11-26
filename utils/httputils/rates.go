@@ -10,6 +10,7 @@ import (
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
+	"nighttroop.t1d.nz/utils/metrics"
 )
 
 // /////
@@ -152,6 +153,7 @@ func RefuseWritesOverStorage(next http.Handler) http.Handler {
 			writeTooManyRequests(w, siteStorageFullRetrySeconds)
 			_, _ = w.Write([]byte(refused))
 			slog.InfoContext(r.Context(), "A write that adds to a site's DB is refused", "why", refused)
+			metrics.WriteRefused(map[string]string{ServerDiskFullMessage: "disk_full", SiteStorageFullMessage: "site_storage"}[refused])
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -175,6 +177,7 @@ func FlaggedSiteWritesWithinRateLimit(siteContext *SiteContext, n int) (bool, in
 		delay = writes.DelayFrom(now)
 	}
 	writes.CancelAt(now)
+	metrics.RateLimited()
 	return false, maxDuration(delay)
 }
 
@@ -212,6 +215,7 @@ func WithinRateLimitAll(limiters ...*rate.Limiter) (bool, int) {
 		}
 	}
 	if !allowed {
+		metrics.RateLimited()
 		// Cancelled at the time reserved, each gives back its token, as it is not yet used
 		for _, reservation := range reservations {
 			reservation.CancelAt(now)

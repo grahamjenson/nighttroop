@@ -25,6 +25,7 @@ require (
 	github.com/oschwald/maxminddb-golang/v2 v2.8.0
 	github.com/pierrec/lz4/v4 v4.1.33
 	github.com/pquerna/otp v1.5.0
+	github.com/prometheus/client_golang v1.17.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/slog-multi v1.9.0
 	github.com/samber/slog-sentry/v2 v2.11.0
@@ -101,7 +102,6 @@ require (
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
-	github.com/prometheus/client_golang v1.17.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect

@@ -141,6 +141,7 @@ AAPS, Trio) send.
 | `LOGS_DB_MAX_ROWS_PER_TABLE` | `100000` | The newest logs, events and errors each logs DB table keeps. |
 | `SLOW_QUERY_MS` | `100` | Milliseconds before a DB query (or a transaction that waits for the write lock) is logged as a `Slow query`, with its DB, sqlc name, duration and rows, never its values. `0` logs none. |
 | `QUERY_SAMPLE_PERCENT` | `10` | Percent (0 to 100) of DB queries whose time is kept, for the control usage page's slowest queries (longest in total since start). `0` keeps none. |
+| `METRICS_PORT` | `0` | The port of the server's metrics, in Prometheus's format, at `/metrics`: requests, refusals, rate limits, background jobs, sites, disk and Go. `0` serves no metrics. The port has no sign in, so let only your private network reach it (on Fly.io, set `[metrics]` in `fly.toml`; see `docs/deploy/staging_flyio`). |
 | `SENTRY_DSN` | Empty | Where errors are reported. Empty turns Sentry off. |
 | `PAGERDUTY_ROUTING_KEY` | Empty | The integration key of the PagerDuty service that pages the admin. Empty turns paging off. |
 | `PAGERDUTY_EVENTS_URL` | `https://events.pagerduty.com/v2/enqueue` | Where pages are sent. For an account in the EU region, use `https://events.eu.pagerduty.com/v2/enqueue`. |

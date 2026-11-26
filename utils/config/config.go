@@ -90,6 +90,8 @@ type ServerConfig struct {
 	HostName     string
 	HostPort     int
 	HostProtocol string // http or https, used for generating links.
+	// MetricsPort is the port the metrics are served on, in Prometheus's format; 0 serves none
+	MetricsPort int
 	// MaxRequestBodyBytes is the largest request body read, so a huge upload cannot exhaust memory while it is decoded
 	MaxRequestBodyBytes int64
 	// RequestsInFlightPerCPU and RequestsBacklogPerCPU are how many requests a CPU works on at once, and how many more
@@ -377,6 +379,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		HostName:     configStringSelect(dotenv, "HOST_NAME", "nt.local.t1d.nz"),
 		HostPort:     configIntSelect(dotenv, "HOST_PORT", 3000),
 		HostProtocol: configStringSelect(dotenv, "HOST_PROTOCOL", "https"),
+		MetricsPort:  configIntSelect(dotenv, "METRICS_PORT", 0),
 		// Far above an uploader's batch of 100 records
 		MaxRequestBodyBytes: int64(configIntSelect(dotenv, "MAX_REQUEST_BODY_BYTES", 4000000)),
 		// A request takes a CPU tens of milliseconds, so this many at once is a second or so of work queued
