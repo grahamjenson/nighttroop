@@ -102,7 +102,7 @@ func echoRole(status int) func(http.ResponseWriter, *http.Request, *httputils.Si
 }
 
 func listSubjects(w http.ResponseWriter, r *http.Request, siteContext *httputils.SiteContext) {
-	tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
+	tx := siteapiutils.NewReadCollectionTx(r.Context(), siteContext)
 	defer tx.Rollback()
 	identities, err := (&sitesettings.IdentitiesCollection{}).SearchRows(r.Context(), tx, nil, siteContext)
 	if err != nil {

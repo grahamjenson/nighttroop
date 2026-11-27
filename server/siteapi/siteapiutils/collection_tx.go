@@ -13,7 +13,7 @@ import (
 )
 
 // CollectionTx gives a store one transaction per database it writes to, started on first use.
-// A transaction holds its DB's write lock from its start, and an in memory DB has a single connection, so while one is
+// A transaction, unless it is read only, holds its DB's write lock from its start, and an in memory DB has a single connection, so while one is
 // open every other write on that DB waits for it: do network calls and plain Queries reads before the first Control()
 // or Site().
 // The two transactions commit separately, so they are atomic per DB, not across both.
@@ -29,15 +29,24 @@ type CollectionTx struct {
 	before []any
 	// onCommit are called once everything is committed
 	onCommit []func()
+	// readOnly transactions take no write lock, see NewReadCollectionTx
+	readOnly bool
 }
 
 func NewCollectionTx(ctx context.Context, siteContext *httputils.SiteContext) *CollectionTx {
 	return &CollectionTx{ctx: ctx, siteContext: siteContext}
 }
 
+// NewReadCollectionTx is a CollectionTx for a handler that only reads, as a search or a get. Its transactions do not
+// take their DB's write lock, so a page being read does not make the site's uploads, or its other pages, wait for it.
+// Do not write in one: a write beside it fails that write at once, as the DB is busy.
+func NewReadCollectionTx(ctx context.Context, siteContext *httputils.SiteContext) *CollectionTx {
+	return &CollectionTx{ctx: ctx, siteContext: siteContext, readOnly: true}
+}
+
 func (t *CollectionTx) Control() (*controldb.Queries, error) {
 	if t.controlTx == nil {
-		tx, err := t.siteContext.ControlDB.SQLiteDB.BeginTx(t.ctx, nil)
+		tx, err := t.siteContext.ControlDB.SQLiteDB.BeginTx(t.ctx, &sql.TxOptions{ReadOnly: t.readOnly})
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +57,7 @@ func (t *CollectionTx) Control() (*controldb.Queries, error) {
 
 func (t *CollectionTx) Site() (*sitedb.Queries, error) {
 	if t.siteTx == nil {
-		tx, err := t.siteContext.SiteDB.SQLiteDB.BeginTx(t.ctx, nil)
+		tx, err := t.siteContext.SiteDB.SQLiteDB.BeginTx(t.ctx, &sql.TxOptions{ReadOnly: t.readOnly})
 		if err != nil {
 			return nil, err
 		}

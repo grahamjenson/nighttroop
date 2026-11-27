@@ -145,7 +145,7 @@ func NewFromHandler[R, M any](collection CollectionNewFrom[R, M]) http.HandlerFu
 		if siteContext == nil {
 			return
 		}
-		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
+		tx := siteapiutils.NewReadCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		component, err := collection.NewFromHTMXResponse(r.Context(), tx, r, siteContext)
 		if herr := tx.Finish(apiutils.ErrorFor(err, collection.GetName())); herr != nil {
@@ -232,7 +232,7 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 		if query.BeforeDate != nil {
 			query.BeforeDay(siteContext.GetSettings().Location())
 		}
-		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
+		tx := siteapiutils.NewReadCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		models, herr := search(r.Context(), tx, collection, query, siteContext)
 		var totals *apiutils.Totals
@@ -262,7 +262,7 @@ func GetHandler[R, M any](collection CollectionGet[R, M]) http.HandlerFunc {
 		}
 
 		id := chi.URLParam(r, "id")
-		tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
+		tx := siteapiutils.NewReadCollectionTx(r.Context(), siteContext)
 		defer tx.Rollback()
 		model, _, herr := get(r.Context(), tx, collection, id, siteContext)
 		if herr == nil && model == nil {

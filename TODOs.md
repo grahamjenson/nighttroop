@@ -7,6 +7,12 @@
 1. e2e restore and archive testing
     1. P2: Refuse to archive a site while S3 is off, as the site admin's delete does
 1. Performance testing (cost estimate for running full node)
+    1. P3: A Nightscout token (`?token=`, as LoopFollow, xDrip4iOS and Nightguard send on each request) is checked
+       with bcrypt again 5 minutes after it was first checked (`utils/security/password_verifier_cache.go`), about
+       70 ms each time and most of what such a client costs: decide a longer time, as a JWT from it lasts an hour
+    1. P3: Each commit syncs the DB's write-ahead log to disk (`synchronous` is `FULL`, as the DSN in
+       `data/sql/gen/db.go` sets none), so a v1 upload of N records is N syncs: decide `NORMAL`, which can lose the
+       last commits when the power fails, for the site DBs or only the logs, jobs and live DBs
 1. Register with Resend and PagerDuty and .p8 push notifications to test all.
 1. Accounts
     1. P4: Add the icons of SugarPixel, Dexcom and FreeStyle Libre to `server/assets/static/logos`, and put them on the right pages.

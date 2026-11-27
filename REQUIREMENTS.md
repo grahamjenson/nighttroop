@@ -462,6 +462,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   query name, time, rows, request, site and identity.
   Never values.
 - A write transaction that waits for the write lock logs as `BEGIN`.
+- A site page or API read (a search, a record, an add form, a live update) takes no write lock. An upload to the
+  site, and the site's other reads, do not wait for it.
 
 #### Metrics
 
