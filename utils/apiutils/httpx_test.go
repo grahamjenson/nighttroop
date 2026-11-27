@@ -2,6 +2,7 @@ package apiutils_test
 
 import (
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -70,4 +71,27 @@ func TestFormToMap(t *testing.T) {
 			require.Equal(t, tt.want, apiutils.FormToMap[model](tt.form, tt.location))
 		})
 	}
+}
+
+// A dotted name nests to 8 parts at most, with any dots after kept in its last part, so a name of many dots does not
+// make the server build a map for each dot
+func TestFormToMapNestsADottedNameOnlySoDeep(t *testing.T) {
+	doc := apiutils.FormToMap[struct{}](url.Values{"a.b.c.d.e.f.g.h.i.j": {"v"}}, time.UTC)
+	want := map[string]any{"h.i.j": "v"}
+	for _, part := range []string{"g", "f", "e", "d", "c", "b", "a"} {
+		want = map[string]any{part: want}
+	}
+	require.Equal(t, want, doc)
+
+	var depth func(value any) int
+	depth = func(value any) int {
+		deepest := 0
+		for _, child := range value.(map[string]any) {
+			if _, nested := child.(map[string]any); nested {
+				deepest = max(deepest, depth(child))
+			}
+		}
+		return deepest + 1
+	}
+	require.Equal(t, 8, depth(apiutils.FormToMap[struct{}](url.Values{strings.Repeat(".", 100_000): {"1"}}, time.UTC)))
 }

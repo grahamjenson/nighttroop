@@ -45,6 +45,10 @@ func encodeJSON(w http.ResponseWriter, body any) {
 	encoder.Encode(body)
 }
 
+// maxFormKeyParts is the most parts a dotted form name nests to; any dots after are kept in its last part. No model
+// nests that deep, and a 500 KB name of only dots otherwise made a map for each dot: about 170 MB for one request.
+const maxFormKeyParts = 8
+
 // FormToMap turns a form submission into the document a JSON client would
 // send for T. Dotted names nest, and because form values are only strings,
 // bool and number fields of T, or pointers to them, (matched by json tag) are converted; an absent
@@ -56,7 +60,7 @@ func FormToMap[T any](form url.Values, location *time.Location) map[string]any {
 		if len(values) == 0 {
 			continue
 		}
-		setNestedValue(doc, strings.Split(key, "."), values[0])
+		setNestedValue(doc, strings.SplitN(key, ".", maxFormKeyParts), values[0])
 	}
 
 	// Each field, with those of a struct it embeds, as the JSON it is read from has them
