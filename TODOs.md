@@ -3,6 +3,7 @@
 ## Before Beta Testing
 
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
+    1. P0: Decide the retention design in `docs/retention.md` (hot rows and cold days), then build it in its steps
     1. P4: A site's DB size on its pages, and for its write limits (3 and 4 times its size limit), counts the free
        pages a truncate leaves, under 10% of it: measure it without them, as the truncate of a site far over its
        limit does
