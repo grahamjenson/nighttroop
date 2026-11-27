@@ -25,20 +25,37 @@ func (q *Queries) ClearStaleSummaries(ctx context.Context, arg ClearStaleSummari
 }
 
 const deleteSummaryPeriods = `-- name: DeleteSummaryPeriods :execresult
-DELETE FROM summary_period WHERE CAST(?1 AS TEXT) IS NULL OR period = ?1
+DELETE FROM summary_period WHERE (CAST(?1 AS TEXT) IS NULL OR period = ?1) AND frozen_at IS NULL
 `
 
 type DeleteSummaryPeriodsParams struct {
 	Period *string
 }
 
-// Deletes the days, weeks or months, or with no period all of them
+// Deletes the days, weeks or months, or with no period all of them, but the frozen ones
 func (q *Queries) DeleteSummaryPeriods(ctx context.Context, arg DeleteSummaryPeriodsParams) (sql.Result, error) {
 	return q.exec(ctx, q.deleteSummaryPeriodsStmt, deleteSummaryPeriods, arg.Period)
 }
 
+const freezeSummaries = `-- name: FreezeSummaries :execresult
+UPDATE summary_period SET frozen_at = ?1
+WHERE frozen_at IS NULL AND end_at < ?2 AND updated_at < end_at + ?3
+`
+
+type FreezeSummariesParams struct {
+	Now        *int64
+	Before     int64
+	FullDataMs int64
+}
+
+// Freezes each summary that ended before Before and was built before FullDataMs after it ended, while it had all the
+// data it is built from
+func (q *Queries) FreezeSummaries(ctx context.Context, arg FreezeSummariesParams) (sql.Result, error) {
+	return q.exec(ctx, q.freezeSummariesStmt, freezeSummaries, arg.Now, arg.Before, arg.FullDataMs)
+}
+
 const getSummaryPeriod = `-- name: GetSummaryPeriod :one
-SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, created_at, updated_at FROM summary_period WHERE period = ? AND date = ?
+SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, frozen_at, created_at, updated_at FROM summary_period WHERE period = ? AND date = ?
 `
 
 type GetSummaryPeriodParams struct {
@@ -76,6 +93,7 @@ func (q *Queries) GetSummaryPeriod(ctx context.Context, arg GetSummaryPeriodPara
 		&i.LoopIobTreatmentJson,
 		&i.LoopCobJson,
 		&i.StaleAt,
+		&i.FrozenAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -83,7 +101,7 @@ func (q *Queries) GetSummaryPeriod(ctx context.Context, arg GetSummaryPeriodPara
 }
 
 const hardDeleteSummaryPeriod = `-- name: HardDeleteSummaryPeriod :execresult
-DELETE FROM summary_period WHERE period = ? AND date = ?
+DELETE FROM summary_period WHERE period = ? AND date = ? AND frozen_at IS NULL
 `
 
 type HardDeleteSummaryPeriodParams struct {
@@ -91,13 +109,14 @@ type HardDeleteSummaryPeriodParams struct {
 	Date   string
 }
 
+// A frozen one is not deleted
 func (q *Queries) HardDeleteSummaryPeriod(ctx context.Context, arg HardDeleteSummaryPeriodParams) (sql.Result, error) {
 	return q.exec(ctx, q.hardDeleteSummaryPeriodStmt, hardDeleteSummaryPeriod, arg.Period, arg.Date)
 }
 
 const markSummariesStale = `-- name: MarkSummariesStale :exec
 UPDATE summary_period SET stale_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE stale_at IS NULL AND end_at > ?1 AND end_at <= ?1 + 2764800000 AND start_at <= ?1
+WHERE stale_at IS NULL AND frozen_at IS NULL AND end_at > ?1 AND end_at <= ?1 + 2764800000 AND start_at <= ?1
 `
 
 type MarkSummariesStaleParams struct {
@@ -111,7 +130,7 @@ func (q *Queries) MarkSummariesStale(ctx context.Context, arg MarkSummariesStale
 }
 
 const searchSummaryPeriods = `-- name: SearchSummaryPeriods :many
-SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, created_at, updated_at FROM summary_period
+SELECT period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, frozen_at, created_at, updated_at FROM summary_period
 WHERE
     period = CAST(?1 AS TEXT)
     AND (CAST(?2 AS TEXT) IS NULL OR date >= ?2)
@@ -171,6 +190,7 @@ func (q *Queries) SearchSummaryPeriods(ctx context.Context, arg SearchSummaryPer
 			&i.LoopIobTreatmentJson,
 			&i.LoopCobJson,
 			&i.StaleAt,
+			&i.FrozenAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -297,7 +317,8 @@ ON CONFLICT(period, date) DO UPDATE SET
     time_very_high = excluded.time_very_high,
     total_daily_basal = excluded.total_daily_basal,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-RETURNING period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, created_at, updated_at
+WHERE summary_period.frozen_at IS NULL
+RETURNING period, date, timezone, start_at, end_at, days, time_in_range, total_daily_dose, total_daily_basal, total_daily_carbs, glucose_mgdl_json, agp_mgdl_json, glucose_readings, meter_readings, cgm_slots, glucose_mean_mgdl, glucose_sd_mgdl, time_very_low, time_low, time_high, time_very_high, loop_iob_json, loop_iob_basal_json, loop_iob_treatment_json, loop_cob_json, stale_at, frozen_at, created_at, updated_at
 `
 
 type UpsertSummaryPeriodParams struct {
@@ -328,6 +349,7 @@ type UpsertSummaryPeriodParams struct {
 	TotalDailyBasal      float64
 }
 
+// A frozen one is kept as it is, and none is returned
 func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeriodParams) (*SummaryPeriod, error) {
 	row := q.queryRow(ctx, q.upsertSummaryPeriodStmt, upsertSummaryPeriod,
 		arg.Period,
@@ -384,6 +406,7 @@ func (q *Queries) UpsertSummaryPeriod(ctx context.Context, arg UpsertSummaryPeri
 		&i.LoopIobTreatmentJson,
 		&i.LoopCobJson,
 		&i.StaleAt,
+		&i.FrozenAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

@@ -630,6 +630,9 @@ CREATE TABLE summary_period (
     -- When it was marked to be built again, as a record in it was deleted or moved to another day, so it is built again
     -- after a restart too; null while it is up to date
     stale_at INTEGER,
+    -- When it was frozen: ended over a month ago, and built while it had all the data it is built from. A frozen one is
+    -- never built again, marked stale or deleted, as its data may no longer all be there.
+    frozen_at INTEGER,
 
     created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
     updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),

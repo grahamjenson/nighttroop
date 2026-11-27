@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
@@ -142,18 +143,37 @@ func RebuildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *ht
 	return upsertSummaryPeriod(ctx, q, day)
 }
 
+// upsertSummaryPeriod keeps the summary built, or is the frozen one, which is kept as it is
 func upsertSummaryPeriod(ctx context.Context, q *sitedb.Queries, row *sitedb.SummaryPeriod) (*sitedb.SummaryPeriod, error) {
-	return q.UpsertSummaryPeriod(ctx, sitedb.UpsertSummaryPeriodParams{Period: row.Period, Date: row.Date, Timezone: row.Timezone,
+	kept, err := q.UpsertSummaryPeriod(ctx, sitedb.UpsertSummaryPeriodParams{Period: row.Period, Date: row.Date, Timezone: row.Timezone,
 		StartAt: row.StartAt, EndAt: row.EndAt, Days: row.Days, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose,
 		TotalDailyCarbs: row.TotalDailyCarbs, GlucoseMgdlJson: row.GlucoseMgdlJson, AgpMgdlJson: row.AgpMgdlJson, LoopIobJson: row.LoopIobJson,
 		LoopIobBasalJson: row.LoopIobBasalJson, LoopIobTreatmentJson: row.LoopIobTreatmentJson, LoopCobJson: row.LoopCobJson,
 		GlucoseReadings: row.GlucoseReadings, MeterReadings: row.MeterReadings, CgmSlots: row.CgmSlots, GlucoseMeanMgdl: row.GlucoseMeanMgdl,
 		GlucoseSdMgdl: row.GlucoseSdMgdl, TimeVeryLow: row.TimeVeryLow, TimeLow: row.TimeLow, TimeHigh: row.TimeHigh, TimeVeryHigh: row.TimeVeryHigh, TotalDailyBasal: row.TotalDailyBasal})
+	if errors.Is(err, sql.ErrNoRows) {
+		return q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: row.Period, Date: row.Date})
+	}
+	return kept, err
 }
 
-// RebuildSummaryDailyWeek deletes all the site's days and periods, as from a timezone they no longer follow, and
-// builds the RebuildDays up to yesterday, and the last week and month of what days there are, again
+// FreezeSummaries freezes each summary that ended over a month ago, db.DeviceReportsKeptFor, and was built before then,
+// while it had all the data it is built from: no rebuild, timezone or week start change, or record changed after,
+// builds it again or deletes it, as its device reports, and later its other data, are deleted. One first built after,
+// as from a backfill of old data, is not frozen, and is built again as its data changes.
+func FreezeSummaries(ctx context.Context, q *sitedb.Queries, now time.Time) error {
+	_, err := q.FreezeSummaries(ctx, sitedb.FreezeSummariesParams{Now: new(now.UnixMilli()), Before: now.Add(-db.DeviceReportsKeptFor).UnixMilli(),
+		FullDataMs: db.DeviceReportsKeptFor.Milliseconds()})
+	return err
+}
+
+// RebuildSummaryDailyWeek deletes all the site's days and periods but the frozen ones, as from a timezone they no
+// longer follow, and builds the RebuildDays up to yesterday, and the last week and month of what days there are, again.
+// A frozen day keeps the timezone it was built in.
 func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
+	if err := FreezeSummaries(ctx, q, now); err != nil {
+		return err
+	}
 	if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{}); err != nil {
 		return err
 	}
@@ -165,9 +185,13 @@ func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, siteContext
 	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
 }
 
-// RebuildSummaryYear deletes all the site's days and periods, and builds again each day of the last year with data,
-// and yesterday, and each whole week, fortnight and month of them with data, as when its admin asks for them to be
+// RebuildSummaryYear deletes all the site's days and periods but the frozen ones, and builds again each day of the
+// last year with data, and yesterday, and each whole week, fortnight and month of them with data, as when its admin
+// asks for them to be. The frozen ones are kept as they are.
 func RebuildSummaryYear(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
+	if err := FreezeSummaries(ctx, q, now); err != nil {
+		return err
+	}
 	if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{}); err != nil {
 		return err
 	}
@@ -200,6 +224,9 @@ func RebuildSummaryYear(ctx context.Context, q *sitedb.Queries, siteContext *htt
 // year, and then each whole week, fortnight and month with one of those days in it, so data a backfill or sync adds to
 // old days is in their summaries without building all of them again
 func RebuildSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, times []time.Time, now time.Time) error {
+	if err := FreezeSummaries(ctx, q, now); err != nil {
+		return err
+	}
 	location, weekStart := siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()
 	today := PeriodStart("day", now, location, weekStart)
 	days, periods := map[time.Time]bool{}, map[string]map[time.Time]bool{}
@@ -243,6 +270,9 @@ func RebuildSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *htt
 // RebuildSummaryWeeks deletes all the site's weeks and fortnights, as from a week start day they no longer follow,
 // and builds the last ones again
 func RebuildSummaryWeeks(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
+	if err := FreezeSummaries(ctx, q, now); err != nil {
+		return err
+	}
 	for _, period := range []string{"week", "fortnight"} {
 		if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{Period: &period}); err != nil {
 			return err

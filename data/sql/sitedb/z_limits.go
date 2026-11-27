@@ -348,6 +348,7 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"LoopIobTreatmentJson": {Column: "loop_iob_treatment_json", Required: true, MaxLength: 4096},
 		"LoopCobJson":          {Column: "loop_cob_json", Required: true, MaxLength: 4096},
 		"StaleAt":              {Column: "stale_at"},
+		"FrozenAt":             {Column: "frozen_at"},
 		"CreatedAt":            {Column: "created_at", Required: true},
 		"UpdatedAt":            {Column: "updated_at", Required: true},
 	},

@@ -1042,7 +1042,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Below the tables, not the main action, for summaries that look wrong (after a timezone change).
   - Admins only, after a confirm.
   - A background job rebuilds from site data the last year's days with data, yesterday, and their weeks, fortnights
-    and months.
+    and months, but not the frozen ones (see Summary builds).
   - Recorded as an event. A repeat before it runs gives one job.
   - Shares the site's few downloads a minute with Truncate and Download Data. Over it, the site refuses it (429).
 
@@ -1060,6 +1060,15 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - A connector's finished backfill: its days are built on the next run, within one minute, with no wait for quiet.
 - Data from the last 15 minutes (a phone uploading) does not delay older days. With a looping phone, they build 2
   minutes after their writes stop.
+- Frozen summaries: a day, week, fortnight or month that ended over 30 days ago, and was built in the 30 days after it
+  ended, while it had all its data, is frozen (`frozen_at`). 30 days is how long device reports are kept.
+  - It is frozen each night, and before each rebuild.
+  - Regenerate summaries, a timezone change and a week start change do not build it again or delete it. It keeps the
+    timezone it was built in.
+  - Data written, changed or deleted in it does not mark it stale or build it again. Deleting it does nothing.
+  - So it is kept as built when its data is deleted.
+  - One first built more than 30 days after it ended, as from a backfill of old data, is not frozen, and is built
+    again as its data changes.
 
 #### TDD report
 

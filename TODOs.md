@@ -3,7 +3,6 @@
 ## Before Beta Testing
 
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
-    1. P1: Regenerate summaries: only rebuild summaries where a full set of data exists for. Summaries which are more than a month old and were generated with a full set of data should be `frozen` and never deleted.
     1. P1: Vacuum sites only when needed
 1. e2e restore and archive testing
     1. P2: Refuse to archive a site while S3 is off, as the site admin's delete does

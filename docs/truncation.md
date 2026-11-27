@@ -251,11 +251,14 @@ months with their AGPs and statistics (~0.1 MB a year). See Open questions.
 
 A day's summary cannot be rebuilt once its raw rows start to go. So:
 
-- `summary_period` gains a `frozen_at`.
-- A day is frozen when it first enters the **Reduced** tier, after a final full-resolution build. Weeks, fortnights
-  and months are frozen once all their days are.
-- **Regenerate summaries** and timezone and week-start rebuilds skip frozen rows.
-- A frozen day keeps the timezone it was built in (on the row), even if the site changes timezone.
+- **Today:** `summary_period` has a `frozen_at`.
+  - A day, week, fortnight or month is frozen once it ended over 30 days ago, if it was built in the 30 days after
+    it ended, while it had all its data. 30 days is how long device reports are kept, and they give its IOB and COB.
+  - It is frozen each night, and before each rebuild.
+  - **Regenerate summaries** and timezone and week-start rebuilds skip frozen rows. A record changed in a frozen day
+    does not mark it stale, and deleting one does nothing.
+  - A frozen day keeps the timezone it was built in (on the row), even if the site changes timezone.
+- **Proposed:** freeze a day when it first enters the **Reduced** tier, after a final full-resolution build.
 - Raw rows are deleted only after the summary is frozen. Tests check the day's total daily dose, carbs and time in
   range are unchanged by compaction.
 

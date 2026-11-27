@@ -28,6 +28,8 @@ ON CONFLICT(period, date) DO UPDATE SET
     time_very_high = excluded.time_very_high,
     total_daily_basal = excluded.total_daily_basal,
     updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+-- A frozen one is kept as it is, and none is returned
+WHERE summary_period.frozen_at IS NULL
 RETURNING *;
 
 -- name: GetSummaryPeriod :one
@@ -44,16 +46,23 @@ ORDER BY date DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: HardDeleteSummaryPeriod :execresult
-DELETE FROM summary_period WHERE period = ? AND date = ?;
+-- A frozen one is not deleted
+DELETE FROM summary_period WHERE period = ? AND date = ? AND frozen_at IS NULL;
 
 -- name: DeleteSummaryPeriods :execresult
--- Deletes the days, weeks or months, or with no period all of them
-DELETE FROM summary_period WHERE CAST(sqlc.narg('Period') AS TEXT) IS NULL OR period = sqlc.narg('Period');
+-- Deletes the days, weeks or months, or with no period all of them, but the frozen ones
+DELETE FROM summary_period WHERE (CAST(sqlc.narg('Period') AS TEXT) IS NULL OR period = sqlc.narg('Period')) AND frozen_at IS NULL;
+
+-- name: FreezeSummaries :execresult
+-- Freezes each summary that ended before Before and was built before FullDataMs after it ended, while it had all the
+-- data it is built from
+UPDATE summary_period SET frozen_at = @now
+WHERE frozen_at IS NULL AND end_at < @before AND updated_at < end_at + @full_data_ms;
 
 -- name: MarkSummariesStale :exec
 -- The summaries a record at At was deleted or moved from; none is longer than 32 days, however old At is
 UPDATE summary_period SET stale_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
-WHERE stale_at IS NULL AND end_at > @at AND end_at <= @at + 2764800000 AND start_at <= @at;
+WHERE stale_at IS NULL AND frozen_at IS NULL AND end_at > @at AND end_at <= @at + 2764800000 AND start_at <= @at;
 
 -- name: StaleSummaryDays :many
 -- The days marked to be built again, by when each starts
