@@ -290,3 +290,10 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
 ASSERT_EQUALS "There is no page at /data/nope" "@message"
+
+NAME unknown_address_outside_a_section
+GET http://{{ site }}/data
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+ASSERT_EQUALS "There is no page at /data" "@message"

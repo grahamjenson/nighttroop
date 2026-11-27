@@ -125,6 +125,8 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/usage/download", sitecollections.DownloadDataHandler)
 		r.Post("/settings/site/delete", sitecollections.DeleteSiteHandler)
 		r.Post("/logout", sitelogin.POSTLogoutHandler(config))
+		// An address with no route, as /data or /account, shows a signed in person the site's Not found page too
+		r.NotFound(sitecollections.NotFoundHandler)
 	})
 
 	return r

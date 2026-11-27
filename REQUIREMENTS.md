@@ -823,6 +823,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Not found page
 
 - An address the site has nothing at shows **Not found** and the address, as "There is no page at /data/nope".
+- An address outside a section, as `/data` or `/account`, shows the same page.
+- If the person is not signed in, an address the site has nothing at opens the sign in page.
 - It says that the search at the top of the page finds any page by name, and links to the summary, Data, Reports and
   Getting Started.
 
