@@ -101,6 +101,21 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Each admin is sent one link each hour.
   - The link is on the control site's address, and opens Account.
 
+#### Password recovery
+
+- If the server sends email, the sign in page shows **Forgot your password?**. It opens a page to type an email.
+  - If the server does not send email, the link is not shown, and the pages and API return 404 or 400.
+- **Send link** sends a link to the admin whose verified email is the one typed, exactly.
+  - The page always says the same, so it does not show which emails are verified.
+  - An email that is not verified, or is no admin's, is sent nothing.
+  - The email is sent after the answer. The response time does not show if it was sent.
+  - Each admin is sent one link each hour. Requests count against the sign in rate limits.
+- The link opens a page with **Get a new password**. Opening the link changes nothing, as mail scanners open links.
+- **Get a new password** gives the admin a new random password, shown once, and says to sign in again.
+  - It works one time, for 1 hour, and only while the email is still the verified one it was sent to.
+  - It removes the admin's passkeys and ends their sign ins, as a reset by another admin does.
+  - The admin still needs their TOTP code to sign in.
+
 #### Global rate limit
 
 - The global rate limit does not apply to control admins. The control site has its own at the same rate. Address and

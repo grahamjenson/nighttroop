@@ -98,6 +98,7 @@ errors:
     email_which: "that is not one of the emails to send"
     email_not_sent: "the email was not sent: try again later"
     email_link: "This link does not work. It may be old or used already. Sign in and send a new one from Account."
+    recover_link: "this link does not work: it may be old or used already. Ask for a new one from Forgot your password?"
     truncate: "only a live or disabled site, whose DB is here, can be truncated"
     new_empty_db: "only an unavailable site, whose DB is not being restored now, can have a new empty DB"
     upload_db: "only an unavailable site, whose DB is not being restored now, can have a DB uploaded"
