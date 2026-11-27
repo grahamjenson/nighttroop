@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -175,6 +176,52 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 			truncated, err = controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_truncated"), Limit: 10})
 			require.NoError(t, err)
 			require.Len(t, truncated, 1)
+		})
+	}
+}
+
+// A shrink writes the whole DB again, so a step of the harder truncate shrinks the DB only if a tenth of it or more is
+// free pages, which the next writes fill otherwise. A site that stays over its limit changes a few records at each
+// backup, and was shrunk at each one.
+func TestTruncateSitesShrinksOnlyADBWithManyFreePages(t *testing.T) {
+	tests := []struct {
+		name       string
+		oldReports int
+		shrunk     bool
+	}{
+		{name: "a few records deleted", oldReports: 5},
+		{name: "many records deleted", oldReports: 400, shrunk: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, controlDB, site := testutils.NewControlDBWithSite(t)
+			ctx, q := t.Context(), site.SiteDB.Queries()
+			status := fmt.Sprintf(`{"note":%q}`, strings.Repeat("x", 4000))
+			old := time.Now().Add(-10 * 24 * time.Hour).UnixMilli()
+			for i := range test.oldReports {
+				_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: fmt.Sprintf("report-%d", i), LoopStatusJson: &status,
+					OccurredAt: old + int64(i), CreatedByDeviceName: new("aaps"), CreatedByIdentityName: "phone"})
+				require.NoError(t, err)
+			}
+			// Far over 1.5 times its limit before the first step, also without the pages the job's usual truncate
+			// frees as it thins the reports, and under after it
+			measured := 0
+			site.SiteDB.SetSizeKB(func() *int64 {
+				measured++
+				return new([]int64{400_000, 30_000}[min(measured, 2)-1])
+			})
+			require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites(), nil))
+
+			_, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "report-0"})
+			require.ErrorIs(t, err, sql.ErrNoRows, "the reports over 7 days old are deleted")
+			free, err := site.SiteDB.FreePart(ctx)
+			require.NoError(t, err)
+			if test.shrunk {
+				require.Zero(t, free, "a DB with a tenth or more of it free is shrunk")
+				return
+			}
+			require.Greater(t, free, 0.0, "a DB with less than a tenth of it free keeps its free pages")
+			require.Less(t, free, 0.1)
 		})
 	}
 }

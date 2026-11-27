@@ -193,6 +193,17 @@ func (db *DB) Vacuum(ctx context.Context) error {
 	return err
 }
 
+// FreePart is the part of the DB's pages that are free, from 0 to 1, which a Vacuum gives back and the next writes
+// fill. sqlc cannot generate a query of a pragma, so it is read here, with the rest of the DB's upkeep.
+func (db *DB) FreePart(ctx context.Context) (float64, error) {
+	var free, pages float64
+	row := db.SQLiteDB.QueryRowContext(ctx, "SELECT freelist_count, page_count FROM pragma_freelist_count(), pragma_page_count()")
+	if err := row.Scan(&free, &pages); err != nil || pages == 0 {
+		return 0, err
+	}
+	return free / pages, nil
+}
+
 // TableSize is the bytes a table takes in its DB's file, its indexes counted with it, and its records
 type TableSize struct {
 	Name    string
