@@ -16,6 +16,11 @@
     1. P4: Sent Emails should be able to identify the site by the subject line referencing it in
 
 1. Security
+    1. P2: A verification email's wait of an hour is checked before the email is sent, and kept after it
+       (`mail.Links`: `Wait`, then `Sent`), so requests at once each send an email, each to its own address, from a
+       site's or a control admin's Account: take the hour before the send, as control's email to a site does
+    1. P4: The FCM and APNs token caches (`utils/push`) keep an entry for each credential ID, and a deleted
+       credential's stays, so a site that adds, tests and deletes push credentials grows them: keep them in an LRU
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that would need auditing
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels

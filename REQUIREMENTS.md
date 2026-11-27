@@ -2669,6 +2669,7 @@ harder:
   Past either: 429.
 - A Nightscout API delete of a treatment or entry type deletes at most 1000, newest first, and says how many.
 - A body over `MAX_REQUEST_BODY_BYTES`: 413. With no length given, reading stops at the limit and it is a bad body.
+- A form field name with dots, as `a.b`, nests to 8 levels at most. Dots after the 8th level stay in the last name.
 - A site DB uploaded to the control site (`POST /sites/{id}/db`) can be up to 512 MB.
 - Headers over 64 KiB: 431.
 
