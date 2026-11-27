@@ -194,6 +194,10 @@ func (b *Builder) buildYesterday(ctx context.Context, siteID string, now time.Ti
 		return err
 	}
 	q := siteContext.SiteDB.Queries()
+	// Each night, the days and periods that are over a month old and were built with all their data are frozen
+	if err := sitedata.FreezeSummaries(ctx, q, now); err != nil {
+		return err
+	}
 	yesterday := sitedata.LocalDate(now, siteContext.GetSiteTimezone(), -1)
 	if _, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: yesterday}); errors.Is(err, sql.ErrNoRows) {
 		if _, err := sitedata.RebuildSummaryDaily(ctx, q, siteContext, yesterday, now); err != nil {

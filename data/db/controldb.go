@@ -626,8 +626,9 @@ func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB
 // clear, as those before were cleared by an earlier run; a day covers a server down for a while
 const truncateLooksBack = 24 * time.Hour
 
-// deviceReportsKeptFor is how long a device report is kept at all
-const deviceReportsKeptFor = 30 * 24 * time.Hour
+// DeviceReportsKeptFor is how long a device report is kept at all, so how long a day's summary can be built with all
+// the data it is built from
+const DeviceReportsKeptFor = 30 * 24 * time.Hour
 
 // ThinParams are ThinOldDeviceReports's, for the reports written since since, at now, both in ms, with utils/thin's
 // ages and buckets, which a backfill keeps to as well
@@ -651,7 +652,7 @@ func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 	if err := site.Queries().ThinOldDeviceReports(ctx, ThinParams(since, now.UnixMilli())); err != nil {
 		return fmt.Errorf("cannot thin the device reports of site %s: %w", site.Subdomain, err)
 	}
-	before := now.Add(-deviceReportsKeptFor).UnixMilli()
+	before := now.Add(-DeviceReportsKeptFor).UnixMilli()
 	if _, err := site.Queries().DeleteOldDeviceReports(ctx, sitedb.DeleteOldDeviceReportsParams{Before: before}); err != nil {
 		return fmt.Errorf("cannot delete the old device reports of site %s: %w", site.Subdomain, err)
 	}

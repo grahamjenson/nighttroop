@@ -531,6 +531,7 @@ type SummaryPeriod struct {
 	LoopIobTreatmentJson string
 	LoopCobJson          string
 	StaleAt              *int64
+	FrozenAt             *int64
 	CreatedAt            int64
 	UpdatedAt            int64
 }
