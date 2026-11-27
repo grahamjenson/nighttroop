@@ -3,56 +3,22 @@
 ## Before Beta Testing
 
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
-    1. P2: Regenerate summaries rebuilds from site data, so it removes the summaries of days whose records the
-       truncate of a site far over its size limit deleted: keep a day's summary when its records are gone
-    1. P3: A site far over its size limit that keeps writing changes records on each truncate, so its DB is vacuumed
-       at each backup (each hour, `SITE_BACKUP_INTERVAL_IN_SECONDS`): vacuum only when its free pages are a large part
-       of it
-1. P1: Push Notification testing. Alarms testing.
+    1. P1: Regenerate summaries: only rebuild summaries where a full set of data exists for. Summaries which are more than a month old and were generated with a full set of data should be `frozen` and never deleted.
+    1. P1: Vacuum sites only when needed
 1. e2e restore and archive testing
-    1. P4: A BDD test of a site page's backup tiles once it is backed up: `RUN_BACKGROUND_JOBS` backs up each site
-       written to, so its tiles can be checked after a backup, not only before one
-    1. P2: Test the S3 lock (`utils/s3utils/lock.go`) against the production S3: it is tested against MinIO, and
-       a provider can treat `If-None-Match`, `If-Match` or a deleted lock in a versioned bucket differently
-    1. P2: A site a control admin archives while S3 is off is never uploaded once S3 works, so its archive is only
-       on the disk: refuse the archive while S3 is off, as the site admin's delete does, or upload it at a tick
-    1. P4: `restoreUnopened` restores the control DB for each open error that is not a failed migration, also a query
-       the schema does not have: restore only a file that fails a quick integrity check
-    1. P3: Page the admin when the server's settings stop it starting (`config.NewServerConfig`): the pager's key
-       is one of those settings, so that failure is only printed
+    1. P2: Refuse to archive a site while S3 is off, as the site admin's delete does
 1. Performance testing (cost estimate for running full node)
-    1. P3: Each read of the summary builds its today so far again, from all of today's glucose readings, doses, food
-       and device statuses: about 40% of what a read allocates for a loop's site (`BenchmarkSummary` in `sitedata`),
-       most of it the readings. Keep a site's today so far between reads, until a write to the site changes it
-
+1. Register with Resend and PagerDuty and .p8 push notifications to test all.
 1. Accounts
-    1. P4: Add the icon of SugarPixel to `server/assets/static/logos`, with its maker's leave, as it is a trade mark
-       of Custom Type One: its tile in the Add Device modal shows its first letter
-    1. P4: Add the icons of Dexcom and FreeStyle Libre to `server/assets/static/logos`, with their makers' leave, as
-       they are trade marks of Dexcom and Abbott: their tiles under Add a connector show their first letter
-    1. P2: Recovering a lost control admin login, as setup only runs on a server with no control admin
-    1. P4: A hidden site banner is hidden in one browser only: the same person sees it again in another browser
-    1. P2: Recover a site through its verified email: a site's admin can verify an email on My Account, but nothing
-       uses it yet to give the admin a new sign in
+    1. P4: Add the icons of SugarPixel, Dexcom and FreeStyle Libre to `server/assets/static/logos`, and put them on the right pages.
+    1. P1: Allow control admin to register an email address, email_env and email_verified_at like sites, and recover the password by giving the email address.
+    1. P2: Recover a site through its verified email, the recovery request must give the email address exactly.
     1. P4: Sent Emails lists the last 50 emails only, with no next page
-    1. P4: Sent Emails finds the site of an email among the first 1000 live sites with an email
-    1. P4: A restart of the server forgets when control last sent a site an email, so the site can be sent one again
+    1. P4: Sent Emails should be able to identify the site by the subject line referencing it in
 
 1. Security
-    1. P1: A Caregiver device changes glucose readings through Nightscout treatments, which it may write: a treatment
-       of the PWD phone with a `glucose` that it changes or deletes rewrites or deletes that reading, and so does the
-       delete of that event group on the site API. Decide to refuse or to limit each, as a careportal BG Check from
-       LoopFollow or T1D Carer must still work. A treatment it adds is a meter reading (`mbg`) already
-    1. P4: Two identities together can hold every Socket.IO session and event stream of their site, as each may hold
-       half: decide a smaller share for a read only identity, or keep some for the site's admins
-    1. P3: Capture each Socket.IO message on staging, as `CAPTURE_REQUESTS` keeps a websocket's upgrade but not its
-       messages
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
-       htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that it would need auditing for first
-    1. P3: A backfill's limit is each site's, and a backfill skips the host limiter, so many sites that backfill from
-       one Nightscout host send it requests together: limit the backfills of a host across sites, as its syncs are
-    1. P4: A site JWT sent to `/api/v2/authorization/request` or `/api/v1/status.json` gets a new JWT, so a TOTP
-       user's session never has to end: decide if a JWT may renew itself, or cap its total life
+       htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that would need auditing
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels
        are right on real sites first, then act on them, each item its own PR:
         1. P2: Score a site's rate-limit refusals too: a count for each site that halves every hour, of refusals by the
