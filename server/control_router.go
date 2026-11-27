@@ -20,7 +20,7 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 
 	static.AddStaticRoutes(r)
 
-	r.Get("/login", controlapi.GETLoginPageHandler())
+	r.Get("/login", controlapi.GETLoginPageHandler(config))
 	publicapi.FooterRoutes(r, config)
 
 	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login", controlapi.POSTLogin(controlDB, config))
@@ -29,6 +29,11 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/passkey/finish", controlapi.POSTPasskeyLoginFinish(controlDB, config))
 	// The link sent to a control admin's email, which needs no sign in
 	r.Get("/account/email/verify", controlapi.GETVerifyAccountEmail(controlDB))
+	// An admin who forgot their password is sent a link to their verified email, which gives them a new one
+	r.Get("/login/recover", controlapi.GETRecoverPage(config))
+	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/recover", controlapi.POSTRecover(controlDB, config))
+	r.Get("/login/recover/password", controlapi.GETNewPasswordPage(config))
+	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/recover/password", controlapi.POSTNewPassword(controlDB, config))
 
 	r.Group(func(r chi.Router) {
 		r.Use(controlapi.JWTAuthMiddleware(controlDB, config))

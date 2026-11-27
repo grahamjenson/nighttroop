@@ -7,6 +7,8 @@ ASSERT_VISIBLE #control--login--name:not([placeholder])
 ASSERT_VISIBLE #control--login--password:not([placeholder])
 ASSERT_NOT_VISIBLE #control--login--name[aria-invalid="true"]
 ASSERT_NOT_VISIBLE #control--login--otp-1[aria-invalid="true"]
+// This server sends no email, so a password cannot be recovered by one
+ASSERT_NOT_VISIBLE #control--login--recover
 
 // The control login is sent as soon as the code's last digit is in, once the name and password are. A wrong code is
 // said to be wrong in an error toast, which says codes change, its inputs are marked invalid, and it is not sent again

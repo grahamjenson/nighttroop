@@ -74,7 +74,7 @@ control:
   account:
     email:
       title: "Email"
-      note: "Your own email. You need none. It is kept encrypted, and only used once you open the link sent to it."
+      note: "Your own email, to recover your password by. You need none. It is kept encrypted, and only used once you open the link sent to it."
       remove_confirm: "Remove your email?"
       verify_subject: "Verify your email for Nighttroop control"
       verify_text: "This email was given as the email of the Nighttroop control admin {{.Name}} at {{.Control}}.\n\nOpen this link within a day to verify it:\n{{.Link}}\n\nIf you did not ask for this, do nothing. The email is not used."
@@ -109,6 +109,17 @@ control:
     deleted: "{{.AdminName}} deleted"
   login:
     title: "Nighttroop Sign In"
+    recover:
+      link: "Forgot your password?"
+      title: "Recover your password"
+      note: "Type the verified email of your admin account. If it is one, a link to get a new password is sent to it."
+      email: "Email"
+      send: "Send link"
+      sent: "If this is the verified email of an admin, a link was sent to it. Open it within an hour."
+      password_note: "This gives you a new password, shown once. Your passkeys are removed. You still need the code from your authenticator app to sign in."
+      password: "Get a new password"
+      subject: "Recover your Nighttroop control password"
+      text: "A new password was asked for the Nighttroop control admin {{.Name}} at {{.Control}}.\n\nOpen this link within an hour to get one:\n{{.Link}}\n\nIf you did not ask for this, do nothing. Your password stays the same."
     name: "Username"
     password: "Password"
     code: "Verification Code"

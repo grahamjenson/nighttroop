@@ -1,0 +1,81 @@
+package control_login_templ
+
+import (
+	"nighttroop.t1d.nz/models/controlmodels"
+	"nighttroop.t1d.nz/server/components/authenticator"
+	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
+	"nighttroop.t1d.nz/server/components/successtoast"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/form"
+	"nighttroop.t1d.nz/server/components/ui/input"
+	"nighttroop.t1d.nz/utils/i18n"
+)
+
+// Recover is where an admin who forgot their password types their verified email, to be sent a link that recovers it
+templ Recover() {
+	@control_templ.ControlBase() {
+		@authenticator.Page() {
+			@authenticator.Card("", false) {
+				<form
+					hx-post="/login/recover"
+					hx-target="#toaster"
+					hx-swap="beforeend"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
+				>
+					@authenticator.Title(i18n.T(ctx, "control.login.recover.title"))
+					<p class="mb-4 text-sm text-gray-600">{ i18n.T(ctx, "control.login.recover.note") }</p>
+					@form.Item() {
+						@form.Label(form.LabelProps{For: "control--recover--email"}) {
+							{ i18n.T(ctx, "control.login.recover.email") }
+						}
+						@input.Input(input.Props{ID: "control--recover--email", Type: input.TypeEmail, Name: "email", Required: true,
+							Attributes: templ.Attributes{"maxlength": "254", "autocomplete": "email"}})
+					}
+					<div class="mt-4"></div>
+					@button.Button(button.Props{ID: "control--recover--send", Type: button.TypeSubmit, FullWidth: true}) {
+						{ i18n.T(ctx, "control.login.recover.send") }
+					}
+				</form>
+			}
+		}
+	}
+}
+
+// RecoverSent is that a link was sent, if the email is an admin's, which it never says
+templ RecoverSent() {
+	@successtoast.Toast(i18n.T(ctx, "control.login.recover.sent"))
+}
+
+// NewPassword is the link sent to recover a password: a button that gives the admin a new one, as opening the link
+// must not, since mail scanners open links too
+templ NewPassword(id, key string) {
+	@control_templ.ControlBase() {
+		@authenticator.Page() {
+			@authenticator.Card("", false) {
+				<form
+					id="control--recover"
+					hx-post="/login/recover/password"
+					hx-target="this"
+					hx-swap="beforeend"
+					hx-status:4xx="target:#toaster swap:beforeend"
+					hx-status:5xx="target:#toaster swap:beforeend"
+				>
+					@authenticator.Title(i18n.T(ctx, "control.login.recover.title"))
+					<p class="mb-4 text-sm text-gray-600">{ i18n.T(ctx, "control.login.recover.password_note") }</p>
+					<input type="hidden" name="id" value={ id }/>
+					<input type="hidden" name="key" value={ key }/>
+					@button.Button(button.Props{ID: "control--recover--password", Type: button.TypeSubmit, FullWidth: true}) {
+						{ i18n.T(ctx, "control.login.recover.password") }
+					}
+				</form>
+			}
+		}
+	}
+}
+
+// Recovered is the admin's new password, shown once, and then a button to sign in with it
+templ Recovered(url string, credentials *controlmodels.SiteIdentityCredentials) {
+	@site_settings_templ.CredentialsModal(url, credentials.Name, *credentials.Password, nil, nil, true)
+}

@@ -9,7 +9,7 @@ ASSERT_VISIBLE #control--nav--logo
 CLICK #control--menu
 CLICK #control--account-button
 ASSERT_PATH /account
-ASSERT_VISIBLE #site--account--email >> text=Your own email. You need none.
+ASSERT_VISIBLE #site--account--email >> text=Your own email, to recover your password by.
 ASSERT_NOT_VISIBLE #site--account--email-current
 
 // Saving an email sends it a link, and it is not verified until the link is opened

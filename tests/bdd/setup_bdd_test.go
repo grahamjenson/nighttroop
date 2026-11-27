@@ -2,6 +2,7 @@ package bdd_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,9 +10,11 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mxschmitt/playwright-go"
 	"github.com/stretchr/testify/require"
@@ -113,6 +116,11 @@ var ownServers = []ownServer{
 		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
 		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
 	}, seedDevAdmin},
+	// A server that sends email, whose admin's email, sam@example.com, is verified, through a Resend that redirects
+	// its /link to the last link it was sent
+	{"email/control_recover.bdd", "192.0.2.26", func(c *config.ServerConfig) {
+		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", lastLinkResend
+	}, seedVerifiedAdmin},
 	// A server that sends email, with one site, emailsit, whose email is verified
 	{"siteemail/control.bdd", "192.0.2.22", func(c *config.ServerConfig) {
 		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
@@ -163,6 +171,42 @@ func seedVerifiedSite(t *testing.T, controlDB *db.ControlDB) map[string]any {
 	require.EqualValues(t, 1, verified)
 	return nil
 }
+
+// seedVerifiedAdmin makes the control admin, whose email, sam@example.com, is verified
+func seedVerifiedAdmin(t *testing.T, controlDB *db.ControlDB) map[string]any {
+	seedDevAdmin(t, controlDB)
+	admin, err := controlDB.Queries.GetControlIdentity(t.Context(), controldb.GetControlIdentityParams{Name: "admin"})
+	require.NoError(t, err)
+	emailEnc, err := controlDB.ServerConfig.Security.EncryptFor(security.PurposeControlEmail, "", "sam@example.com")
+	require.NoError(t, err)
+	require.NoError(t, controlDB.Queries.UpdateControlIdentityEmail(t.Context(), controldb.UpdateControlIdentityEmailParams{ID: admin.ID, EmailEnc: &emailEnc}))
+	verified, err := controlDB.Queries.VerifyControlIdentityEmail(t.Context(), controldb.VerifyControlIdentityEmailParams{ID: admin.ID, EmailEnc: &emailEnc})
+	require.NoError(t, err)
+	require.EqualValues(t, 1, verified)
+	return map[string]any{"resend_url": lastLinkResend}
+}
+
+// lastLinkResend is a stand in for Resend that takes every email, and redirects GET /link to the last link one had,
+// waiting a while for one, as an email is sent after its request is answered
+var lastLinkResend = func() string {
+	links := make(chan string, 10)
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var email struct{ Text string }
+			_ = json.NewDecoder(r.Body).Decode(&email)
+			if link := regexp.MustCompile(`http\S+/login/recover/password\?\S+`).FindString(email.Text); link != "" {
+				links <- link
+			}
+			return
+		}
+		select {
+		case link := <-links:
+			http.Redirect(w, r, link, http.StatusFound)
+		case <-time.After(5 * time.Second):
+			http.NotFound(w, r)
+		}
+	})).URL
+}()
 
 // TestOwnServer runs each of the ownServers, one at a time, on one browser. A file's test is
 // TestOwnServer/<folder>/<file>, so run one with -run 'TestOwnServer/setup'.

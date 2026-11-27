@@ -10,7 +10,8 @@ import (
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
-templ Login() {
+// Login is control's sign in page, with a link to recover a password when the server sends email
+templ Login(recover bool) {
 	@control_templ.ControlBase() {
 		// It fills what the footer leaves of the window, so the form is in its middle with nothing to scroll
 		@authenticator.Page() {
@@ -75,6 +76,11 @@ templ Login() {
 					}
 				</form>
 				@site_login_templ.PasskeyLogin("control--login")
+				if recover {
+					<p class="mt-4 text-center text-sm">
+						<a id="control--login--recover" href="/login/recover" class="font-medium text-brand-night underline">{ i18n.T(ctx, "control.login.recover.link") }</a>
+					</p>
+				}
 				// Logs in as soon as the code's last digit is in, once the name and password are
 				@authenticator.AutoSubmit("otp", "control--login--otp")
 				@authenticator.InvalidAfterError("otp")
