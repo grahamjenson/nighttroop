@@ -74,8 +74,6 @@
        a test file now:
         1. P3: `GOTO` ignores the error of an assert after it, so `ASSERT_HELD` with nothing held, or a `SCREENSHOT`
            over its size limit, passes there: fail the step, as the other steps do
-        1. P3: `ASSERT_NEW_PAGE` and `ASSERT_NEW_URL` pass after a step that is not a click (`GOTO`,
-           `RUN_BACKGROUND_JOBS`), and asserts after `MIDDAY_TIMEZONE` are dropped: refuse both when the file is read
         1. P4: `ASSERT_EQUALS ".a.id" "@result.id"` passes when neither value is there, as both are then null: refuse
            an expected value that is looked up and not there
         1. P4: `ASSERT_NOT_VISIBLE` and `ASSERT_COUNT` do not fill in `{{ }}`, so one with a value in its locator finds

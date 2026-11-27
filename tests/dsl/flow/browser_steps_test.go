@@ -113,6 +113,10 @@ func TestParseBrowserErrors(t *testing.T) {
 		{"WAIT_VISIBLE without a locator", "GOTO /\nWAIT_VISIBLE 30\n", "site/bad.bdd:2: WAIT_VISIBLE needs 1 to 60 seconds and a locator"},
 		{"ASSERT_TITLE before an action", "ASSERT_TITLE Nighttroop\n", "assert_title before action"},
 		{"SAVE_VALUE without a key", "GOTO /\nSAVE_VALUE #totp-secret\n", "site/bad.bdd:2: expected a locator and a key"},
+		// An assert that the action before it would not check is refused, as it would pass whatever the page did
+		{"ASSERT_NEW_URL after GOTO", "GOTO /\nASSERT_NEW_URL\n", "site/bad.bdd:2: ASSERT_NEW_URL checks a click, not GOTO /"},
+		{"ASSERT_NEW_PAGE after RUN_BACKGROUND_JOBS", "GOTO /\nRUN_BACKGROUND_JOBS\nASSERT_NEW_PAGE\n", "site/bad.bdd:3: ASSERT_NEW_PAGE checks a click, not RUN_BACKGROUND_JOBS"},
+		{"an assert after MIDDAY_TIMEZONE", "MIDDAY_TIMEZONE\nASSERT_VISIBLE #summary\n", "site/bad.bdd:2: ASSERT_VISIBLE cannot follow MIDDAY_TIMEZONE, which takes no asserts"},
 		{"ASSERT_COUNT without a number", "GOTO /\nASSERT_COUNT #toaster three\n", "site/bad.bdd:2: ASSERT_COUNT needs a locator and a number"},
 	}
 	for _, test := range tests {

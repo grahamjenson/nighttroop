@@ -227,7 +227,7 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 			if err != nil {
 				return nil, err
 			}
-			if err := addAssert(current, first, assert); err != nil {
+			if err := addAssert(current, l, assert); err != nil {
 				return nil, err
 			}
 		}
@@ -242,14 +242,21 @@ func ParseBrowserLines(lines []Line) ([]Action, error) {
 // assertable is an action that takes the asserts after it
 type assertable interface{ AddAssert(BrowserAssert) }
 
-// addAssert gives an assert to the action before it, which must take asserts
-func addAssert(current Action, first string, assert BrowserAssert) error {
+// addAssert gives the assert of line l to the action before it, which must take asserts. Only a click checks
+// ASSERT_NEW_PAGE and ASSERT_NEW_URL, so after any other action they would pass with nothing checked.
+func addAssert(current Action, l Line, assert BrowserAssert) error {
 	if current == nil {
-		return fmt.Errorf("%s before action", strings.ToLower(first))
+		return fmt.Errorf("%s before action", strings.ToLower(l.First))
 	}
 	action, ok := current.(assertable)
 	if !ok {
-		return fmt.Errorf("current action does not support asserts")
+		return fmt.Errorf("%s:%d: %s cannot follow %s, which takes no asserts", l.Path, l.Number, l.First, current.ToFlatString())
+	}
+	switch assert.(type) {
+	case *AssertNewPage, *AssertNewURL:
+		if _, clicks := current.(*Click); !clicks {
+			return fmt.Errorf("%s:%d: %s checks a click, not %s", l.Path, l.Number, l.First, current.ToFlatString())
+		}
 	}
 	action.AddAssert(assert)
 	return nil
