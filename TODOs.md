@@ -3,7 +3,9 @@
 ## Before Beta Testing
 
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
-    1. P1: Vacuum sites only when needed
+    1. P4: A site's DB size on its pages, and for its write limits (3 and 4 times its size limit), counts the free
+       pages a truncate leaves, under 10% of it: measure it without them, as the truncate of a site far over its
+       limit does
 1. e2e restore and archive testing
     1. P2: Refuse to archive a site while S3 is off, as the site admin's delete does
 1. Performance testing (cost estimate for running full node)

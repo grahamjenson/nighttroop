@@ -563,18 +563,37 @@ const (
 	hardTruncatedBy = "size limit"
 )
 
+// vacuumFreePart is the part of a site's DB that must be free pages for the job to shrink it. A shrink writes the whole
+// DB again, and a site that stays over its limit changes a few records at each backup, so less than this is left for
+// the next writes to fill.
+const vacuumFreePart = 0.1
+
+// vacuumIfMostlyFree shrinks site's DB if vacuumFreePart of it or more is free pages
+func vacuumIfMostlyFree(ctx context.Context, site *SiteDB) error {
+	free, err := site.FreePart(ctx)
+	if err != nil || free < vacuumFreePart {
+		return err
+	}
+	return site.Vacuum(ctx)
+}
+
 // hardTruncateSite truncates the site harder while its DB is over hardTruncateSizeFactor times its limit, limitKB.
 // First it clears the JSON that matters only while recent, and deletes device reports over 7 days old and the loop
 // settings no record refers to. If the site is still over, it deletes its readings and treatments over 90 days old,
-// but the newest of each type. After each step that changed records it shrinks the DB, so its size shows them. If any
+// but the newest of each type. After each step that changed records it shrinks the DB if enough of it is free. If any
 // changed, it records the new size and logs a "Site truncated" event.
 func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB int64) error {
-	over := func(sizeKB *int64) bool {
-		return sizeKB != nil && float64(*sizeKB) > hardTruncateSizeFactor*float64(limitKB)
+	// A DB is measured without its free pages, as a DB left unshrunk keeps them and the next writes fill them
+	over := func(sizeKB *int64) (bool, error) {
+		if sizeKB == nil {
+			return false, nil
+		}
+		free, err := site.FreePart(ctx)
+		return float64(*sizeKB)*(1-free) > hardTruncateSizeFactor*float64(limitKB), err
 	}
 	beforeKB := site.EstimatedSizeKB()
-	if !over(beforeKB) {
-		return nil
+	if isOver, err := over(beforeKB); err != nil || !isOver {
+		return err
 	}
 	started, q := time.Now(), site.Queries()
 	var changed int64
@@ -590,9 +609,10 @@ func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB
 		count(q.DeleteUnreferencedLoopSettings(ctx)),
 	)
 	if err == nil && changed > 0 {
-		err = site.Vacuum(ctx)
+		err = vacuumIfMostlyFree(ctx, site)
 	}
-	if sizeKB := site.EstimatedSizeKB(); err == nil && over(sizeKB) {
+	stillOver, overErr := over(site.EstimatedSizeKB())
+	if err = errors.Join(err, overErr); err == nil && stillOver {
 		// The groups go first, as the events they refer to are kept
 		old := sitedb.DeleteOldEventGroupsParams{Before: started.Add(-hardTruncateRecordsKeptFor).UnixMilli()}
 		step1 := changed
@@ -608,7 +628,7 @@ func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB
 			count(q.DeleteOldNotificationEvents(ctx, sitedb.DeleteOldNotificationEventsParams(old))),
 		)
 		if err == nil && changed > step1 {
-			err = site.Vacuum(ctx)
+			err = vacuumIfMostlyFree(ctx, site)
 		}
 	}
 	if err != nil {

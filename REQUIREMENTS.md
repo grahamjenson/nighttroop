@@ -2579,7 +2579,9 @@ harder:
    - It keeps the newest of each treatment type, of each reading type, and of each event table. The current
      profile, and sensor, site and insulin ages, read the newest however old.
    - It keeps the summaries of those days, weeks and months. They are not marked stale.
-- After each step that changed records, the job shrinks the DB.
+- After each step that changed records, the job shrinks the DB only if 10% or more of it is free pages. If less is
+  free, the next records fill the free pages.
+- The job measures the DB without its free pages, to find if the site is over 1.5 times its limit.
 - If a step changed records, the job records the new DB size. A "Site truncated" event by "size limit" shows the size
   before and after.
 - If the DB is not on disk (in memory), or the site has no limit, the job does not do this.
