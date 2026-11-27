@@ -33,7 +33,7 @@ func PushDevicesHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := controlContext.ControlDB.Queries.SearchAllPushRegistrations(r.Context(), controldb.SearchAllPushRegistrationsParams{SiteID: siteID, Limit: maxPushDevices})
 	if err != nil {
 		slog.ErrorContext(r.Context(), "failed to list push registrations", "error", err)
-		apiutils.ErrInternalServerError.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrInternalServerError)
 		return
 	}
 	devices := make([]*controlmodels.PushRegistration, 0, len(rows))
@@ -52,38 +52,38 @@ func PushTestHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		apiutils.ErrNotFound.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrNotFound)
 		return
 	}
 	q, config := controlContext.ControlDB.Queries, controlContext.ControlDB.ServerConfig
 	registration, err := q.GetAnySitePushRegistration(r.Context(), controldb.GetAnySitePushRegistrationParams{ID: id})
 	if errors.Is(err, sql.ErrNoRows) {
-		apiutils.ErrNotFound.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrNotFound)
 		return
 	}
 	if err != nil {
-		apiutils.ErrInternalServerError.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrInternalServerError)
 		return
 	}
 	if allowed, seconds := httputils.WithinRateLimitAll(config.RateLimiters.SitePushLimiter(registration.SiteID)); !allowed {
-		apiutils.ErrRateLimitExceeded(seconds).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrRateLimitExceeded(seconds))
 		return
 	}
 	err = push.Send(r.Context(), q, config.Security, registration, push.Alert{Title: "Nighttroop", Body: "A test push from the server's control site"})
 	switch {
 	case errors.Is(err, push.ErrNoCredential):
-		apiutils.ErrConstraintCheckFailedWithHint(err).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrConstraintCheckFailedWithHint(err))
 		return
 	case errors.Is(err, push.ErrTokenGone):
-		(&apiutils.HTTPError{Status: http.StatusGone, Message: "The app is no longer registered on this device, so its registration is deleted"}).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, (&apiutils.HTTPError{Status: http.StatusGone, Message: "The app is no longer registered on this device, so its registration is deleted"}))
 		return
 	case err != nil:
 		slog.WarnContext(r.Context(), "A control test push failed", "site_id", registration.SiteID, "app", registration.App, "error", err)
-		(&apiutils.HTTPError{Status: http.StatusBadGateway, Message: err.Error()}).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, (&apiutils.HTTPError{Status: http.StatusBadGateway, Message: err.Error()}))
 		return
 	}
 	if registration, err = q.GetAnySitePushRegistration(r.Context(), controldb.GetAnySitePushRegistrationParams{ID: id}); err != nil {
-		apiutils.ErrInternalServerError.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrInternalServerError)
 		return
 	}
 	tested := sitemodels.PushRegistrationFromDB(registration)

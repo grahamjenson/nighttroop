@@ -163,7 +163,7 @@ func (s *SitesCollection) CreateHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	info := publicmodels.NewSiteInfo{URL: site.SiteDB.URL(), AdminPassword: site.AdminPassword, AdminTotpSecret: site.TotpSecret,
@@ -177,14 +177,14 @@ func (s *SitesCollection) SettingsHandler(w http.ResponseWriter, r *http.Request
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	model, herr := apiutils.ExtractModelFromRequest[controlmodels.ServerSettings](httputils.GetContentType(r), r)
 	if herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	err := controlContext.ControlDB.Queries.UpdatePublicSiteCreation(r.Context(), controldb.UpdatePublicSiteCreationParams{
 		PublicSiteCreation: model.PublicSiteCreation, UpdatedByIdentityName: &controlContext.IdentityModel.Name})
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Unable to update the server settings", "error", err)
-		apiutils.ErrInternalServerError.Write(acceptType, w)
+		WriteError(w, r, acceptType, apiutils.ErrInternalServerError)
 		return
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, model, control_sites_templ.PublicSiteCreationChanged(model.PublicSiteCreation))
@@ -200,11 +200,11 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 	siteDB, _, err := controlContext.ControlDB.GetSite(r.Context(), siteID)
 	unavailable := errors.Is(err, db.ErrSiteUnavailable)
 	if err != nil && !unavailable {
-		apiutils.ErrNotFound.Write(acceptType, w)
+		WriteError(w, r, acceptType, apiutils.ErrNotFound)
 		return
 	}
 	if allowed, wait := httputils.WithinRateLimitAll(controlContext.ControlDB.ServerConfig.RateLimiters.SiteDownloadLimiter(siteID)); !allowed {
-		apiutils.ErrRateLimitExceeded(wait).Write(acceptType, w)
+		WriteError(w, r, acceptType, apiutils.ErrRateLimitExceeded(wait))
 		return
 	}
 	// The same download as the site's admin gets from its Download Data, or for an unavailable site, its DB here that
@@ -216,12 +216,12 @@ func (s *SitesCollection) DownloadDBHandler(w http.ResponseWriter, r *http.Reque
 		download, err = backup.SnapshotSite(r.Context(), siteDB.SQLiteDB, siteID)
 	}
 	if errors.Is(err, db.ErrNoSiteDBHere) || errors.Is(err, db.ErrSiteNotUnavailable) {
-		apiutils.ErrNotFound.Write(acceptType, w)
+		WriteError(w, r, acceptType, apiutils.ErrNotFound)
 		return
 	}
 	if err != nil {
 		slog.ErrorContext(r.Context(), "failed to copy a site's DB for a control admin", "error", err)
-		apiutils.ErrInternalServerError.Write(acceptType, w)
+		WriteError(w, r, acceptType, apiutils.ErrInternalServerError)
 		return
 	}
 	defer download.Close()
@@ -331,7 +331,7 @@ func (s *SitesCollection) siteAction(w http.ResponseWriter, r *http.Request, com
 		site, herr = get(r.Context(), s, site.ID, controlContext)
 	}
 	if herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, site, component(site))

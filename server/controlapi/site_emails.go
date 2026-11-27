@@ -44,21 +44,21 @@ func SendSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 		Email string `json:"email"`
 	}](httputils.GetContentType(r), r)
 	if herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	texts, known := siteEmailTexts[form.Email]
 	switch {
 	case !cfg.EmailWorking():
-		apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.email_off")).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.email_off")))
 		return
 	case !known:
-		apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.email_which")).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.control.email_which")))
 		return
 	}
 	site, err := controlContext.ControlDB.Queries.GetSite(r.Context(), controldb.GetSiteParams{ID: siteID})
 	if err != nil || site.EmailEnc == nil || site.EmailVerifiedAt == nil {
-		apiutils.ErrNotFound.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrNotFound)
 		return
 	}
 
@@ -71,7 +71,7 @@ func SendSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	siteEmailed.Unlock()
 	if sent && wait > 0 {
-		apiutils.ErrRateLimitExceeded(int(wait.Seconds()) + 1).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrRateLimitExceeded(int(wait.Seconds())+1))
 		return
 	}
 
@@ -90,7 +90,7 @@ func SendSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 			delete(siteEmailed.at, siteID)
 		}
 		siteEmailed.Unlock()
-		apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.email_not_sent")).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.email_not_sent")))
 		return
 	}
 	controlContext.ControlDB.Logs.SiteEmailedEvent(r.Context(), siteID, controlContext.IdentityModel.Name, form.Email)

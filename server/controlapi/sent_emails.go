@@ -34,7 +34,7 @@ func SentEmailsHandler(w http.ResponseWriter, r *http.Request) {
 		sent, err := mailerOf(cfg).List(r.Context(), sentEmailsShown)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "cannot read the sent emails", "error", err)
-			apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.emails_not_read")).Write(acceptType, w)
+			controlcollections.WriteError(w, r, acceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.emails_not_read")))
 			return
 		}
 		sites := sitesByEmail(r.Context(), controlContext)
@@ -65,7 +65,7 @@ func SentEmailAddressHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	sent, err := mailerOf(controlContext.ControlDB.ServerConfig).Get(r.Context(), id)
 	if err != nil || len(sent.To) == 0 {
-		apiutils.ErrNotFound.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrNotFound)
 		return
 	}
 	slog.InfoContext(r.Context(), "a control admin read the address of a sent email", "by", controlContext.IdentityModel.Name, "email_id", id)

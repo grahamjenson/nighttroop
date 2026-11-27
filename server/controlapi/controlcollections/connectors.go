@@ -54,7 +54,7 @@ func (s *ConnectorsCollection) SharedHostsHandler(w http.ResponseWriter, r *http
 	rows, err := controlContext.ControlDB.Queries.SharedNightscoutHosts(r.Context())
 	hosts, herr := apiutils.Searched(rows, err, s.GetName(), controlmodels.SharedHostFromDB)
 	if herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, hosts, control_connectors_templ.SharedHosts(hosts))

@@ -26,7 +26,7 @@ func (s *SitesCollection) IdentitiesHandler(w http.ResponseWriter, r *http.Reque
 	acceptType := httputils.GetAcceptType(r)
 	site, identities, herr := s.siteIdentities(r)
 	if herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, identities, control_sites_templ.SiteIdentities(site.ID, identities))
@@ -84,7 +84,7 @@ func (s *SitesCollection) PageHandler(w http.ResponseWriter, r *http.Request) {
 		page.BackupVersions = versions
 	}
 	if herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	WriteResponse(w, r, acceptType, http.StatusOK, site, control_sites_templ.SitePage(page))
@@ -132,7 +132,7 @@ func (s *SitesCollection) resetIdentity(w http.ResponseWriter, r *http.Request, 
 		values, err = reset(r.Context(), controlContext.ControlDB, identity, controlContext.IdentityModel.Name)
 	}
 	if herr := apiutils.ErrorFor(err, "site identities"); herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	credentials := &controlmodels.SiteIdentityCredentials{Name: identity.Name, NSToken: values.NSToken, TotpSecret: values.TotpSecret}
@@ -154,7 +154,7 @@ func (s *SitesCollection) AssumeHandler(cfg *config.ServerConfig) http.HandlerFu
 			token, err = cfg.Security.GenerateAssumeJWTToken(identity.SiteID, identity.Name, controlContext.IdentityModel.Name)
 		}
 		if herr := apiutils.ErrorFor(err, "site identities"); herr != nil {
-			herr.Write(acceptType, w)
+			WriteError(w, r, acceptType, herr)
 			return
 		}
 		link := &controlmodels.SiteIdentityAssume{Name: identity.Name, URL: cfg.SiteURL(identity.SiteID) + "/login/assume?token=" + url.QueryEscape(token)}

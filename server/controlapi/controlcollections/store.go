@@ -44,7 +44,7 @@ func (store *ControlStore) registerCollection[R, M any](collection CollectionBas
 	cannot := func(what string) http.HandlerFunc {
 		message := route + " cannot be " + what + " here"
 		return func(w http.ResponseWriter, r *http.Request) {
-			(&apiutils.HTTPError{Status: http.StatusMethodNotAllowed, Message: message}).Write(httputils.GetAcceptType(r), w)
+			WriteError(w, r, httputils.GetAcceptType(r), (&apiutils.HTTPError{Status: http.StatusMethodNotAllowed, Message: message}))
 		}
 	}
 	routes := &ControlCollectionRoutes{Search: cannot("searched"), Get: cannot("read"), Update: cannot("updated")}

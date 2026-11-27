@@ -44,7 +44,7 @@ func ControlAdminsHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := controlContext.ControlDB.Queries.AllControlIdentities(r.Context())
 	admins, herr := apiutils.Searched(rows, err, "control admins", controlmodels.ControlAdminFromDB)
 	if herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, admins, control_admins_templ.Admins(admins))
@@ -75,7 +75,7 @@ func CreateControlAdminHandler(w http.ResponseWriter, r *http.Request) {
 		created, err = controlContext.ControlDB.Queries.GetControlIdentity(r.Context(), controldb.GetControlIdentityParams{Name: form.Name})
 	}
 	if herr := apiutils.ErrorFor(err, "control admins"); herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	slog.InfoContext(r.Context(), "Control admin added", "admin", created.Name, "role", created.Role, "by", controlContext.IdentityModel.Name)
@@ -97,7 +97,7 @@ func SetControlAdminRoleHandler(w http.ResponseWriter, r *http.Request) {
 		err = controlContext.ControlDB.SetControlIdentityRole(r.Context(), identity, form.Role, controlContext.IdentityModel)
 	}
 	if herr := adminError(err); herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	identity.Role = form.Role
@@ -114,7 +114,7 @@ func DeleteControlAdminHandler(w http.ResponseWriter, r *http.Request) {
 		err = controlContext.ControlDB.DeleteControlIdentity(r.Context(), identity)
 	}
 	if herr := adminError(err); herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	slog.InfoContext(r.Context(), "Control admin deleted", "admin", identity.Name, "by", controlContext.IdentityModel.Name)
@@ -140,7 +140,7 @@ func resetControlAdmin(w http.ResponseWriter, r *http.Request, reset func(*db.Co
 		values, err = reset(controlContext.ControlDB, r.Context(), identity, controlContext.IdentityModel)
 	}
 	if herr := apiutils.ErrorFor(err, "control admins"); herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	credentials := adminCredentials(identity, values)
@@ -216,7 +216,7 @@ func TestPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, map[string]string{"level": string(level)}, control_admins_templ.TestPaged(level))

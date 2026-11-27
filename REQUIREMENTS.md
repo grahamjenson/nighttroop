@@ -776,6 +776,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - `MODE=staging`: a large banner on every page (public, site, control) says it is a test site, frequently wiped.
 - Toasts: at the top of every page (site and control), newest on top. A fourth hides the oldest until it times out,
   so three at most take space and the newest always shows.
+- If a button or form on a control page is refused, an error toast says why, without the API's "Bad or missing
+  request body" text. The toast times out.
 - Tab title: the page's name (`Glucose Readings · Nighttroop`), after a full load or a link or tab. With no title
   (sign in): `Nighttroop`.
 

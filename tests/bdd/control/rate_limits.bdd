@@ -73,6 +73,10 @@ ASSERT_TEXT_EQUALS #control--rate-settings--site_report_print--burst 7
 INPUT #control--rate-settings--site_push--burst 0
 CLICK #control--rate-settings--save
 ASSERT_TEXT_VISIBLE site_push needs a rate above 0
+// Its toast is an error toast like every page's, which says why in the page's words and goes when its time is up
+ASSERT_COUNT #toaster [data-tui-toast][data-variant="error"]:has-text("site_push needs a rate above 0") 1
+ASSERT_NOT_VISIBLE #toaster >> text=Bad or missing request body
+ASSERT_NOT_VISIBLE #toaster >> text=site_push needs a rate above 0
 
 // Setting it back to its env default uses the env's again
 INPUT #control--rate-settings--site_push--per_minute 10
