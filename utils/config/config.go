@@ -621,9 +621,27 @@ func (config *ServerConfig) ValidateClean() error {
 		return fmt.Errorf("OPERATOR_NAME and SUPPORT_EMAIL must be set: who runs this server, and how its users contact them")
 	}
 
+	// 0 minutes deletes each new site at once, and 0 days keeps no old version of a backup
+	for _, setting := range []struct {
+		name  string
+		value int
+	}{
+		{"DELETE_AFTER_INACTIVITY_MINS", config.DeleteAfterInactivityMins},
+		{"SITE_BACKUP_INTERVAL_IN_SECONDS", config.SiteBackupIntervalInSeconds},
+		{"SITE_BACKUP_RETENTION_DAYS", config.SiteBackupRetentionDays},
+		{"CONTROL_BACKUP_RETENTION_DAYS", config.ControlBackupRetentionDays},
+	} {
+		if setting.value < 1 {
+			return fmt.Errorf("%s must be at least 1, not %d", setting.name, setting.value)
+		}
+	}
+
 	if !config.IsDevOrTest() {
 		if err := validateSecrets(config.RawKeySets, config.S3URL, config.S3AccessKeyID, config.S3AccessSecretKey); err != nil {
 			return err
+		}
+		if config.S3URL != "" && config.S3Bucket == "" {
+			return fmt.Errorf("S3_URL is set, so S3_BUCKET must be set")
 		}
 	}
 

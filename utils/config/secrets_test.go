@@ -64,6 +64,8 @@ func TestValidateSecrets(t *testing.T) {
 		{"staging with S3 and minioadmin", consts.Staging, map[string]string{"S3_URL": "https://s3.example.com", "S3_ACCESS_KEY": "minioadmin", "S3_SECRET_KEY": "minioadmin"}, "S3_ACCESS_KEY"},
 		{"production with S3 and a minioadmin secret", consts.Production, map[string]string{"S3_URL": "https://s3.example.com", "S3_ACCESS_KEY": "an access key", "S3_SECRET_KEY": "minioadmin"}, "S3_SECRET_KEY"},
 		{"production with S3 and an empty access key", consts.Production, map[string]string{"S3_URL": "https://s3.example.com", "S3_ACCESS_KEY": "", "S3_SECRET_KEY": "a secret key"}, "S3_ACCESS_KEY"},
+		{"production with S3 and an empty bucket", consts.Production, map[string]string{"S3_URL": "https://s3.example.com", "S3_ACCESS_KEY": "an access key", "S3_SECRET_KEY": "a secret key", "S3_BUCKET": ""}, "S3_BUCKET"},
+		{"development with S3 and an empty bucket", consts.Development, map[string]string{"S3_URL": "http://localhost:9000", "S3_BUCKET": ""}, ""},
 		{"development with S3 and the minioadmin defaults", consts.Development, map[string]string{"S3_URL": "http://localhost:9000"}, ""},
 		{"test with S3 and the minioadmin defaults", consts.Test, map[string]string{"S3_URL": "http://localhost:9000"}, ""},
 	}
@@ -87,5 +89,22 @@ func TestValidateSecrets(t *testing.T) {
 				require.ErrorContains(t, err, tt.wantErr)
 			}
 		})
+	}
+}
+
+// A server in any mode does not start with a time or a retention under 1: 0 minutes deletes each new site at once
+func TestValidateTimesAreAtLeastOne(t *testing.T) {
+	for _, name := range []string{"DELETE_AFTER_INACTIVITY_MINS", "SITE_BACKUP_INTERVAL_IN_SECONDS", "SITE_BACKUP_RETENTION_DAYS", "CONTROL_BACKUP_RETENTION_DAYS"} {
+		for value, ok := range map[string]bool{"-1": false, "0": false, "1": true} {
+			t.Run(name+"="+value, func(t *testing.T) {
+				cfg, err := readServerConfig(consts.Test, map[string]string{"OPERATOR_NAME": "Example Health", "SUPPORT_EMAIL": "help@example.org", name: value})
+				require.NoError(t, err)
+				if err = cfg.ValidateClean(); ok {
+					require.NoError(t, err)
+				} else {
+					require.ErrorContains(t, err, name+" must be at least 1, not "+value)
+				}
+			})
+		}
 	}
 }
