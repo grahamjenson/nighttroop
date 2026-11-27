@@ -1,15 +1,9 @@
 package sitecollections
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/hex"
 	"log/slog"
 	"net/http"
-	"net/mail"
 	"strings"
-	"sync"
 	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -23,29 +17,8 @@ import (
 )
 
 // A site's admin may give the site an email, to be told about the site by. It is theirs once they open the link sent
-// to it. The link's key is kept here, in memory, so a restart of the server means sending the link again.
-const (
-	// emailLinkLasts is how long a verification link works, and emailEvery how often a site may be sent one, so a
-	// site cannot be used to send emails to an address that did not ask for them
-	emailLinkLasts = 24 * time.Hour
-	emailEvery     = time.Hour
-	// maxEmailLength is the longest address an email standard allows
-	maxEmailLength = 254
-)
-
-// emailLink is the verification link last sent for a site
-type emailLink struct {
-	// keyHash is the SHA-256 of the link's key, and emailEnc the email it was sent to, as the site's row has it
-	keyHash  [sha256.Size]byte
-	emailEnc string
-	sentAt   time.Time
-}
-
-// emailLinks are the link last sent for each site, by site ID: at most one a site, and one a site an hour
-var emailLinks = struct {
-	sync.Mutex
-	bySite map[string]emailLink
-}{bySite: map[string]emailLink{}}
+// to it, which works for a day. Each site is sent one an hour.
+var emailLinks = sendmail.NewLinks(24*time.Hour, time.Hour)
 
 // SiteEmailFor is the site's email as its admin's My Account page shows it, or nil when the page has no email card:
 // the server sends no email, or the identity is not an admin
@@ -95,21 +68,17 @@ func SaveSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	email := strings.TrimSpace(form.Email)
-	if address, err := mail.ParseAddress(email); err != nil || address.Address != email || len(email) > maxEmailLength {
+	if !sendmail.Address(email) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.site.email_bad")))
 		return
 	}
 
-	emailLinks.Lock()
-	last, sent := emailLinks.bySite[siteContext.SiteID]
-	emailLinks.Unlock()
-	if wait := emailEvery - time.Since(last.sentAt); sent && wait > 0 {
+	if wait := emailLinks.Wait(siteContext.SiteID); wait > 0 {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(int(wait.Seconds())+1))
 		return
 	}
 
-	key := make([]byte, 32)
-	_, _ = rand.Read(key)
+	key := sendmail.Key()
 	emailEnc, err := siteContext.Config.Security.EncryptFor(security.PurposeSiteEmail, siteContext.SiteID, email)
 	if err == nil {
 		err = siteContext.ControlDB.Queries.UpdateSiteEmail(r.Context(), controldb.UpdateSiteEmailParams{ID: siteContext.SiteID, EmailEnc: &emailEnc})
@@ -121,7 +90,7 @@ func SaveSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	siteContext.SiteModel.EmailEnc, siteContext.SiteModel.EmailVerifiedAt = &emailEnc, nil
 
-	link := siteContext.SiteDB.URL() + "/settings/account/email/verify?key=" + hex.EncodeToString(key)
+	link := siteContext.SiteDB.URL() + "/settings/account/email/verify?key=" + key
 	mailer := sendmail.New(siteContext.Config.ResendAPIKey, siteContext.Config.ResendFrom, siteContext.Config.ResendAPIURL)
 	err = mailer.Send(r.Context(), email, i18n.T(r.Context(), "site.settings.account.email.verify_subject"),
 		i18n.T(r.Context(), "site.settings.account.email.verify_text", i18n.Data{"Site": siteContext.SiteDB.URL(), "Link": link}))
@@ -131,9 +100,7 @@ func SaveSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.email_not_sent")))
 		return
 	}
-	emailLinks.Lock()
-	emailLinks.bySite[siteContext.SiteID] = emailLink{keyHash: sha256.Sum256(key), emailEnc: emailEnc, sentAt: time.Now()}
-	emailLinks.Unlock()
+	emailLinks.Sent(siteContext.SiteID, key, emailEnc)
 
 	shown := &site_settings_templ.SiteEmail{Email: email}
 	WriteResponse(w, r, siteContext, http.StatusOK, shown, site_settings_templ.EmailSaved(shown), false)
@@ -151,11 +118,7 @@ func RemoveSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// The link goes, but when it was sent stays, so removing an email does not let the site send another at once
-	emailLinks.Lock()
-	if last, ok := emailLinks.bySite[siteContext.SiteID]; ok {
-		emailLinks.bySite[siteContext.SiteID] = emailLink{sentAt: last.sentAt}
-	}
-	emailLinks.Unlock()
+	emailLinks.Forget(siteContext.SiteID)
 	shown := &site_settings_templ.SiteEmail{}
 	WriteResponse(w, r, siteContext, http.StatusOK, shown, site_settings_templ.EmailRemoved(shown), false)
 }
@@ -164,21 +127,11 @@ func RemoveSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 // the link was sent to, once, and opens My Account. It needs no sign in, as whoever has the link has the email.
 func VerifySiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := httputils.GetSiteContext(r.Context())
-	key, err := hex.DecodeString(r.URL.Query().Get("key"))
-	keyHash := sha256.Sum256(key)
-
-	emailLinks.Lock()
-	last, sent := emailLinks.bySite[siteContext.SiteID]
-	valid := err == nil && sent && last.emailEnc != "" && time.Since(last.sentAt) < emailLinkLasts &&
-		subtle.ConstantTimeCompare(keyHash[:], last.keyHash[:]) == 1
-	if valid {
-		emailLinks.bySite[siteContext.SiteID] = emailLink{sentAt: last.sentAt}
-	}
-	emailLinks.Unlock()
-
+	emailEnc, valid := emailLinks.Take(siteContext.SiteID, r.URL.Query().Get("key"))
 	var verified int64
+	var err error
 	if valid {
-		verified, err = siteContext.ControlDB.Queries.VerifySiteEmail(r.Context(), controldb.VerifySiteEmailParams{ID: siteContext.SiteID, EmailEnc: &last.emailEnc})
+		verified, err = siteContext.ControlDB.Queries.VerifySiteEmail(r.Context(), controldb.VerifySiteEmailParams{ID: siteContext.SiteID, EmailEnc: &emailEnc})
 	}
 	if !valid || err != nil || verified != 1 {
 		http.Error(w, i18n.T(r.Context(), "errors.site.email_link"), http.StatusBadRequest)

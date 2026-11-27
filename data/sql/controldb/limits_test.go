@@ -30,7 +30,7 @@ func TestControlDataLimits(t *testing.T) {
 		"control_identities": testutils.Recipe(func(i int) controldb.CreateControlIdentityParams {
 			return controldb.CreateControlIdentityParams{Name: id(i), PasswordHash: "hash", TotpSecretEnc: "secret",
 				Role: consts.ControlRoleAdmin, CreatedByIdentityName: by}
-		}, q.CreateControlIdentity, "UpdatedByIdentityName"),
+		}, q.CreateControlIdentity, "UpdatedByIdentityName", "EmailEnc"),
 		"passkeys": testutils.Recipe(func(i int) controldb.CreateControlPasskeyParams {
 			return controldb.CreateControlPasskeyParams{ControlIdentityID: admin.ID, CredentialID: id(i), CredentialJson: "{}"}
 		}, q.CreateControlPasskey),

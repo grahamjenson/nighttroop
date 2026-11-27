@@ -27,6 +27,8 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 	// A control admin's passkey signs it in on its own; it adds them on its Account page
 	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/passkey/begin", controlapi.POSTPasskeyLoginBegin(config))
 	r.With(httputils.AllowedCountriesMiddleware(config)).Post("/login/passkey/finish", controlapi.POSTPasskeyLoginFinish(controlDB, config))
+	// The link sent to a control admin's email, which needs no sign in
+	r.Get("/account/email/verify", controlapi.GETVerifyAccountEmail(controlDB))
 
 	r.Group(func(r chi.Router) {
 		r.Use(controlapi.JWTAuthMiddleware(controlDB, config))
@@ -59,6 +61,8 @@ func NewControlRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.
 		r.Post("/account/passkeys/begin", controlapi.POSTAccountPasskeyBegin(controlDB, config))
 		r.Post("/account/passkeys/finish", controlapi.POSTAccountPasskeyFinish(controlDB, config))
 		r.Delete("/account/passkeys/{id}", controlapi.DELETEAccountPasskey(controlDB))
+		r.Post("/account/email", controlapi.POSTAccountEmail(controlDB, config))
+		r.Delete("/account/email", controlapi.DELETEAccountEmail(controlDB, config))
 		r.Get("/usage", controlapi.UsageHandler)
 		r.Get("/connectors/shared-hosts", (&controlcollections.ConnectorsCollection{}).SharedHostsHandler)
 		r.Get("/rate-limits", controlapi.RateLimitsHandler)

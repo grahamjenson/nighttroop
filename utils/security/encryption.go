@@ -163,6 +163,7 @@ const (
 	PurposeWelcomePasskey  Purpose = "welcome_passkey"
 	PurposeNightscoutHost  Purpose = "nightscout_host" // a MAC of a Nightscout connector's host
 	PurposeSiteEmail       Purpose = "site_email"
+	PurposeControlEmail    Purpose = "control_email"
 )
 
 func associatedData(purpose Purpose, siteID string) []byte {

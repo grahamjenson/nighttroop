@@ -1,6 +1,7 @@
 package site_settings_templ
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -22,10 +23,22 @@ import (
 
 // MyAccount is the signed in identity's, or control admin's, own page at path: who it is, and up to most passkeys it
 // adds, on its own address, and removes. A site identity's, with guide, also opens the guide to setting the site up.
-// SiteEmail is the email a site's admin gave the site, "" for none, and whether they have verified it
+// SiteEmail is the email a site's admin gave the site, "" for none, and whether they have verified it. With Control it
+// is a control admin's own email, on their Account page.
 type SiteEmail struct {
 	Email    string `json:"email"`
 	Verified bool   `json:"verified"`
+	Control  bool   `json:"-"`
+}
+
+// emailCard is where the email card saves and removes the email, its title, its note and its question before removing
+func emailCard(ctx context.Context, email *SiteEmail) (path, title, note, remove string) {
+	if email.Control {
+		return "/account/email", i18n.T(ctx, "control.account.email.title"), i18n.T(ctx, "control.account.email.note"),
+			i18n.T(ctx, "control.account.email.remove_confirm")
+	}
+	return "/settings/account/email", i18n.T(ctx, "site.settings.account.email.title"), i18n.T(ctx, "site.settings.account.email.note"),
+		i18n.T(ctx, "site.settings.account.email.remove_confirm")
 }
 
 // MyAccount also has, with an email, the card a site's admin gives the site's email on.
@@ -81,11 +94,12 @@ templ MyAccount(name, role string, passkeys []*controldb.Passkey, most int, path
 	</div>
 }
 
-// EmailCard is the site's email: the one given, whether it is verified, a form to give or change it, and a button to
+// EmailCard is the site's, or control admin's, email: the one given, whether it is verified, a form to give or change it, and a button to
 // remove it. Saving one sends it a link, and the card swaps itself for the answer.
 templ EmailCard(email *SiteEmail) {
+	{{ path, title, note, remove := emailCard(ctx, email) }}
 	<div id="site--account--email">
-		@card.Card(card.Props{Title: i18n.T(ctx, "site.settings.account.email.title"), Note: i18n.T(ctx, "site.settings.account.email.note")}) {
+		@card.Card(card.Props{Title: title, Note: note}) {
 			if email.Email != "" {
 				<p class="mb-3 text-sm">
 					<span id="site--account--email-current" class="font-medium">{ email.Email }</span>
@@ -102,7 +116,7 @@ templ EmailCard(email *SiteEmail) {
 			}
 			<form
 				class="flex flex-wrap items-end gap-2"
-				hx-post="/settings/account/email"
+				hx-post={ path }
 				hx-target="#site--account--email"
 				hx-swap="outerHTML"
 				hx-status:4xx="target:#toaster swap:beforeend"
@@ -117,8 +131,8 @@ templ EmailCard(email *SiteEmail) {
 				}
 				if email.Email != "" {
 					@button.Button(button.Props{ID: "site--account--email-remove", Type: button.TypeButton, Variant: button.VariantOutline, Size: button.SizeSm,
-						Attributes: templ.Attributes{"hx-delete": "/settings/account/email", "hx-target": "#site--account--email", "hx-swap": "outerHTML",
-							"hx-confirm": i18n.T(ctx, "site.settings.account.email.remove_confirm"), "data-confirm-delete": i18n.T(ctx, "site.settings.account.remove")}}) {
+						Attributes: templ.Attributes{"hx-delete": path, "hx-target": "#site--account--email", "hx-swap": "outerHTML",
+							"hx-confirm": remove, "data-confirm-delete": i18n.T(ctx, "site.settings.account.remove")}}) {
 						{ i18n.T(ctx, "site.settings.account.remove") }
 					}
 				}

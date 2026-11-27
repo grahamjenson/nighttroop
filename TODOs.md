@@ -11,7 +11,7 @@
 1. Register with Resend and PagerDuty and .p8 push notifications to test all.
 1. Accounts
     1. P4: Add the icons of SugarPixel, Dexcom and FreeStyle Libre to `server/assets/static/logos`, and put them on the right pages.
-    1. P1: Allow control admin to register an email address, email_env and email_verified_at like sites, and recover the password by giving the email address.
+    1. P1: Recover a control admin's password by giving their verified email address. Account already registers and verifies it.
     1. P2: Recover a site through its verified email, the recovery request must give the email address exactly.
     1. P4: Sent Emails lists the last 50 emails only, with no next page
     1. P4: Sent Emails should be able to identify the site by the subject line referencing it in

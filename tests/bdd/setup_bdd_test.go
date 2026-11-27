@@ -109,6 +109,10 @@ var ownServers = []ownServer{
 		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
 		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
 	}, seedDevAdmin},
+	{"email/control_account.bdd", "192.0.2.25", func(c *config.ServerConfig) {
+		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+		c.ResendAPIKey, c.ResendFrom, c.ResendAPIURL = "re_key", "Nighttroop <hello@nt.example.com>", resend.URL
+	}, seedDevAdmin},
 	// A server that sends email, with one site, emailsit, whose email is verified
 	{"siteemail/control.bdd", "192.0.2.22", func(c *config.ServerConfig) {
 		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
