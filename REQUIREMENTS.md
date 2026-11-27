@@ -30,6 +30,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - It keeps the backup of a site with no DB on the server: that backup is the archive of an archived site.
   - If there is no backup folder, the server still removes the logs DB when the disk is short.
   - If the disk still has less than 100 MB free, the server does not start, and says how much is free.
+- The server does not start, and names the setting, if one of these is under 1: `DELETE_AFTER_INACTIVITY_MINS`,
+  `SITE_BACKUP_INTERVAL_IN_SECONDS`, `SITE_BACKUP_RETENTION_DAYS`, `CONTROL_BACKUP_RETENTION_DAYS`.
 - The server listens when it has read its settings. If the port is in use, it does not start, and uses no S3 or DB.
 - Until every DB is open, each request, `/health` too, gets 503 with `Retry-After: 5` and `{"status":"starting"}`. A button or form on a page (an htmx request) gets an error toast instead: "The server is starting. Try again in a few seconds."
 
@@ -2383,6 +2385,7 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
       again with S3;
     - if S3 refuses the lock, it logs a warning and tests S3 again until 3 tests in a row work.
   - Production and staging need `S3_ACCESS_KEY` and `S3_SECRET_KEY`, not `minioadmin`, to start.
+  - Production and staging do not start if `S3_BUCKET` is empty.
   - If S3 stops answering during an upload or download, the transfer fails after 30 minutes. The next backup round
     tries again.
   - If S3 takes a small request and does not answer, the request fails after 20 seconds.

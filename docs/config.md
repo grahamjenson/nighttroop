@@ -104,12 +104,12 @@ AAPS, Trio) send.
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `S3_URL` | None | The S3-compatible endpoint for backups, archives and the control DB's replica. Outside development and test it must be `https://`, as S3 encrypts the replica with SSE-C only over HTTPS (example in development: `http://localhost:9000`, the docker-compose MinIO). |
-| `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on at startup. |
+| `S3_BUCKET` | `mybucket` | The bucket. Versioning and lifecycle rules are turned on at startup. Production and staging do not start if it is empty and `S3_URL` is set. |
 | `S3_ACCESS_KEY` | `minioadmin` (docker-compose MinIO) | The access key ID. |
 | `S3_SECRET_KEY` | `minioadmin` (docker-compose MinIO) | The secret key. |
-| `SITE_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How old a written site's backup is before it is backed up again. Each minute (or each interval, if it is shorter), the job deletes the sites never used, then truncates and backs up the sites that are due. |
-| `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a file of the control DB's replica after Litestream replaces or deletes it. |
-| `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site backup or archive. |
+| `SITE_BACKUP_INTERVAL_IN_SECONDS` | `3600` | How old a written site's backup is before it is backed up again. Each minute (or each interval, if it is shorter), the job deletes the sites never used, then truncates and backs up the sites that are due. At least `1`. |
+| `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a file of the control DB's replica after Litestream replaces or deletes it. At least `1`. |
+| `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site backup or archive. At least `1`. |
 
 - `S3_URL` unset or empty: S3 is off. No restore on start, no backup upload, and sites cannot be deleted.
 - `S3_URL` set:
@@ -127,7 +127,7 @@ AAPS, Trio) send.
 | --- | --- | --- |
 | `MAX_SITES` | `10000` | The most sites the public can create from the home page. A control admin can create more. |
 | `MAX_IDENTITIES_PER_USER` | `100` | The most identities on one site. Rate limiters are kept for 20 a site, so more costs no more memory. |
-| `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a never used site is kept before deletion. |
+| `DELETE_AFTER_INACTIVITY_MINS` | `10080` (a week) | How long a never used site is kept before deletion. At least `1`, as `0` deletes each new site at once. |
 | `DISABLE_AFTER_INACTIVITY_DAYS` | `7` | How long a site is not written or seen before control marks it Inactive. An admin can disable any live site. |
 | `BACKGROUND_CONNECTOR_WORKERS` | `5` | Syncs that run at once. |
 | `CONNECTOR_INTERVAL_IN_SECONDS` | `5` | How often due syncs are queued. |

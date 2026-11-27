@@ -128,8 +128,6 @@
     1. P3: Restoring an archived site reads only its copy here if there is one, so a damaged copy fails each time
        though S3 has a good one: download it when the copy does not decompress. Also refuse a restore of a site that
        is unavailable, as a second restore can delete the DB kept for it
-    1. P4: Refuse a config whose `DELETE_AFTER_INACTIVITY_MINS`, `SITE_BACKUP_INTERVAL_IN_SECONDS` or backup retention
-       days are under 1, and a production `S3_URL` with no `S3_BUCKET`: 0 minutes deletes each new site at once
 
 1. Database:
     1. P4: Make `go generate` fail for a bare value that an indexed column equals in a query with an `ORDER BY`, as
