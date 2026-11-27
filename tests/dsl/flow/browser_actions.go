@@ -599,8 +599,6 @@ type MiddayTimezone struct {
 	TestLine int
 }
 
-func (r *MiddayTimezone) AddAssert(BrowserAssert) {}
-
 func (r *MiddayTimezone) ToFlatString() string { return "MIDDAY_TIMEZONE" }
 
 func (r *MiddayTimezone) ToErrorLine(msg string) string {
