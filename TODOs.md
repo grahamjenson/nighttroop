@@ -54,8 +54,6 @@
 1. Site usability:
     1. P4: While an urgent alarm is snoozed, the banner shows the alarm it quiets (a high under its urgent high) as
        "Snoozed: High", though that one has no snooze: leave it out, or say what quiets it
-    1. P4: An address outside a section, as `/data` or `/account`, gives a signed in person the bare text
-       `404 page not found`: show the site's Not found page there too, as it shows for `/data/nope`
     1. P5: The dose and carbs boxes of the add and details forms open a phone's full keyboard, as they take a
        negative value and a phone's number keys have no minus sign: decide a way to take back a value with number keys
 

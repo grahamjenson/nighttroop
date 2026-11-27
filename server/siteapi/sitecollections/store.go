@@ -165,14 +165,19 @@ func answerNotFound(status int, message string) http.HandlerFunc {
 	}
 }
 
+// NotFoundHandler answers an address the site has nothing at with the address as it was asked for, as "There is no
+// nope here" says little to someone who followed a link
+func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	answerNotFound(http.StatusNotFound, "There is no page at "+r.URL.Path)(w, r)
+}
+
 // routes are those of the collection the request names in a section, or ones answering that there is no such collection
 func (s *SiteStore) routes(section string, r *http.Request) *SiteCollectionRoutes {
 	name := chi.URLParam(r, "collection")
 	if routes, exists := s.collectionRoutes[section][name]; exists {
 		return routes
 	}
-	// The address as it was asked for, as "There is no nope here" says little to someone who followed a link
-	missing := answerNotFound(http.StatusNotFound, "There is no page at "+r.URL.Path)
+	missing := http.HandlerFunc(NotFoundHandler)
 	return &SiteCollectionRoutes{Search: missing, Get: missing, Create: missing, Update: missing, Delete: missing, Events: missing, New: missing}
 }
 
