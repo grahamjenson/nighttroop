@@ -27,6 +27,8 @@ var columnLimits = map[string]map[string]sitedb.ColumnLimit{
 		"CreatedByIdentityName": {Column: "created_by_identity_name", Required: true, MaxLength: 32},
 		"DeletedAt":             {Column: "deleted_at"},
 		"CredentialsChangedAt":  {Column: "credentials_changed_at", Required: true},
+		"EmailEnc":              {Column: "email_enc", MaxLength: 512},
+		"EmailVerifiedAt":       {Column: "email_verified_at"},
 	},
 	"passkeys": {
 		"ID":                {Column: "id", Required: true},

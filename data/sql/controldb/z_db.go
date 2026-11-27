@@ -309,6 +309,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateConnectorReportsSuccessStmt, err = db.PrepareContext(ctx, updateConnectorReportsSuccess); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateConnectorReportsSuccess: %w", err)
 	}
+	if q.updateControlIdentityEmailStmt, err = db.PrepareContext(ctx, updateControlIdentityEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateControlIdentityEmail: %w", err)
+	}
 	if q.updateControlIdentityPasswordStmt, err = db.PrepareContext(ctx, updateControlIdentityPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateControlIdentityPassword: %w", err)
 	}
@@ -374,6 +377,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.upsertPushRegistrationStmt, err = db.PrepareContext(ctx, upsertPushRegistration); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertPushRegistration: %w", err)
+	}
+	if q.verifyControlIdentityEmailStmt, err = db.PrepareContext(ctx, verifyControlIdentityEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query VerifyControlIdentityEmail: %w", err)
 	}
 	if q.verifySiteEmailStmt, err = db.PrepareContext(ctx, verifySiteEmail); err != nil {
 		return nil, fmt.Errorf("error preparing query VerifySiteEmail: %w", err)
@@ -858,6 +864,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateConnectorReportsSuccessStmt: %w", cerr)
 		}
 	}
+	if q.updateControlIdentityEmailStmt != nil {
+		if cerr := q.updateControlIdentityEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateControlIdentityEmailStmt: %w", cerr)
+		}
+	}
 	if q.updateControlIdentityPasswordStmt != nil {
 		if cerr := q.updateControlIdentityPasswordStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateControlIdentityPasswordStmt: %w", cerr)
@@ -966,6 +977,11 @@ func (q *Queries) Close() error {
 	if q.upsertPushRegistrationStmt != nil {
 		if cerr := q.upsertPushRegistrationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertPushRegistrationStmt: %w", cerr)
+		}
+	}
+	if q.verifyControlIdentityEmailStmt != nil {
+		if cerr := q.verifyControlIdentityEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing verifyControlIdentityEmailStmt: %w", cerr)
 		}
 	}
 	if q.verifySiteEmailStmt != nil {
@@ -1107,6 +1123,7 @@ type Queries struct {
 	updateConnectorAttemptStmt              *sql.Stmt
 	updateConnectorReportsFailureStmt       *sql.Stmt
 	updateConnectorReportsSuccessStmt       *sql.Stmt
+	updateControlIdentityEmailStmt          *sql.Stmt
 	updateControlIdentityPasswordStmt       *sql.Stmt
 	updateControlIdentityRoleStmt           *sql.Stmt
 	updateControlIdentityTOTPStmt           *sql.Stmt
@@ -1129,6 +1146,7 @@ type Queries struct {
 	updateSiteTableSizesStmt                *sql.Stmt
 	updateSitesBackupUploadedStmt           *sql.Stmt
 	upsertPushRegistrationStmt              *sql.Stmt
+	verifyControlIdentityEmailStmt          *sql.Stmt
 	verifySiteEmailStmt                     *sql.Stmt
 }
 
@@ -1231,6 +1249,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateConnectorAttemptStmt:              q.updateConnectorAttemptStmt,
 		updateConnectorReportsFailureStmt:       q.updateConnectorReportsFailureStmt,
 		updateConnectorReportsSuccessStmt:       q.updateConnectorReportsSuccessStmt,
+		updateControlIdentityEmailStmt:          q.updateControlIdentityEmailStmt,
 		updateControlIdentityPasswordStmt:       q.updateControlIdentityPasswordStmt,
 		updateControlIdentityRoleStmt:           q.updateControlIdentityRoleStmt,
 		updateControlIdentityTOTPStmt:           q.updateControlIdentityTOTPStmt,
@@ -1253,6 +1272,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteTableSizesStmt:                q.updateSiteTableSizesStmt,
 		updateSitesBackupUploadedStmt:           q.updateSitesBackupUploadedStmt,
 		upsertPushRegistrationStmt:              q.upsertPushRegistrationStmt,
+		verifyControlIdentityEmailStmt:          q.verifyControlIdentityEmailStmt,
 		verifySiteEmailStmt:                     q.verifySiteEmailStmt,
 	}
 }

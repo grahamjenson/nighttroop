@@ -30,7 +30,12 @@ CREATE TABLE control_identities (
     deleted_at INTEGER, -- soft delete here, but on delete will wipe out password and such
 
     -- credentials_changed_at is when its password or TOTP last changed, or it was made: JWTs issued before it are refused
-    credentials_changed_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+    credentials_changed_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+
+    -- An email the admin may give, encrypted, to recover their password by, and when they proved it is theirs by the
+    -- link sent to it. An admin needs none. One not verified is never written to.
+    email_enc TEXT CHECK(length(email_enc) <= 512),
+    email_verified_at INTEGER
 ) STRICT;
 
 CREATE TABLE passkeys (

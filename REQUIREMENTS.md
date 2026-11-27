@@ -93,6 +93,14 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - named for the admin, with no name, email or device of the person.
 - Passkeys of admins and identities share one table. Each is found, listed or removed only for its owner.
 
+#### Admin email
+
+- An admin needs no email. If the server sends email, Account shows an **Email** card for the admin's own email.
+  - If the server does not send email, the card is not shown and the API refuses (400).
+- The card works as a site's **Site email** card does, with these differences:
+  - Each admin is sent one link each hour.
+  - The link is on the control site's address, and opens Account.
+
 #### Global rate limit
 
 - The global rate limit does not apply to control admins. The control site has its own at the same rate. Address and

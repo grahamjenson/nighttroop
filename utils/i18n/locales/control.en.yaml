@@ -71,6 +71,13 @@ control:
     events: "Events"
     errors: "Errors"
     logout: "Sign out"
+  account:
+    email:
+      title: "Email"
+      note: "Your own email. You need none. It is kept encrypted, and only used once you open the link sent to it."
+      remove_confirm: "Remove your email?"
+      verify_subject: "Verify your email for Nighttroop control"
+      verify_text: "This email was given as the email of the Nighttroop control admin {{.Name}} at {{.Control}}.\n\nOpen this link within a day to verify it:\n{{.Link}}\n\nIf you did not ask for this, do nothing. The email is not used."
   admins:
     test_page: "Test Admin Page"
     test_page_level: "Page by"

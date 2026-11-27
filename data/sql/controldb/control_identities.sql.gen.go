@@ -13,7 +13,7 @@ import (
 )
 
 const allControlIdentities = `-- name: AllControlIdentities :many
-SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at FROM control_identities ORDER BY created_at DESC LIMIT 100
+SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at, email_enc, email_verified_at FROM control_identities ORDER BY created_at DESC LIMIT 100
 `
 
 // Control has at most 20 admins, see controlapi.maxControlAdmins
@@ -41,6 +41,8 @@ func (q *Queries) AllControlIdentities(ctx context.Context) ([]*ControlIdentity,
 			&i.CreatedByIdentityName,
 			&i.DeletedAt,
 			&i.CredentialsChangedAt,
+			&i.EmailEnc,
+			&i.EmailVerifiedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -122,7 +124,7 @@ func (q *Queries) DeleteControlIdentity(ctx context.Context, arg DeleteControlId
 }
 
 const getControlIdentity = `-- name: GetControlIdentity :one
-SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at FROM control_identities WHERE name = ?1 LIMIT 1
+SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at, email_enc, email_verified_at FROM control_identities WHERE name = ?1 LIMIT 1
 `
 
 type GetControlIdentityParams struct {
@@ -147,12 +149,14 @@ func (q *Queries) GetControlIdentity(ctx context.Context, arg GetControlIdentity
 		&i.CreatedByIdentityName,
 		&i.DeletedAt,
 		&i.CredentialsChangedAt,
+		&i.EmailEnc,
+		&i.EmailVerifiedAt,
 	)
 	return &i, err
 }
 
 const getControlIdentityByID = `-- name: GetControlIdentityByID :one
-SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at FROM control_identities WHERE id = ?1
+SELECT id, name, password_hash, totp_secret_enc, role, created_at, last_seen_at, last_write_at, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name, deleted_at, credentials_changed_at, email_enc, email_verified_at FROM control_identities WHERE id = ?1
 `
 
 type GetControlIdentityByIDParams struct {
@@ -177,8 +181,25 @@ func (q *Queries) GetControlIdentityByID(ctx context.Context, arg GetControlIden
 		&i.CreatedByIdentityName,
 		&i.DeletedAt,
 		&i.CredentialsChangedAt,
+		&i.EmailEnc,
+		&i.EmailVerifiedAt,
 	)
 	return &i, err
+}
+
+const updateControlIdentityEmail = `-- name: UpdateControlIdentityEmail :exec
+UPDATE control_identities SET email_enc = ?1, email_verified_at = NULL WHERE id = ?2
+`
+
+type UpdateControlIdentityEmailParams struct {
+	EmailEnc *string
+	ID       int64
+}
+
+// A new email is not verified, and none takes the email away
+func (q *Queries) UpdateControlIdentityEmail(ctx context.Context, arg UpdateControlIdentityEmailParams) error {
+	_, err := q.exec(ctx, q.updateControlIdentityEmailStmt, updateControlIdentityEmail, arg.EmailEnc, arg.ID)
+	return err
 }
 
 const updateControlIdentityPassword = `-- name: UpdateControlIdentityPassword :exec
@@ -252,4 +273,23 @@ func (q *Queries) UpdateControlIdentityTOTP(ctx context.Context, arg UpdateContr
 		arg.ID,
 	)
 	return err
+}
+
+const verifyControlIdentityEmail = `-- name: VerifyControlIdentityEmail :execrows
+UPDATE control_identities SET email_verified_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = ?1 AND email_enc = ?2
+`
+
+type VerifyControlIdentityEmailParams struct {
+	ID       int64
+	EmailEnc *string
+}
+
+// Only the email the link was sent to is verified, not one saved since
+func (q *Queries) VerifyControlIdentityEmail(ctx context.Context, arg VerifyControlIdentityEmailParams) (int64, error) {
+	result, err := q.exec(ctx, q.verifyControlIdentityEmailStmt, verifyControlIdentityEmail, arg.ID, arg.EmailEnc)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

@@ -56,3 +56,12 @@ UPDATE control_identities
 SET totp_secret_enc = sqlc.arg('TotpSecretEnc'), credentials_changed_at = CAST(unixepoch('subsec') * 1000 AS INTEGER),
     updated_by_identity_id = sqlc.arg('UpdatedByIdentityID'), updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id = sqlc.arg('ID');
+
+-- name: UpdateControlIdentityEmail :exec
+-- A new email is not verified, and none takes the email away
+UPDATE control_identities SET email_enc = sqlc.narg('EmailEnc'), email_verified_at = NULL WHERE id = sqlc.arg('ID');
+
+-- name: VerifyControlIdentityEmail :execrows
+-- Only the email the link was sent to is verified, not one saved since
+UPDATE control_identities SET email_verified_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+WHERE id = sqlc.arg('ID') AND email_enc = sqlc.arg('EmailEnc');

@@ -362,6 +362,16 @@ func (m *GetControlIdentityByIDParams) SetID(v int64) {
 }
 
 // GetID returns the ID value.
+func (m UpdateControlIdentityEmailParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated UpdateControlIdentityEmailParams.
+func (m *UpdateControlIdentityEmailParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
 func (m UpdateControlIdentityPasswordParams) GetID() int64 {
 	return m.ID
 }
@@ -388,6 +398,16 @@ func (m UpdateControlIdentityTOTPParams) GetID() int64 {
 
 // SetID sets the ID value and returns the updated UpdateControlIdentityTOTPParams.
 func (m *UpdateControlIdentityTOTPParams) SetID(v int64) {
+	m.ID = v
+}
+
+// GetID returns the ID value.
+func (m VerifyControlIdentityEmailParams) GetID() int64 {
+	return m.ID
+}
+
+// SetID sets the ID value and returns the updated VerifyControlIdentityEmailParams.
+func (m *VerifyControlIdentityEmailParams) SetID(v int64) {
 	m.ID = v
 }
 
