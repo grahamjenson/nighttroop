@@ -81,7 +81,7 @@ func (s *PushCredentialsCollection) CreateHandler(w http.ResponseWriter, r *http
 		herr = apiutils.ErrorFor(err, s.GetName())
 	}
 	if herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	slog.InfoContext(r.Context(), "Control admin added a push credential", "identity", controlContext.IdentityModel.Name,
@@ -122,7 +122,7 @@ func (s *PushCredentialsCollection) DeleteHandler(w http.ResponseWriter, r *http
 		_, err = controlContext.ControlDB.Queries.DeletePushCredential(r.Context(), controldb.DeletePushCredentialParams{ID: row.ID, SiteID: row.SiteID})
 	}
 	if herr := apiutils.ErrorFor(err, s.GetName()); herr != nil {
-		herr.Write(acceptType, w)
+		WriteError(w, r, acceptType, herr)
 		return
 	}
 	slog.InfoContext(r.Context(), "Control admin deleted a push credential", "identity", controlContext.IdentityModel.Name, "id", row.ID)

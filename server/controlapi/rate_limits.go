@@ -32,12 +32,12 @@ func SetRateLimitsHandler(w http.ResponseWriter, r *http.Request) {
 	limiters := controlContext.ControlDB.ServerConfig.RateLimiters
 	rates, herr := ratesFromRequest(r, limiters.Settings())
 	if herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	if err := controlContext.ControlDB.SetRateLimits(r.Context(), rates, controlContext.IdentityModel.Name); err != nil {
 		slog.ErrorContext(r.Context(), "Unable to set the rate limits", "error", err)
-		apiutils.ErrInternalServerError.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrInternalServerError)
 		return
 	}
 	settings := limiters.Settings()

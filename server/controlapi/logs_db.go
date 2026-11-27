@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"nighttroop.t1d.nz/server/controlapi/controlcollections"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/backup"
@@ -33,7 +34,7 @@ const logsDBWriteTimeout = 10 * time.Minute
 func LogsDBHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	if !downloadingLogsDB.TryLock() {
-		errDownloadingLogsDB.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, errDownloadingLogsDB)
 		return
 	}
 	defer downloadingLogsDB.Unlock()
@@ -53,7 +54,7 @@ func LogsDBHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		slog.ErrorContext(r.Context(), "failed to copy the logs DB", "error", err)
-		apiutils.ErrInternalServerError.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrInternalServerError)
 		return
 	}
 	slog.InfoContext(r.Context(), "Control admin downloaded the logs DB", "identity", controlContext.IdentityModel.Name)

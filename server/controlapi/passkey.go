@@ -71,7 +71,7 @@ func GETAccount(controlDB *db.ControlDB) http.HandlerFunc {
 		user, err := controlUserFor(r, controlDB, identity, false)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "Unable to list the control admin's passkeys", "error", err)
-			apiutils.ErrInternalServerError.Write(httputils.GetAcceptType(r), w)
+			controlcollections.WriteError(w, r, httputils.GetAcceptType(r), apiutils.ErrInternalServerError)
 			return
 		}
 		controlcollections.WriteResponse(w, r, httputils.GetAcceptType(r), http.StatusOK, user.passkeys,

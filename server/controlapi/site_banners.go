@@ -35,7 +35,7 @@ func SiteBannersHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := controlContext.ControlDB.Queries.AllSiteBanners(r.Context())
 	banners, herr := apiutils.Searched(rows, err, "site banners", controlmodels.SiteBannerFromDB)
 	if herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, banners, control_banners_templ.Banners(banners))
@@ -47,7 +47,7 @@ func CreateSiteBannerHandler(w http.ResponseWriter, r *http.Request) {
 	controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 	form, herr := apiutils.ExtractModelFromRequest[siteBannerForm](httputils.GetContentType(r), r)
 	if herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	message, level := strings.TrimSpace(form.Message), form.Level
@@ -77,15 +77,15 @@ func CreateSiteBannerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if refused != "" {
-		apiutils.ErrBadBodyWithHint(i18n.NewError(refused, i18n.Data{"Max": controlmodels.MaxSiteBanners, "Days": controlmodels.MaxSiteBannerDays,
-			"Sites": controlmodels.MaxSiteBannerSites, "Length": controlmodels.SiteBannerMessageLimit.MaxLength})).Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrBadBodyWithHint(i18n.NewError(refused, i18n.Data{"Max": controlmodels.MaxSiteBanners,
+			"Days": controlmodels.MaxSiteBannerDays, "Sites": controlmodels.MaxSiteBannerSites, "Length": controlmodels.SiteBannerMessageLimit.MaxLength})))
 		return
 	}
 	siteIDs, _ := json.Marshal(sites)
 	row, err := controlContext.ControlDB.Queries.CreateSiteBanner(r.Context(), controldb.CreateSiteBannerParams{Message: message, Level: level,
 		SiteIdsJson: string(siteIDs), ExpiresAt: time.Now().AddDate(0, 0, int(form.Days)).UnixMilli(), CreatedByIdentityName: controlContext.IdentityModel.Name})
 	if herr := apiutils.ErrorFor(err, "site banners"); herr != nil {
-		herr.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, herr)
 		return
 	}
 	banner := controlmodels.SiteBannerFromDB(row)
@@ -101,7 +101,7 @@ func DeleteSiteBannerHandler(w http.ResponseWriter, r *http.Request) {
 		deleted, err = controlContext.ControlDB.Queries.DeleteSiteBanner(r.Context(), controldb.DeleteSiteBannerParams{ID: id})
 	}
 	if err != nil || deleted == 0 {
-		apiutils.ErrNotFound.Write(acceptType, w)
+		controlcollections.WriteError(w, r, acceptType, apiutils.ErrNotFound)
 		return
 	}
 	controlcollections.WriteResponse(w, r, acceptType, http.StatusOK, map[string]string{"status": "deleted"}, control_banners_templ.Deleted())

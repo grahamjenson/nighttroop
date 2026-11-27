@@ -7,6 +7,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/server/components/control_templ"
+	"nighttroop.t1d.nz/server/components/errortoast"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
@@ -59,7 +60,7 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 
 		query, herr := apiutils.QueryFromParams(r.URL.Query())
 		if herr != nil {
-			herr.Write(acceptType, w)
+			WriteError(w, r, acceptType, herr)
 			return
 		}
 		if query == nil {
@@ -68,7 +69,7 @@ func SearchHandler[R, M any](collection CollectionSearch[R, M]) http.HandlerFunc
 		rows, err := collection.SearchRows(r.Context(), query, controlContext)
 		models, herr := apiutils.Searched(rows, err, collection.GetName(), collection.ToModel)
 		if herr != nil {
-			herr.Write(acceptType, w)
+			WriteError(w, r, acceptType, herr)
 			return
 		}
 		WriteResponse(w, r, acceptType, http.StatusOK, models, collection.SearchHTMXResponse(models, query))
@@ -84,7 +85,7 @@ func GetHandler[R, M any](collection CollectionGet[R, M]) http.HandlerFunc {
 			herr = apiutils.ErrNotFound
 		}
 		if herr != nil {
-			herr.Write(acceptType, w)
+			WriteError(w, r, acceptType, herr)
 			return
 		}
 		WriteResponse(w, r, acceptType, http.StatusOK, model, collection.GetHTMXResponse(model))
@@ -96,7 +97,7 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 		controlContext, acceptType := httputils.GetControlContext(r.Context()), httputils.GetAcceptType(r)
 		requestModel, herr := apiutils.ExtractModelFromRequest[M](httputils.GetContentType(r), r)
 		if herr != nil {
-			herr.Write(acceptType, w)
+			WriteError(w, r, acceptType, herr)
 			return
 		}
 		oldModel, herr := get(r.Context(), collection, chi.URLParam(r, "id"), controlContext)
@@ -110,7 +111,7 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 			}
 		}
 		if herr != nil {
-			herr.Write(acceptType, w)
+			WriteError(w, r, acceptType, herr)
 			return
 		}
 		WriteResponse(w, r, acceptType, http.StatusOK, requestModel, collection.UpdateHTMXResponse(requestModel))
@@ -125,7 +126,7 @@ func UpdateHandler[R, M any](collection CollectionUpdate[R, M]) http.HandlerFunc
 func AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !can.ControlChangeServer(httputils.GetControlContext(r.Context()).IdentityModel.Role) {
-			apiutils.ErrForbidden.Write(httputils.GetAcceptType(r), w)
+			WriteError(w, r, httputils.GetAcceptType(r), apiutils.ErrForbidden)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -136,6 +137,18 @@ func AdminOnly(next http.Handler) http.Handler {
 func get[R, M any](ctx context.Context, collection CollectionBase[R, M], id string, controlContext *httputils.ControlContext) (*M, *apiutils.HTTPError) {
 	row, err := collection.GetRow(ctx, id, controlContext)
 	return apiutils.Found(row, err, collection.GetName(), collection.ToModel)
+}
+
+// WriteError sends HTMX the error as a toast, which forms add to #toaster, where it times out as every toast does, and
+// anything else the error as it writes itself. The toast says the part of the error written for users, when it has one.
+func WriteError(w http.ResponseWriter, r *http.Request, acceptType httputils.AcceptType, herr *apiutils.HTTPError) {
+	if acceptType != httputils.AcceptTypeHTMX {
+		herr.Write(acceptType, w)
+		return
+	}
+	httputils.SetErrorReason(r.Context(), herr.Message)
+	apiutils.WriteStatus(w, acceptType, herr.Status)
+	errortoast.Toast("", herr.UserMessage(r.Context())).Render(r.Context(), w)
 }
 
 // WriteResponse sends HTMX the component, a browser the component in a full page, and anything else the model as JSON
