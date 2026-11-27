@@ -91,7 +91,7 @@ func EventsHandler[R, M any](collection CollectionBase[R, M]) http.HandlerFunc {
 				return []byte("{}"), nil
 			}
 			model := collection.ToModel(row, siteContext)
-			tx := siteapiutils.NewCollectionTx(r.Context(), siteContext)
+			tx := siteapiutils.NewReadCollectionTx(r.Context(), siteContext)
 			defer tx.Rollback()
 			if herr := fill(r.Context(), tx, collection, siteContext, model); herr != nil {
 				return nil, herr
