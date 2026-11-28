@@ -1,7 +1,22 @@
 -- name: UpsertColdDay :exec
--- Packaging a day again writes it again, and says when
+-- Packaging a day again writes it again, and says when. A day that would be written unchanged is not (see upsertColdDay).
 INSERT INTO cold_days (kind, date, body) VALUES (sqlc.arg('Kind'), sqlc.arg('Date'), sqlc.arg('Body'))
 ON CONFLICT(kind, date) DO UPDATE SET body = excluded.body, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER);
+
+-- name: LastWrittenOfDay :one
+-- When a row that happened from From to before To, of the tables whose rows are deleted once their cold days have them,
+-- was last written, deleted ones too, or 0 for none
+SELECT CAST(COALESCE(MAX(written.updated_at), 0) AS INTEGER) AS written_at FROM (
+    SELECT glucose_readings.updated_at FROM glucose_readings WHERE glucose_readings.occurred_at >= sqlc.arg('From') AND glucose_readings.occurred_at < sqlc.arg('To')
+    UNION ALL SELECT insulin_doses.updated_at FROM insulin_doses WHERE insulin_doses.occurred_at >= sqlc.arg('From') AND insulin_doses.occurred_at < sqlc.arg('To')
+    UNION ALL SELECT food_intakes.updated_at FROM food_intakes WHERE food_intakes.occurred_at >= sqlc.arg('From') AND food_intakes.occurred_at < sqlc.arg('To')
+    UNION ALL SELECT temp_basals.updated_at FROM temp_basals WHERE temp_basals.occurred_at >= sqlc.arg('From') AND temp_basals.occurred_at < sqlc.arg('To')
+    UNION ALL SELECT temp_targets.updated_at FROM temp_targets WHERE temp_targets.occurred_at >= sqlc.arg('From') AND temp_targets.occurred_at < sqlc.arg('To')
+    UNION ALL SELECT activities.updated_at FROM activities WHERE activities.occurred_at >= sqlc.arg('From') AND activities.occurred_at < sqlc.arg('To')
+    UNION ALL SELECT notification_events.updated_at FROM notification_events WHERE notification_events.occurred_at >= sqlc.arg('From') AND notification_events.occurred_at < sqlc.arg('To')
+    UNION ALL SELECT profile_switches.updated_at FROM profile_switches WHERE profile_switches.occurred_at >= sqlc.arg('From') AND profile_switches.occurred_at < sqlc.arg('To')
+    UNION ALL SELECT event_groups.updated_at FROM event_groups WHERE event_groups.occurred_at >= sqlc.arg('From') AND event_groups.occurred_at < sqlc.arg('To')
+) AS written;
 
 -- name: GetColdDay :one
 SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date = sqlc.arg('Date');

@@ -282,3 +282,48 @@ func TestPackagingDeviceReports(t *testing.T) {
 	require.Equal(t, 2.0, iob[36])
 	require.Equal(t, map[int]float64{0: 139, 1: 127, 3: 100}, series("pump_reservoir", day))
 }
+
+// A day packaged again unchanged, with none of its rows written since, keeps when it was packaged, so packaging a site
+// again and again, as Truncate does, does not restart the wait before its rows are deleted. A row written since, though
+// the day is the same, as a loop's dose that is not an event, a changed day and a day marked stale each say now.
+func TestPackagingAnUnchangedDayKeepsWhenItWasPackaged(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	// A server that deletes rows would never package the old day again once it settled, nor one marked stale
+	cfg.RetentionDeleteRows = false
+	t.Cleanup(func() { cfg.RetentionDeleteRows = true })
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	old := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -40)
+	date := old.Format(time.DateOnly)
+	dose := func(id string, automatic bool) {
+		_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: id, Dose: 4, Automatic: &automatic, OccurredAt: old.Add(5 * time.Hour).UnixMilli(), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	packagedAt := func() int64 {
+		_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: retention.EventsKind, Date: date})
+		require.NoError(t, err)
+		return row.UpdatedAt
+	}
+	// later is a time packaged after the last, once a millisecond has passed, so a write would show
+	later := func(last int64) int64 {
+		require.Eventually(t, func() bool { return time.Now().UnixMilli() > last }, time.Second, time.Millisecond)
+		return packagedAt()
+	}
+
+	dose("bolus", false)
+	first := packagedAt()
+	require.Equal(t, first, later(first), "packaged again unchanged")
+
+	dose("smb", true)
+	written := later(first)
+	require.Greater(t, written, first, "a row written since, though the day's events are the same")
+	require.Equal(t, written, later(written))
+
+	dose("correction", false)
+	changed := later(written)
+	require.Greater(t, changed, written, "a changed day")
+
+	require.NoError(t, q.MarkColdDaysStale(ctx, sitedb.MarkColdDaysStaleParams{Date: date}))
+	require.Greater(t, later(changed), changed, "a day marked to be packaged again")
+}

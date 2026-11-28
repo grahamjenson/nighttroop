@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -273,7 +274,29 @@ func writeSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Ser
 	if err != nil || !slices.EqualFunc(values, read, func(a, b float64) bool { return a == b || (math.IsNaN(a) && math.IsNaN(b)) }) {
 		return fmt.Errorf("the packaged day of %s does not read back as it was written: %v", series.Name, err)
 	}
-	return q.UpsertColdDay(ctx, sitedb.UpsertColdDayParams{Kind: series.Name, Date: date, Body: packed})
+	return upsertColdDay(ctx, q, series.Name, date, packed)
+}
+
+// upsertColdDay keeps the cold day of kind for the UTC date. One that is the same, packaged after every row of its day
+// was last written and not marked to be packaged again, is not written again, so it keeps when it was packaged and the
+// wait before its rows are deleted (PackagedSettle) goes on. Any other is written, and says it was packaged now, after
+// each of its rows, as a row is deleted only when its cold day was packaged after it was last written.
+func upsertColdDay(ctx context.Context, q *sitedb.Queries, kind, date string, body []byte) error {
+	day, err := time.Parse(time.DateOnly, date)
+	if err != nil {
+		return err
+	}
+	switch packaged, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: kind, Date: date}); {
+	case errors.Is(err, sql.ErrNoRows):
+	case err != nil:
+		return err
+	case packaged.UpdatedAt > 0 && bytes.Equal(packaged.Body, body):
+		written, err := q.LastWrittenOfDay(ctx, sitedb.LastWrittenOfDayParams{From: day.UnixMilli(), To: day.UnixMilli() + dayMs})
+		if err != nil || packaged.UpdatedAt >= written {
+			return err
+		}
+	}
+	return q.UpsertColdDay(ctx, sitedb.UpsertColdDayParams{Kind: kind, Date: date, Body: body})
 }
 
 // packageGlucoseDay writes the glucose series of the UTC day that starts at start, in ms, from its CGM readings: the

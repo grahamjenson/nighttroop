@@ -185,5 +185,5 @@ func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, alway
 	if _, read, err := retention.ReadEvents(packed); err != nil || len(read.Events) != len(events) || len(read.InForce) != len(before) {
 		return fmt.Errorf("the packaged events do not read back as they were written: %v", err)
 	}
-	return q.UpsertColdDay(ctx, sitedb.UpsertColdDayParams{Kind: retention.EventsKind, Date: date, Body: packed})
+	return upsertColdDay(ctx, q, retention.EventsKind, date, packed)
 }
