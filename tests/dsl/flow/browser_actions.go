@@ -81,7 +81,9 @@ func (r *Goto) Execute(t *testing.T, page playwright.Page, ctx map[string]any) (
 	}
 
 	for _, assert := range r.Asserts {
-		assert.Execute(t, ctx, page, []playwright.Response{resp})
+		if err := assert.Execute(t, ctx, page, []playwright.Response{resp}); err != nil {
+			t.Fatalf("\n\n ASSERT FAILED \n %s: %v \n\n", r.ToErrorLine("Error with ASSERT"), err)
+		}
 	}
 
 	// Implement the execution logic for the Goto action here

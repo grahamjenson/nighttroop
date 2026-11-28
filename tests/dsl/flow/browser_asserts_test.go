@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/mxschmitt/playwright-go"
@@ -372,4 +374,60 @@ func TestScreenshotIsTakenFromThePagesTop(t *testing.T) {
 	scrolled, err := page.Evaluate("window.scrollY")
 	require.NoError(t, err)
 	require.EqualValues(t, 600, scrolled, "the page is scrolled back")
+}
+
+// failingScriptEnv has the script TestGotoFailsOnAnAssertsError runs in a process of its own, which it is to fail
+const failingScriptEnv = "FLOW_FAILING_SCRIPT"
+
+// The page is random dots, which a PNG cannot make smaller, so its screenshot is over maxScreenshotBytes
+const noisePage = `<html><body style="margin:0"><canvas id="noise" width="1280" height="1600"></canvas><script>
+const context = document.getElementById("noise").getContext("2d"), image = context.createImageData(1280, 1600)
+for (let i = 0; i < image.data.length; i++) image.data[i] = i % 4 === 3 ? 255 : Math.random() * 256
+context.putImageData(image, 0, 0)
+</script></body></html>`
+
+// An assert after a GOTO that returns an error fails the step, as it does after the other steps, rather than passing
+// with nothing checked
+func TestGotoFailsOnAnAssertsError(t *testing.T) {
+	if script := os.Getenv(failingScriptEnv); script != "" {
+		runFailingScript(t, script)
+		return
+	}
+	tests := []struct {
+		name, script, want string
+	}{
+		{"ASSERT_HELD with nothing held", "HOLD /refresh\nGOTO {{ server_url }}/\nASSERT_HELD /refresh\n",
+			"site/test.bdd:3: the page sent no request to /refresh to hold"},
+		{"SCREENSHOT over its size limit", "GOTO {{ server_url }}/\nSCREENSHOT noise\n", "over the most a screenshot may be"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// A step fails the test it runs in, so the script is run by this test in a process of its own
+			run := exec.Command(os.Args[0], "-test.run=^TestGotoFailsOnAnAssertsError$")
+			run.Env = append(os.Environ(), failingScriptEnv+"="+test.script)
+			output, err := run.CombinedOutput()
+			require.Error(t, err, "the script passed:\n%s", output)
+			require.Contains(t, string(output), "Error with ASSERT: GOTO {{ server_url }}/: ")
+			require.Contains(t, string(output), test.want)
+		})
+	}
+}
+
+// runFailingScript runs a browser script against a server of the noise page
+func runFailingScript(t *testing.T, script string) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(noisePage))
+	}))
+	t.Cleanup(server.Close)
+	pw, err := playwright.Run()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = pw.Stop() })
+	browser, err := pw.Chromium.Launch()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = browser.Close() })
+	ScreenshotDir = t.TempDir()
+
+	flow, err := Parse(fstest.MapFS{"site/test.bdd": {Data: []byte(script)}}, "site/test.bdd")
+	require.NoError(t, err)
+	(&Runner{NewPage: func() (playwright.Page, error) { return browser.NewPage() }}).Run(t, flow, map[string]any{"server_url": server.URL})
 }
