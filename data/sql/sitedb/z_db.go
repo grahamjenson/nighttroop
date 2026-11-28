@@ -75,6 +75,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.allTempTargetsStmt, err = db.PrepareContext(ctx, allTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query AllTempTargets: %w", err)
 	}
+	if q.cGMDaysWrittenSinceStmt, err = db.PrepareContext(ctx, cGMDaysWrittenSince); err != nil {
+		return nil, fmt.Errorf("error preparing query CGMDaysWrittenSince: %w", err)
+	}
+	if q.cGMReadingsOfDayStmt, err = db.PrepareContext(ctx, cGMReadingsOfDay); err != nil {
+		return nil, fmt.Errorf("error preparing query CGMReadingsOfDay: %w", err)
+	}
 	if q.clearDeviceReportStatusesStmt, err = db.PrepareContext(ctx, clearDeviceReportStatuses); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearDeviceReportStatuses: %w", err)
 	}
@@ -177,6 +183,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteOldTempTargetsStmt, err = db.PrepareContext(ctx, deleteOldTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOldTempTargets: %w", err)
 	}
+	if q.deleteSealedCGMReadingsStmt, err = db.PrepareContext(ctx, deleteSealedCGMReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSealedCGMReadings: %w", err)
+	}
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
 	}
@@ -242,6 +251,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getActivityStmt, err = db.PrepareContext(ctx, getActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query GetActivity: %w", err)
+	}
+	if q.getColdDayStmt, err = db.PrepareContext(ctx, getColdDay); err != nil {
+		return nil, fmt.Errorf("error preparing query GetColdDay: %w", err)
 	}
 	if q.getDeviceReportStmt, err = db.PrepareContext(ctx, getDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDeviceReport: %w", err)
@@ -386,6 +398,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.hardDeleteTempTargetStmt, err = db.PrepareContext(ctx, hardDeleteTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query HardDeleteTempTarget: %w", err)
+	}
+	if q.hasColdDaysStmt, err = db.PrepareContext(ctx, hasColdDays); err != nil {
+		return nil, fmt.Errorf("error preparing query HasColdDays: %w", err)
 	}
 	if q.insulinDoseTotalsStmt, err = db.PrepareContext(ctx, insulinDoseTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query InsulinDoseTotals: %w", err)
@@ -597,6 +612,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateTempTargetStmt, err = db.PrepareContext(ctx, updateTempTarget); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateTempTarget: %w", err)
 	}
+	if q.upsertColdDayStmt, err = db.PrepareContext(ctx, upsertColdDay); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertColdDay: %w", err)
+	}
 	if q.upsertGeneralSettingStmt, err = db.PrepareContext(ctx, upsertGeneralSetting); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertGeneralSetting: %w", err)
 	}
@@ -694,6 +712,16 @@ func (q *Queries) Close() error {
 	if q.allTempTargetsStmt != nil {
 		if cerr := q.allTempTargetsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing allTempTargetsStmt: %w", cerr)
+		}
+	}
+	if q.cGMDaysWrittenSinceStmt != nil {
+		if cerr := q.cGMDaysWrittenSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing cGMDaysWrittenSinceStmt: %w", cerr)
+		}
+	}
+	if q.cGMReadingsOfDayStmt != nil {
+		if cerr := q.cGMReadingsOfDayStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing cGMReadingsOfDayStmt: %w", cerr)
 		}
 	}
 	if q.clearDeviceReportStatusesStmt != nil {
@@ -866,6 +894,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteOldTempTargetsStmt: %w", cerr)
 		}
 	}
+	if q.deleteSealedCGMReadingsStmt != nil {
+		if cerr := q.deleteSealedCGMReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSealedCGMReadingsStmt: %w", cerr)
+		}
+	}
 	if q.deleteSummaryPeriodsStmt != nil {
 		if cerr := q.deleteSummaryPeriodsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSummaryPeriodsStmt: %w", cerr)
@@ -974,6 +1007,11 @@ func (q *Queries) Close() error {
 	if q.getActivityStmt != nil {
 		if cerr := q.getActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getActivityStmt: %w", cerr)
+		}
+	}
+	if q.getColdDayStmt != nil {
+		if cerr := q.getColdDayStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getColdDayStmt: %w", cerr)
 		}
 	}
 	if q.getDeviceReportStmt != nil {
@@ -1214,6 +1252,11 @@ func (q *Queries) Close() error {
 	if q.hardDeleteTempTargetStmt != nil {
 		if cerr := q.hardDeleteTempTargetStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing hardDeleteTempTargetStmt: %w", cerr)
+		}
+	}
+	if q.hasColdDaysStmt != nil {
+		if cerr := q.hasColdDaysStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing hasColdDaysStmt: %w", cerr)
 		}
 	}
 	if q.insulinDoseTotalsStmt != nil {
@@ -1566,6 +1609,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateTempTargetStmt: %w", cerr)
 		}
 	}
+	if q.upsertColdDayStmt != nil {
+		if cerr := q.upsertColdDayStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertColdDayStmt: %w", cerr)
+		}
+	}
 	if q.upsertGeneralSettingStmt != nil {
 		if cerr := q.upsertGeneralSettingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertGeneralSettingStmt: %w", cerr)
@@ -1637,6 +1685,8 @@ type Queries struct {
 	allProfileSwitchesStmt                      *sql.Stmt
 	allTempBasalsStmt                           *sql.Stmt
 	allTempTargetsStmt                          *sql.Stmt
+	cGMDaysWrittenSinceStmt                     *sql.Stmt
+	cGMReadingsOfDayStmt                        *sql.Stmt
 	clearDeviceReportStatusesStmt               *sql.Stmt
 	clearOldBolusCalculatorJSONStmt             *sql.Stmt
 	clearOldDeviceReportJSONStmt                *sql.Stmt
@@ -1671,6 +1721,7 @@ type Queries struct {
 	deleteOldProfileSwitchesStmt                *sql.Stmt
 	deleteOldTempBasalsStmt                     *sql.Stmt
 	deleteOldTempTargetsStmt                    *sql.Stmt
+	deleteSealedCGMReadingsStmt                 *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
@@ -1693,6 +1744,7 @@ type Queries struct {
 	freezeSummariesStmt                         *sql.Stmt
 	generalSettingsBytesStmt                    *sql.Stmt
 	getActivityStmt                             *sql.Stmt
+	getColdDayStmt                              *sql.Stmt
 	getDeviceReportStmt                         *sql.Stmt
 	getDeviceReportsByIDsStmt                   *sql.Stmt
 	getEventGroupStmt                           *sql.Stmt
@@ -1741,6 +1793,7 @@ type Queries struct {
 	hardDeleteSummaryPeriodStmt                 *sql.Stmt
 	hardDeleteTempBasalStmt                     *sql.Stmt
 	hardDeleteTempTargetStmt                    *sql.Stmt
+	hasColdDaysStmt                             *sql.Stmt
 	insulinDoseTotalsStmt                       *sql.Stmt
 	insulinDosesExtendedIntoStmt                *sql.Stmt
 	lastModifiedCollectionsStmt                 *sql.Stmt
@@ -1811,6 +1864,7 @@ type Queries struct {
 	updateProfileSwitchStmt                     *sql.Stmt
 	updateTempBasalStmt                         *sql.Stmt
 	updateTempTargetStmt                        *sql.Stmt
+	upsertColdDayStmt                           *sql.Stmt
 	upsertGeneralSettingStmt                    *sql.Stmt
 	upsertLoopSettingsStmt                      *sql.Stmt
 	upsertSummaryPeriodStmt                     *sql.Stmt
@@ -1837,6 +1891,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		allProfileSwitchesStmt:                      q.allProfileSwitchesStmt,
 		allTempBasalsStmt:                           q.allTempBasalsStmt,
 		allTempTargetsStmt:                          q.allTempTargetsStmt,
+		cGMDaysWrittenSinceStmt:                     q.cGMDaysWrittenSinceStmt,
+		cGMReadingsOfDayStmt:                        q.cGMReadingsOfDayStmt,
 		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,
 		clearOldBolusCalculatorJSONStmt:             q.clearOldBolusCalculatorJSONStmt,
 		clearOldDeviceReportJSONStmt:                q.clearOldDeviceReportJSONStmt,
@@ -1871,6 +1927,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteOldProfileSwitchesStmt:                q.deleteOldProfileSwitchesStmt,
 		deleteOldTempBasalsStmt:                     q.deleteOldTempBasalsStmt,
 		deleteOldTempTargetsStmt:                    q.deleteOldTempTargetsStmt,
+		deleteSealedCGMReadingsStmt:                 q.deleteSealedCGMReadingsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
@@ -1893,6 +1950,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		freezeSummariesStmt:                         q.freezeSummariesStmt,
 		generalSettingsBytesStmt:                    q.generalSettingsBytesStmt,
 		getActivityStmt:                             q.getActivityStmt,
+		getColdDayStmt:                              q.getColdDayStmt,
 		getDeviceReportStmt:                         q.getDeviceReportStmt,
 		getDeviceReportsByIDsStmt:                   q.getDeviceReportsByIDsStmt,
 		getEventGroupStmt:                           q.getEventGroupStmt,
@@ -1941,6 +1999,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		hardDeleteSummaryPeriodStmt:                 q.hardDeleteSummaryPeriodStmt,
 		hardDeleteTempBasalStmt:                     q.hardDeleteTempBasalStmt,
 		hardDeleteTempTargetStmt:                    q.hardDeleteTempTargetStmt,
+		hasColdDaysStmt:                             q.hasColdDaysStmt,
 		insulinDoseTotalsStmt:                       q.insulinDoseTotalsStmt,
 		insulinDosesExtendedIntoStmt:                q.insulinDosesExtendedIntoStmt,
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
@@ -2011,6 +2070,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateProfileSwitchStmt:                     q.updateProfileSwitchStmt,
 		updateTempBasalStmt:                         q.updateTempBasalStmt,
 		updateTempTargetStmt:                        q.updateTempTargetStmt,
+		upsertColdDayStmt:                           q.upsertColdDayStmt,
 		upsertGeneralSettingStmt:                    q.upsertGeneralSettingStmt,
 		upsertLoopSettingsStmt:                      q.upsertLoopSettingsStmt,
 		upsertSummaryPeriodStmt:                     q.upsertSummaryPeriodStmt,

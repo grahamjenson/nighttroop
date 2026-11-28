@@ -508,6 +508,9 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	if err := truncateSite(ctx, site, 0); err != nil {
 		return nil, err
 	}
+	if err := db.sealSite(ctx, site, 0, time.Now()); err != nil {
+		return nil, err
+	}
 	if _, err := site.Queries().DeleteUnreferencedLoopSettings(ctx); err != nil {
 		return nil, fmt.Errorf("cannot delete the unreferenced loop settings of site %s: %w", subdomain, err)
 	}
@@ -540,6 +543,9 @@ func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB, truncat
 			since = min(since, at)
 		}
 		err := truncateSite(siteCtx, site, since)
+		if err == nil {
+			err = db.sealSite(siteCtx, site, since, time.Now())
+		}
 		if limitKB, ok := limitsKB[site.Subdomain]; ok && err == nil {
 			err = db.hardTruncateSite(siteCtx, site, limitKB)
 		}

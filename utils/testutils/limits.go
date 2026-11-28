@@ -113,6 +113,9 @@ func setLimitCase(field reflect.Value, c limitCase, i int, json bool) {
 		field = field.Elem()
 	}
 	switch {
+	case c.length >= 0 && field.Kind() == reflect.Slice:
+		// A column of bytes
+		field.SetBytes([]byte(text(c.length, i, json)))
 	case c.length >= 0:
 		field.SetString(text(c.length, i, json))
 	case field.CanInt():

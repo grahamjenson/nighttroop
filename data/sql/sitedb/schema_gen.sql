@@ -108,6 +108,15 @@ CREATE TABLE activities (
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
 ) STRICT;
 
+CREATE TABLE cold_days (
+    kind TEXT NOT NULL CHECK(length(kind) <= 32),
+    date TEXT NOT NULL CHECK(length(date) = 10),
+    body BLOB NOT NULL CHECK(length(body) <= 16384),
+    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
+    PRIMARY KEY (kind, date)
+) STRICT;
+
 CREATE TABLE device_reports (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     

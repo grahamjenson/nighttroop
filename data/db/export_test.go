@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/utils/consts"
@@ -40,4 +41,9 @@ func FailSiteIdentitiesAfterAdmin(t *testing.T) {
 		return nil, nil, nil, errors.New("cannot create the site's second identity")
 	}
 	t.Cleanup(func() { createSiteIdentities = (*ControlDB).createSiteDefaultIdentities })
+}
+
+// SealSite is sealSite, for a test to say since when
+func (db *ControlDB) SealSite(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
+	return db.sealSite(ctx, site, since, now)
 }

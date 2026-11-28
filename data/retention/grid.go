@@ -1,57 +1,139 @@
 package retention
 
 import (
-	"encoding/json"
+	"bytes"
+	"compress/flate"
+	"encoding/binary"
 	"errors"
+	"io"
 	"math"
+	"slices"
+	"time"
 )
 
-// gridVersion is the "v" of a packed grid, so the packing can change and old days still be read
-const gridVersion = 1
+// Version is the version of a cold day's bytes this code writes, a day's first byte. A day says its own, so the
+// form can change and the days sealed years ago still be read: add a case to UnpackGrid, never change what an old
+// version means.
+const Version = 1
 
-// grid is a day of one series as its cold day holds it, as JSON: D has one entry a step of the grid, null where there
-// is no value, and else the value's difference from the value before it, as a whole number
-type grid struct {
-	V int      `json:"v"`
-	D []*int64 `json:"d"`
+// shapeBytes are the shapes a cold day can say it is, as its second byte
+var shapeBytes = map[Shape]byte{SeriesShape: 1, EventsShape: 2}
+
+// The third byte of a series says how its values were packed, as each day is packed the way that makes it smallest
+const (
+	// secondOrder is that each value is written as the change of its change, which is smaller for a smooth series
+	secondOrder = 1 << iota
+	// deflated is that the values are DEFLATE compressed
+	deflated
+)
+
+// day is how long a cold day is
+const day = 24 * time.Hour
+
+// maxSteps is the most steps a day's grid has: one a minute
+const maxSteps = int(day / time.Minute)
+
+// Empty is a day of the series with no values: NaN at every step
+func (s Series) Empty() []float64 {
+	values := make([]float64, day/s.Step)
+	for i := range values {
+		values[i] = math.NaN()
+	}
+	return values
 }
 
-// PackGrid packs a day of one series as JSON: values has one entry a step of the grid, NaN where there is none. Each
-// value is kept as a whole number, value*scale, and written as its difference from the one before: a CGM's glucose
-// changes by a few mg/dL in 5 minutes, so most entries are one or two characters. It is JSON, not bytes, so the
-// column is checked with json_valid, as every JSON column is, and a person can read it.
-func PackGrid(values []float64, scale float64) string {
-	packed, last := grid{V: gridVersion, D: make([]*int64, len(values))}, int64(0)
+// PackGrid packs a day of a series as bytes: values has one entry a step, NaN where there is none. The bytes are
+// the version, the shape, how the values were packed, then the series' step in seconds, its scale and how many
+// steps, so a day is read as it was written whatever its series' policy has since become. Then the values: a bit a
+// step for whether it has one, and each value, as a whole number value*Scale, as its difference from the one
+// before, or the difference of that difference, in as few bytes as it needs, and DEFLATE compressed. Each way is
+// tried and the smallest kept: a CGM's glucose changes by a few mg/dL in 5 minutes, and a day of it is about 170
+// bytes.
+func PackGrid(series Series, values []float64) []byte {
+	present := make([]byte, (len(values)+7)/8)
+	orders := [2][]byte{}
+	var last, lastDelta int64
 	for i, value := range values {
 		if math.IsNaN(value) {
 			continue
 		}
-		whole := int64(math.Round(value * scale))
-		packed.D[i], last = new(whole-last), whole
+		present[i/8] |= 1 << (i % 8)
+		whole := int64(math.Round(value * series.Scale))
+		delta := whole - last
+		orders[0], orders[1] = binary.AppendVarint(orders[0], delta), binary.AppendVarint(orders[1], delta-lastDelta)
+		last, lastDelta = whole, delta
 	}
-	body, _ := json.Marshal(packed)
-	return string(body)
+	var smallest []byte
+	var how byte
+	for order, deltas := range orders {
+		plain := append(slices.Clone(present), deltas...)
+		var compressed bytes.Buffer
+		writer, _ := flate.NewWriter(&compressed, flate.BestCompression)
+		_, _ = writer.Write(plain)
+		_ = writer.Close()
+		for flag, packed := range map[byte][]byte{0: plain, deflated: compressed.Bytes()} {
+			if smallest == nil || len(packed) < len(smallest) {
+				smallest, how = packed, flag|byte(order)*secondOrder
+			}
+		}
+	}
+	head := []byte{Version, shapeBytes[SeriesShape], how}
+	for _, number := range []uint64{uint64(series.Step / time.Second), uint64(series.Scale), uint64(len(values))} {
+		head = binary.AppendUvarint(head, number)
+	}
+	return append(head, smallest...)
 }
 
-// maxSteps is the most steps a day's grid has: one a minute
-const maxSteps = 24 * 60
+// errNotASeries is that bytes are not a series of a version this code reads
+var errNotASeries = errors.New("retention: not a series of a known version")
 
-// UnpackGrid is the values PackGrid packed, NaN where there is none
-func UnpackGrid(packed string, scale float64) ([]float64, error) {
-	var unpacked grid
-	if err := json.Unmarshal([]byte(packed), &unpacked); err != nil {
-		return nil, err
+// UnpackGrid is the values PackGrid packed, NaN where there is none, by the version, scale and packing the day says
+func UnpackGrid(packed []byte) ([]float64, error) {
+	if len(packed) < 3 || packed[0] != Version || packed[1] != shapeBytes[SeriesShape] || packed[2]&^(secondOrder|deflated) != 0 {
+		return nil, errNotASeries
 	}
-	if unpacked.V != gridVersion || len(unpacked.D) > maxSteps {
-		return nil, errors.New("retention: not a packed grid of a known version")
-	}
-	values, last := make([]float64, len(unpacked.D)), int64(0)
-	for i, delta := range unpacked.D {
-		values[i] = math.NaN()
-		if delta != nil {
-			last += *delta
-			values[i] = float64(last) / scale
+	how, rest := packed[2], packed[3:]
+	var head [3]uint64
+	for i := range head {
+		number, read := binary.Uvarint(rest)
+		if read <= 0 {
+			return nil, errNotASeries
 		}
+		head[i], rest = number, rest[read:]
+	}
+	scale, steps := float64(head[1]), int(min(head[2], uint64(maxSteps)+1))
+	if scale == 0 || steps > maxSteps {
+		return nil, errNotASeries
+	}
+	if how&deflated != 0 {
+		// A day is at most a bit and 10 bytes a step, so no more is read of bytes that say they are more
+		plain, err := io.ReadAll(io.LimitReader(flate.NewReader(bytes.NewReader(rest)), int64(maxSteps*11)))
+		if err != nil {
+			return nil, errNotASeries
+		}
+		rest = plain
+	}
+	bitmap := (steps + 7) / 8
+	if len(rest) < bitmap {
+		return nil, errNotASeries
+	}
+	present, deltas := rest[:bitmap], rest[bitmap:]
+	values := make([]float64, steps)
+	var last, lastDelta int64
+	for i := range values {
+		values[i] = math.NaN()
+		if present[i/8]&(1<<(i%8)) == 0 {
+			continue
+		}
+		delta, read := binary.Varint(deltas)
+		if read <= 0 {
+			return nil, errNotASeries
+		}
+		if how&secondOrder != 0 {
+			delta += lastDelta
+		}
+		deltas, last, lastDelta = deltas[read:], last+delta, delta
+		values[i] = float64(last) / scale
 	}
 	return values, nil
 }

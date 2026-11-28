@@ -1,7 +1,7 @@
 # Retention: hot rows and cold days
 
-**Status:** a proposal, for discussion. The server does not use it. `data/retention` has a small prototype with
-tests. This replaces the tiers of `docs/truncation.md` with one general system.
+**Status:** step 1 is built. The server seals the CGM glucose of each day into `cold_days`. It deletes no row
+unless `RETENTION_DELETE_ROWS` is `true`. The other steps are the plan. See [Build order](#build-order).
 
 ## The problem, measured
 
@@ -36,27 +36,26 @@ A site's data has two forms.
 
 | Form | What it is | For |
 | --- | --- | --- |
-| **Hot rows** | The tables of today: one row for each record, as the app sent it, with indexes | The last days: what apps sync, and what a person edits |
-| **Cold days** | One row for each kind of data for each UTC day | All days before that: what a person looks back at |
+| **Hot rows** | The tables of today: one row for each record, as the app sent it, with indexes | The last 31 days (`RETENTION_HOT_DAYS`): what apps sync, and what a person edits |
+| **Cold days** | One row for each kind of data for each UTC day, as packed bytes | All days: what a person looks back at |
 
-To **seal** a day is to change its hot rows into cold days, and then delete the rows. One job does it, for all
-tables, from one table of policies.
-
-The result, with the prototype's numbers:
+To **seal** a day is to write its cold days from its hot rows. A day is sealed after it ends, and again when
+its rows change. The rows are deleted when they are older than the hot days. One job does it, for all tables,
+from one table of policies.
 
 | | Hot rows | Cold day |
 | --- | --- | --- |
-| A day of CGM glucose | 61 KB | 747 bytes |
-| A day of a looping site | about 370 KB, without device reports | about 5 KB |
-| A year of a looping site | 135 MB | about 1.8 MB |
+| A day of CGM glucose | 61 KB | 173 bytes (tested) |
+| A day of a looping site | about 370 KB, without device reports | about 2 KB (estimate) |
+| A year of a looping site | 135 MB | about 0.7 MB (estimate) |
 
 ## Five rules
 
-1. **Each table has a shape.** The shape is the form its rows take in a cold day, and says what sealing does. A table with no policy fails a test
-   (`TestEveryTableHasAPolicy`), so a new table cannot be added without a decision.
+1. **Each table has a shape.** The shape is the form its rows take in a cold day, and says what sealing does. A
+   table with no policy fails a test (`TestEveryTableHasAPolicy`), so a new table needs a decision.
 2. **A cold day is the truth, not a summary.** Reports, statistics and charts are built from cold days and can be
    built again at any time. There is no "frozen" summary that cannot be made again.
-3. **A row is deleted only after its cold day is written and checked** (see [Sealing](#sealing)).
+3. **A row is deleted only if its cold day was written after the row was last written.**
 4. **One reader.** Pages, reports and the API ask one function for a series or for the events of a time range. It
    reads hot rows, cold days, or both. No caller knows where the border is.
 5. **Each policy says what is lost**, in words a person can read. The site shows these words.
@@ -65,15 +64,17 @@ The result, with the prototype's numbers:
 
 | Shape | What it is | Sealing does | Tables |
 | --- | --- | --- | --- |
-| **Signal** | A number a machine writes on a clock | Folds the rows into series on a grid. Deletes the rows. | `glucose_readings`, `temp_basals` |
-| **Event** | What a person did or decided, a few each day | Moves the rows into the day's event list, with the columns the policy keeps. Folds numbers into series. | `insulin_doses`, `food_intakes`, `activities`, `temp_targets`, `profile_switches`, `notification_events`, `event_groups` |
-| **Telemetry** | What a device says about itself | Folds its numbers into series. Deletes the rows. | `device_reports` |
-| **Dictionary** | A value many records repeat | Kept one time, by its hash, while a record refers to it | `loop_settings`, and each profile of a profile switch |
-| **Config** | A list a person manages | Never sealed | `food_presets`, `profile_presets`, `general_settings` |
-| **Derived** | Built from the other tables | A cache. Built again when needed. | `summary_period` |
+| `series` | A number on a clock: a CGM's glucose, a loop's IOB | Folds the rows into series on a grid | `glucose_readings`, `temp_basals`, `device_reports` |
+| `events` | What a person did or decided, a few each day | Puts the rows into the day's event list, with the columns the policy keeps. Folds numbers into series. | `insulin_doses`, `food_intakes`, `activities`, `temp_targets`, `profile_switches`, `notification_events`, `event_groups` |
+| `dictionary` | A value many records repeat | Kept one time, by its hash, while a record refers to it | `loop_settings`, and each profile of a profile switch |
+| `config` | A list a person manages | Never sealed | `food_presets`, `profile_presets`, `general_settings` |
+| `derived` | Built from the other tables | A cache. Built again when needed. | `summary_period` |
+| `cold` | The cold days | Already small | `cold_days` |
 
-`data/retention/policy.go` has the policy of each table: its shape, its series, the columns its events keep, and
-what is lost.
+- A table can give two shapes. `glucose_readings` gives the `glucose` series, and its finger pricks and its
+  readings with a note are events.
+- `data/retention/policy.go` has the policy of each table: its shape, its series, the columns its events keep,
+  and what is lost.
 
 ## Cold days
 
@@ -81,16 +82,36 @@ One table holds all cold data:
 
 ```sql
 CREATE TABLE cold_days (
-    kind TEXT NOT NULL CHECK(length(kind) <= 32),  -- a series ('glucose'), 'events', or 'seal'
+    kind TEXT NOT NULL CHECK(length(kind) <= 32),  -- a series ('glucose'), or 'events'
     date TEXT NOT NULL CHECK(length(date) = 10),   -- the UTC day
-    body_json TEXT NOT NULL CHECK(length(body_json) <= 65536 AND json_valid(body_json)),
+    body BLOB NOT NULL CHECK(length(body) <= 16384),
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,                   -- when it was last sealed
     PRIMARY KEY (kind, date)
-) STRICT, WITHOUT ROWID;
+) STRICT;
 ```
 
 - The key is `(kind, date)`, so a year of one series is 365 rows that are side by side on disk.
 - **A cold day is a UTC day.** Each day has the same steps. A change of the site's timezone, or of the clocks,
   changes nothing that is stored. A local day is read from the two UTC days it is in.
+- `body` is packed bytes, not JSON, to be as small as possible.
+
+### The first bytes: version and shape
+
+A cold day is kept for years, so each body says what it is.
+
+| Byte | What | Values |
+| --- | --- | --- |
+| 1 | Version | `1` |
+| 2 | Shape | `1` series, `2` events |
+| 3 | How a series was packed | bit 1: change of the change; bit 2: DEFLATE |
+| Then, for a series | Step in seconds, scale, number of steps | 3 varints |
+
+- A body is read by what it says it is, not by what the policy is now. If the step of a series changes later,
+  old days are still read with their own step.
+- To change the form, add a version and read each old version as it was written. Never change what an old
+  version means. A day gets the new version only when it is sealed again.
+- A body with a version, a shape or a packing the code does not know is an error, not a day of wrong numbers.
 
 ### A series
 
@@ -100,26 +121,33 @@ A series is one number through the day on a grid: one value for each step, or no
 | --- | --- | --- | --- | --- |
 | `glucose` | `glucose_readings` (CGM) | 5 min | 1 mg/dL | The newest reading of the best source |
 | `iob`, `iob_basal`, `cob` | `device_reports` | 5 min | 0.01 U, 0.1 g | The newest report |
-| `insulin_automatic`, `insulin_manual` | `insulin_doses` | 1 hour | 0.001 U | The total |
-| `basal_delivered`, `basal_suspended_minutes` | `temp_basals` and the profile | 1 hour | 0.001 U | The total |
-| `carbs` | `food_intakes` | 1 hour | 0.1 g | The total |
+| `insulin_automatic`, `insulin_manual` | `insulin_doses` | 15 min | 0.001 U | The total |
+| `basal_delivered`, `basal_suspended_minutes` | `temp_basals` and the profile | 15 min | 0.001 U | The total |
+| `carbs` | `food_intakes` | 15 min | 0.1 g | The total |
 | `pump_reservoir`, `pump_battery`, `phone_battery` | `device_reports` | 1 hour | | The newest report |
 
-`PackGrid` (`data/retention/grid.go`) packs a day as JSON: `{"v":1,"d":[140,2,-1,0,null,3,...]}`. `d` has one
-entry for each step: `null` for no value, or the difference from the value before. Glucose changes a few mg/dL in
-5 minutes, so most entries are 1 or 2 characters.
+Totals are for each 15 minutes, not each hour. A day in India (+5:30) or Nepal (+5:45) starts in the middle of a
+UTC hour, so its daily dose is exact only from 15-minute totals. (`policy.go` still says 1 hour for these: to
+change in step 4.)
+
+`PackGrid` (`data/retention/grid.go`) packs a day:
+
+1. One bit for each step: it has a value, or not.
+2. Each value as a whole number (value × scale), written as its change from the value before, or as the change
+   of that change. Small numbers take 1 byte.
+3. DEFLATE over the result.
+4. It tries each way and keeps the smallest.
 
 | A day of glucose (276 readings, an hour with none) | Bytes |
 | --- | --- |
 | As rows, with indexes | 61,272 |
-| JSON, each value (`[140,142,141,...]`) | 1,122 |
-| **JSON, differences (proposed)** | **747** |
-| Packed bytes, not JSON | 316 |
+| JSON, each value | 1,122 |
+| JSON, changes | 747 |
+| Packed changes | 313 |
+| **Packed changes, DEFLATE (built)** | **173** |
 
-- It is JSON, so the column has `json_valid`, as each JSON column has, and a person can read a day with a query.
-- Packed bytes are half the size, but cannot be checked or read. JSON is the proposal. See Open question 8.
-- SQLite's JSONB is not smaller here: it keeps a number as its digits.
-- A new series is one line in the policy table. It needs no column and no migration.
+A smooth series is smaller: a day of IOB is 107 bytes in the test. A new series is one line in the policy
+table. It needs no column and no migration.
 
 ### The day's events
 
@@ -127,8 +155,8 @@ entry for each step: `null` for no value, or the difference from the value befor
 profile switches, site and sensor changes. Each event keeps its ID, its time, its values, its notes and who made it.
 A treatment and its `event_groups` row become one entry.
 
-- About 120 bytes for each event, not 630 (the row and its group, with indexes).
-- Automatic records (temp basals, automatic boluses) are not in the list. Their totals are in the hourly series.
+- Automatic records (temp basals, automatic boluses) are not in the list. Their totals are in the series.
+- Its packing is to decide in step 4. It has shape `2`.
 
 ### Statistics
 
@@ -137,51 +165,46 @@ A treatment and its `event_groups` row become one entry.
 - Two `Stats` merge into one that is exact. A week is the merge of its days, a year the merge of its weeks.
 - The counts give the time in **any** range. If a person changes their target range, old periods are right for
   the new range. `summary_period` stores `time_in_range` for the range of the day it was built, and cannot do this.
-- A day's `Stats` comes from its glucose grid in microseconds, so it is not stored. A month can store its `Stats`
-  as a cache, so a chart of 10 years reads 120 rows.
+- A day's `Stats` comes from its glucose series in microseconds, so it is not stored.
 
 ## Sealing
 
-A job seals the oldest day that is not sealed and is older than the site's **hot days**. For each day, in one
-transaction:
+Sealing runs for each site before its backup, where the truncation runs (`sealSite`, `data/db/seal.go`).
 
-1. Read the day's hot rows.
-2. Build each series and the event list from the policies.
-3. If cold days are there already (late data, see below), merge: a step of a series takes the new value, an event
-   with the same ID replaces the old one.
-4. **Check.** The cold day must agree with the rows: the same total insulin, the same total carbs, the same
-   count of 5-minute steps with glucose. If one check fails, delete nothing and record an error.
-5. Write the cold days, and a `seal` row with the counts of rows folded and deleted for each table.
-6. Delete the rows, and the day's soft deleted rows.
+1. Find the UTC days that ended and had a row written, changed or deleted since the last run. A site that was
+   never sealed has all its days.
+2. For each day, read its rows and build each series (and, later, the event list) from the policies.
+3. If the day's rows can be gone (it is older than the hot days), start from the cold day as it is: a row
+   written since takes its step, and a deleted row clears its step. If not, build the day from its rows only.
+4. **Check.** Read the new cold day back. It must be equal to what was built. If not, write nothing.
+5. Write the cold day.
+6. If `RETENTION_DELETE_ROWS` is `true`, delete the rows older than the hot days. Only a row whose cold day was
+   written after the row was last written is deleted. Thus no row is deleted that its cold day does not have.
 
-- The job can stop after each day and continue later.
-- The `seal` rows are the record of what was done. A page shows them: "14 March: 288 readings became 1 glucose
-  line. 9 events kept."
+- Each day is one write, so a run can stop after a day and continue later.
+- Reports will read series, not rows, for all days but today. Thus a day's series is written after the day
+  ends, and its rows stay for the hot days.
+- For glucose, a CGM reading with a note, or one a treatment refers to, is not deleted. It is an event.
 
 ### Late data and edits
 
 | Case | What happens |
 | --- | --- |
-| An app sends a record for a sealed day (a backfill, a new connector with 2 years of history) | It is written as a hot row, as today. The next run seals the day again and merges it. |
-| A person edits or deletes an event of a sealed day | The day's event list is written again with the change. |
+| An app sends a record for a sealed day (a backfill, a new connector with 2 years of history) | It is written as a hot row, as today. The next run seals the day again, with what the day had. |
 | A person deletes a CGM reading of a sealed day | Its step of the glucose series is cleared. |
-| A backfill of years of history | Its rows are sealed in the same job. A connector could write cold days directly later. |
+| A person edits or deletes an event of a sealed day (step 4) | The day's event list is written again with the change. |
 
 Thus a cold day is never "frozen". It is only compact.
 
 ## Hot days
 
-One number says how many days are hot rows: the env var `RETENTION_HOT_DAYS` (default 14,
-`retention.DefaultHotDays`). A site over its size limit has fewer.
+`RETENTION_HOT_DAYS` says how many days are hot rows (default 31, `retention.DefaultHotDays`).
 
 | Site | Hot days | Why |
 | --- | --- | --- |
-| Default | 14 | More than the sync window of each app we know, and a person edits recent days |
-| Over its size limit | Fewer, step by step | The limit holds without deleting information |
+| Default | 31 | A month of each record as sent: more than the sync window of each app we know |
+| Over its size limit (step 6) | Fewer, step by step | The limit holds without deleting information |
 | Floor | 3 | Loops read hours; followers read 1 to 2 days |
-
-- Device reports keep their own, shorter schedule (as today): as sent for a day, then thinner, then only series.
-- A site could have its own number later (Open question 9).
 
 ## What apps get
 
@@ -191,7 +214,7 @@ Apps read through the Nightscout API. Most read the last hours or days, which ar
 | --- | --- | --- |
 | `entries` (CGM) | The rows | **Made from the glucose series:** one entry for each 5-minute step, with an ID made from its time |
 | `treatments`: meals, manual boluses, notes, changes | The rows | Made from the day's event list, with their own IDs |
-| `treatments`: temp basals, automatic boluses | The rows | One for each hour from the hourly series, or none (to decide) |
+| `treatments`: temp basals, automatic boluses | The rows | One for each hour from the totals, or none (to decide) |
 | `devicestatus` | The rows | None |
 | API v3 `history` (changes since a time) | As today | Sealing is not a change, so nothing is sent again |
 | A write or a delete by ID | As today | An event: found in its day's list. A CGM entry: by its time. |
@@ -200,27 +223,29 @@ Apps read through the Nightscout API. Most read the last hours or days, which ar
   bolus, as today. It does not get each temp basal.
 - A request that makes entries from many sealed days costs CPU. It needs a limit for each request, and the
   existing rate limits.
+- **None of this is built.** Until step 2, a deleted row is not in the API. That is why `RETENTION_DELETE_ROWS`
+  is off.
 
-## What a person sees
+## What a person sees (when all steps are built)
 
-- **Reports** (AGP, time in range, daily dose): the same, for any age, and now right for a changed target range.
-- **Day view of an old day:** the glucose line, IOB and COB, hourly insulin, basal and carbs, and each meal, bolus
-  and note. Not each temp basal or automatic bolus.
+- **Reports** (AGP, time in range, daily dose): the same, for any age, and right for a changed target range.
+- **Day view of an old day:** the glucose line, IOB and COB, the insulin, basal and carbs totals, and each meal,
+  bolus and note. Not each temp basal or automatic bolus.
 - **Data pages:** hot rows as today. Older days show the event list, and a note for what is in series.
 - **Download Data:** the cold days as CSV files, one for each series, and the events.
-- **A "Storage" page:** what each policy keeps and loses, and the `seal` records.
+- **A "Storage" page:** what each policy keeps and loses.
 
 ## What is lost
 
 | What | When | Why it is acceptable |
 | --- | --- | --- |
-| A CGM reading's exact second, raw signal, and app | When its day is sealed | The 5-minute value is what all reports and standards use |
-| The readings of a second source of the same glucose | When sealed | One reading for each 5 minutes is kept |
-| Each temp basal and automatic bolus | When sealed | The hourly totals are exact |
+| A CGM reading's exact second, raw signal, and app | When its row is deleted | The 5-minute value is what all reports and standards use |
+| The readings of a second source of the same glucose | When deleted | One reading for each 5 minutes is kept |
+| Each temp basal and automatic bolus | When deleted | The 15-minute totals are exact |
 | The loop's reasons and predictions | After 1 day (as today) | Only useful to look at the last hours |
-| Each device report | By its schedule (as today) | IOB, COB, reservoir and batteries are series |
-| The app's own IDs of a treatment | When sealed | No app we know uploads again after 14 days |
-| Which app and device made an event | When sealed | The identity is kept |
+| Each device report | By its schedule | IOB, COB, reservoir and batteries are series |
+| The app's own IDs of a treatment | When deleted | No app we know uploads again after a month |
+| Which app and device made an event | When deleted | The identity is kept |
 
 Nothing a person entered is lost. See Open question 1 for a way to lose nothing at all.
 
@@ -230,21 +255,21 @@ A looping site, with the measured numbers:
 
 | Part | Size |
 | --- | --- |
-| 14 hot days at about 370 KB (without device reports) | about 5 MB |
+| 31 hot days at about 370 KB (without device reports) | about 11.5 MB |
 | Device reports, thinned as today | about 2 MB |
-| Cold days, each year (about 5 KB a day: 4 series each 5 minutes at 0.75 KB, hourly series, events) | about 1.8 MB |
-| **After 1 year** | **about 9 MB** |
-| **After 7 years** | **about 20 MB** |
+| Cold days, each year (about 2 KB a day) | about 0.7 MB |
+| **After 1 year** | **about 14 MB** |
+| **After 9 years** | **about 20 MB** |
 
 - Today the same site is 20 MB after about 5 weeks.
-- A site with a CGM and no loop is about 1 MB hot and 0.7 MB for each year.
-- Without `iob_basal` (Open question 5), a looping site is about 1.5 MB for each year.
-- `summary_period` is about 2.5 MB a year today (lists of 288 numbers as JSON). It would be larger than the cold
-  data it is built from. It must use packed grids, or become a small cache.
+- **The 31 hot days are more than half of 20 MB for a looping site.** The two changes below take them to about
+  5.5 MB, and then the site is under 20 MB for 15 years or more.
+- A site with a CGM and no loop is about 2 MB hot and 0.3 MB for each year.
+- The cold sizes other than glucose and IOB are estimates.
 
 ## Hot rows can be cheaper too
 
-Sealing does not help the first 14 days. Two changes, each on its own, make hot rows smaller:
+Sealing does not help the hot days. Two changes, each on its own, make hot rows smaller:
 
 1. **No `event_groups` row for an automatic record.** A temp basal and an automatic bolus with no notes carry
    nothing a person wrote. Their group row is 190 KB a day, a third of the site. The few fields an app needs back
@@ -254,35 +279,65 @@ Sealing does not help the first 14 days. Two changes, each on its own, make hot 
 
 ## Build order
 
-Each step is one PR, and the site works after each one. Sealing is off until an env var turns it on.
+Each step is one PR, and the site works after each one.
 
-| Step | What | Reads change |
-| --- | --- | --- |
-| 1 | `cold_days`, `PackGrid`, the seal job for **glucose only**, the checks, the `seal` record | The reader for glucose; summaries use it |
-| 2 | The Nightscout API makes `entries` from sealed days | `entries` |
-| 3 | Device reports fold into `iob`, `cob`, reservoir and battery series | The day view |
-| 4 | Events: the day's list, and the hourly insulin, basal and carbs series | Data pages, `treatments`, daily dose |
-| 5 | Hot days by size pressure; the Storage page; Download Data as CSV | |
-| 6 | `summary_period` becomes a cache of packed grids and `Stats`; `frozen_at` goes | Reports |
-| 7 | Cheaper hot rows (the two changes above) | |
+| Step | What | Reads change | State |
+| --- | --- | --- | --- |
+| 1 | `cold_days`, the versioned body, sealing of **glucose**, the delete rule | None | **Built** |
+| 2 | One reader for glucose (hot rows and cold days); the Nightscout API makes `entries` from sealed days; the site's glucose page reads it | `entries`, glucose page | |
+| 3 | Device reports fold into `iob`, `cob`, reservoir and battery series | The day view | |
+| 4 | Events: the day's list, and the 15-minute insulin, basal and carbs totals; checks of totals | Data pages, `treatments`, daily dose | |
+| 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
+| 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
+| 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
 
-Step 1 alone takes glucose from 63 KB a day to 0.75 KB, with the least risk: the glucose line of a day is already
-what `summary_period` stores.
+`RETENTION_DELETE_ROWS` can be `true` after step 2 for glucose, and becomes the default when each table's reader
+is built.
+
+## What this takes the place of
+
+### Summaries (step 5)
+
+Each field of `summary_period` can be built from cold days:
+
+| Field | From |
+| --- | --- |
+| The day's glucose line; AGP; time in range and the bands; mean, SD, GMI; counts | The `glucose` series |
+| Total daily dose, basal and carbs | The 15-minute totals |
+| IOB and COB lines | The `iob` and `cob` series |
+| Finger prick count | The day's events |
+
+- An AGP of 90 days reads 90 small rows. It needs no stored AGP.
+- **To remove:** the `summary_period` table, `frozen_at` and the stale marks, the builds for a new timezone or
+  week start, **Regenerate summaries**, and most of `background/summary_daily`.
+- **To keep:** the report maths (percentiles, bands). It reads series, not summary rows.
+- **A change a person can see:** the mean and SD are of the 5-minute values, not of each reading. A site with a
+  1-minute sensor gets a small difference.
+
+### Truncation (step 6)
+
+| Today | With cold days |
+| --- | --- |
+| Device reports thinned (10 min, 20 min, hourly) and deleted after 30 days; `utils/thin` | **Remove.** Their numbers are series. Device reports get short hot days of their own (2 days). |
+| A site over 1.5 times its limit: clear old JSON, delete device reports over 7 days old | **Remove.** The site gets fewer hot days. |
+| The same site, if still over: delete readings and treatments over 90 days old | **Remove.** This loses data. Sealing does not. |
+| The **Truncate** button | **Keep.** It seals now, with the fewest hot days, and vacuums. It seals now already. |
+| Delete loop settings no record refers to | **Keep**, in the seal run. |
+| Vacuum | **Keep.** |
+| The size limit, writes refused at 4 times the limit, the abuse score | **Keep.** Sealing does not help a site that writes too many rows today. |
+
+To check before the thinning goes: does a page or an app read a device report over 2 days old?
 
 ## Open questions
 
 1. **Lose nothing: an archive.** Before a day's rows are deleted, write them, as sent, to a compressed file for
-   each month in the site's S3 folder. "Sealed" then means "not in the site DB", not "gone", and a month could be
+   each month in the site's S3 folder. "Deleted" then means "not in the site DB", not "gone", and a month could be
    read back. It needs S3, storage for each site, and a way to restore. Is this wanted, as an option of a site?
-2. **Hot days:** is 14 right? Is 3 a safe floor for each app (AAPS, Trio, Loop, xDrip+)?
+2. **Hot days:** is 3 a safe floor for each app (AAPS, Trio, Loop, xDrip+)?
 3. **Temp basals to apps:** for a sealed day, send one temp basal for each hour, or none?
-4. **Hourly or 15 minutes** for insulin and basal? 15 minutes is 4 times the bytes of a small number (about 150
-   bytes more a day) and shows how the loop acted.
-5. **`iob_basal`:** keep it, or only total IOB? It is about 770 bytes a day.
-6. **Profiles:** store each distinct profile one time by hash (a dictionary), and a switch refers to it. This
-   needs one new column or table. Is the change wanted before the DB is frozen?
-7. **Events for 20 years:** 10 events a day are 0.4 MB a year. Is that acceptable for ever, or do events older
-   than N years become counts?
-8. **JSON or packed bytes** for a series? JSON (proposed) is checked and readable, at about 1.8 MB a year. Packed
-   bytes are about 1.1 MB a year, and need an exception to the rule for JSON columns.
-9. **A site's own setting:** can a person choose "keep more days as rows" if their DB has space?
+4. **`iob_basal`:** keep it, or only total IOB?
+5. **Profiles:** store each distinct profile one time by hash (a dictionary), and a switch refers to it. This
+   needs one new column or table.
+6. **Events for 20 years:** 10 events a day are the largest part of a cold day. Is that acceptable for ever, or
+   do events older than N years become counts?
+7. **A site's own setting:** can a person choose more hot days if their DB has space?
