@@ -389,7 +389,7 @@ func TestTruncateClearsOldPumps(t *testing.T) {
 }
 
 // Truncating a site deletes the loop settings no profile or device report refers to any more, such as a deleted
-// profile's, but each app's last seen, and keeps those one does; the job every 10 minutes leaves them all
+// profile's, but each app's last seen, and keeps those one does
 func TestTruncateDeletesUnreferencedLoopSettings(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
@@ -424,10 +424,8 @@ func TestTruncateDeletesUnreferencedLoopSettings(t *testing.T) {
 		return true
 	}
 
+	// The job's truncate, as before each backup, deletes them
 	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites(), nil))
-	require.True(t, kept("unreferenced") && kept("deleted-profile"), "the job every 10 minutes keeps them")
-	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
-	require.NoError(t, err)
 	for _, name := range []string{"loop", "remote", "configuration", "loop-newest", "aaps-newest"} {
 		require.True(t, kept(name), "%s's settings are kept", name)
 	}

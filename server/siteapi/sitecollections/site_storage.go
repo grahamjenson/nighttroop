@@ -3,14 +3,12 @@ package sitecollections
 import (
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/a-h/templ"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_settings_templ"
 	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitesettings"
-	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -42,7 +40,7 @@ func withTables(r *http.Request, usage *controlmodels.SiteUsage) *controlmodels.
 	return usage
 }
 
-// usageStorage is the site's storage on its Usage page, with Truncate
+// usageStorage is the site's storage on its Usage page
 func usageStorage(usage *controlmodels.SiteUsage) templ.Component {
 	return site_settings_templ.UsageStorage(usage.SizeKB, usage.LimitKB, usage.Tables)
 }
@@ -59,30 +57,4 @@ func siteSize(r *http.Request) (*int64, *int64) {
 		return nil, nil
 	}
 	return site.EstimatedDbSizeKb, site.MaxDbSizeKbLimit
-}
-
-// TruncateHandler truncates the site for its admin from its Usage page, as the control site's Truncate does, recorded as
-// the same event, then shows its storage again with a toast of its new size, or as JSON its storage with its size
-// before. It rewrites the whole DB, so it shares the site's few downloads a minute.
-func TruncateHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), can.ActionUpdate)
-	if siteContext == nil {
-		return
-	}
-	if allowed, wait := httputils.WithinRateLimitAll(siteContext.Config.RateLimiters.SiteDownloadLimiter(siteContext.SiteID)); !allowed {
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(wait))
-		return
-	}
-	started := time.Now()
-	beforeKB, limitKB := siteSize(r)
-	afterKB, err := siteContext.ControlDB.TruncateSite(r.Context(), siteContext.SiteID)
-	if err != nil {
-		slog.ErrorContext(r.Context(), "Cannot truncate the site", "error", err)
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
-		return
-	}
-	siteContext.ControlDB.Logs.SiteTruncatedEvent(r.Context(), siteContext.SiteID, siteContext.IdentityModel.Name, started, beforeKB, afterKB)
-	usage := withTables(r, &controlmodels.SiteUsage{SizeKB: afterKB, LimitKB: limitKB, BeforeSizeKB: beforeKB})
-	WriteResponse(w, r, siteContext, http.StatusOK, usage,
-		templ.Join(usageStorage(usage), site_settings_templ.UsageTruncated(afterKB)), false)
 }

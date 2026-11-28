@@ -24,12 +24,10 @@ POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?toke
 B [{"eventType": "Temporary Target", "targetTop": 120, "targetBottom": 110, "units": "mg/dl", "duration": 2880, "reason": "Illness", "created_at": "{{ time 4320 }}"}]
 ASSERT_STATUS 200
 
-// Truncate, on the Usage page, packages the site's ended days now
+// The site job, which runs before each backup, packages the site's ended days
+RUN_BACKGROUND_JOBS
 BROWSE
 GOTO {{ .site_url }}/usage
-CLICK_ASKS #site--usage--truncate
-CLICK #confirm--ok
-ASSERT_TEXT_VISIBLE Site Truncated
 
 // The day's glucose is one row: a series, version 1, every 5 minutes, with how many of its steps have a value and
 // how few bytes it is. Its events are another, and its carbs, and its basal rate if it has a profile.
