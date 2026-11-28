@@ -105,8 +105,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearStaleSummariesStmt, err = db.PrepareContext(ctx, clearStaleSummaries); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearStaleSummaries: %w", err)
 	}
+	if q.coldDayTotalsStmt, err = db.PrepareContext(ctx, coldDayTotals); err != nil {
+		return nil, fmt.Errorf("error preparing query ColdDayTotals: %w", err)
+	}
 	if q.coldDaysNewestFirstStmt, err = db.PrepareContext(ctx, coldDaysNewestFirst); err != nil {
 		return nil, fmt.Errorf("error preparing query ColdDaysNewestFirst: %w", err)
+	}
+	if q.coldDaysPageStmt, err = db.PrepareContext(ctx, coldDaysPage); err != nil {
+		return nil, fmt.Errorf("error preparing query ColdDaysPage: %w", err)
 	}
 	if q.countGeneralSettingsStmt, err = db.PrepareContext(ctx, countGeneralSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query CountGeneralSettings: %w", err)
@@ -767,9 +773,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing clearStaleSummariesStmt: %w", cerr)
 		}
 	}
+	if q.coldDayTotalsStmt != nil {
+		if cerr := q.coldDayTotalsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing coldDayTotalsStmt: %w", cerr)
+		}
+	}
 	if q.coldDaysNewestFirstStmt != nil {
 		if cerr := q.coldDaysNewestFirstStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing coldDaysNewestFirstStmt: %w", cerr)
+		}
+	}
+	if q.coldDaysPageStmt != nil {
+		if cerr := q.coldDaysPageStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing coldDaysPageStmt: %w", cerr)
 		}
 	}
 	if q.countGeneralSettingsStmt != nil {
@@ -1703,7 +1719,9 @@ type Queries struct {
 	clearOldProfileSwitchJSONStmt               *sql.Stmt
 	clearOldPumpsStmt                           *sql.Stmt
 	clearStaleSummariesStmt                     *sql.Stmt
+	coldDayTotalsStmt                           *sql.Stmt
 	coldDaysNewestFirstStmt                     *sql.Stmt
+	coldDaysPageStmt                            *sql.Stmt
 	countGeneralSettingsStmt                    *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
@@ -1910,7 +1928,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearOldProfileSwitchJSONStmt:               q.clearOldProfileSwitchJSONStmt,
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
 		clearStaleSummariesStmt:                     q.clearStaleSummariesStmt,
+		coldDayTotalsStmt:                           q.coldDayTotalsStmt,
 		coldDaysNewestFirstStmt:                     q.coldDaysNewestFirstStmt,
+		coldDaysPageStmt:                            q.coldDaysPageStmt,
 		countGeneralSettingsStmt:                    q.countGeneralSettingsStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,

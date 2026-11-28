@@ -87,38 +87,57 @@ func PackGrid(series Series, values []float64) []byte {
 // errNotASeries is that bytes are not a series of a version this code reads
 var errNotASeries = errors.New("retention: not a series of a known version")
 
+// Header is what a cold day's first bytes say it is: its version and shape, and for a series how its values were
+// packed, its step and scale, and how many steps it has
+type Header struct {
+	Version     int
+	Shape       Shape
+	SecondOrder bool
+	Deflated    bool
+	Step        time.Duration
+	Scale       float64
+	Steps       int
+}
+
 // UnpackGrid is the values PackGrid packed, NaN where there is none, by the version, scale and packing the day says
 func UnpackGrid(packed []byte) ([]float64, error) {
+	_, values, err := ReadGrid(packed)
+	return values, err
+}
+
+// ReadGrid is a packed series with what its first bytes say it is, to look at a cold day as it is kept
+func ReadGrid(packed []byte) (Header, []float64, error) {
 	if len(packed) < 3 || packed[0] != Version || packed[1] != shapeBytes[SeriesShape] || packed[2]&^(secondOrder|deflated) != 0 {
-		return nil, errNotASeries
+		return Header{}, nil, errNotASeries
 	}
 	how, rest := packed[2], packed[3:]
 	var head [3]uint64
 	for i := range head {
 		number, read := binary.Uvarint(rest)
 		if read <= 0 {
-			return nil, errNotASeries
+			return Header{}, nil, errNotASeries
 		}
 		head[i], rest = number, rest[read:]
 	}
-	scale, steps := float64(head[1]), int(min(head[2], uint64(maxSteps)+1))
-	if scale == 0 || steps > maxSteps {
-		return nil, errNotASeries
+	header := Header{Version: Version, Shape: SeriesShape, SecondOrder: how&secondOrder != 0, Deflated: how&deflated != 0,
+		Step: time.Duration(min(head[0], uint64(day/time.Second))) * time.Second, Scale: float64(head[1]), Steps: int(min(head[2], uint64(maxSteps)+1))}
+	if header.Scale == 0 || header.Steps > maxSteps {
+		return Header{}, nil, errNotASeries
 	}
-	if how&deflated != 0 {
+	if header.Deflated {
 		// A day is at most a bit and 10 bytes a step, so no more is read of bytes that say they are more
 		plain, err := io.ReadAll(io.LimitReader(flate.NewReader(bytes.NewReader(rest)), int64(maxSteps*11)))
 		if err != nil {
-			return nil, errNotASeries
+			return Header{}, nil, errNotASeries
 		}
 		rest = plain
 	}
-	bitmap := (steps + 7) / 8
+	bitmap := (header.Steps + 7) / 8
 	if len(rest) < bitmap {
-		return nil, errNotASeries
+		return Header{}, nil, errNotASeries
 	}
 	present, deltas := rest[:bitmap], rest[bitmap:]
-	values := make([]float64, steps)
+	values := make([]float64, header.Steps)
 	var last, lastDelta int64
 	for i := range values {
 		values[i] = math.NaN()
@@ -127,15 +146,15 @@ func UnpackGrid(packed []byte) ([]float64, error) {
 		}
 		delta, read := binary.Varint(deltas)
 		if read <= 0 {
-			return nil, errNotASeries
+			return Header{}, nil, errNotASeries
 		}
-		if how&secondOrder != 0 {
+		if header.SecondOrder {
 			delta += lastDelta
 		}
 		deltas, last, lastDelta = deltas[read:], last+delta, delta
-		values[i] = float64(last) / scale
+		values[i] = float64(last) / header.Scale
 	}
-	return values, nil
+	return header, values, nil
 }
 
 // Stats are what is known of a set of values that can be added to another set's: the stats of a week are its days'

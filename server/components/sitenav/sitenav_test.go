@@ -66,8 +66,8 @@ func TestVisible(t *testing.T) {
 	require.Equal(t, []string{"site--settings--connectors-button"}, ids(Visible(admin, Connectors)))
 	require.Equal(t, []string{"site--settings--alarms-button"}, ids(Visible(admin, Alarms)))
 	require.Equal(t, []string{"site--logs--events-button", "site--logs--errors-button", "site--logs--logs-button"}, ids(Visible(admin, Logs)))
-	require.Equal(t, []string{"site--usage-button"}, ids(Visible(admin, Usage)))
-	require.Len(t, Visible(admin, MenuHubs...), 10)
+	require.Equal(t, []string{"site--usage-button", "site--cold-days-button"}, ids(Visible(admin, Usage)))
+	require.Len(t, Visible(admin, MenuHubs...), 11)
 	for _, role := range []consts.IdentityRole{consts.IdentityRoleUser, consts.IdentityRoleUserReadOnly, consts.IdentityRoleDeviceRead} {
 		settings := ids(Visible(&controldb.SiteIdentity{Role: role}, Settings))
 		require.Equal(t, []string{"site--settings--settings-button", "site--settings--push-devices-button"}, settings, role)

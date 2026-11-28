@@ -131,6 +131,73 @@ type CleanGlucoseReading struct {
 	UtcOffsetMinutes      *int64   `json:"utc_offset_minutes,omitempty"`
 }
 
+// ColdDay One kind of data of one UTC day as the site keeps it once its rows are old: what its packed bytes say they are, and what is in them
+type ColdDay struct {
+	// Bytes The size of its packed body
+	Bytes int64 `json:"bytes"`
+
+	// Date The UTC day
+	Date openapi_types.Date `json:"date"`
+
+	// Deflated Whether its values are DEFLATE compressed
+	Deflated bool `json:"deflated"`
+
+	// Error Why its bytes could not be read, e.g. a version this server does not know
+	Error *string `json:"error"`
+
+	// Kind The series, e.g. glucose
+	Kind string   `json:"kind"`
+	Max  *float32 `json:"max"`
+	Min  *float32 `json:"min"`
+
+	// Points Each value with the time its step starts; only for one day
+	Points *[]ColdPoint `json:"points,omitempty"`
+
+	// Scale What each value was multiplied by to be kept as a whole number
+	Scale float32 `json:"scale"`
+
+	// SealedAt When it was last sealed, in ms
+	SealedAt int64 `json:"sealed_at"`
+
+	// SecondOrder Whether each value is kept as the change of its change
+	SecondOrder bool `json:"second_order"`
+
+	// Shape The shape its second byte says, e.g. series
+	Shape string `json:"shape"`
+
+	// StepSeconds The step of its grid
+	StepSeconds int64 `json:"step_seconds"`
+
+	// Steps How many steps the day has
+	Steps int `json:"steps"`
+
+	// Values How many steps have a value
+	Values int `json:"values"`
+
+	// Version The version its first byte says
+	Version int `json:"version"`
+}
+
+// ColdDays A page of a site's cold days, the newest first
+type ColdDays struct {
+	Days []ColdDay `json:"days"`
+
+	// Total How many cold days the site has
+	Total int64 `json:"total"`
+
+	// TotalBytes The bytes of all their packed bodies
+	TotalBytes int64 `json:"total_bytes"`
+}
+
+// ColdPoint defines model for ColdPoint.
+type ColdPoint struct {
+	// At When the step starts, in ms
+	At int64 `json:"at"`
+
+	// Value The value as it is kept; glucose is in mg/dL
+	Value float32 `json:"value"`
+}
+
 // CreatedSite defines model for CreatedSite.
 type CreatedSite struct {
 	// ApiKey The admin's password
@@ -704,6 +771,20 @@ type NsSortDesc = string
 // Skip defines model for Skip.
 type Skip = int64
 
+// ColdDayResult defines model for ColdDayResult.
+type ColdDayResult struct {
+	// Result One kind of data of one UTC day as the site keeps it once its rows are old: what its packed bytes say they are, and what is in them
+	Result *ColdDay `json:"result,omitempty"`
+	Status *int     `json:"status,omitempty"`
+}
+
+// ColdDaysResult defines model for ColdDaysResult.
+type ColdDaysResult struct {
+	// Result A page of a site's cold days, the newest first
+	Result *ColdDays `json:"result,omitempty"`
+	Status *int      `json:"status,omitempty"`
+}
+
 // Deleted defines model for Deleted.
 type Deleted struct {
 	// Status deleted
@@ -1164,6 +1245,12 @@ type AccountPasskeyFinishJSONBody map[string]interface{}
 // GetSummaryParams defines parameters for GetSummary.
 type GetSummaryParams struct {
 	Hours *int64 `form:"hours,omitempty" json:"hours,omitempty"`
+}
+
+// ListColdDaysParams defines parameters for ListColdDays.
+type ListColdDaysParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Skip  *int `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
 // WelcomePasskeyFinishJSONBody defines parameters for WelcomePasskeyFinish.
@@ -2173,6 +2260,12 @@ type ClientInterface interface {
 
 	// GetUsage request
 	GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListColdDays request
+	ListColdDays(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetColdDay request
+	GetColdDay(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DownloadSiteData request
 	DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3427,6 +3520,30 @@ func (c *Client) GetSummary(ctx context.Context, params *GetSummaryParams, reqEd
 
 func (c *Client) GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetUsageRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListColdDays(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListColdDaysRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetColdDay(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetColdDayRequest(c.Server, kind, date)
 	if err != nil {
 		return nil, err
 	}
@@ -7411,6 +7528,112 @@ func NewGetUsageRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewListColdDaysRequest generates requests for ListColdDays
+func NewListColdDaysRequest(server string, params *ListColdDaysParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/usage/cold-days")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Skip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetColdDayRequest generates requests for GetColdDay
+func NewGetColdDayRequest(server string, kind string, date openapi_types.Date) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "kind", runtime.ParamLocationPath, kind)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "date", runtime.ParamLocationPath, date)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/usage/cold-days/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewDownloadSiteDataRequest generates requests for DownloadSiteData
 func NewDownloadSiteDataRequest(server string) (*http.Request, error) {
 	var err error
@@ -7863,6 +8086,12 @@ type ClientWithResponsesInterface interface {
 
 	// GetUsageWithResponse request
 	GetUsageWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetUsageResponse, error)
+
+	// ListColdDaysWithResponse request
+	ListColdDaysWithResponse(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*ListColdDaysResponse, error)
+
+	// GetColdDayWithResponse request
+	GetColdDayWithResponse(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*GetColdDayResponse, error)
 
 	// DownloadSiteDataWithResponse request
 	DownloadSiteDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DownloadSiteDataResponse, error)
@@ -9748,6 +9977,52 @@ func (r GetUsageResponse) StatusCode() int {
 	return 0
 }
 
+type ListColdDaysResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ColdDaysResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListColdDaysResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListColdDaysResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetColdDayResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ColdDayResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetColdDayResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetColdDayResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type DownloadSiteDataResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -10750,6 +11025,24 @@ func (c *ClientWithResponses) GetUsageWithResponse(ctx context.Context, reqEdito
 		return nil, err
 	}
 	return ParseGetUsageResponse(rsp)
+}
+
+// ListColdDaysWithResponse request returning *ListColdDaysResponse
+func (c *ClientWithResponses) ListColdDaysWithResponse(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*ListColdDaysResponse, error) {
+	rsp, err := c.ListColdDays(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListColdDaysResponse(rsp)
+}
+
+// GetColdDayWithResponse request returning *GetColdDayResponse
+func (c *ClientWithResponses) GetColdDayWithResponse(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*GetColdDayResponse, error) {
+	rsp, err := c.GetColdDay(ctx, kind, date, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetColdDayResponse(rsp)
 }
 
 // DownloadSiteDataWithResponse request returning *DownloadSiteDataResponse
@@ -13437,6 +13730,72 @@ func ParseGetUsageResponse(rsp *http.Response) (*GetUsageResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SiteUsageResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListColdDaysResponse parses an HTTP response from a ListColdDaysWithResponse call
+func ParseListColdDaysResponse(rsp *http.Response) (*ListColdDaysResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListColdDaysResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ColdDaysResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetColdDayResponse parses an HTTP response from a GetColdDayWithResponse call
+func ParseGetColdDayResponse(rsp *http.Response) (*GetColdDayResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetColdDayResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ColdDayResult
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

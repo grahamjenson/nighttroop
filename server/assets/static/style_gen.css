@@ -875,6 +875,9 @@
   .appearance-none {
     appearance: none;
   }
+  .columns-2 {
+    columns: 2;
+  }
   .break-before-page {
     break-before: page;
   }
@@ -3110,6 +3113,11 @@
       columns: 2;
     }
   }
+  .sm\:columns-4 {
+    @media (width >= 40rem) {
+      columns: 4;
+    }
+  }
   .sm\:grid-cols-2 {
     @media (width >= 40rem) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3453,6 +3461,11 @@
   .lg\:w-80 {
     @media (width >= 64rem) {
       width: calc(var(--spacing) * 80);
+    }
+  }
+  .lg\:columns-6 {
+    @media (width >= 64rem) {
+      columns: 6;
     }
   }
   .lg\:grid-cols-2 {

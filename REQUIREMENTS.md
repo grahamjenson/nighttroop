@@ -2575,6 +2575,23 @@ Before it backs up a site written to, at most every hour, the server seals the s
   - If a reading of such a day is deleted, its 5-minute step is cleared.
 - Each table of a site DB has a retention policy (`data/retention`). A table with no policy fails a test.
 
+#### Cold Days page
+
+- Cold Days (Settings side tabs, below Usage; also found by the page search) is for a site's admins. Other
+  identities do not see it (403 from the API).
+- It lists the site's cold days, newest first: the UTC date, the kind (example: `glucose`), the shape and version,
+  the step, how many steps have a value, the least and greatest value, the size in bytes, and when it was sealed.
+- It shows how many cold days the site has and their total size.
+- If no day is sealed, it says so and says when a day is sealed.
+- It shows 100 cold days. **Older** and **Newer** move through them (`limit`, at most 1000, and `skip`).
+- A date opens the day: its version, shape, packing (change or change of change, with DEFLATE or not), step,
+  scale, values, size and sealed time, then each value with the UTC time its step starts.
+  - A value shows as the number that is kept. Glucose is in mg/dL, whatever the units of the site.
+- If the server cannot read a day's bytes (example: a version it does not know), the row and the day say "Not
+  readable by this server".
+- A kind and date with no cold day is 404.
+- The page is read only. It has no form and no button, and there is no API to create, change or delete a cold day.
+
 #### Entries of sealed days
 
 If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries` of the days older than

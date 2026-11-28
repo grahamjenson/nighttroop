@@ -2496,6 +2496,11 @@ func (m *ColdDaysNewestFirstParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated ColdDaysPageParams.
+func (m *ColdDaysPageParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetDate returns the Date value.
 func (m GetColdDayParams) GetDate() string {
 	return m.Date

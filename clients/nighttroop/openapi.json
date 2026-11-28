@@ -301,6 +301,28 @@
         "responses": { "200": { "$ref": "#/components/responses/SiteUsageResult" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
+    "/usage/cold-days": {
+      "get": {
+        "operationId": "ListColdDays", "tags": ["Site"],
+        "summary": "What the site keeps of its old days: each kind of data of each UTC day, the newest first; admins only. Read only.",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 100, "minimum": 1, "maximum": 1000 } },
+          { "name": "skip", "in": "query", "schema": { "type": "integer", "default": 0, "minimum": 0 } }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/ColdDaysResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/usage/cold-days/{kind}/{date}": {
+      "get": {
+        "operationId": "GetColdDay", "tags": ["Site"],
+        "summary": "One cold day, with each of its values at the time its step starts; admins only. Read only.",
+        "parameters": [
+          { "name": "kind", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The kind of data, e.g. glucose" },
+          { "name": "date", "in": "path", "required": true, "schema": { "type": "string", "format": "date" }, "description": "The UTC day" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/ColdDayResult" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
     "/usage/truncate": {
       "post": {
         "operationId": "TruncateSite", "tags": ["Site"],
@@ -663,6 +685,8 @@
       "FoodIntakeList": { "description": "Food intakes, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/FoodIntake" } } } }] } } } } } },
       "EventGroupResult": { "description": "An event group", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/EventGroup" } } } } } },
       "EventGroupList": { "description": "Event groups, newest first", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/EventGroup" } } } }] } } } } } },
+      "ColdDaysResult": { "description": "A page of the site's cold days", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/ColdDays" } } } } } },
+      "ColdDayResult": { "description": "One cold day, with its points", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/ColdDay" } } } } } },
       "SiteUsageResult": { "description": "The site's storage", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "$ref": "#/components/schemas/SiteUsage" } } } } } },
       "EventChoiceList": { "description": "The events that can be grouped, by kind", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "integer" }, "result": { "type": "array", "items": { "$ref": "#/components/schemas/EventChoice" } } } } } } },
       "NsError": { "description": "A Nightscout error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
@@ -1025,6 +1049,47 @@
       "SummaryList": {
         "type": "object",
         "properties": { "status": { "type": "integer" }, "result": { "allOf": [{ "$ref": "#/components/schemas/SearchPage" }, { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/Summary" } } } }] } }
+      },
+      "ColdDays": {
+        "type": "object",
+        "description": "A page of a site's cold days, the newest first",
+        "required": ["days", "total", "total_bytes"],
+        "properties": {
+          "days": { "type": "array", "items": { "$ref": "#/components/schemas/ColdDay" } },
+          "total": { "type": "integer", "format": "int64", "description": "How many cold days the site has" },
+          "total_bytes": { "type": "integer", "format": "int64", "description": "The bytes of all their packed bodies" }
+        }
+      },
+      "ColdDay": {
+        "type": "object",
+        "description": "One kind of data of one UTC day as the site keeps it once its rows are old: what its packed bytes say they are, and what is in them",
+        "required": ["kind", "date", "bytes", "sealed_at", "version", "shape", "second_order", "deflated", "step_seconds", "scale", "steps", "values", "min", "max", "error"],
+        "properties": {
+          "kind": { "type": "string", "description": "The series, e.g. glucose" },
+          "date": { "type": "string", "format": "date", "description": "The UTC day" },
+          "bytes": { "type": "integer", "format": "int64", "description": "The size of its packed body" },
+          "sealed_at": { "type": "integer", "format": "int64", "description": "When it was last sealed, in ms" },
+          "version": { "type": "integer", "description": "The version its first byte says" },
+          "shape": { "type": "string", "description": "The shape its second byte says, e.g. series" },
+          "second_order": { "type": "boolean", "description": "Whether each value is kept as the change of its change" },
+          "deflated": { "type": "boolean", "description": "Whether its values are DEFLATE compressed" },
+          "step_seconds": { "type": "integer", "format": "int64", "description": "The step of its grid" },
+          "scale": { "type": "number", "description": "What each value was multiplied by to be kept as a whole number" },
+          "steps": { "type": "integer", "description": "How many steps the day has" },
+          "values": { "type": "integer", "description": "How many steps have a value" },
+          "min": { "type": "number", "nullable": true },
+          "max": { "type": "number", "nullable": true },
+          "error": { "type": "string", "nullable": true, "description": "Why its bytes could not be read, e.g. a version this server does not know" },
+          "points": { "type": "array", "description": "Each value with the time its step starts; only for one day", "items": { "$ref": "#/components/schemas/ColdPoint" } }
+        }
+      },
+      "ColdPoint": {
+        "type": "object",
+        "required": ["at", "value"],
+        "properties": {
+          "at": { "type": "integer", "format": "int64", "description": "When the step starts, in ms" },
+          "value": { "type": "number", "description": "The value as it is kept; glucose is in mg/dL" }
+        }
       },
       "SiteUsage": {
         "type": "object",

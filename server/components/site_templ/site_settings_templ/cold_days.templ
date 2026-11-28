@@ -1,0 +1,170 @@
+package site_settings_templ
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"time"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
+)
+
+// coldDayPath is the page of one cold day
+func coldDayPath(day *sitemodels.ColdDay) string {
+	return "/usage/cold-days/" + day.Kind + "/" + day.Date
+}
+
+// coldStep says a series' step: 5 min, 1 h
+func coldStep(seconds int64) string {
+	return (time.Duration(seconds) * time.Second).String()
+}
+
+// coldNumber is a value as it is kept, with no more digits than it has
+func coldNumber(value float64) string {
+	return strconv.FormatFloat(value, 'f', -1, 64)
+}
+
+// coldPacking says how a series' values were packed
+func coldPacking(ctx context.Context, day *sitemodels.ColdDay) string {
+	packing := i18n.T(ctx, "site.settings.cold_days.packing_change")
+	if day.SecondOrder {
+		packing = i18n.T(ctx, "site.settings.cold_days.packing_second")
+	}
+	if day.Deflated {
+		packing += ", DEFLATE"
+	}
+	return packing
+}
+
+// ColdDays is what the site keeps of its old days, for its admins to look at: each kind of data of each UTC day, the
+// newest first, with what its packed bytes say they are and how small they are. Nothing is made or changed here.
+templ ColdDays(page *sitemodels.ColdDays, skip, limit int64) {
+	<div id="site--cold-days" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page(i18n.T(ctx, "site.settings.cold_days.title")) {
+			{ i18n.T(ctx, "site.settings.cold_days.about") }
+		}
+		<p id="site--cold-days--totals" class="text-sm text-muted-foreground">
+			{ i18n.T(ctx, "site.settings.cold_days.totals", i18n.Data{"Days": page.Total, "Size": display.Bytes(float64(page.TotalBytes))}) }
+		</p>
+		if len(page.Days) == 0 {
+			<p id="site--cold-days--none" class="text-sm text-muted-foreground">{ i18n.T(ctx, "site.settings.cold_days.none") }</p>
+		} else {
+			@table.Table(table.Props{ID: "site--cold-days--table"}) {
+				@table.Header() {
+					@table.Row() {
+						for _, head := range []string{"site.settings.cold_days.date", "site.settings.cold_days.kind", "site.settings.cold_days.shape", "site.settings.cold_days.step",
+							"site.settings.cold_days.values", "site.settings.cold_days.range", "site.settings.cold_days.size", "site.settings.cold_days.sealed"} {
+							@table.Head() {
+								{ i18n.T(ctx, head) }
+							}
+						}
+					}
+				}
+				@table.Body() {
+					for _, day := range page.Days {
+						@table.Row(table.RowProps{ID: "site--cold-day--" + day.Kind + "--" + day.Date}) {
+							@table.Cell() {
+								@nav.Link("site--cold-day--"+day.Kind+"--"+day.Date+"--open", coldDayPath(day), "underline") {
+									{ day.Date }
+								}
+							}
+							@table.Cell() {
+								{ day.Kind }
+							}
+							if day.Error != nil {
+								@table.Cell(table.CellProps{Class: "text-red-700", Attributes: templ.Attributes{"colspan": "4"}}) {
+									{ i18n.T(ctx, "site.settings.cold_days.unreadable") }
+								}
+							} else {
+								@table.Cell() {
+									{ day.Shape } v{ fmt.Sprint(day.Version) }
+								}
+								@table.Cell() {
+									{ coldStep(day.StepSeconds) }
+								}
+								@table.Cell() {
+									{ fmt.Sprintf("%d / %d", day.Values, day.Steps) }
+								}
+								@table.Cell() {
+									if day.Min != nil {
+										{ coldNumber(*day.Min) } – { coldNumber(*day.Max) }
+									}
+								}
+							}
+							@table.Cell() {
+								{ i18n.T(ctx, "site.settings.cold_days.bytes", i18n.Data{"Bytes": day.Bytes}) }
+							}
+							@table.Cell() {
+								<span title={ display.DateTime(&day.SealedAt) }>{ display.Ago(ctx, &day.SealedAt, time.Now()) }</span>
+							}
+						}
+					}
+				}
+			}
+			<div class="flex justify-between text-sm">
+				if skip > 0 {
+					@nav.Link("site--cold-days--newer", fmt.Sprintf("/usage/cold-days?skip=%d&limit=%d", max(skip-limit, 0), limit), "underline") {
+						{ i18n.T(ctx, "site.settings.cold_days.newer") }
+					}
+				} else {
+					<span></span>
+				}
+				if skip+int64(len(page.Days)) < page.Total {
+					@nav.Link("site--cold-days--older", fmt.Sprintf("/usage/cold-days?skip=%d&limit=%d", skip+limit, limit), "underline") {
+						{ i18n.T(ctx, "site.settings.cold_days.older") }
+					}
+				}
+			</div>
+		}
+	</div>
+}
+
+// coldFact is one thing a cold day says of itself
+templ coldFact(id, label, value string) {
+	<div>
+		<dt class="text-xs uppercase tracking-wide text-muted-foreground">{ label }</dt>
+		<dd id={ id } class="font-mono text-sm">{ value }</dd>
+	</div>
+}
+
+// ColdDay is one cold day opened: what its first bytes say it is, and each of its values at the time its step starts,
+// in UTC, as the number that is kept
+templ ColdDay(day *sitemodels.ColdDay) {
+	<div id="site--cold-day" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page(i18n.T(ctx, "site.settings.cold_days.day_title", i18n.Data{"Kind": day.Kind, "Date": day.Date})) {
+			@nav.Link("site--cold-day--back", "/usage/cold-days", "underline") {
+				{ i18n.T(ctx, "site.settings.cold_days.back") }
+			}
+		}
+		if day.Error != nil {
+			<p id="site--cold-day--error" class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+				{ i18n.T(ctx, "site.settings.cold_days.unreadable") }: { *day.Error }
+			</p>
+		} else {
+			<dl id="site--cold-day--facts" class="grid grid-cols-2 gap-4 rounded-md border border-gray-200 bg-white p-4 sm:grid-cols-4">
+				@coldFact("site--cold-day--version", i18n.T(ctx, "site.settings.cold_days.version"), fmt.Sprint(day.Version))
+				@coldFact("site--cold-day--shape", i18n.T(ctx, "site.settings.cold_days.shape"), day.Shape)
+				@coldFact("site--cold-day--packing", i18n.T(ctx, "site.settings.cold_days.packing"), coldPacking(ctx, day))
+				@coldFact("site--cold-day--step", i18n.T(ctx, "site.settings.cold_days.step"), coldStep(day.StepSeconds))
+				@coldFact("site--cold-day--scale", i18n.T(ctx, "site.settings.cold_days.scale"), coldNumber(day.Scale))
+				@coldFact("site--cold-day--values", i18n.T(ctx, "site.settings.cold_days.values"), fmt.Sprintf("%d / %d", day.Values, day.Steps))
+				@coldFact("site--cold-day--size", i18n.T(ctx, "site.settings.cold_days.size"), i18n.T(ctx, "site.settings.cold_days.bytes", i18n.Data{"Bytes": day.Bytes}))
+				@coldFact("site--cold-day--sealed", i18n.T(ctx, "site.settings.cold_days.sealed"), display.DateTime(&day.SealedAt))
+			</dl>
+			<p class="text-sm text-muted-foreground">{ i18n.T(ctx, "site.settings.cold_days.points_note") }</p>
+			<ol id="site--cold-day--points" class="columns-2 gap-6 font-mono text-sm sm:columns-4 lg:columns-6">
+				for _, point := range day.Points {
+					<li class="flex justify-between border-b border-gray-100 py-0.5">
+						<span class="text-muted-foreground">{ time.UnixMilli(point.At).UTC().Format("15:04") }</span>
+						<span>{ coldNumber(point.Value) }</span>
+					</li>
+				}
+			</ol>
+		}
+	</div>
+}
