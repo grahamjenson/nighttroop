@@ -312,7 +312,7 @@ API's search uses it (`SearchWithCold`):
 
 - A made treatment is built from the cold events with its ID (`group_id`): a meal and its bolus are one treatment.
   It has its own `_id`, its type, its time and what its events kept.
-- A search by date or by `eventType`, newest first, has made treatments. A search by another field (carbs,
+- A search by date or by `eventType`, newest first or oldest first, has made treatments. A search by another field (carbs,
   insulin, `enteredBy`, duration) has rows only.
 - A loop's boluses and temp basals are not made: they are series, not events. To decide: make them from the
   series, one for each run of the same rate.
@@ -386,7 +386,8 @@ Each step is one PR, and the site works after each one.
 | 2 | The reader of packaged glucose; the Nightscout API makes `entries` from packaged days | `entries` | **Built** |
 | 2b | A made entry is read and deleted by its `_id` | `entries` | **Built** |
 | 2c | A search of `entries` oldest first has made entries | `entries` | **Built** |
-| 2d | The site's glucose page says that older readings are in Reports; a search of `treatments` oldest first | Glucose page | |
+| 2d | A search of `treatments` oldest first has made treatments | `treatments` | **Built** |
+| 2e | The site's data pages say that older records are in Reports | Data pages | |
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
 | 4b | Events: the day's list | The Cold Days page | **Built** |

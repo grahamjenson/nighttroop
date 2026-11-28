@@ -323,6 +323,32 @@ func TestTreatmentsOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	require.Equal(t, of(before)[1:3], of(treatments(url.Values{"count": {"2"}, "skip": {"1"}})))
 	require.Empty(t, treatments(url.Values{"count": {"100"}, "find[date][$lt]": {ms(old)}}))
 
+	// A search the oldest first, as API v3's sort=date, has them too, the other way round, and a page of them
+	oldest := func(params string) []string {
+		req := httptest.NewRequest("GET", "http://"+site.SiteDB.Subdomain+".ns.localhost/api/v3/treatments?sort=date&"+params+"&token="+site.PwdNSToken, nil)
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+		var page struct {
+			Result []struct {
+				Identifier string `json:"identifier"`
+			} `json:"result"`
+		}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &page), rr.Body.String())
+		list := []string{}
+		for _, e := range page.Result {
+			list = append(list, e.Identifier)
+		}
+		return list
+	}
+	ascending := []string{}
+	for _, treatment := range slices.Backward(found) {
+		ascending = append(ascending, treatment["_id"].(string))
+	}
+	require.Equal(t, ascending, oldest("limit=100"))
+	require.Equal(t, ascending[:2], oldest("limit=2"))
+	require.Equal(t, ascending[2:4], oldest("limit=2&skip=2"))
+
 	// A server that does not delete rows reads only rows
 	cfg.RetentionDeleteRows = false
 	require.Len(t, treatments(all), 1)

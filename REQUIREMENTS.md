@@ -2674,7 +2674,7 @@ days: insulin doses, food intakes, temp basals, temp targets, activities, notes 
 If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the `treatments` of the days older than
 `RETENTION_HOT_DAYS` from the days' cold events.
 
-- A search of `treatments`, newest first, gives the made treatments with the treatments that are rows, in order
+- A search of `treatments`, newest first or oldest first, gives the made treatments with the treatments that are rows, in order
   of date. `count` and `skip` page through them as one list.
 - A made treatment has the `_id`, `eventType`, `created_at`, `enteredBy` and notes it had, and what its events
   kept (example: `carbs`, `insulin`, `duration`, `targetTop`, `targetBottom`, `reason`).
