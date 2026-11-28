@@ -1,6 +1,7 @@
 package controlapi
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -56,11 +57,15 @@ func POSTAccountEmail(controlDB *db.ControlDB, cfg *config.ServerConfig) http.Ha
 		case herr != nil:
 		case !mail.Address(email):
 			herr = apiutils.ErrBadBodyWithHint(i18n.NewError("errors.site.email_bad"))
-		case accountEmailLinks.Wait(owner) > 0:
-			herr = apiutils.ErrRateLimitExceeded(int(accountEmailLinks.Wait(owner).Seconds()) + 1)
 		}
 		if herr != nil {
 			herr.Write(acceptType, w)
+			return
+		}
+		// The hour is taken before the email is kept and sent, so requests at once keep and send one email
+		wait, notSent := accountEmailLinks.Claim(owner)
+		if wait > 0 {
+			apiutils.ErrRateLimitExceeded(int(wait.Seconds())+1).Write(acceptType, w)
 			return
 		}
 
@@ -70,15 +75,18 @@ func POSTAccountEmail(controlDB *db.ControlDB, cfg *config.ServerConfig) http.Ha
 			err = controlDB.Queries.UpdateControlIdentityEmail(r.Context(), controldb.UpdateControlIdentityEmailParams{ID: identity.ID, EmailEnc: &emailEnc})
 		}
 		if err != nil {
+			notSent()
 			slog.ErrorContext(r.Context(), "cannot keep a control admin's email", "error", err)
 			apiutils.ErrInternalServerError.Write(acceptType, w)
 			return
 		}
 		link := controlOrigin(cfg) + "/account/email/verify?id=" + owner + "&key=" + key
-		err = mail.New(cfg.ResendAPIKey, cfg.ResendFrom, cfg.ResendAPIURL).Send(r.Context(), email, i18n.T(r.Context(), "control.account.email.verify_subject"),
+		// A client that goes away does not stop its email, so it cannot drop requests to send emails that do not count
+		err = mail.New(cfg.ResendAPIKey, cfg.ResendFrom, cfg.ResendAPIURL).Send(context.WithoutCancel(r.Context()), email, i18n.T(r.Context(), "control.account.email.verify_subject"),
 			i18n.T(r.Context(), "control.account.email.verify_text", i18n.Data{"Name": identity.Name, "Control": controlOrigin(cfg), "Link": link}))
 		if err != nil {
 			// The address is not logged. The email stays, not verified, and the link can be sent again at once.
+			notSent()
 			slog.ErrorContext(r.Context(), "cannot send a control admin's verification email", "error", err)
 			apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.email_not_sent")).Write(acceptType, w)
 			return

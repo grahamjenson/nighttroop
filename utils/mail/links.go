@@ -51,6 +51,28 @@ func (l *Links) Wait(owner string) time.Duration {
 	return max(0, l.every-time.Since(last.sentAt))
 }
 
+// Claim takes owner's turn to be sent a link, before the email is sent and in one step, so requests at once send one
+// email. If wait is not 0, owner is sent none for that long. If it is 0, send the email and keep its link with Sent,
+// or call notSent if the email was not sent, which puts back what was there, so another can be sent at once.
+func (l *Links) Claim(owner string) (wait time.Duration, notSent func()) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+	before, sent := l.byOwner[owner]
+	if wait = l.every - time.Since(before.sentAt); sent && wait > 0 {
+		return wait, nil
+	}
+	l.byOwner[owner] = link{sentAt: time.Now()}
+	return 0, func() {
+		l.lock.Lock()
+		defer l.lock.Unlock()
+		if sent {
+			l.byOwner[owner] = before
+		} else {
+			delete(l.byOwner, owner)
+		}
+	}
+}
+
 // Key is a new link's key, as it goes in the link
 func Key() string {
 	key := make([]byte, 32)

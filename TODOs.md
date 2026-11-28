@@ -31,9 +31,12 @@
     1. P4: Sent Emails should be able to identify the site by the subject line referencing it in
 
 1. Security
-    1. P2: A verification email's wait of an hour is checked before the email is sent, and kept after it
-       (`mail.Links`: `Wait`, then `Sent`), so requests at once each send an email, each to its own address, from a
-       site's or a control admin's Account: take the hour before the send, as control's email to a site does
+    1. P4: Control's email to a site is sent with its request's context, and an email that was not sent does not
+       count, so an admin's client that drops its request while Resend takes the email may send a site more than one
+       a day: send it with a context the client cannot cancel, as a verification email is
+    1. P4: A password recovery email's wait of an hour is checked and kept in two steps (`POSTRecover`: `Wait`, then
+       `Sent`), so requests at once may each send one to the admin's verified email: take the hour with `Claim` of
+       `mail.Links`, and remove `Wait`
     1. P4: The FCM and APNs token caches (`utils/push`) keep an entry for each credential ID, and a deleted
        credential's stays, so a site that adds, tests and deletes push credentials grows them: keep them in an LRU
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and

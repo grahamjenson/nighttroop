@@ -2,6 +2,8 @@ package mail
 
 import (
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -55,4 +57,47 @@ func TestLinks(t *testing.T) {
 	_, ok = old.Take("a", key)
 	require.False(t, ok, "old")
 	require.Zero(t, old.Wait("a"))
+}
+
+// An owner's turn is taken in one step, before the email is sent: of the requests at once, one sends. An email that
+// was not sent gives the turn back, with the link that was there.
+func TestLinksClaim(t *testing.T) {
+	links, key := NewLinks(time.Hour, time.Minute), Key()
+	var start, done sync.WaitGroup
+	var took atomic.Int32
+	start.Add(1)
+	for range 50 {
+		done.Go(func() {
+			start.Wait()
+			if wait, _ := links.Claim("a"); wait == 0 {
+				took.Add(1)
+			}
+		})
+	}
+	start.Done()
+	done.Wait()
+	require.EqualValues(t, 1, took.Load(), "requests at once")
+
+	wait, notSent := links.Claim("b")
+	require.Zero(t, wait)
+	wait, again := links.Claim("b")
+	require.InDelta(t, time.Minute, wait, float64(time.Second), "an email being sent counts")
+	require.Nil(t, again)
+	notSent()
+	require.Zero(t, links.Wait("b"), "an email not sent does not count")
+
+	links.Sent("b", key, "enc")
+	wait, _ = links.Claim("b")
+	require.InDelta(t, time.Minute, wait, float64(time.Second), "an email sent counts")
+
+	old := NewLinks(time.Hour, 0)
+	old.Sent("a", key, "enc")
+	wait, notSent = old.Claim("a")
+	require.Zero(t, wait)
+	_, ok := old.Take("a", key)
+	require.False(t, ok, "the link before does not work while another is sent")
+	notSent()
+	emailEnc, ok := old.Take("a", key)
+	require.True(t, ok, "an email not sent puts back the link before")
+	require.Equal(t, "enc", emailEnc)
 }
