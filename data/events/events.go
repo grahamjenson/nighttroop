@@ -42,8 +42,6 @@ const (
 	SiteTimezoneChanged Name = "site_timezone_changed"
 	// SiteWeekStartChanged is a site's own week start day changing, its Attributes the day it was and is
 	SiteWeekStartChanged Name = "site_week_start_changed"
-	// SummariesRegenerationRequested is a site's admin asking for its summaries to be built again from its data
-	SummariesRegenerationRequested Name = "summaries_regeneration_requested"
 	// Alarm is an identity's alarms after a check that changed them, its Attributes an alarms.Checked
 	Alarm Name = "alarm"
 	// AlarmCreated, AlarmSnoozed and AlarmDeleted are an identity's alarm becoming active, being snoozed, and stopping
@@ -68,7 +66,7 @@ const (
 
 // Persisted are the events kept in the logs DB. A model change is not, as the site's DB row is its record.
 var Persisted = []Name{SiteCreated, SiteDisabled, SiteEnabled, SiteDeleted, SiteArchived, SiteHydrated, SiteTruncated, SiteEmailed, SiteDBMadeEmpty, SiteDBUploaded, SiteVersionRestored, SiteDBMissing, SitesBackedUp,
-	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, SummariesRegenerationRequested, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, SiteDBDownloadedByControl, ResourceHigh, ResourceRecovered}
+	SiteAdminRecovered, IdentityCredentialsChanged, ConnectorTurnedOff, ConnectorBackfilled, ConnectorRecordsAdded, SiteTimezoneChanged, SiteWeekStartChanged, AlarmCreated, AlarmSnoozed, AlarmDeleted, SignedIn, SignInFailed, SignedInByControl, SiteDBDownloadedByControl, ResourceHigh, ResourceRecovered}
 
 // PersistedNames are the persisted events' names, to pick from
 func PersistedNames() []string {

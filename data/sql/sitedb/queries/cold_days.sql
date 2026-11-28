@@ -166,3 +166,40 @@ AND id NOT IN (SELECT profile_switch_id FROM event_groups WHERE profile_switch_i
 AND NOT (duration_minutes > 0 AND profile_switches.occurred_at + duration_minutes * 60000 >= sqlc.arg('Before'))
 AND NOT (duration_minutes = 0 AND profile_switches.occurred_at >= (SELECT COALESCE(MAX(newest.occurred_at), 0) FROM profile_switches AS newest
     WHERE newest.duration_minutes = 0 AND newest.deleted_at IS NULL AND newest.occurred_at < sqlc.arg('Before')));
+
+-- name: MarkColdDaysStale :exec
+-- A record of the day was deleted for good, or moved to another day, which leaves no row that says the day changed:
+-- its cold days are marked, by a time written of 0, to be packaged again from its rows
+UPDATE cold_days SET updated_at = 0 WHERE date = sqlc.arg('Date');
+
+-- name: StaleColdDays :many
+-- The dates from From that are marked to be packaged again
+SELECT DISTINCT date FROM cold_days WHERE updated_at = 0 AND date >= sqlc.arg('FromDate') ORDER BY date LIMIT 5000;
+
+-- name: ClearStaleColdDays :exec
+-- A run that packaged the marked days again clears the mark of a cold day it did not write, as one of a series the
+-- day no longer has a value of
+UPDATE cold_days SET updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE updated_at = 0 AND date >= sqlc.arg('FromDate');
+
+-- name: SummaryDataWrittenSince :many
+-- When the data a day's summary is built from, which a report reads from the day's cold days, that was written, changed or deleted after Since, and happened before
+-- Before, happened, by the 15 minutes each is in, as every timezone's midnight starts one. The + keeps SQLite on
+-- updated_at's index, as few rows are written since, while nearly all happened before
+SELECT DISTINCT CAST(written.occurred_at / 900000 * 900000 AS INTEGER) AS occurred_at FROM (
+    SELECT glucose_readings.occurred_at FROM glucose_readings
+        WHERE glucose_readings.updated_at > @since AND +glucose_readings.occurred_at < @before
+    UNION ALL SELECT insulin_doses.occurred_at FROM insulin_doses
+        WHERE insulin_doses.updated_at > @since AND +insulin_doses.occurred_at < @before
+    UNION ALL SELECT food_intakes.occurred_at FROM food_intakes
+        WHERE food_intakes.updated_at > @since AND +food_intakes.occurred_at < @before
+    UNION ALL SELECT temp_basals.occurred_at FROM temp_basals
+        WHERE temp_basals.updated_at > @since AND +temp_basals.occurred_at < @before
+    UNION ALL SELECT temp_targets.occurred_at FROM temp_targets
+        WHERE temp_targets.updated_at > @since AND +temp_targets.occurred_at < @before
+    UNION ALL SELECT profile_switches.occurred_at FROM profile_switches
+        WHERE profile_switches.updated_at > @since AND +profile_switches.occurred_at < @before
+    UNION ALL SELECT event_groups.occurred_at FROM event_groups
+        WHERE event_groups.updated_at > @since AND +event_groups.occurred_at < @before
+    UNION ALL SELECT device_reports.occurred_at FROM device_reports
+        WHERE device_reports.updated_at > @since AND +device_reports.occurred_at < @before
+) AS written;

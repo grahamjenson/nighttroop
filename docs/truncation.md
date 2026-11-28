@@ -1,6 +1,7 @@
 # Truncating old data: a proposal
 
 **Note:** `docs/retention.md` is a newer proposal that replaces the tiers of this one with one general system. Read it first.
+The summaries (`summary_period`, the freeze, **Regenerate summaries**) that this page describes are removed.
 
 **Status:** proposal, for comment. Nothing is built beyond what "Today" says. The numbers (ages, resolutions, sizes)
 are starting points to argue about, not decisions.

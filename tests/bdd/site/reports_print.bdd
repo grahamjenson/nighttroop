@@ -12,10 +12,6 @@ CLICK #site--settings--virtual-connector--backfill
 RUN_BACKGROUND_JOBS
 CLICK #site--settings--virtual-connector--backfill
 RUN_BACKGROUND_JOBS
-GOTO /reports
-CLICK #site--summaries--regenerate
-ASSERT_TEXT_VISIBLE Regenerating summaries
-RUN_BACKGROUND_JOBS
 
 // The Summaries report opens the printable report in a tab of its own, with none of the site's header
 GOTO /reports

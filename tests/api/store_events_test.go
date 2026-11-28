@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,15 +15,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/retention"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/livedb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server"
-	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/utils/alarms"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
-	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
@@ -166,25 +166,35 @@ func TestSettingsEventsStreamToTheirIdentityAlone(t *testing.T) {
 	require.Contains(t, data, `"timezone":"Europe/Paris"`)
 }
 
-// A day a record moved away from, through the site API, or was deleted from for good, through the Nightscout API, is
-// marked stale in the site's DB as it is written, so its summary is built again after a restart too
+// A day a record may have moved away from, through the site API, or was deleted from for good, through the Nightscout
+// API, has no row that says it changed. Its cold days are marked stale as it is written, and the next run packages them again.
 func TestMovesAndPermanentDeletesMarkTheirDayStale(t *testing.T) {
 	s := newEventsSite(t)
 	ctx, now := t.Context(), time.Now()
 	day := now.AddDate(0, 0, -3)
+	date := day.UTC().Format(time.DateOnly)
 	q := s.site.SiteDB.Queries()
-	stale := func() []int64 {
-		starts, err := q.StaleSummaryDays(ctx)
+	stale := func() []string {
+		dates, err := q.StaleColdDays(ctx, sitedb.StaleColdDaysParams{})
 		require.NoError(t, err)
-		return starts
+		return dates
 	}
-	build := func() {
-		_, model, err := s.controlDB.GetSite(ctx, s.site.SiteDB.Subdomain)
+	// bolus is the insulin of the day's boluses in its cold day, after the site is packaged, which clears the marks
+	bolus := func() float64 {
+		_, err := s.controlDB.TruncateSite(ctx, s.site.SiteDB.Subdomain)
 		require.NoError(t, err)
-		siteContext := &httputils.SiteContext{SiteID: s.site.SiteDB.Subdomain, ControlDB: s.controlDB, SiteDB: s.site.SiteDB, SiteModel: model}
-		require.NoError(t, sitedata.RebuildSummaryDays(ctx, q, siteContext, []time.Time{day}, now))
-		require.NoError(t, q.ClearStaleSummaries(ctx, sitedb.ClearStaleSummariesParams{Before: new(time.Now().UnixMilli())}))
 		require.Empty(t, stale())
+		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "insulin_bolus", Date: date})
+		require.NoError(t, err)
+		values, err := retention.UnpackGrid(row.Body)
+		require.NoError(t, err)
+		total := 0.0
+		for _, value := range values {
+			if !math.IsNaN(value) {
+				total += value
+			}
+		}
+		return total
 	}
 
 	resp := s.request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/data/insulin", fmt.Sprintf(`{"dose": 4, "occurred_at": %d}`, day.UnixMilli()))
@@ -195,15 +205,24 @@ func TestMovesAndPermanentDeletesMarkTheirDayStale(t *testing.T) {
 		} `json:"result"`
 	}
 	require.NoError(t, json.NewDecoder(resp.Body).Decode(&created))
-	build()
+	require.Equal(t, 4.0, bolus())
 	resp = s.request(consts.FIRST_PWD_NAME, consts.IdentityRoleDevicePWDPhone, http.MethodPost, "/data/insulin/"+created.Result.ID, fmt.Sprintf(`{"dose": 4, "occurred_at": %d}`, day.AddDate(0, 0, -1).UnixMilli()))
 	require.Equal(t, http.StatusOK, resp.StatusCode)
-	require.Len(t, stale(), 1, "the day it moved from")
+	require.Equal(t, []string{date}, stale(), "the day of a record changed through the site API, which it may move from")
+	require.Equal(t, 4.0, bolus(), "which is packaged again, and the mark cleared")
 
 	_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "deleted-for-good", Mgdl: 120, ReadingType: "sgv", OccurredAt: day.UnixMilli(), CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
-	build()
+	bolus()
+	glucose := func() []byte {
+		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "glucose", Date: date})
+		require.NoError(t, err)
+		return row.Body
+	}
+	with := glucose()
 	status, _, _ := testutils.JSONRequest[any](t, s.router, http.MethodDelete, "http://"+s.site.SiteDB.Subdomain+".ns.localhost/api/v1/entries/deleted-for-good?permanent=true&token="+s.site.PwdNSToken, nil)
 	require.Equal(t, http.StatusOK, status)
-	require.Len(t, stale(), 1, "the day it was deleted from")
+	require.Equal(t, []string{date}, stale(), "the day it was deleted from")
+	bolus()
+	require.NotEqual(t, with, glucose(), "which is packaged again without it")
 }

@@ -653,8 +653,7 @@ func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB
 // clear, as those before were cleared by an earlier run; a day covers a server down for a while
 const truncateLooksBack = 24 * time.Hour
 
-// DeviceReportsKeptFor is how long a device report is kept at all, so how long a day's summary can be built with all
-// the data it is built from
+// DeviceReportsKeptFor is how long a device report is kept at all
 const DeviceReportsKeptFor = 30 * 24 * time.Hour
 
 // ThinParams are ThinOldDeviceReports's, for the reports written since since, at now, both in ms, with utils/thin's

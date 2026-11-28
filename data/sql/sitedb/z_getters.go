@@ -1991,36 +1991,6 @@ func (m *ProfileSwitchesVw) SetCreatedByIdentityName(v *string) {
 	m.CreatedByIdentityName = v
 }
 
-// GetDate returns the Date value.
-func (m SummaryPeriod) GetDate() string {
-	return m.Date
-}
-
-// GetTimezone returns the Timezone value.
-func (m SummaryPeriod) GetTimezone() string {
-	return m.Timezone
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m SummaryPeriod) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated SummaryPeriod.
-func (m *SummaryPeriod) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetUpdatedAt returns the UpdatedAt value.
-func (m SummaryPeriod) GetUpdatedAt() int64 {
-	return m.UpdatedAt
-}
-
-// SetUpdatedAt sets the UpdatedAt value and returns the updated SummaryPeriod.
-func (m *SummaryPeriod) SetUpdatedAt(v int64) {
-	m.UpdatedAt = v
-}
-
 // GetID returns the ID value.
 func (m TempBasal) GetID() string {
 	return m.ID
@@ -2503,6 +2473,11 @@ func (m *ColdDaysPageParams) SetLimit(v int64) {
 
 // GetDate returns the Date value.
 func (m GetColdDayParams) GetDate() string {
+	return m.Date
+}
+
+// GetDate returns the Date value.
+func (m MarkColdDaysStaleParams) GetDate() string {
 	return m.Date
 }
 
@@ -5614,30 +5589,5 @@ func (m UpdateProfilePresetParams) GetID() string {
 // SetID sets the ID value and returns the updated UpdateProfilePresetParams.
 func (m *UpdateProfilePresetParams) SetID(v string) {
 	m.ID = v
-}
-
-// GetDate returns the Date value.
-func (m GetSummaryPeriodParams) GetDate() string {
-	return m.Date
-}
-
-// GetDate returns the Date value.
-func (m HardDeleteSummaryPeriodParams) GetDate() string {
-	return m.Date
-}
-
-// SetLimit sets the Limit value and returns the updated SearchSummaryPeriodsParams.
-func (m *SearchSummaryPeriodsParams) SetLimit(v int64) {
-	m.Limit = v
-}
-
-// GetDate returns the Date value.
-func (m UpsertSummaryPeriodParams) GetDate() string {
-	return m.Date
-}
-
-// GetTimezone returns the Timezone value.
-func (m UpsertSummaryPeriodParams) GetTimezone() string {
-	return m.Timezone
 }
 

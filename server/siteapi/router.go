@@ -66,7 +66,6 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		// The reports open on the kept summaries, as tables of their numbers, where an admin can have them built again
 		r.Get("/reports", sitecollections.SummariesReportHandler)
 		r.Get("/reports/summaries", sitecollections.SummariesReportHandler)
-		r.Post("/reports/summaries/regenerate", sitecollections.RegenerateSummariesHandler)
 		// The AGP report is of a day, week, fortnight or month, the week with yesterday in it at first
 		r.Get("/reports/agp", sitecollections.PeriodReportHandler(site_reports_templ.Report))
 		r.Get("/reports/agp/{id}", sitecollections.PeriodReportHandler(site_reports_templ.Report))

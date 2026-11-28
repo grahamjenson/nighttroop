@@ -490,11 +490,7 @@ func PeriodReportHandler(page func(p *sitemodels.SiteSummaryPeriod, days []*site
 			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
-		component := page(report.Period, report.Days, report.Previous)
-		if report.OutOfDate {
-			component = templ.Join(site_reports_templ.OutOfDate(), component)
-		}
-		WriteResponse(w, r, siteContext, http.StatusOK, nil, component, true)
+		WriteResponse(w, r, siteContext, http.StatusOK, nil, page(report.Period, report.Days, report.Previous), true)
 	}
 }
 
@@ -508,11 +504,7 @@ func periodReport(r *http.Request, siteContext *httputils.SiteContext, id string
 	if herr != nil {
 		return nil, herr
 	}
-	outOfDate, err := sitedata.SummariesOutOfDate(r.Context(), siteContext.SiteDB.Queries(), siteContext, append(rows, row), now)
-	if err != nil {
-		slog.ErrorContext(r.Context(), "Cannot tell whether the report's summaries are out of date", "error", err)
-	}
-	report := &site_reports_templ.PeriodReport{Period: sitemodels.SummaryPeriodFromDB(row, siteContext), Days: days, OutOfDate: outOfDate}
+	report := &site_reports_templ.PeriodReport{Period: sitemodels.SummaryPeriodFromDB(row, siteContext), Days: days}
 	before := row.Period + "-" + time.UnixMilli(row.StartAt).In(siteContext.GetSiteTimezone()).AddDate(0, 0, -1).Format(time.DateOnly)
 	// A period before with no data has nothing to compare with, though some of its numbers, as its time CGM active,
 	// are 0 rather than missing
@@ -606,29 +598,7 @@ func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		summaries[period] = models
 	}
-	admin := can.IdentityRegenerateSummaries(siteContext.IdentityModel.Role)
-	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.SummariesReport(first, summaries, admin), true)
-}
-
-// RegenerateSummariesHandler asks for the site's summaries to be built again from its data, which a background job
-// does, as a year of them takes a while. Only its admins can, and asking again before it runs asks once. As each build
-// reads a year of the site's data, it shares the site's few downloads a minute, so asking again once it ran cannot keep
-// the server building.
-func RegenerateSummariesHandler(w http.ResponseWriter, r *http.Request) {
-	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), can.ActionSearch)
-	if siteContext == nil {
-		return
-	}
-	if !can.IdentityRegenerateSummaries(siteContext.IdentityModel.Role) {
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
-		return
-	}
-	if allowed, wait := httputils.WithinRateLimitAll(siteContext.Config.RateLimiters.SiteDownloadLimiter(siteContext.SiteID)); !allowed {
-		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(wait))
-		return
-	}
-	siteContext.ControlDB.Logs.SummariesRegenerationRequestedEvent(r.Context(), siteContext.SiteID, siteContext.IdentityModel.Name)
-	WriteResponse(w, r, siteContext, http.StatusAccepted, map[string]bool{"regenerating": true}, site_reports_templ.SummariesRegenerating(), false)
+	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.SummariesReport(first, summaries), true)
 }
 
 func GettingStartedHandler(w http.ResponseWriter, r *http.Request) {

@@ -56,25 +56,23 @@ var signInChecks = map[string]func(consts.IdentityRole) bool{
 // Columns: site_admin.go and site_report.go
 //   - administer: IdentityAdministerSite
 //   - siteSettings: IdentityReadSiteSettings
-//   - regenerate: IdentityRegenerateSummaries
 //   - allPush: IdentitySeeAllPushRegistrations
 //   - resetOthers: IdentityResetOthersCredentials
 //   - onlyReport: IdentityOnlySeeReport
 const siteMatrix = `
-role               administer  siteSettings  regenerate  allPush  resetOthers  onlyReport
-admin              yes         yes           yes         yes      yes          no
-user               no          no            no          no       no           no
-user_readonly      no          no            no          no       no           no
-clinician          no          no            no          no       no           yes
-device_pwd_phone   no          no            no          no       no           no
-device_read        no          no            no          no       no           no
-device_read_write  no          no            no          no       no           no
+role               administer  siteSettings  allPush  resetOthers  onlyReport
+admin              yes         yes           yes      yes          no
+user               no          no            no       no           no
+user_readonly      no          no            no       no           no
+clinician          no          no            no       no           yes
+device_pwd_phone   no          no            no       no           no
+device_read        no          no            no       no           no
+device_read_write  no          no            no       no           no
 `
 
 var siteChecks = map[string]func(consts.IdentityRole) bool{
 	"administer":   IdentityAdministerSite,
 	"siteSettings": IdentityReadSiteSettings,
-	"regenerate":   IdentityRegenerateSummaries,
 	"allPush":      IdentitySeeAllPushRegistrations,
 	"resetOthers":  IdentityResetOthersCredentials,
 	"onlyReport":   IdentityOnlySeeReport,

@@ -193,9 +193,7 @@ If `RETENTION_DELETE_ROWS` is `true`, a run deletes the treatments and events ol
 
 - The rows deleted: `event_groups`, `insulin_doses`, `food_intakes`, `temp_basals`, `temp_targets`, `activities`,
   `notification_events`, `profile_switches`.
-- The site's data pages show only rows. Reports show old days from the summaries, which are frozen after 30 days.
-- **Warning:** Do not set `RETENTION_HOT_DAYS` below `31` with `RETENTION_DELETE_ROWS`. A summary that is not
-  frozen is built again from rows, and loses the deleted ones. Step 5 removes this limit.
+- The site's data pages show only rows. Reports read old days from their cold days.
 
 ### What is in force when a day starts
 
@@ -395,7 +393,7 @@ Each step is one PR, and the site works after each one.
 | 5a | A summary day built from the series of its cold days (`coldSummaryDaily`), for a day in any timezone | None yet | **Built** |
 | 5b | Reports (AGP, time in range, daily dose) read the days built from series; a week or a month is built when read | Reports | **Built** |
 | 5b2 | The Summaries page lists days, weeks and months built when read | The Summaries page | **Built** |
-| 5c | **Remove the summaries:** the `summary_period` table, the freeze, the stale marks, the builds | | |
+| 5c | **Remove the summaries:** the `summary_period` table, the freeze, the builds, **Regenerate summaries**. The stale marks are of cold days | Reports | **Built** |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
 
@@ -417,8 +415,12 @@ Each field of `summary_period` can be built from cold days:
 | Finger prick count | The day's events |
 
 - An AGP of 90 days reads 90 small rows. It needs no stored AGP.
-- **To remove:** the `summary_period` table, `frozen_at` and the stale marks, the builds for a new timezone or
-  week start, **Regenerate summaries**, and most of `background/summary_daily`.
+- **Removed:** the `summary_period` table, `frozen_at`, the builds for a new timezone or week start, **Regenerate
+  summaries**, `background/summary_daily`, and `summaries_checked_at` of a site.
+- **The stale mark is of cold days.** A record deleted for good, or moved to another day, leaves no row that says
+  its day changed. The write sets `updated_at` of the day's cold days to 0. A report builds such a day from rows.
+  The next run packages it again, and clears the mark. No row is deleted on a marked cold day, as the delete
+  rule needs a cold day written after the row.
 - **To keep:** the report maths (percentiles, bands). It reads series, not summary rows.
 - **Which days are built from cold days** (`builtSummaryDays`): a day that ended before the UTC day before today.
   A later day is built from rows.

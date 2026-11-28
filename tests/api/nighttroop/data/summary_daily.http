@@ -30,14 +30,13 @@ POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B {"eventType": "Carb Correction", "created_at": "{{ daytime -1 735 }}", "carbs": 30}
 ASSERT_STATUS 200
 
-// Creating a day builds it from that data: half its readings in range, its dose and carbs, and its glucose every 5
-// minutes from midnight, the noon reading 144 five minutes in
-NAME build_yesterday
-POST http://{{ site }}/data/summary-daily
+// A day is built from that data when it is read: half its readings in range, its dose and carbs, and its glucose
+// every 5 minutes from midnight, the noon reading 144 five minutes in
+NAME get_yesterday
+GET http://{{ site }}/data/summary-daily/{{ date -1 }}
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
-B {"date": "{{ date -1 }}"}
-ASSERT_STATUS 201
+ASSERT_STATUS 200
 ASSERT_EQUALS ".yesterday" "@result.date"
 ASSERT_EQUALS "UTC" "@result.timezone"
 ASSERT_EXISTS "@result.start"
@@ -89,42 +88,6 @@ ASSERT_EQUALS 50 "@result.items.0.yesterday.time_in_range"
 ASSERT_EQUALS 2 "@result.items.0.yesterday.total_daily_dose"
 ASSERT_EQUALS 0 "@result.items.0.today.time_in_range"
 
-// Only a day before today, and within a year, can be built
-NAME build_today_refused
-POST http://{{ site }}/data/summary-daily
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"date": "{{ date 0 }}"}
-ASSERT_STATUS 400
-
-NAME build_long_ago_refused
-POST http://{{ site }}/data/summary-daily
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"date": "{{ date -400 }}"}
-ASSERT_STATUS 400
-
-NAME build_not_a_date_refused
-POST http://{{ site }}/data/summary-daily
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"date": "yesterday"}
-ASSERT_STATUS 400
-
-// Deleting a day deletes the kept one. A day is built as it is read, so it is still read.
-NAME delete_summary_day
-DELETE http://{{ site }}/data/summary-daily/{{ date -1 }}
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-ASSERT_STATUS 200
-
-NAME deleted_summary_day
-GET http://{{ site }}/data/summary-daily/{{ date -1 }}
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-ASSERT_STATUS 200
-ASSERT_EQUALS 50 "@result.time_in_range"
-
 // A day with no data is not found, and neither is what is not a date
 NAME no_data_summary_day
 GET http://{{ site }}/data/summary-daily/{{ date -20 }}
@@ -137,16 +100,6 @@ GET http://{{ site }}/data/summary-daily/yesterday
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
-
-// After midnight the background job builds yesterday, as it is not yet built
-RUN_BACKGROUND_JOBS
-
-NAME job_built_yesterday
-GET http://{{ site }}/data/summary-daily/{{ date -1 }}
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-ASSERT_STATUS 200
-ASSERT_EQUALS 2 "@result.total_daily_dose"
 
 // A day is built as it is read, so a new site timezone gives the days of its midnights at once
 NAME change_timezone
@@ -162,3 +115,17 @@ H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS "Pacific/Auckland" "@result.items.0.timezone"
+
+// A day cannot be made or deleted: it is only read
+NAME make_day_refused
+POST http://{{ site }}/data/summary-daily
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"date": "{{ date -1 }}"}
+ASSERT_STATUS 405
+
+NAME delete_day_refused
+DELETE http://{{ site }}/data/summary-daily/{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 405

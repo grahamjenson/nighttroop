@@ -64,10 +64,6 @@ CREATE INDEX profile_switches_occurred_at_idx ON profile_switches(occurred_at, d
 
 CREATE INDEX profile_switches_updated_at_idx ON profile_switches(updated_at);
 
-CREATE INDEX summary_period_end_at_idx ON summary_period(end_at);
-
-CREATE INDEX summary_period_stale_idx ON summary_period(period, start_at) WHERE stale_at IS NOT NULL;
-
 CREATE INDEX temp_basals_occurred_at_idx ON temp_basals(occurred_at, deleted_at);
 
 CREATE INDEX temp_basals_updated_at_idx ON temp_basals(updated_at);
@@ -555,53 +551,6 @@ CREATE TABLE profile_switches (
     updated_by_identity_name TEXT CHECK(length(updated_by_identity_name) <= 64),
     created_by_identity_id INTEGER,
     created_by_identity_name TEXT NOT NULL CHECK(length(created_by_identity_name) <= 64)
-) STRICT;
-
-CREATE TABLE summary_period (
-    period TEXT NOT NULL CHECK(period IN ('day', 'week', 'fortnight', 'month')),
-    date TEXT NOT NULL CHECK(length(date) = 10),
-    timezone TEXT NOT NULL CHECK(length(timezone) <= 64),
-    start_at INTEGER NOT NULL,
-    end_at INTEGER NOT NULL,
-
-    days INTEGER NOT NULL,
-    time_in_range REAL,
-    total_daily_dose REAL NOT NULL,
-    -- The basal of the daily dose, the basal in force through the day, and a period's the mean of its days', as its daily
-    -- dose is; the rest of the dose is boluses
-    total_daily_basal REAL NOT NULL DEFAULT 0 CHECK(total_daily_basal >= 0),
-    total_daily_carbs REAL NOT NULL,
-    glucose_mgdl_json TEXT NOT NULL CHECK(length(glucose_mgdl_json) <= 2048 AND json_valid(glucose_mgdl_json)),
-    agp_mgdl_json TEXT CHECK(agp_mgdl_json IS NULL OR (length(agp_mgdl_json) <= 8192 AND json_valid(agp_mgdl_json))),
-    -- A day's glucose readings, those from a meter, and its 5 minutes with a CGM reading, and a period's its days' added
-    -- up. Its glucose mean and standard deviation, in mg/dL, are of its readings, and a period's of all its days'. The
-    -- percent of its readings very low (below 54 mg/dL), low, high and very high (above 250 mg/dL), with time_in_range
-    -- adding up to 100, are a period's the means of its days', as time_in_range is.
-    glucose_readings INTEGER NOT NULL DEFAULT 0 CHECK(glucose_readings >= 0),
-    meter_readings INTEGER NOT NULL DEFAULT 0 CHECK(meter_readings >= 0),
-    cgm_slots INTEGER NOT NULL DEFAULT 0 CHECK(cgm_slots >= 0),
-    glucose_mean_mgdl REAL,
-    glucose_sd_mgdl REAL,
-    time_very_low REAL,
-    time_low REAL,
-    time_high REAL,
-    time_very_high REAL,
-    -- The loop's IOB (total, basal and treatment) and COB every 5 minutes from midnight, as glucose is: a day's newest
-    -- loop device report in each 5 minutes, null when there was none, and a week's or month's the mean of its days'
-    loop_iob_json TEXT NOT NULL CHECK(length(loop_iob_json) <= 4096 AND json_valid(loop_iob_json)),
-    loop_iob_basal_json TEXT NOT NULL CHECK(length(loop_iob_basal_json) <= 4096 AND json_valid(loop_iob_basal_json)),
-    loop_iob_treatment_json TEXT NOT NULL CHECK(length(loop_iob_treatment_json) <= 4096 AND json_valid(loop_iob_treatment_json)),
-    loop_cob_json TEXT NOT NULL CHECK(length(loop_cob_json) <= 4096 AND json_valid(loop_cob_json)),
-    -- When it was marked to be built again, as a record in it was deleted or moved to another day, so it is built again
-    -- after a restart too; null while it is up to date
-    stale_at INTEGER,
-    -- When it was frozen: ended over a month ago, and built while it had all the data it is built from. A frozen one is
-    -- never built again, marked stale or deleted, as its data may no longer all be there.
-    frozen_at INTEGER,
-
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    updated_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER)),
-    PRIMARY KEY (period, date)
 ) STRICT;
 
 CREATE TABLE temp_basals (

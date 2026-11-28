@@ -11,10 +11,8 @@ import (
 	"nighttroop.t1d.nz/background/connectors"
 	"nighttroop.t1d.nz/background/cron"
 	"nighttroop.t1d.nz/background/liteq"
-	"nighttroop.t1d.nz/background/onevent"
 	"nighttroop.t1d.nz/background/site_banners"
 	"nighttroop.t1d.nz/background/summarise_jobs"
-	"nighttroop.t1d.nz/background/summary_daily"
 	"nighttroop.t1d.nz/background/trim_logs"
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/utils/config"
@@ -61,10 +59,6 @@ func NewBackGroundManager(ctx context.Context, controlDB *db.ControlDB, config *
 
 	// Watch the server's CPU, memory and disk, warning the control site when one gets high
 	check_resources.SetupCron(cron, config, controlDB)
-
-	// Build each site's yesterday soon after its midnight, and its last week again when its timezone changes
-	summaryDaily := summary_daily.SetupCron(cron, config.Events, controlDB)
-	consumers = append(consumers, onevent.Listen(config.Events, queue, summaryDaily.RebuildOnSettingsChange(), summaryDaily.RebuildOnRequest())...)
 
 	// Connector Jobs
 	connectorJobManager.SetupCron(cron, queue)

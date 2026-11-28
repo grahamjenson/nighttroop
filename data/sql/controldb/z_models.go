@@ -80,26 +80,25 @@ type ServerSetting struct {
 }
 
 type Site struct {
-	ID                 string
-	BackupKeyHash      string
-	CreatedAt          int64
-	MaxDbSizeKbLimit   *int64
-	EstimatedDbSizeKb  *int64
-	AbuseScore         float64
-	TableSizesJson     types.TableSizes
-	LastSeenAt         *int64
-	LastWriteAt        *int64
-	SummariesCheckedAt *int64
-	BackedUpAt         *int64
-	BackupSizeKb       *int64
-	BackupUploadedAt   *int64
-	State              string
-	DisabledAt         *int64
-	ArchivedAt         *int64
-	DeletedAt          *int64
-	SettingsJson       string
-	EmailEnc           *string
-	EmailVerifiedAt    *int64
+	ID                string
+	BackupKeyHash     string
+	CreatedAt         int64
+	MaxDbSizeKbLimit  *int64
+	EstimatedDbSizeKb *int64
+	AbuseScore        float64
+	TableSizesJson    types.TableSizes
+	LastSeenAt        *int64
+	LastWriteAt       *int64
+	BackedUpAt        *int64
+	BackupSizeKb      *int64
+	BackupUploadedAt  *int64
+	State             string
+	DisabledAt        *int64
+	ArchivedAt        *int64
+	DeletedAt         *int64
+	SettingsJson      string
+	EmailEnc          *string
+	EmailVerifiedAt   *int64
 }
 
 type SiteBanner struct {

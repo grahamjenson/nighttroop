@@ -31,6 +31,37 @@ const (
 
 var AGPPercentiles = []float64{5, 25, 50, 75, 95}
 
+// SummaryRow is a day, week, fortnight or month of a site as it is built when it is read: what a report reads, and
+// what the site models of a day and of a period are made from. It is not kept. Period is "day", "week", "fortnight" or
+// "month", Date is its first date, and its glucose, AGP and loop lines are JSON of a value each 5 minutes from midnight.
+type SummaryRow struct {
+	Period               string
+	Date                 string
+	Timezone             string
+	StartAt              int64
+	EndAt                int64
+	Days                 int64
+	TimeInRange          *float64
+	TotalDailyDose       float64
+	TotalDailyBasal      float64
+	TotalDailyCarbs      float64
+	GlucoseMgdlJson      string
+	AgpMgdlJson          *string
+	GlucoseReadings      int64
+	MeterReadings        int64
+	CgmSlots             int64
+	GlucoseMeanMgdl      *float64
+	GlucoseSdMgdl        *float64
+	TimeVeryLow          *float64
+	TimeLow              *float64
+	TimeHigh             *float64
+	TimeVeryHigh         *float64
+	LoopIobJson          string
+	LoopIobBasalJson     string
+	LoopIobTreatmentJson string
+	LoopCobJson          string
+}
+
 // SiteSummaryDaily is a day of the site's data, from midnight in its timezone: its time in range, total daily dose and
 // carbs, and its glucose every 5 minutes from midnight, null when there was no reading, in the settings' units
 type SiteSummaryDaily struct {
@@ -45,16 +76,13 @@ type SiteSummaryDaily struct {
 	TotalCarbs      float64       `json:"total_carbs"`
 	Glucose         []*float64    `json:"glucose"`
 	Units           *consts.Units `json:"units"`
-	CreatedAt       int64         `json:"created_at"`
-	UpdatedAt       int64         `json:"updated_at"`
 }
 
 // SummaryDailyFromDB is the site model of a summary day, with its glucose in the site context's units
-func SummaryDailyFromDB(row *sitedb.SummaryPeriod, siteContext *httputils.SiteContext) *SiteSummaryDaily {
+func SummaryDailyFromDB(row *SummaryRow, siteContext *httputils.SiteContext) *SiteSummaryDaily {
 	units := ContextUnits(siteContext)
 	model := &SiteSummaryDaily{Date: row.Date, Timezone: row.Timezone, Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange,
-		TotalDailyDose: row.TotalDailyDose, TotalDailyBasal: row.TotalDailyBasal, TotalCarbs: row.TotalDailyCarbs, Glucose: []*float64{}, Units: units,
-		CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt}
+		TotalDailyDose: row.TotalDailyDose, TotalDailyBasal: row.TotalDailyBasal, TotalCarbs: row.TotalDailyCarbs, Glucose: []*float64{}, Units: units}
 	var mgdl []*int64
 	_ = json.Unmarshal([]byte(row.GlucoseMgdlJson), &mgdl)
 	for _, value := range mgdl {
@@ -80,14 +108,14 @@ type SummaryDay struct {
 }
 
 // SummaryDayFromPeriod is the summary's day of a summary day, or the mean day of a week or month
-func SummaryDayFromPeriod(row *sitedb.SummaryPeriod) SummaryDay {
+func SummaryDayFromPeriod(row *SummaryRow) SummaryDay {
 	return SummaryDay{Start: row.StartAt, End: row.EndAt, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose, Days: row.Days}
 }
 
 // NewSummaryDaily is the day named date from start until end, as it is at until, built from readings, doses, food,
 // loop reports and minutes that may run outside it: its glucose, then its insulin and carbs, then its loop IOB and COB.
-func NewSummaryDaily(date, timezone string, start, end, until int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, reports []*sitedb.DeviceReportsLoopBetweenRow, minutesSince int64, minutes []SummaryMinute) *sitedb.SummaryPeriod {
-	day := summaryDay{row: &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end},
+func NewSummaryDaily(date, timezone string, start, end, until int64, low, high float64, readings []*glucose.Clean, doses []*sitedb.InsulinDose, food []*sitedb.FoodIntake, reports []*sitedb.DeviceReportsLoopBetweenRow, minutesSince int64, minutes []SummaryMinute) *SummaryRow {
+	day := summaryDay{row: &SummaryRow{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end},
 		start: start, end: end, slots: (end - start + SummaryDailySlotMs - 1) / SummaryDailySlotMs}
 	day.addGlucoseStats(readings, low, high)
 	day.addGlucoseSlots(readings)
@@ -102,7 +130,7 @@ func NewSummaryDaily(date, timezone string, start, end, until int64, low, high f
 
 // summaryDay builds the row of a summary day from start until end, in its slots of SummaryDailySlotMs
 type summaryDay struct {
-	row        *sitedb.SummaryPeriod
+	row        *SummaryRow
 	start, end int64
 	slots      int64
 }
@@ -240,12 +268,12 @@ func rangeBand(mgdl, low, high float64) int {
 }
 
 // timeColumns are the summary's percents of its readings very low, low, in range, high and very high
-func timeColumns(row *sitedb.SummaryPeriod) [5]**float64 {
+func timeColumns(row *SummaryRow) [5]**float64 {
 	return [5]**float64{&row.TimeVeryLow, &row.TimeLow, &row.TimeInRange, &row.TimeHigh, &row.TimeVeryHigh}
 }
 
 // loopColumns are the summary's loop IOB, basal IOB, treatment IOB and COB JSON columns
-func loopColumns(row *sitedb.SummaryPeriod) [4]*string {
+func loopColumns(row *SummaryRow) [4]*string {
 	return [4]*string{&row.LoopIobJson, &row.LoopIobBasalJson, &row.LoopIobTreatmentJson, &row.LoopCobJson}
 }
 
@@ -257,8 +285,8 @@ func loopColumns(row *sitedb.SummaryPeriod) [4]*string {
 // its loop IOB and COB are,
 // rounded to 2 decimals. Its readings are all its days', with their mean and standard deviation. Its AGP is the
 // percentiles of their glucose in the 15 minutes around each 5 minutes from midnight.
-func NewSummaryPeriod(period, date, timezone string, start, end, until int64, days []*sitedb.SummaryPeriod) *sitedb.SummaryPeriod {
-	row := &sitedb.SummaryPeriod{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
+func NewSummaryPeriod(period, date, timezone string, start, end, until int64, days []*SummaryRow) *SummaryRow {
+	row := &SummaryRow{Period: period, Date: date, Timezone: timezone, StartAt: start, EndAt: end}
 	times, weighed, sum, squares := [5]float64{}, 0.0, 0.0, 0.0
 	// over is the totals of the days over by until, and all of every day with data
 	over, all := dailyTotals{}, dailyTotals{}
@@ -322,12 +350,12 @@ type dailyTotals struct {
 	days               int
 }
 
-func (t *dailyTotals) add(day *sitedb.SummaryPeriod) {
+func (t *dailyTotals) add(day *SummaryRow) {
 	t.dose, t.basal, t.carbs, t.days = t.dose+day.TotalDailyDose, t.basal+day.TotalDailyBasal, t.carbs+day.TotalDailyCarbs, t.days+1
 }
 
 // fill sets the row's daily dose, basal and carbs to the means of the days, if there are any
-func (t dailyTotals) fill(row *sitedb.SummaryPeriod) {
+func (t dailyTotals) fill(row *SummaryRow) {
 	if t.days == 0 {
 		return
 	}
@@ -436,8 +464,8 @@ type DaySeries struct {
 // with the meterReadings it had: what NewSummaryDaily builds, but its glucose is the CGM's value of each 5 minutes,
 // so its mean, standard deviation and times in each range are of those, each counting once, and a meter's reading is
 // not in its glucose line. The loop's treatment IOB is its IOB less its basal IOB.
-func NewSummaryDailyFromSeries(date, timezone string, start, end int64, low, high float64, series DaySeries, meterReadings int64) *sitedb.SummaryPeriod {
-	row := &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end, MeterReadings: meterReadings}
+func NewSummaryDailyFromSeries(date, timezone string, start, end int64, low, high float64, series DaySeries, meterReadings int64) *SummaryRow {
+	row := &SummaryRow{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end, MeterReadings: meterReadings}
 	slots := func(values []float64, decimals int, into *string) {
 		rounded := make([]*float64, len(values))
 		for i, value := range values {

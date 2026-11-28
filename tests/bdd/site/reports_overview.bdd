@@ -39,11 +39,6 @@ CLICK #site--settings--virtual-connector--backfill
 RUN_BACKGROUND_JOBS
 CLICK #site--settings--virtual-connector--backfill
 RUN_BACKGROUND_JOBS
-// Regenerating the summaries keeps each of those days
-GOTO /reports
-CLICK #site--summaries--regenerate
-ASSERT_TEXT_VISIBLE Regenerating summaries
-RUN_BACKGROUND_JOBS
 
 // The month to yesterday has the days' glucose: its average, GMI, standard deviation and coefficient of variation in
 // large type, the settings' units beside the average

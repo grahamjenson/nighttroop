@@ -63,10 +63,6 @@ func TestSiteDataLimits(t *testing.T) {
 		"cold_days": testutils.Recipe(func(i int) sitedb.UpsertColdDayParams {
 			return sitedb.UpsertColdDayParams{Kind: "glucose", Date: fmt.Sprintf("%010d", i), Body: []byte{1}}
 		}, q.UpsertColdDay),
-		"summary_period": testutils.Recipe(func(i int) sitedb.UpsertSummaryPeriodParams {
-			return sitedb.UpsertSummaryPeriodParams{Period: "day", Date: fmt.Sprintf("%010d", i), Timezone: "UTC", Days: 1,
-				GlucoseMgdlJson: "[]", LoopIobJson: "[]", LoopIobBasalJson: "[]", LoopIobTreatmentJson: "[]", LoopCobJson: "[]"}
-		}, testutils.NoResult(q.UpsertSummaryPeriod)),
 		"temp_basals": testutils.Recipe(func(i int) sitedb.CreateTempBasalParams {
 			return sitedb.CreateTempBasalParams{ID: id(i), DurationMinutes: 30, Rate: new(1.0), OccurredAt: now, CreatedByIdentityName: by}
 		}, func(ctx context.Context, p sitedb.CreateTempBasalParams) error {

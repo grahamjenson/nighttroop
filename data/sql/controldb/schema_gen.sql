@@ -234,8 +234,6 @@ CREATE TABLE sites (
     -- last_seen_at is default null because on creation they have not been seen, will be deleted quickly is not logged in sooner
     last_seen_at INTEGER,
     last_write_at INTEGER,
-    -- the site's data written up to then, by its updated_at, is in its summaries, as the stale rebuild last checked
-    summaries_checked_at INTEGER,
     -- when the site's backup copy was last made, and that copy's size on disk
     backed_up_at INTEGER,
     backup_size_kb INTEGER,
