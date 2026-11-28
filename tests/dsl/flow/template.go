@@ -111,6 +111,11 @@ func Render(input string, ctx map[string]any) (string, error) {
 				day, err := templateDayTime(ctx, days, 0)
 				return day.Format(time.DateOnly), err
 			},
+			// month is the first day of the month months before this one, in the site's timezone, e.g. month 3
+			"month": func(months int) (string, error) {
+				today, err := templateDayTime(ctx, 0, 0)
+				return time.Date(today.Year(), today.Month()-time.Month(months), 1, 0, 0, 0, 0, today.Location()).Format(time.DateOnly), err
+			},
 			"daytime": func(days, minutes int) (string, error) {
 				day, err := templateDayTime(ctx, days, minutes)
 				return day.Format(time.RFC3339), err

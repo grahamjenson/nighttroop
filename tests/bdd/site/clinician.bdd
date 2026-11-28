@@ -36,9 +36,9 @@ INPUT #site--login--password {{ .doctor_password }}
 CLICK #site--login-button
 ASSERT_NEW_URL
 ASSERT_PATH /
-// The report is long, so its last page is waited for before its pages are counted
-ASSERT_VISIBLE #site--print>section:nth-of-type(8)>footer
-ASSERT_COUNT #site--print > section 8
+// The report is long, so its last page is waited for. Only this month has data, so only it has pages.
+ASSERT_VISIBLE #site--print>section:last-of-type>footer
+ASSERT_VISIBLE #site--print--overview-{{ month 0 }}
 ASSERT_VISIBLE #site--print>section:nth-of-type(1) #site--overview--mean >> text=/^\d+\.\d$/
 ASSERT_NOT_VISIBLE #site--nav--reports
 ASSERT_NOT_VISIBLE #site--settings-menu
@@ -49,9 +49,9 @@ SCREENSHOT clinician_report
 // Any other page opens the report instead, so the clinician cannot see the data or manage the account
 GOTO {{ .site_url }}/data/glucose
 ASSERT_PATH /
-// The report is long, so its last page is waited for before its pages are counted
-ASSERT_VISIBLE #site--print>section:nth-of-type(8)>footer
-ASSERT_COUNT #site--print > section 8
+// The report is long, so its last page is waited for. Only this month has data, so only it has pages.
+ASSERT_VISIBLE #site--print>section:last-of-type>footer
+ASSERT_VISIBLE #site--print--overview-{{ month 0 }}
 GOTO {{ .site_url }}/settings/account
 ASSERT_PATH /
 GOTO {{ .site_url }}/reports/agp
