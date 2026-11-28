@@ -507,6 +507,9 @@ func (c Collection[NS, DM]) keyDuplicate(q *sitedb.Queries, ctx context.Context,
 func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.SiteContext, identifier string, query nsquery.Query) (nsutils.Document, *nsutils.HTTPError) {
 	m := c.db
 	dbModel, err := m.GetModel(siteContext.SiteDB.Queries(), ctx, identifier, true)
+	if cold, ok := any(m).(coldSearcher[DM]); ok && (err == sql.ErrNoRows || err == nil && dbModel == nil) {
+		dbModel, err = cold.ColdModel(siteContext.SiteDB.Queries(), ctx, siteContext, identifier, false)
+	}
 	if err == sql.ErrNoRows {
 		return nil, nsutils.ErrNotFound
 	}
@@ -551,6 +554,9 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 // coldSearcher is a collection that can search its packaged days whose rows are deleted (see docs/retention.md)
 type coldSearcher[DM any] interface {
 	SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*DM, bool, error)
+	// ColdModel is the record a packaged day's identifier names, deleted from its day too when clear, or
+	// sql.ErrNoRows when there is none
+	ColdModel(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, identifier string, clear bool) (*DM, error)
 }
 
 // History finds what changed in updated_at's index, then reads each by its primary key, so a page starts from since
@@ -676,6 +682,16 @@ func (c Collection[NS, DM]) Delete(ctx context.Context, siteContext *httputils.S
 	// Read first, so a missing record is not found and the change can say what was deleted.
 	// A permanent delete can remove a record already soft deleted.
 	deleted, err := m.GetModel(q, ctx, identifier, permanent)
+	if cold, ok := any(m).(coldSearcher[DM]); ok && (err == sql.ErrNoRows || err == nil && deleted == nil) {
+		// A record made from a cold day is deleted from the cold day, as it has no row
+		if deleted, err = cold.ColdModel(q, ctx, siteContext, identifier, true); err == nil && deleted != nil {
+			if httpErr := c.commit(ctx, tx, "delete"); httpErr != nil {
+				return httpErr
+			}
+			siteContext.PublishModelChange(events.Deleted, deleted)
+			return nil
+		}
+	}
 	if err == sql.ErrNoRows || (err == nil && deleted == nil) {
 		// One deleted already is gone rather than not found, which API v3 answers as done, as Nightscout does, since
 		// AAPS deletes a treatment again after a follower's delete reaches it

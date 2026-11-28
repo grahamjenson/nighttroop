@@ -2,6 +2,7 @@ package nscollections
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"math"
 	"slices"
@@ -106,4 +107,16 @@ func (c EntriesCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context
 	merged := append(rows, cold...)
 	slices.SortStableFunc(merged, func(a, b *sitedb.GlucoseReading) int { return int(min(max(b.OccurredAt-a.OccurredAt, -1), 1)) })
 	return merged[min(int(query.Skip), len(merged)):min(want, len(merged))], true, nil
+}
+
+// ColdModel is the reading a packaged day's identifier names, made from its cold day, where the server deletes rows.
+// With clear its step of the day is cleared, as a delete of it.
+func (c EntriesCollection) ColdModel(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, identifier string, clear bool) (*sitedb.GlucoseReading, error) {
+	if siteContext.Config == nil || !siteContext.Config.RetentionDeleteRows {
+		return nil, sql.ErrNoRows
+	}
+	if clear {
+		return db.ClearColdGlucoseReading(ctx, q, identifier)
+	}
+	return db.ColdGlucoseReading(ctx, q, identifier)
 }

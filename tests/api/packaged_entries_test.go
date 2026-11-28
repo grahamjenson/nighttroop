@@ -111,9 +111,30 @@ func TestEntriesOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	require.Equal(t, []string{"meter"}, ids(entries(url.Values{"count": {"100"}, "find[type]": {"mbg"}})))
 	require.Empty(t, entries(url.Values{"count": {"100"}, "find[device]": {"nighttroop"}}))
 
+	// A made reading is read by its ID, and deleted by it: its step of the cold day is cleared, so it is in no search
+	// and is not found again. An ID of a step with no reading is not found.
+	ns := site.SiteDB.Subdomain + ".ns.localhost"
+	one := "/api/v1/entries/" + found[5].ID + "?token=" + site.PwdNSToken
+	status, got, _ := testutils.JSONRequest[[]entry](t, router, http.MethodGet, "http://"+ns+one, nil)
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, []entry{found[5]}, got)
+	status, _, _ = testutils.JSONRequest[any](t, router, http.MethodGet, "http://"+ns+"/api/v1/entries/"+fmt.Sprintf("%08xc01dc01dc01dc01d", old.Add(12*time.Hour).Unix())+"?token="+site.PwdNSToken, nil)
+	require.Equal(t, http.StatusNotFound, status)
+	status, _, _ = testutils.JSONRequest[any](t, router, http.MethodDelete, "http://"+ns+one, nil)
+	require.Equal(t, http.StatusOK, status)
+	status, _, _ = testutils.JSONRequest[any](t, router, http.MethodGet, "http://"+ns+one, nil)
+	require.Equal(t, http.StatusNotFound, status)
+	require.Equal(t, append(ids(found[:5]), ids(found[6:])...), ids(entries(all)))
+	// Packaged again, the day keeps the step clear
+	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	require.Equal(t, append(ids(found[:5]), ids(found[6:])...), ids(entries(all)))
+
 	// A server that does not delete rows reads only rows, as all of them are there
 	cfg.RetentionDeleteRows = false
 	require.Equal(t, []string{"recent2", "recent1", "recent0", "meter", "noted"}, ids(entries(all)))
+	status, _, _ = testutils.JSONRequest[any](t, router, http.MethodGet, "http://"+ns+"/api/v1/entries/"+found[6].ID+"?token="+site.PwdNSToken, nil)
+	require.Equal(t, http.StatusNotFound, status)
 }
 
 // A site's admin looks at what the site keeps of its old days: each cold day with what its bytes say they are, and one

@@ -305,7 +305,8 @@ API's search uses it (`SearchWithCold`):
 - A step that still has a row (a reading with a note) is given as the row, not made again.
 - A search by date, type or glucose, newest first, has made entries. A search by device, app, ID, or the time a
   record was written has rows only. So has a search sorted oldest first, or by `srvModified`.
-- A made entry cannot be read, changed or deleted by its `_id` (404). To do, with the delete of a step.
+- A made entry is read and deleted by its `_id`, which has its time. A delete clears its step of the cold day.
+  It cannot be changed. A made treatment has no time in its `_id`, so it is not read or deleted by it.
 
 **Built: `treatments`** (`treatments_cold.go`), by the same rules as `entries`:
 
@@ -383,7 +384,8 @@ Each step is one PR, and the site works after each one.
 | --- | --- | --- | --- |
 | 1 | `cold_days`, the versioned body, packaging of **glucose**, the delete rule | None | **Built** |
 | 2 | The reader of packaged glucose; the Nightscout API makes `entries` from packaged days | `entries` | **Built** |
-| 2b | The site's glucose page says that older readings are in Reports; a made entry by its `_id`; searches oldest first | Glucose page | |
+| 2b | A made entry is read and deleted by its `_id` | `entries` | **Built** |
+| 2c | The site's glucose page says that older readings are in Reports; searches oldest first | Glucose page | |
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
 | 4b | Events: the day's list | The Cold Days page | **Built** |

@@ -2647,7 +2647,11 @@ If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries`
 - Searches that have made entries: by `date`, by `type` (if `sgv` matches), by `sgv`.
 - Searches that have rows only: by `device`, app, `_id`, the time a record was written or changed; a search of
   deleted records; a search sorted oldest first or by `srvModified`; API v3 `history`.
-- A made entry is not found by its `_id` (404).
+- A made entry is read by its `_id`. If its 5-minute step has no glucose, the API gives 404.
+- A delete of a made entry by its `_id` clears its 5-minute step of the cold day. Then it is in no search and no
+  report, and its `_id` gives 404.
+- A made entry cannot be changed by its `_id`.
+- A made treatment is not read or deleted by its `_id` (404).
 - If `RETENTION_DELETE_ROWS` is not `true`, a search reads rows only.
 
 #### Delete of packaged treatments
