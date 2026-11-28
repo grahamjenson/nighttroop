@@ -1,6 +1,13 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_VISIBLE "Nighttroop"
 
+// A new site has only today, which has no readings, and says so rather than showing only the range
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--days li:last-child >> text=No readings
+ASSERT_NOT_VISIBLE #site--glucose--days li:last-child svg
+ASSERT_NOT_VISIBLE #site--glucose--days li:last-child [title="Time in range"]
+
 // Virtual connector writes its last 30 minutes, then a backfill the day before them (tests backfill a day)
 CLICK #site--settings-menu
 CLICK #site--nav--menu--connectors
@@ -14,7 +21,7 @@ CLICK #site--settings--virtual-connector--backfill
 ASSERT_TEXT_VISIBLE Backfilling Virtual
 RUN_BACKGROUND_JOBS
 
-// A new timezone, at the same midnight, builds the last 7 days again with the backfilled readings in them
+// A day is built as it is read, so a new timezone, at the same midnight, has the backfilled readings in its days
 GOTO /settings
 ASSERT_STATUS 200
 INPUT #site--settings--site--timezone Etc/UTC
@@ -22,30 +29,28 @@ CLICK #site--settings--site--save
 ASSERT_TEXT_VISIBLE Settings Saved
 RUN_BACKGROUND_JOBS
 
-// The readings page shows each day's glucose as a small graph, oldest first, ending with today so far from its
-// clean readings: the 7 days kept and today. The page is opened afresh, so no toasts cover them.
+// The readings page shows each day's glucose as a small graph, oldest first, from the first day with readings to
+// today so far: the backfilled day or two and today. The page is opened afresh, so no toasts cover them.
 GOTO /data/glucose?limit=10
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--glucose--days
-ASSERT_TEXT_VISIBLE Last 8 days
+ASSERT_VISIBLE #site--glucose--days >> text=/Last [23] days/
 ASSERT_VISIBLE #site--glucose--days li:last-child >> text=Today
 // Today and yesterday have readings drawn over the range, and their time in range
 ASSERT_DRAWN #site--glucose--days li:last-child svg rect >> nth=1
 ASSERT_DRAWN #site--glucose--days li >> nth=-2 >> svg rect >> nth=1
 ASSERT_VISIBLE #site--glucose--days li:last-child [title="Time in range"]
 ASSERT_NOT_VISIBLE #site--glucose--days li:last-child >> text=No readings
-// The first day has no readings, so it says so rather than showing only the range, and has no time in range
-ASSERT_VISIBLE #site--glucose--days li >> nth=0 >> text=No readings
-ASSERT_NOT_VISIBLE #site--glucose--days li >> nth=0 >> svg
-ASSERT_NOT_VISIBLE #site--glucose--days li >> nth=0 >> [title="Time in range"]
+// No day before the first with readings is shown
+ASSERT_NOT_VISIBLE #site--glucose--days >> text=No readings
 SCREENSHOT glucose_days
 
-// On a phone the days are two to a row, and a day with no readings still says so. The window is tall enough for the
-// whole page, so fitting it checks only its width.
+// On a phone the days are two to a row. The window is tall enough for the whole page, so fitting it checks only its
+// width.
 WINDOW 390x2000
 GOTO /data/glucose?limit=10
 ASSERT_STATUS 200
-ASSERT_VISIBLE #site--glucose--days li >> nth=0 >> text=No readings
+ASSERT_VISIBLE #site--glucose--days li:last-child >> text=Today
 ASSERT_FITS
 SCREENSHOT glucose_days_phone
 WINDOW 1280x720

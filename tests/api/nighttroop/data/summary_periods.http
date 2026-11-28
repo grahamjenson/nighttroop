@@ -58,8 +58,8 @@ ASSERT_EQUALS 50 "@result.items.0.last_week.time_in_range"
 ASSERT_EQUALS 2 "@result.items.0.last_week.total_daily_dose"
 
 
-// A new week start day deletes the weeks and fortnights, which no longer follow it, so once the jobs run the kept ones
-// are gone: back on Monday, they are built from their days again, and the day was deleted
+// A week is built from its days as it is read, and a day from its data, so a new week start day, and the delete of
+// the kept day, lose nothing: back on Monday, last week is as it was
 NAME week_start_sunday
 POST http://{{ site }}/settings/site
 H Authorization: Bearer {{ jwt }}
@@ -81,6 +81,5 @@ GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_EQUALS null "@result.items.0.last_week.time_in_range"
-ASSERT_EQUALS 0 "@result.items.0.last_week.total_daily_dose"
-ASSERT_EQUALS null "@result.items.0.last_fortnight.time_in_range"
+ASSERT_EQUALS 50 "@result.items.0.last_week.time_in_range"
+ASSERT_EQUALS 2 "@result.items.0.last_week.total_daily_dose"

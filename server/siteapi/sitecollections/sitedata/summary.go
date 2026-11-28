@@ -2,8 +2,6 @@ package sitedata
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"log/slog"
 	"slices"
 	"time"
@@ -263,10 +261,7 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 		slog.ErrorContext(ctx, "Error building the summary's today", "error", err)
 		return apiutils.ErrInternalServerError
 	}
-	yesterdayRow, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: yesterday})
-	if errors.Is(err, sql.ErrNoRows) {
-		yesterdayRow, err = buildSummaryDaily(ctx, q, siteContext, yesterday, now.UnixMilli())
-	}
+	yesterdayRow, err := buildSummaryDaily(ctx, q, siteContext, yesterday, now.UnixMilli())
 	if err != nil {
 		slog.ErrorContext(ctx, "Error finding the summary's yesterday", "error", err)
 		return apiutils.ErrInternalServerError
@@ -274,7 +269,7 @@ func addDays(ctx context.Context, q *sitedb.Queries, summary *sitemodels.Summary
 	summary.Today, summary.Yesterday = sitemodels.SummaryDayFromPeriod(todayRow), sitemodels.SummaryDayFromPeriod(yesterdayRow)
 	summary.Today.End = now.UnixMilli()
 	for period, day := range map[string]*sitemodels.SummaryDay{"week": &summary.LastWeek, "fortnight": &summary.LastFortnight, "month": &summary.LastMonth} {
-		row, _, err := LastSummaryPeriod(ctx, q, siteContext, period, now)
+		row, err := builtSummaryPeriod(ctx, q, siteContext, period, LastPeriodStart(period, now, location, siteContext.GetSiteWeekStartDay()), now)
 		if err != nil {
 			slog.ErrorContext(ctx, "Error finding the summary's last "+period, "error", err)
 			return apiutils.ErrInternalServerError

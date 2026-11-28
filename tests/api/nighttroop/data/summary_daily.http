@@ -111,7 +111,7 @@ H Accept: application/json
 B {"date": "yesterday"}
 ASSERT_STATUS 400
 
-// Deleting a day removes it for good
+// Deleting a day deletes the kept one. A day is built as it is read, so it is still read.
 NAME delete_summary_day
 DELETE http://{{ site }}/data/summary-daily/{{ date -1 }}
 H Authorization: Bearer {{ jwt }}
@@ -120,6 +120,20 @@ ASSERT_STATUS 200
 
 NAME deleted_summary_day
 GET http://{{ site }}/data/summary-daily/{{ date -1 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 50 "@result.time_in_range"
+
+// A day with no data is not found, and neither is what is not a date
+NAME no_data_summary_day
+GET http://{{ site }}/data/summary-daily/{{ date -20 }}
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 404
+
+NAME not_a_date_summary_day
+GET http://{{ site }}/data/summary-daily/yesterday
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 404
@@ -134,7 +148,7 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_EQUALS 2 "@result.total_daily_dose"
 
-// A new site timezone deletes the days, from a midnight they no longer follow, and builds the last 7 days in it
+// A day is built as it is read, so a new site timezone gives the days of its midnights at once
 NAME change_timezone
 POST http://{{ site }}/settings/site
 H Authorization: Bearer {{ jwt }}
@@ -142,22 +156,9 @@ H Accept: application/json
 B {"timezone": "Pacific/Auckland"}
 ASSERT_STATUS 200
 
-// The change is an event a background job acts on, so the days are as they were until the jobs run
-NAME days_before_jobs
+NAME days_in_new_timezone
 GET http://{{ site }}/data/summary-daily
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@result.items"
-ASSERT_EQUALS "UTC" "@result.items.1.timezone"
-
-RUN_BACKGROUND_JOBS
-
-NAME rebuilt_week
-GET http://{{ site }}/data/summary-daily
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-ASSERT_STATUS 200
-ASSERT_LENGTH 8 "@result.items"
 ASSERT_EQUALS "Pacific/Auckland" "@result.items.0.timezone"
-ASSERT_EQUALS "Pacific/Auckland" "@result.items.7.timezone"

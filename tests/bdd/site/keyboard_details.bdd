@@ -1,5 +1,5 @@
-// The readings are all of today, so the last days card has yesterday, which the background jobs keep, and today: the
-// site is in a time zone where it is midday-ish, as readings across its midnight would put them in three days
+// The readings are all of today, so the days card has only today: the site is in a time zone where it is midday-ish,
+// as readings across its midnight would put them in two days
 MIDDAY_TIMEZONE
 INCLUDE steps/new_site_admin.steps
 
@@ -35,10 +35,7 @@ PRESS Escape
 ASSERT_NOT_VISIBLE #site--glucose--create--modal
 ASSERT_VISIBLE #site--glucose--add:focus
 
-// Tab goes on through the last days card's links, yesterday then today, then to the newest reading's row, outlined
-// as focused
-PRESS Tab
-ASSERT_VISIBLE #site--glucose--days li:first-child a:focus
+// Tab goes on through the days card's link, today, then to the newest reading's row, outlined as focused
 PRESS Tab
 ASSERT_VISIBLE #site--glucose--days li:last-child a:focus
 PRESS Tab

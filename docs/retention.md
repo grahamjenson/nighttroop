@@ -373,7 +373,8 @@ Each step is one PR, and the site works after each one.
 | 4d | The Nightscout API makes `treatments` from packaged days | `treatments` | **Built** |
 | 4e | The delete of treatment and event rows older than the hot days; a packaged day keeps what it has when its rows are gone | Data pages | |
 | 5a | A summary day built from the series of its cold days (`coldSummaryDaily`), for a day in any timezone | None yet | **Built** |
-| 5b | Reports (AGP, time in range, daily dose) read the days built from series; a week or a month is built when read | Reports | |
+| 5b | Reports (AGP, time in range, daily dose) read the days built from series; a week or a month is built when read | Reports | **Built** |
+| 5b2 | The Summaries page lists days, weeks and months built when read | The Summaries page | |
 | 5c | **Remove the summaries:** the `summary_period` table, the freeze, the stale marks, the builds | | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
@@ -399,6 +400,11 @@ Each field of `summary_period` can be built from cold days:
 - **To remove:** the `summary_period` table, `frozen_at` and the stale marks, the builds for a new timezone or
   week start, **Regenerate summaries**, and most of `background/summary_daily`.
 - **To keep:** the report maths (percentiles, bands). It reads series, not summary rows.
+- **Which days are built from cold days** (`builtSummaryDays`): a day that ended before the UTC day before today.
+  A later day is built from rows.
+- **A day is never behind its data.** A day with data written since the site was last backed up (less one hour),
+  which is when it was last packaged, is built from rows. One query finds those days.
+- If `RETENTION_DELETE_ROWS` is `true`, a day older than the hot days is always built from cold days.
 - A site's day is not a UTC day. `db.ColdSeries` reads a time range of a series from the UTC days it is in.
 - What a day built from series does not have: a meter reading in its glucose line. Its count is from the rows.
 - **A change a person can see:** the mean and SD are of the 5-minute values, not of each reading. A site with a

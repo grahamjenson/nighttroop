@@ -1,6 +1,7 @@
 package sitedata
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"errors"
@@ -46,27 +47,34 @@ func (s *SummaryDailyCollection) ToModel(row *sitedb.SummaryPeriod, siteContext 
 	return sitemodels.SummaryDailyFromDB(row, siteContext)
 }
 
+// GetRow is the day named by the id, built as it is read, or not found for a day with no data
 func (s *SummaryDailyCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.SummaryPeriod, error) {
-	return siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).GetSummaryPeriod, sitedb.GetSummaryPeriodParams{Period: "day", Date: id})
-}
-
-// SearchRows is the kept days, newest first, after today so far on the first page, built from its clean readings and
-// not kept, as it is not over
-func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.SummaryPeriod, error) {
 	q, err := collectionTx.Site()
 	if err != nil {
 		return nil, err
 	}
-	if query.Skip > 0 {
-		return q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", Limit: query.Limit, Skip: query.Skip - 1})
+	if _, err := time.Parse(time.DateOnly, id); err != nil {
+		return nil, sql.ErrNoRows
 	}
-	now := time.Now()
-	today, err := buildSummaryDaily(ctx, q, siteContext, LocalDate(now, siteContext.GetSiteTimezone(), 0), now.UnixMilli())
-	if err != nil {
+	days, err := builtSummaryDays(ctx, q, siteContext, id, id, time.Now(), false)
+	if err != nil || len(days) == 0 {
+		return nil, cmp.Or(err, sql.ErrNoRows)
+	}
+	return days[0], nil
+}
+
+// SearchRows is the days, newest first, from today so far back to the first with data: a page is the limit of dates,
+// back from the skip of them before today
+func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.SummaryPeriod, error) {
+	q, err := collectionTx.Site()
+	if err != nil || query.Skip >= summaryDailyMaxDays {
 		return nil, err
 	}
-	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", Limit: query.Limit - 1})
-	return append([]*sitedb.SummaryPeriod{today}, days...), err
+	now, location := time.Now(), siteContext.GetSiteTimezone()
+	last := int(-query.Skip)
+	days, err := builtSummaryDays(ctx, q, siteContext, LocalDate(now, location, last+1-int(min(query.Limit, summaryDailyMaxDays))), LocalDate(now, location, last), now, true)
+	slices.Reverse(days)
+	return days, err
 }
 
 // CreateRow builds the model's date again, a day before today in the site's timezone and no more than a year ago
@@ -108,25 +116,10 @@ func (s *SummaryDailyCollection) DeleteHTMXResponse(*sitemodels.SiteSummaryDaily
 	return templ.NopComponent
 }
 
-// SummaryDays are the site's kept days from the date first to last, as 2026-01-31, at most a year of them, oldest first
-func SummaryDays(ctx context.Context, q *sitedb.Queries, first, last string) ([]*sitedb.SummaryPeriod, error) {
-	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", DateGTE: &first, DateLTE: &last, Limit: summaryDailyMaxDays})
-	slices.Reverse(days)
-	return days, err
-}
-
-// SummaryDaysSoFar are the SummaryDays from first to last, and today so far after them when last is today, built from
-// its data up to now and not kept, as it is not over
+// SummaryDaysSoFar are the site's days with data from the date first to last, as 2026-01-31, oldest first, and today so
+// far after them when last is today (see builtSummaryDays)
 func SummaryDaysSoFar(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, last string, now time.Time) ([]*sitedb.SummaryPeriod, error) {
-	days, err := SummaryDays(ctx, q, first, last)
-	if err != nil || last != LocalDate(now, siteContext.GetSiteTimezone(), 0) {
-		return days, err
-	}
-	today, err := buildSummaryDaily(ctx, q, siteContext, last, now.UnixMilli())
-	if err != nil {
-		return nil, err
-	}
-	return append(days, today), nil
+	return builtSummaryDays(ctx, q, siteContext, first, last, now, false)
 }
 
 // LocalDate is the date days from now's, in location's time
@@ -318,6 +311,16 @@ func PeriodEnd(period string, start time.Time) time.Time {
 		return start.AddDate(0, 1, 0)
 	}
 	return start.AddDate(0, 0, map[string]int{"day": 1, "week": 7, "fortnight": 14}[period])
+}
+
+// builtSummaryPeriod is the site's week, fortnight or month from start, built as it is read from its days so far
+func builtSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, period string, start, now time.Time) (*sitedb.SummaryPeriod, error) {
+	date, end := start.Format(time.DateOnly), PeriodEnd(period, start)
+	days, err := builtSummaryDays(ctx, q, siteContext, date, end.AddDate(0, 0, -1).Format(time.DateOnly), now, false)
+	if err != nil {
+		return nil, err
+	}
+	return sitemodels.NewSummaryPeriod(period, date, start.Location().String(), start.UnixMilli(), end.UnixMilli(), now.UnixMilli(), days), nil
 }
 
 // LastSummaryPeriod is the site's last whole week, fortnight or month, and whether it was built, built from its days
