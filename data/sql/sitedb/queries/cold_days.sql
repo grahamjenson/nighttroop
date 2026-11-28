@@ -6,6 +6,11 @@ ON CONFLICT(kind, date) DO UPDATE SET body = excluded.body, updated_at = CAST(un
 -- name: GetColdDay :one
 SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date = sqlc.arg('Date');
 
+-- name: ColdDaysNewestFirst :many
+-- The days of one kind from From to To, as dates, the newest first, to read a time range a few days at a time
+SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date >= sqlc.arg('FromDate') AND date <= sqlc.arg('ToDate')
+ORDER BY date DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: HasColdDays :one
 -- Whether any day was ever sealed: a site with none has all its days sealed, not only those written lately
 SELECT EXISTS (SELECT 1 FROM cold_days);

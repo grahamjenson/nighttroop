@@ -524,18 +524,33 @@ func (c Collection[NS, DM]) Get(ctx context.Context, siteContext *httputils.Site
 }
 
 func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]nsutils.Document, *nsutils.HTTPError) {
-	search := c.db.SearchModels
-	if sortedIDs := c.sortedIDs(query.SortOrder); sortedIDs != nil {
+	search, q := c.db.SearchModels, siteContext.SiteDB.Queries()
+	sortedIDs := c.sortedIDs(query.SortOrder)
+	if sortedIDs != nil {
 		search = func(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error) {
 			return c.inOrder(q, ctx, query, sortedIDs)
 		}
 	}
-	models, err := search(siteContext.SiteDB.Queries(), ctx, query)
+	// A collection with sealed days whose rows are deleted searches those days too, when the newest is first
+	var models []*DM
+	var err error
+	searched := false
+	if cold, ok := any(c.db).(coldSearcher[DM]); ok && sortedIDs == nil {
+		models, searched, err = cold.SearchWithCold(q, ctx, siteContext, query)
+	}
+	if !searched {
+		models, err = search(q, ctx, query)
+	}
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to search the database", "error", err, "collection", c.db.Name())
 		return nil, nsutils.ErrInternal
 	}
 	return c.documents(models, siteContext), nil
+}
+
+// coldSearcher is a collection that can search its sealed days whose rows are deleted (see docs/retention.md)
+type coldSearcher[DM any] interface {
+	SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*DM, bool, error)
 }
 
 // History finds what changed in updated_at's index, then reads each by its primary key, so a page starts from since

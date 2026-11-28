@@ -105,6 +105,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearStaleSummariesStmt, err = db.PrepareContext(ctx, clearStaleSummaries); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearStaleSummaries: %w", err)
 	}
+	if q.coldDaysNewestFirstStmt, err = db.PrepareContext(ctx, coldDaysNewestFirst); err != nil {
+		return nil, fmt.Errorf("error preparing query ColdDaysNewestFirst: %w", err)
+	}
 	if q.countGeneralSettingsStmt, err = db.PrepareContext(ctx, countGeneralSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query CountGeneralSettings: %w", err)
 	}
@@ -762,6 +765,11 @@ func (q *Queries) Close() error {
 	if q.clearStaleSummariesStmt != nil {
 		if cerr := q.clearStaleSummariesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing clearStaleSummariesStmt: %w", cerr)
+		}
+	}
+	if q.coldDaysNewestFirstStmt != nil {
+		if cerr := q.coldDaysNewestFirstStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing coldDaysNewestFirstStmt: %w", cerr)
 		}
 	}
 	if q.countGeneralSettingsStmt != nil {
@@ -1695,6 +1703,7 @@ type Queries struct {
 	clearOldProfileSwitchJSONStmt               *sql.Stmt
 	clearOldPumpsStmt                           *sql.Stmt
 	clearStaleSummariesStmt                     *sql.Stmt
+	coldDaysNewestFirstStmt                     *sql.Stmt
 	countGeneralSettingsStmt                    *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
@@ -1901,6 +1910,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearOldProfileSwitchJSONStmt:               q.clearOldProfileSwitchJSONStmt,
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
 		clearStaleSummariesStmt:                     q.clearStaleSummariesStmt,
+		coldDaysNewestFirstStmt:                     q.coldDaysNewestFirstStmt,
 		countGeneralSettingsStmt:                    q.countGeneralSettingsStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,

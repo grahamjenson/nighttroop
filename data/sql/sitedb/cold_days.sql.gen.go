@@ -107,6 +107,53 @@ func (q *Queries) CGMReadingsOfDay(ctx context.Context, arg CGMReadingsOfDayPara
 	return items, nil
 }
 
+const coldDaysNewestFirst = `-- name: ColdDaysNewestFirst :many
+SELECT kind, date, body, created_at, updated_at FROM cold_days WHERE kind = ?1 AND date >= ?2 AND date <= ?3
+ORDER BY date DESC LIMIT CAST(?4 AS INTEGER)
+`
+
+type ColdDaysNewestFirstParams struct {
+	Kind     string
+	FromDate string
+	ToDate   string
+	Limit    int64
+}
+
+// The days of one kind from From to To, as dates, the newest first, to read a time range a few days at a time
+func (q *Queries) ColdDaysNewestFirst(ctx context.Context, arg ColdDaysNewestFirstParams) ([]*ColdDay, error) {
+	rows, err := q.query(ctx, q.coldDaysNewestFirstStmt, coldDaysNewestFirst,
+		arg.Kind,
+		arg.FromDate,
+		arg.ToDate,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ColdDay
+	for rows.Next() {
+		var i ColdDay
+		if err := rows.Scan(
+			&i.Kind,
+			&i.Date,
+			&i.Body,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const deleteSealedCGMReadings = `-- name: DeleteSealedCGMReadings :execrows
 DELETE FROM glucose_readings
 WHERE reading_type = 'sgv' AND glucose_readings.occurred_at < ?1 AND notes IS NULL
