@@ -215,3 +215,24 @@ func TestTruncateSitesShrinksOnlyADBWithManyFreePages(t *testing.T) {
 		})
 	}
 }
+
+// The job's usual truncate shrinks a site within its size limit too, when a tenth or more of its DB is free pages, as
+// after its old rows are deleted: nothing else gives its disk space back
+func TestTruncateSitesShrinksASiteWithinItsLimit(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	status := fmt.Sprintf(`{"note":%q}`, strings.Repeat("x", 4000))
+	// Device reports over 30 days old, which the usual truncate deletes
+	old := time.Now().Add(-40 * 24 * time.Hour).UnixMilli()
+	for i := range 400 {
+		_, err := q.CreateDeviceReport(ctx, sitedb.CreateDeviceReportParams{ID: fmt.Sprintf("report-%d", i), LoopStatusJson: &status,
+			OccurredAt: old + int64(i), CreatedByDeviceName: new("aaps"), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	require.NoError(t, controlDB.TruncateSites(ctx, controlDB.AllSites(), nil))
+	_, err := q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "report-0"})
+	require.ErrorIs(t, err, sql.ErrNoRows)
+	free, err := site.SiteDB.FreePart(ctx)
+	require.NoError(t, err)
+	require.Zero(t, free, "the pages of the deleted rows are given back")
+}

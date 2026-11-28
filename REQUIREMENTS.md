@@ -2729,6 +2729,8 @@ Before it backs up a site written to, at most every hour, the server truncates i
 - The control site's **Truncate** reads all statuses.
   - It also clears those older than a day (e.g. a device's newest from before it stopped reports for a day).
 - Then the job deletes loop settings that no profile or device status refers to, except each app's last seen.
+- After it packages and truncates a site, the job shrinks the site's DB if 10% or more of it is free pages. Thus
+  the disk space of deleted rows is given back. If less is free, the next records fill the free pages.
 
 #### Truncation of a site far over its size limit
 
@@ -2740,8 +2742,6 @@ device statuses harder:
 - It deletes device statuses over 7 days old.
 - It changes no other record. A reading, a treatment or an event is deleted only after its day is packaged (see
   Packaging of old days), so no data is lost.
-- If it changed records, the job shrinks the DB only if 10% or more of it is free pages. If less is free, the next
-  records fill the free pages.
 - The job measures the DB without its free pages, to find if the site is over 1.5 times its limit.
 - If it changed records, the job records the new DB size. A "Site truncated" event by "size limit" shows the size
   before and after.

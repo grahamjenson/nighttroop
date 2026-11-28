@@ -446,7 +446,7 @@ Each field of `summary_period` can be built from cold days:
 | The same site, if still over: delete readings and treatments over 90 days old | **Removed.** It lost data. A row is deleted only once its day is packaged, and that is for all sites. |
 | The **Truncate** button | **Removed from the site.** The control site's Truncate runs the job's truncate for one site now, for all its data. It does nothing that the job does not do. |
 | Delete loop settings no record refers to | **Kept**, in the job's truncate. |
-| Vacuum | **Keep.** |
+| Vacuum | **Kept**, for all sites: the job shrinks a DB when 10% or more of it is free pages. |
 | The size limit, writes refused at 4 times the limit, the abuse score | **Keep.** Packaging does not help a site that writes too many rows today. |
 
 
