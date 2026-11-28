@@ -47,3 +47,14 @@ func TestSiteTableSizes(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, tables)
 }
+
+// BenchmarkGetSite is the look up of its site that every request of a site makes, with the site's tables measured
+func BenchmarkGetSite(b *testing.B) {
+	_, controlDB, site := testutils.NewControlDBWithSite(b)
+	require.NoError(b, controlDB.RecordSiteTableSizes(b.Context(), controlDB.AllSites()))
+	b.ReportAllocs()
+	for b.Loop() {
+		_, _, err := controlDB.GetSite(b.Context(), site.SiteDB.Subdomain)
+		require.NoError(b, err)
+	}
+}
