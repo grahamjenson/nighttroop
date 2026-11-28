@@ -2680,7 +2680,9 @@ days: insulin doses, food intakes, temp basals, temp targets, activities, notes 
 
 - If `RETENTION_DELETE_ROWS` is `false`, the server deletes none.
 - Only a row whose day's `events` cold day was written after the row was last written is deleted.
-- Activities, temp targets and notes are deleted as soon as that cold day has them.
+- No row of the last `RETENTION_HOT_DAYS` days is deleted, of any table. Example: an activity of today stays a row.
+- Activities, temp targets and notes older than `RETENTION_HOT_DAYS` days are deleted with no 24-hour wait, when
+  that cold day has them.
   - A treatment with no event, such as a site change, or with only those events, is deleted at the same time.
   - If the day is packaged again, it keeps their events. A note that a person deleted is not brought back.
   - A temp target in force at midnight stays in force in the next day, after its row is deleted.

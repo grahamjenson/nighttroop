@@ -339,3 +339,38 @@ func TestADayWithTooManyEventsKeepsTheMostImportant(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, food)
 }
+
+// "At once" is without the wait for a day to settle, not before the hot days are over: an activity, a note, a temp
+// target and a site change of today, of 2 days ago, and of the last of the hot days all stay rows, however many times
+// the site is packaged, and only those older than the hot days go
+func TestEventsOfTheHotDaysAreNotDeleted(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	must := func(_ any, err error) { require.NoError(t, err) }
+	now := time.Now().UTC()
+	today := now.Truncate(24 * time.Hour)
+	ages := map[string]time.Time{"today": now.Add(-time.Minute), "recent": today.AddDate(0, 0, -2).Add(5 * time.Hour),
+		"hot": today.AddDate(0, 0, -cfg.RetentionHotDays+1).Add(5 * time.Hour), "old": today.AddDate(0, 0, -cfg.RetentionHotDays-5).Add(5 * time.Hour)}
+	for age, when := range ages {
+		at, by := when.UnixMilli(), "phone"
+		must(q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: "walk-" + age, ActivityType: "walk", OccurredAt: at, CreatedByIdentityName: by}))
+		must(q.CreateNotificationEvent(ctx, sitedb.CreateNotificationEventParams{ID: "note-" + age, Title: "Note", NotificationType: "note", OccurredAt: at, CreatedByIdentityName: by}))
+		must(q.CreateTempTarget(ctx, sitedb.CreateTempTargetParams{ID: "target-" + age, LowTargetMgdl: 140, HighTargetMgdl: 160, DurationMinutes: 30, OccurredAt: at, CreatedByIdentityName: by}))
+		must(q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "site-" + age, GroupType: "Site Change", OccurredAt: at, CreatedByIdentityName: by}))
+	}
+	for range 3 {
+		_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+	}
+	for age := range ages {
+		kept := age != "old"
+		_, err := q.GetActivity(ctx, sitedb.GetActivityParams{ID: "walk-" + age})
+		require.Equal(t, kept, err == nil, "the activity of %s", age)
+		_, err = q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: "note-" + age})
+		require.Equal(t, kept, err == nil, "the note of %s", age)
+		_, err = q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: "target-" + age})
+		require.Equal(t, kept, err == nil, "the temp target of %s", age)
+		_, err = q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: "site-" + age})
+		require.Equal(t, kept, err == nil, "the site change of %s", age)
+	}
+}
