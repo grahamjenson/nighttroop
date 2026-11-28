@@ -3,8 +3,9 @@
 ## Before Beta Testing
 
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
-    1. P1: Retention step 2b (`docs/retention.md`): the glucose page says older readings are in Reports; a made
-       entry can be read and deleted by its `_id`; a search oldest first has made entries
+    1. P1: Retention step 2c (`docs/retention.md`): the glucose page says older readings are in Reports; a search
+       oldest first has made entries
+    1. P3: A made treatment is not read or deleted by its `_id`: its `_id` does not say which day it is of
     1. P1: Retention step 6: hot days by size (remove most of the truncation)
     1. P2: A treatment written late for a day whose rows are deleted stays a row for ever: add it to the day's
        cold days and delete it

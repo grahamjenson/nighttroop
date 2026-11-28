@@ -2,6 +2,7 @@ package nscollections
 
 import (
 	"context"
+	"database/sql"
 	"slices"
 
 	"nighttroop.t1d.nz/data/db"
@@ -114,4 +115,10 @@ func (c TreatmentCollection) SearchWithCold(q *sitedb.Queries, ctx context.Conte
 		return int(min(max(b.EventGroup.OccurredAt-a.EventGroup.OccurredAt, -1), 1))
 	})
 	return merged[min(int(query.Skip), len(merged)):min(want, len(merged))], true, nil
+}
+
+// ColdModel is none: a treatment's identifier does not say which day it is of, so a made treatment is not read or
+// deleted by it
+func (c TreatmentCollection) ColdModel(*sitedb.Queries, context.Context, *httputils.SiteContext, string, bool) (*sitedb.EventGroupsBundle, error) {
+	return nil, sql.ErrNoRows
 }

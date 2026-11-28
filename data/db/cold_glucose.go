@@ -1,11 +1,15 @@
 package db
 
 import (
+	"cmp"
 	"context"
+	"database/sql"
 	"fmt"
 	"math"
 	"reflect"
 	"slices"
+	"strconv"
+	"strings"
 	"time"
 
 	"nighttroop.t1d.nz/data/retention"
@@ -120,4 +124,40 @@ func RowOf(table string, event map[string]any, into any) {
 			}
 		}
 	}
+}
+
+// ColdReadingAt is the time, in ms, of the reading a cold day's ID names, and whether id is one (see ColdReadingID)
+func ColdReadingAt(id string) (int64, bool) {
+	seconds, err := strconv.ParseInt(strings.TrimSuffix(id, coldIDSuffix), 16, 64)
+	return seconds * 1000, err == nil && len(id) == 8+len(coldIDSuffix) && strings.HasSuffix(id, coldIDSuffix)
+}
+
+// ColdGlucoseReading is the reading id names, made from its step of its cold day, or sql.ErrNoRows when id is not a
+// cold day's or the step has no value
+func ColdGlucoseReading(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.GlucoseReading, error) {
+	at, ok := ColdReadingAt(id)
+	if !ok {
+		return nil, sql.ErrNoRows
+	}
+	readings, err := ColdGlucoseReadings(ctx, q, at, at+1, 1, func(int64, float64) bool { return true })
+	if err != nil || len(readings) == 0 {
+		return nil, cmp.Or(err, sql.ErrNoRows)
+	}
+	return readings[0], nil
+}
+
+// ClearColdGlucoseReading deletes the reading id names from its cold day, by clearing its step, and is the reading it
+// was, or sql.ErrNoRows when there was none. A day packaged again keeps the step clear, as it has no row.
+func ClearColdGlucoseReading(ctx context.Context, q *sitedb.Queries, id string) (*sitedb.GlucoseReading, error) {
+	reading, err := ColdGlucoseReading(ctx, q, id)
+	if err != nil {
+		return nil, err
+	}
+	start := reading.OccurredAt - reading.OccurredAt%dayMs
+	values, err := ColdSeries(ctx, q, retention.Glucose, start, start+dayMs)
+	if err != nil {
+		return nil, err
+	}
+	values[(reading.OccurredAt-start)/retention.Glucose.Step.Milliseconds()] = math.NaN()
+	return reading, writeSeriesDay(ctx, q, retention.Glucose, time.UnixMilli(start).UTC().Format(time.DateOnly), values)
 }
