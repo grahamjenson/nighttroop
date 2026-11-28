@@ -161,7 +161,7 @@ func TestColdGlucoseReadings(t *testing.T) {
 	require.NoError(t, controlDB.PackageSite(ctx, site.SiteDB, 0, time.Now()))
 	every := func(int64, float64) bool { return true }
 	read := func(from, to time.Time, limit int, keep func(int64, float64) bool) []*sitedb.GlucoseReading {
-		readings, err := db.ColdGlucoseReadings(ctx, q, from.UnixMilli(), to.UnixMilli(), limit, keep)
+		readings, err := db.ColdGlucoseReadings(ctx, q, from.UnixMilli(), to.UnixMilli(), limit, false, keep)
 		require.NoError(t, err)
 		return readings
 	}
@@ -169,6 +169,17 @@ func TestColdGlucoseReadings(t *testing.T) {
 	// All of them, however many days that is, the newest first, each at the start of its step
 	all := read(first, today, 5000, every)
 	require.Len(t, all, 1500)
+	// The oldest first is the same readings the other way round, and a few of them are the oldest
+	oldest, err := db.ColdGlucoseReadings(ctx, q, first.UnixMilli(), today.UnixMilli(), 5000, true, every)
+	require.NoError(t, err)
+	require.Len(t, oldest, 1500)
+	require.Equal(t, all[len(all)-1].ID, oldest[0].ID)
+	require.Equal(t, all[0].ID, oldest[len(oldest)-1].ID)
+	few, err := db.ColdGlucoseReadings(ctx, q, first.Add(time.Minute).UnixMilli(), today.UnixMilli(), 7, true, every)
+	require.NoError(t, err)
+	require.Len(t, few, 7)
+	require.Equal(t, oldest[1].ID, few[0].ID)
+	require.Equal(t, oldest[7].ID, few[6].ID)
 	require.Equal(t, first.AddDate(0, 0, 499).Add(24*time.Hour-5*time.Minute).UnixMilli(), all[0].OccurredAt)
 	require.Equal(t, first.UnixMilli(), all[1499].OccurredAt)
 	require.True(t, slices.IsSortedFunc(all, func(a, b *sitedb.GlucoseReading) int { return int(b.OccurredAt - a.OccurredAt) }))

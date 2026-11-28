@@ -124,7 +124,7 @@ var keywords = map[string][]string{
 	"/reports/tdd":               {"site.nav.keywords.total_daily_dose"},
 	"/settings":                  {"site.nav.keywords.units", "mmol/L", "mg/dL", "site.nav.keywords.timezone", "site.nav.keywords.language", "site.nav.keywords.date_format", "site.nav.keywords.time_format", "site.nav.keywords.week_starts_on", "site.nav.keywords.number_format", "site.nav.keywords.password_totp", "site.nav.keywords.delete_site"},
 	"/cold-storage":              {"site.nav.keywords.cold_days", "site.nav.keywords.packaged_days"},
-	"/usage":                     {"site.nav.keywords.db_size", "site.nav.keywords.storage", "site.nav.keywords.truncate", "site.nav.keywords.download_data"},
+	"/usage":                     {"site.nav.keywords.db_size", "site.nav.keywords.storage", "site.nav.keywords.download_data"},
 	"/settings/alarms":           {"site.nav.keywords.low_alarm", "site.nav.keywords.urgent_low_alarm", "site.nav.keywords.predicted_low_alarm", "site.nav.keywords.high_alarm", "site.nav.keywords.urgent_high_alarm", "site.nav.keywords.fast_drop_alarm", "site.nav.keywords.fast_rise_alarm", "site.nav.keywords.no_data_alarm"},
 	"/settings/identities":       {"site.nav.keywords.admins", "site.nav.keywords.read_only", "site.nav.keywords.pwd_phone"},
 	"/settings/push-devices":     {"site.nav.keywords.phones"},

@@ -223,6 +223,53 @@ func (q *Queries) ColdDaysNewestFirst(ctx context.Context, arg ColdDaysNewestFir
 	return items, nil
 }
 
+const coldDaysOldestFirst = `-- name: ColdDaysOldestFirst :many
+SELECT kind, date, body, created_at, updated_at FROM cold_days WHERE kind = ?1 AND date >= ?2 AND date <= ?3
+ORDER BY date LIMIT CAST(?4 AS INTEGER)
+`
+
+type ColdDaysOldestFirstParams struct {
+	Kind     string
+	FromDate string
+	ToDate   string
+	Limit    int64
+}
+
+// The same days, the oldest first, for a search the oldest first
+func (q *Queries) ColdDaysOldestFirst(ctx context.Context, arg ColdDaysOldestFirstParams) ([]*ColdDay, error) {
+	rows, err := q.query(ctx, q.coldDaysOldestFirstStmt, coldDaysOldestFirst,
+		arg.Kind,
+		arg.FromDate,
+		arg.ToDate,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ColdDay
+	for rows.Next() {
+		var i ColdDay
+		if err := rows.Scan(
+			&i.Kind,
+			&i.Date,
+			&i.Body,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const coldDaysPage = `-- name: ColdDaysPage :many
 SELECT kind, date, body, created_at, updated_at FROM cold_days
 WHERE (CAST(?1 AS TEXT) IS NULL OR kind = ?1)

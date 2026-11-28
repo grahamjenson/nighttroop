@@ -303,8 +303,8 @@ API's search uses it (`SearchWithCold`):
 - A made entry is at the start of its 5-minute step. Its `_id` is the 8 hex digits of its time and
   `c01dc01dc01dc01d`: the shape of a Nightscout ID, and the same each time.
 - A step that still has a row (a reading with a note) is given as the row, not made again.
-- A search by date, type or glucose, newest first, has made entries. A search by device, app, ID, or the time a
-  record was written has rows only. So has a search sorted oldest first, or by `srvModified`.
+- A search by date, type or glucose, newest first or oldest first, has made entries. A search by device, app, ID,
+  or the time a record was written has rows only. So has a search sorted by `srvModified`.
 - A made entry is read and deleted by its `_id`, which has its time. A delete clears its step of the cold day.
   It cannot be changed. A made treatment has no time in its `_id`, so it is not read or deleted by it.
 
@@ -385,7 +385,8 @@ Each step is one PR, and the site works after each one.
 | 1 | `cold_days`, the versioned body, packaging of **glucose**, the delete rule | None | **Built** |
 | 2 | The reader of packaged glucose; the Nightscout API makes `entries` from packaged days | `entries` | **Built** |
 | 2b | A made entry is read and deleted by its `_id` | `entries` | **Built** |
-| 2c | The site's glucose page says that older readings are in Reports; searches oldest first | Glucose page | |
+| 2c | A search of `entries` oldest first has made entries | `entries` | **Built** |
+| 2d | The site's glucose page says that older readings are in Reports; a search of `treatments` oldest first | Glucose page | |
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
 | 4b | Events: the day's list | The Cold Storage page | **Built** |
@@ -441,8 +442,8 @@ Each field of `summary_period` can be built from cold days:
 | Device reports thinned (10 min, 20 min, hourly) and deleted after 30 days; `utils/thin` | **Remove.** Their numbers are series. Device reports get short hot days of their own (2 days). |
 | A site over 1.5 times its limit: clear old JSON, delete device reports over 7 days old | **Remove.** The site gets fewer hot days. |
 | The same site, if still over: delete readings and treatments over 90 days old | **Remove.** This loses data. Packaging does not. |
-| The **Truncate** button | **Keep.** It packages now, with the fewest hot days, and vacuums. It packages now already. |
-| Delete loop settings no record refers to | **Keep**, in the package run. |
+| The **Truncate** button | **Removed from the site.** The control site's Truncate runs the job's truncate for one site now, for all its data. It does nothing that the job does not do. |
+| Delete loop settings no record refers to | **Kept**, in the job's truncate. |
 | Vacuum | **Keep.** |
 | The size limit, writes refused at 4 times the limit, the abuse score | **Keep.** Packaging does not help a site that writes too many rows today. |
 

@@ -129,7 +129,6 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Get("/usage/cold-days/{kind}/{date}", func(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/cold-storage/"+url.PathEscape(chi.URLParam(r, "kind"))+"/"+url.PathEscape(chi.URLParam(r, "date")), http.StatusMovedPermanently)
 		})
-		r.Post("/usage/truncate", sitecollections.TruncateHandler)
 		r.Get("/usage/download", sitecollections.DownloadDataHandler)
 		r.Post("/settings/site/delete", sitecollections.DeleteSiteHandler)
 		r.Post("/logout", sitelogin.POSTLogoutHandler(config))

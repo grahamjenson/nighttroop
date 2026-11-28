@@ -318,19 +318,11 @@
         "responses": { "200": { "$ref": "#/components/responses/ColdDayResult" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
-    "/usage/truncate": {
-      "post": {
-        "operationId": "TruncateSite", "tags": ["Site"],
-        "summary": "Truncates the site's device statuses and old loop settings, and shrinks its DB; admins only",
-        "description": "Shares the site's few downloads a minute with GET /usage/download; over it, the reply is 429. The result's size_kb is the size after, and before_size_kb the size before.",
-        "responses": { "200": { "$ref": "#/components/responses/SiteUsageResult" }, "default": { "$ref": "#/components/responses/Error" } }
-      }
-    },
     "/usage/download": {
       "get": {
         "operationId": "DownloadSiteData", "tags": ["Site"],
         "summary": "A snapshot of the site's DB, as <site>-<date>.zip holding <site>-<date>.sqlite; admins only",
-        "description": "Shares the site's few downloads a minute with POST /usage/truncate; over it, the reply is 429. The zip is sent as it is made, so an error after it starts cuts it short.",
+        "description": "A site has only a few downloads a minute; over them, the reply is 429. The zip is sent as it is made, so an error after it starts cuts it short.",
         "responses": {
           "200": { "description": "The zip, as an attachment", "content": { "application/zip": { "schema": { "type": "string", "format": "binary" } } } },
           "default": { "$ref": "#/components/responses/Error" }
@@ -1092,11 +1084,10 @@
       "SiteUsage": {
         "type": "object",
         "description": "A site's storage, as its Usage page shows it",
-        "required": ["size_kb", "limit_kb", "before_size_kb", "tables"],
+        "required": ["size_kb", "limit_kb", "tables"],
         "properties": {
-          "size_kb": { "type": "integer", "format": "int64", "nullable": true, "description": "The DB size in KB; after a truncate, the size after it. Null when it was never measured." },
+          "size_kb": { "type": "integer", "format": "int64", "nullable": true, "description": "The DB size in KB, null when it was never measured" },
           "limit_kb": { "type": "integer", "format": "int64", "nullable": true, "description": "The DB size limit in KB, null when there is none" },
-          "before_size_kb": { "type": "integer", "format": "int64", "nullable": true, "description": "The DB size in KB before a truncate; null in GET /usage, or when it was never measured" },
           "tables": { "type": "array", "description": "The DB's tables as last measured, largest first; empty when they cannot be measured", "items": { "$ref": "#/components/schemas/SiteTable" } }
         }
       },

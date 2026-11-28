@@ -11,6 +11,11 @@ SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date = sqlc.arg('Date'
 SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date >= sqlc.arg('FromDate') AND date <= sqlc.arg('ToDate')
 ORDER BY date DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
+-- name: ColdDaysOldestFirst :many
+-- The same days, the oldest first, for a search the oldest first
+SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date >= sqlc.arg('FromDate') AND date <= sqlc.arg('ToDate')
+ORDER BY date LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: ColdDaysPage :many
 -- The cold days of Kind, after DateGT and before DateLT (each when given), the newest first, for the Cold Storage page
 SELECT * FROM cold_days

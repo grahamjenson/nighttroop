@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -110,6 +111,31 @@ func TestEntriesOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	// A search a made reading cannot match is of rows only: a meter's readings, or those of a device
 	require.Equal(t, []string{"meter"}, ids(entries(url.Values{"count": {"100"}, "find[type]": {"mbg"}})))
 	require.Empty(t, entries(url.Values{"count": {"100"}, "find[device]": {"nighttroop"}}))
+
+	// A search the oldest first, as API v3's sort=date, has them too: the old day's ten, then the two rows of it, then
+	// the recent day's, and a page of them
+	oldest := func(params string) []string {
+		req := httptest.NewRequest("GET", "http://"+site.SiteDB.Subdomain+".ns.localhost/api/v3/entries?sort=date&"+params+"&token="+site.PwdNSToken, nil)
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+		var page struct {
+			Result []struct {
+				Identifier string `json:"identifier"`
+			} `json:"result"`
+		}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &page), rr.Body.String())
+		list := []string{}
+		for _, e := range page.Result {
+			list = append(list, e.Identifier)
+		}
+		return list
+	}
+	ascending := slices.Clone(ids(found))
+	slices.Reverse(ascending)
+	require.Equal(t, ascending, oldest("limit=100"))
+	require.Equal(t, ascending[:4], oldest("limit=4"))
+	require.Equal(t, ascending[8:12], oldest("limit=4&skip=8"))
 
 	// A made reading is read by its ID, and deleted by it: its step of the cold day is cleared, so it is in no search
 	// and is not found again. An ID of a step with no reading is not found.

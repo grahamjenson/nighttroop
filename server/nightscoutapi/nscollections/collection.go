@@ -534,12 +534,12 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 			return c.inOrder(q, ctx, query, sortedIDs)
 		}
 	}
-	// A collection with packaged days whose rows are deleted searches those days too, when the newest is first
+	// A collection with packaged days whose rows are deleted searches those days too, by date
 	var models []*DM
 	var err error
 	searched := false
-	if cold, ok := any(c.db).(coldSearcher[DM]); ok && sortedIDs == nil {
-		models, searched, err = cold.SearchWithCold(q, ctx, siteContext, query)
+	if cold, ok := any(c.db).(coldSearcher[DM]); ok && (sortedIDs == nil || *query.SortOrder == nsquery.SortOccurredAtAsc) {
+		models, searched, err = cold.SearchWithCold(q, ctx, siteContext, query, search)
 	}
 	if !searched {
 		models, err = search(q, ctx, query)
@@ -553,7 +553,9 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 
 // coldSearcher is a collection that can search its packaged days whose rows are deleted (see docs/retention.md)
 type coldSearcher[DM any] interface {
-	SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*DM, bool, error)
+	// SearchWithCold is the search, by date, with the records of the packaged days, and whether it was one. rows
+	// searches the rows in the query's order.
+	SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query, rows func(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*DM, error)) ([]*DM, bool, error)
 	// ColdModel is the record a packaged day's identifier names, deleted from its day too when clear, or
 	// sql.ErrNoRows when there is none
 	ColdModel(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, identifier string, clear bool) (*DM, error)

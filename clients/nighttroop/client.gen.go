@@ -554,13 +554,10 @@ type SiteTable struct {
 
 // SiteUsage A site's storage, as its Usage page shows it
 type SiteUsage struct {
-	// BeforeSizeKb The DB size in KB before a truncate; null in GET /usage, or when it was never measured
-	BeforeSizeKb *int64 `json:"before_size_kb"`
-
 	// LimitKb The DB size limit in KB, null when there is none
 	LimitKb *int64 `json:"limit_kb"`
 
-	// SizeKb The DB size in KB; after a truncate, the size after it. Null when it was never measured.
+	// SizeKb The DB size in KB, null when it was never measured
 	SizeKb *int64 `json:"size_kb"`
 
 	// Tables The DB's tables as last measured, largest first; empty when they cannot be measured
@@ -2296,9 +2293,6 @@ type ClientInterface interface {
 	// DownloadSiteData request
 	DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// TruncateSite request
-	TruncateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// WelcomePasskeyBegin request
 	WelcomePasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -3570,18 +3564,6 @@ func (c *Client) GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*
 
 func (c *Client) DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDownloadSiteDataRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) TruncateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTruncateSiteRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -7712,33 +7694,6 @@ func NewDownloadSiteDataRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewTruncateSiteRequest generates requests for TruncateSite
-func NewTruncateSiteRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/usage/truncate")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewWelcomePasskeyBeginRequest generates requests for WelcomePasskeyBegin
 func NewWelcomePasskeyBeginRequest(server string) (*http.Request, error) {
 	var err error
@@ -8143,9 +8098,6 @@ type ClientWithResponsesInterface interface {
 
 	// DownloadSiteDataWithResponse request
 	DownloadSiteDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DownloadSiteDataResponse, error)
-
-	// TruncateSiteWithResponse request
-	TruncateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*TruncateSiteResponse, error)
 
 	// WelcomePasskeyBeginWithResponse request
 	WelcomePasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*WelcomePasskeyBeginResponse, error)
@@ -10065,29 +10017,6 @@ func (r DownloadSiteDataResponse) StatusCode() int {
 	return 0
 }
 
-type TruncateSiteResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *SiteUsageResult
-	JSONDefault  *Error
-}
-
-// Status returns HTTPResponse.Status
-func (r TruncateSiteResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r TruncateSiteResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type WelcomePasskeyBeginResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -11063,15 +10992,6 @@ func (c *ClientWithResponses) DownloadSiteDataWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseDownloadSiteDataResponse(rsp)
-}
-
-// TruncateSiteWithResponse request returning *TruncateSiteResponse
-func (c *ClientWithResponses) TruncateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*TruncateSiteResponse, error) {
-	rsp, err := c.TruncateSite(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseTruncateSiteResponse(rsp)
 }
 
 // WelcomePasskeyBeginWithResponse request returning *WelcomePasskeyBeginResponse
@@ -13800,39 +13720,6 @@ func ParseDownloadSiteDataResponse(rsp *http.Response) (*DownloadSiteDataRespons
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseTruncateSiteResponse parses an HTTP response from a TruncateSiteWithResponse call
-func ParseTruncateSiteResponse(rsp *http.Response) (*TruncateSiteResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &TruncateSiteResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SiteUsageResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
