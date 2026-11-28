@@ -1,8 +1,8 @@
 # Retention: hot rows and cold days
 
-**Status:** steps 1 to 4d are built, but the delete of treatment rows (4e). The server packages the CGM glucose of each day, what a loop's phone reports
+**Status:** steps 1 to 4e are built. The server packages the CGM glucose of each day, what a loop's phone reports
 (IOB, COB, reservoir, batteries), the treatments (basal rate, insulin, carbs), and the day's events into
-`cold_days`. The Nightscout API makes `entries` from packaged days. It deletes no row unless `RETENTION_DELETE_ROWS` is
+`cold_days`. The Nightscout API makes `entries` and `treatments` from packaged days. It deletes no row unless `RETENTION_DELETE_ROWS` is
 `true`. The other steps are the plan. See [Build order](#build-order).
 
 ## The problem, measured
@@ -173,7 +173,29 @@ A treatment and its `event_groups` row become one entry.
 - The columns of an event's treatment (`group_type`, `entered_by`) are added where the event has none of that
   name, and `group_id`, the treatment's own ID, which an app knows it by.
 - A day with more events than a cold day holds (16 KB packed, some thousands of events) is not packaged.
-- **Not yet:** the delete of event rows (4d). So a day's events are built from its rows alone.
+- A day's events are built from its rows alone. Thus a day whose rows are deleted is not packaged again.
+
+### The delete of treatments and events
+
+If `RETENTION_DELETE_ROWS` is `true`, a run deletes the treatments and events older than the hot days.
+
+| Rule | Why |
+|---|---|
+| A day's `events` cold day is written last, after its treatment series. | It is the mark that the day is packaged. |
+| A row is deleted only if its day's `events` cold day was written after the row was last written. | No row is deleted that its cold days do not have. |
+| A row is deleted only when that cold day is 24 hours old (`db.PackagedSettle`). | A backfill writes a day's rows over some runs. |
+| A day older than the hot days, with an `events` cold day 24 hours old, is not packaged again. | Its rows are not all there. |
+| A row written later for such a day stays a row. | The Nightscout API gives it with the day's made treatments. |
+| A treatment is deleted first, then each event that no treatment refers to. | An event of a treatment that stays, stays. |
+| The newest profile switch with no end, before the hot days, is kept. | The basal rate of the hot days is read from it. |
+| A profile switch with an end in the hot days is kept. | The same. |
+| A meter reading is kept. | It is an event, not a part of the glucose series. |
+
+- The rows deleted: `event_groups`, `insulin_doses`, `food_intakes`, `temp_basals`, `temp_targets`, `activities`,
+  `notification_events`, `profile_switches`.
+- The site's data pages show only rows. Reports show old days from the summaries, which are frozen after 30 days.
+- **Warning:** Do not set `RETENTION_HOT_DAYS` below `31` with `RETENTION_DELETE_ROWS`. A summary that is not
+  frozen is built again from rows, and loses the deleted ones. Step 5 removes this limit.
 
 ### What is in force when a day starts
 
@@ -236,7 +258,7 @@ Packaging runs for each site before its backup, where the truncation runs (`pack
   the temp basals, and an extended bolus split over its time and over midnight. `data/db` cannot import that
   package, so it sets `db.TreatmentDaySeries` when the server starts.
 - A day's treatment series are packaged when it ends, for the last 2 days, and again for a day with a treatment
-  written. They are built from the rows alone, as no treatment row is deleted yet.
+  written. They are built from the rows alone.
 - The phone's battery is the loop's phone's. A carer's phone reports its own battery, which is not packaged.
 
 ### Late data and edits
@@ -295,8 +317,6 @@ API's search uses it (`SearchWithCold`):
   insulin, `enteredBy`, duration) has rows only.
 - A loop's boluses and temp basals are not made: they are series, not events. To decide: make them from the
   series, one for each run of the same rate.
-- No treatment row is deleted yet (step 4e), so the API reads rows for all days, and a made treatment shows only
-  in a test that deletes rows.
 
 `devicestatus` of packaged days is not made.
 
@@ -371,13 +391,13 @@ Each step is one PR, and the site works after each one.
 | 4b | Events: the day's list | The Cold Days page | **Built** |
 | 4c | What is in force at the start of a day; a profile switch keeps its profile | The Cold Days page | **Built** |
 | 4d | The Nightscout API makes `treatments` from packaged days | `treatments` | **Built** |
-| 4e | The delete of treatment and event rows older than the hot days; a packaged day keeps what it has when its rows are gone | Data pages | |
+| 4e | The delete of treatment and event rows older than the hot days; a packaged day keeps what it has when its rows are gone | Data pages | **Built** |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
 
-`RETENTION_DELETE_ROWS` can now be `true` on staging: apps get the glucose of packaged days. The site's glucose page
-shows only rows, and Reports show old days from the summaries, as before. It becomes the default when each
+`RETENTION_DELETE_ROWS` can now be `true` on staging: apps get the glucose and the treatments of packaged days. The
+site's data pages show only rows, and Reports show old days from the summaries, as before. It becomes the default when each
 table's reader is built.
 
 ## What this takes the place of

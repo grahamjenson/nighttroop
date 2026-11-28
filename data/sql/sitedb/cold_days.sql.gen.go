@@ -211,6 +211,29 @@ func (q *Queries) ColdDaysPage(ctx context.Context, arg ColdDaysPageParams) ([]*
 	return items, nil
 }
 
+const deletePackagedActivities = `-- name: DeletePackagedActivities :execrows
+DELETE FROM activities
+WHERE activities.occurred_at < ?1
+AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(activities.occurred_at / 1000, 'unixepoch')
+    AND cold_days.updated_at >= activities.updated_at AND cold_days.updated_at <= ?2)
+AND id NOT IN (SELECT activity_id FROM event_groups WHERE activity_id IS NOT NULL)
+`
+
+type DeletePackagedActivitiesParams struct {
+	Before        int64
+	SettledBefore int64
+}
+
+// The activities from before Before whose day was packaged after they were last written, and not since SettledBefore, that
+// no treatment still refers to
+func (q *Queries) DeletePackagedActivities(ctx context.Context, arg DeletePackagedActivitiesParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedActivitiesStmt, deletePackagedActivities, arg.Before, arg.SettledBefore)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const deletePackagedCGMReadings = `-- name: DeletePackagedCGMReadings :execrows
 DELETE FROM glucose_readings
 WHERE reading_type = 'sgv' AND glucose_readings.occurred_at < ?1 AND notes IS NULL
@@ -227,6 +250,170 @@ type DeletePackagedCGMReadingsParams struct {
 // that its cold day does not have. One with a note, or that a treatment refers to, is kept: it is an event.
 func (q *Queries) DeletePackagedCGMReadings(ctx context.Context, arg DeletePackagedCGMReadingsParams) (int64, error) {
 	result, err := q.exec(ctx, q.deletePackagedCGMReadingsStmt, deletePackagedCGMReadings, arg.Before)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deletePackagedEventGroups = `-- name: DeletePackagedEventGroups :execrows
+DELETE FROM event_groups
+WHERE event_groups.occurred_at < ?1
+AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(event_groups.occurred_at / 1000, 'unixepoch')
+    AND cold_days.updated_at >= event_groups.updated_at AND cold_days.updated_at <= ?2)
+`
+
+type DeletePackagedEventGroupsParams struct {
+	Before        int64
+	SettledBefore int64
+}
+
+// The treatments from before Before whose day's events were packaged after they were last written, and not since
+// SettledBefore, so the day is as it will stay. A treatment goes before its events, which it refers to.
+func (q *Queries) DeletePackagedEventGroups(ctx context.Context, arg DeletePackagedEventGroupsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedEventGroupsStmt, deletePackagedEventGroups, arg.Before, arg.SettledBefore)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deletePackagedFoodIntakes = `-- name: DeletePackagedFoodIntakes :execrows
+DELETE FROM food_intakes
+WHERE food_intakes.occurred_at < ?1
+AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(food_intakes.occurred_at / 1000, 'unixepoch')
+    AND cold_days.updated_at >= food_intakes.updated_at AND cold_days.updated_at <= ?2)
+AND id NOT IN (SELECT food_intake_id FROM event_groups WHERE food_intake_id IS NOT NULL)
+`
+
+type DeletePackagedFoodIntakesParams struct {
+	Before        int64
+	SettledBefore int64
+}
+
+// The food intakes from before Before whose day was packaged after they were last written, and not since SettledBefore, that
+// no treatment still refers to
+func (q *Queries) DeletePackagedFoodIntakes(ctx context.Context, arg DeletePackagedFoodIntakesParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedFoodIntakesStmt, deletePackagedFoodIntakes, arg.Before, arg.SettledBefore)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deletePackagedInsulinDoses = `-- name: DeletePackagedInsulinDoses :execrows
+DELETE FROM insulin_doses
+WHERE insulin_doses.occurred_at < ?1
+AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(insulin_doses.occurred_at / 1000, 'unixepoch')
+    AND cold_days.updated_at >= insulin_doses.updated_at AND cold_days.updated_at <= ?2)
+AND id NOT IN (SELECT insulin_dose_id FROM event_groups WHERE insulin_dose_id IS NOT NULL)
+`
+
+type DeletePackagedInsulinDosesParams struct {
+	Before        int64
+	SettledBefore int64
+}
+
+// The insulin doses from before Before whose day was packaged after they were last written, and not since SettledBefore, that
+// no treatment still refers to
+func (q *Queries) DeletePackagedInsulinDoses(ctx context.Context, arg DeletePackagedInsulinDosesParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedInsulinDosesStmt, deletePackagedInsulinDoses, arg.Before, arg.SettledBefore)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deletePackagedNotificationEvents = `-- name: DeletePackagedNotificationEvents :execrows
+DELETE FROM notification_events
+WHERE notification_events.occurred_at < ?1
+AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(notification_events.occurred_at / 1000, 'unixepoch')
+    AND cold_days.updated_at >= notification_events.updated_at AND cold_days.updated_at <= ?2)
+AND id NOT IN (SELECT notification_event_id FROM event_groups WHERE notification_event_id IS NOT NULL)
+`
+
+type DeletePackagedNotificationEventsParams struct {
+	Before        int64
+	SettledBefore int64
+}
+
+// The notifications from before Before whose day was packaged after they were last written, and not since SettledBefore, that
+// no treatment still refers to
+func (q *Queries) DeletePackagedNotificationEvents(ctx context.Context, arg DeletePackagedNotificationEventsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedNotificationEventsStmt, deletePackagedNotificationEvents, arg.Before, arg.SettledBefore)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deletePackagedProfileSwitches = `-- name: DeletePackagedProfileSwitches :execrows
+DELETE FROM profile_switches
+WHERE profile_switches.occurred_at < ?1
+AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(profile_switches.occurred_at / 1000, 'unixepoch')
+    AND cold_days.updated_at >= profile_switches.updated_at AND cold_days.updated_at <= ?2)
+AND id NOT IN (SELECT profile_switch_id FROM event_groups WHERE profile_switch_id IS NOT NULL)
+AND NOT (duration_minutes > 0 AND profile_switches.occurred_at + duration_minutes * 60000 >= ?1)
+AND NOT (duration_minutes = 0 AND profile_switches.occurred_at >= (SELECT COALESCE(MAX(newest.occurred_at), 0) FROM profile_switches AS newest
+    WHERE newest.duration_minutes = 0 AND newest.deleted_at IS NULL AND newest.occurred_at < ?1))
+`
+
+type DeletePackagedProfileSwitchesParams struct {
+	Before        int64
+	SettledBefore int64
+}
+
+// The profile switches from before Before whose day was packaged after they were last written, and not since
+// SettledBefore, that no treatment still refers to, but those that may still be in force: the newest with no end, and
+// one with an end that is not before Before. The basal of the days that are still rows is read from them.
+func (q *Queries) DeletePackagedProfileSwitches(ctx context.Context, arg DeletePackagedProfileSwitchesParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedProfileSwitchesStmt, deletePackagedProfileSwitches, arg.Before, arg.SettledBefore)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deletePackagedTempBasals = `-- name: DeletePackagedTempBasals :execrows
+DELETE FROM temp_basals
+WHERE temp_basals.occurred_at < ?1
+AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(temp_basals.occurred_at / 1000, 'unixepoch')
+    AND cold_days.updated_at >= temp_basals.updated_at AND cold_days.updated_at <= ?2)
+AND id NOT IN (SELECT temp_basal_id FROM event_groups WHERE temp_basal_id IS NOT NULL)
+`
+
+type DeletePackagedTempBasalsParams struct {
+	Before        int64
+	SettledBefore int64
+}
+
+// The temp basals from before Before whose day was packaged after they were last written, and not since SettledBefore, that
+// no treatment still refers to
+func (q *Queries) DeletePackagedTempBasals(ctx context.Context, arg DeletePackagedTempBasalsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedTempBasalsStmt, deletePackagedTempBasals, arg.Before, arg.SettledBefore)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deletePackagedTempTargets = `-- name: DeletePackagedTempTargets :execrows
+DELETE FROM temp_targets
+WHERE temp_targets.occurred_at < ?1
+AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(temp_targets.occurred_at / 1000, 'unixepoch')
+    AND cold_days.updated_at >= temp_targets.updated_at AND cold_days.updated_at <= ?2)
+AND id NOT IN (SELECT temp_target_id FROM event_groups WHERE temp_target_id IS NOT NULL)
+`
+
+type DeletePackagedTempTargetsParams struct {
+	Before        int64
+	SettledBefore int64
+}
+
+// The temp targets from before Before whose day was packaged after they were last written, and not since SettledBefore, that
+// no treatment still refers to
+func (q *Queries) DeletePackagedTempTargets(ctx context.Context, arg DeletePackagedTempTargetsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedTempTargetsStmt, deletePackagedTempTargets, arg.Before, arg.SettledBefore)
 	if err != nil {
 		return 0, err
 	}

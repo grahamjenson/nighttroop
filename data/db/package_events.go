@@ -123,9 +123,10 @@ func inForce(ctx context.Context, q *sitedb.Queries, start int64) ([]map[string]
 // packageEventsDay writes the events of the UTC day that starts at start, in ms, from its rows, the oldest first: each
 // row that is an event, with what its treatment says of it (who entered it, as what) where it has none, and each
 // treatment with no event, as a site change is, and before them what was in force when the day started (inForce).
-// They are built from the rows alone, as no event row is deleted yet. A day with no event and nothing in force is
-// written only to empty one that had some, and a day whose events are more than a cold day holds is not packaged.
-func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
+// They are built from the rows alone: a day whose rows are deleted is not packaged again (packageTreatmentDays). A day
+// with no event and nothing in force is written only to empty one that had some, or always, to say the day was
+// packaged, and a day whose events are more than a cold day holds is not packaged.
+func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, always bool) error {
 	groups, err := q.EventGroupsOfDay(ctx, sitedb.EventGroupsOfDayParams{From: start, To: start + dayMs})
 	if err != nil {
 		return err
@@ -168,7 +169,7 @@ func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error
 	if err != nil {
 		return err
 	}
-	if len(events) == 0 && len(before) == 0 {
+	if len(events) == 0 && len(before) == 0 && !always {
 		if _, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: retention.EventsKind, Date: date}); err != nil {
 			return nil
 		}
