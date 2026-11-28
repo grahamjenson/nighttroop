@@ -2639,14 +2639,14 @@ Before it backs up a site written to, at most every hour, the server packages th
 If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries` of the days older than
 `RETENTION_HOT_DAYS` from `cold_days`.
 
-- A search of `entries`, newest first, gives the made entries with the entries that are rows, in order of date.
-  `count` and `skip` page through them as one list.
+- A search of `entries`, newest first or oldest first, gives the made entries with the entries that are rows, in
+  order of date. `count` and `skip` page through them as one list.
 - A made entry has `type` `sgv`, the glucose of its 5-minute step, and the start of the step as its `date`.
 - Its `_id` is 24 hex digits: 8 of its time in seconds, then `c01dc01dc01dc01d`. It is the same in each search.
 - A 5-minute step that has a row (example: a reading with a note) is given one time, as the row.
 - Searches that have made entries: by `date`, by `type` (if `sgv` matches), by `sgv`.
 - Searches that have rows only: by `device`, app, `_id`, the time a record was written or changed; a search of
-  deleted records; a search sorted oldest first or by `srvModified`; API v3 `history`.
+  deleted records; a search sorted by `srvModified` or `srvCreated`; API v3 `history`.
 - A made entry is read by its `_id`. If its 5-minute step has no glucose, the API gives 404.
 - A delete of a made entry by its `_id` clears its 5-minute step of the cold day. Then it is in no search and no
   report, and its `_id` gives 404.

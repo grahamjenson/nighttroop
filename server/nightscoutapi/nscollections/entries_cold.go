@@ -63,11 +63,11 @@ func typeMatches(query nsquery.Query, recordType string) bool {
 	return (query.TypeEq == nil || *query.TypeEq == recordType) && (query.TypeNeq == nil || *query.TypeNeq != recordType)
 }
 
-// SearchWithCold is a search for readings, the newest first, with those of the packaged days whose rows are deleted,
-// and whether it was one: only where the server deletes rows, and only a search a cold day's reading can match that
-// reaches back before the hot days. The rows are read first. A step of a cold day that a row is still in is not made
-// again, and no cold day is read that is older than the last row of the page.
-func (c EntriesCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*sitedb.GlucoseReading, bool, error) {
+// SearchWithCold is a search for readings, the newest first or the oldest, with those of the packaged days whose rows
+// are deleted, and whether it was one: only where the server deletes rows, and only a search a cold day's reading can
+// match that reaches back before the hot days. The rows are read first, by rows, in the search's order. A step of a
+// cold day that a row is still in is not made again, and no cold day is read that is past the last row of the page.
+func (c EntriesCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query, rows func(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.GlucoseReading, error)) ([]*sitedb.GlucoseReading, bool, error) {
 	cfg := siteContext.Config
 	if cfg == nil || !cfg.RetentionDeleteRows || !coldCanMatch(query) {
 		return nil, false, nil
@@ -76,19 +76,23 @@ func (c EntriesCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context
 	if from >= to {
 		return nil, false, nil
 	}
+	orZeroFrom := from
 	want := int(query.Skip + query.Limit)
 	rowsQuery := query
 	rowsQuery.Skip, rowsQuery.Limit = 0, int64(want)
-	rows, err := c.SearchModels(q, ctx, rowsQuery)
+	found, err := rows(q, ctx, rowsQuery)
 	if err != nil {
 		return nil, true, err
 	}
-	if len(rows) == want && want > 0 {
-		from = max(from, rows[want-1].OccurredAt)
+	oldestFirst := query.SortOrder != nil && *query.SortOrder == nsquery.SortOccurredAtAsc
+	if len(found) == want && want > 0 {
+		if from = max(from, found[want-1].OccurredAt); oldestFirst {
+			from, to = orZeroFrom, min(to, found[want-1].OccurredAt+1)
+		}
 	}
 	step := retention.Glucose.Step.Milliseconds()
 	inRows := map[int64]bool{}
-	for _, row := range rows {
+	for _, row := range found {
 		inRows[row.OccurredAt/step] = inRows[row.OccurredAt/step] || row.ReadingType == "sgv"
 	}
 	sgv := func(bound *int64, otherwise float64) float64 {
@@ -97,15 +101,20 @@ func (c EntriesCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context
 		}
 		return float64(*bound)
 	}
-	cold, err := db.ColdGlucoseReadings(ctx, q, from, to, want, func(at int64, mgdl float64) bool {
+	cold, err := db.ColdGlucoseReadings(ctx, q, from, to, want, oldestFirst, func(at int64, mgdl float64) bool {
 		return !inRows[at/step] && (query.SgvEQ == nil || mgdl == float64(*query.SgvEQ)) &&
 			mgdl >= sgv(query.SgvGTE, 0) && mgdl > sgv(query.SgvGT, -1) && mgdl <= sgv(query.SgvLTE, math.MaxFloat64) && mgdl < sgv(query.SgvLT, math.MaxFloat64)
 	})
 	if err != nil {
 		return nil, true, err
 	}
-	merged := append(rows, cold...)
-	slices.SortStableFunc(merged, func(a, b *sitedb.GlucoseReading) int { return int(min(max(b.OccurredAt-a.OccurredAt, -1), 1)) })
+	merged := append(found, cold...)
+	slices.SortStableFunc(merged, func(a, b *sitedb.GlucoseReading) int {
+		if oldestFirst {
+			a, b = b, a
+		}
+		return int(min(max(b.OccurredAt-a.OccurredAt, -1), 1))
+	})
 	return merged[min(int(query.Skip), len(merged)):min(want, len(merged))], true, nil
 }
 
