@@ -2562,6 +2562,21 @@ Before it backs up a site written to, at most every hour, the server seals the s
     reading of the best source (as the glucose page shows it).
   - A deleted reading, and a meter reading, are not in it.
   - Today is not sealed.
+- Each UTC day with a device status has one `cold_days` row for each number its statuses have:
+
+  | Kind | Step | Kept to | From |
+  | --- | --- | --- | --- |
+  | `iob`, `iob_basal` | 5 minutes | 0.01 U | The loop's IOB, and its basal part |
+  | `cob` | 5 minutes | 0.1 g | The loop's COB |
+  | `pump_reservoir` | 1 hour | 0.1 U | The pump's reservoir |
+  | `pump_battery` | 1 hour | 1 % | The pump's battery |
+  | `phone_battery` | 1 hour | 1 % | The battery of the loop's phone, not of a phone with no loop |
+
+  - A step holds the number of its newest device status.
+  - Today is sealed too, as far as it is.
+  - The site is sealed before its device statuses are thinned. A day keeps its values after its device statuses are
+    thinned or deleted, and gets the values of a device status written late.
+  - A kind with no number in a day has no row.
 - The body of a row is packed bytes. Its first bytes say its version (1) and its shape (series), and its step and
   scale. A body with a version or a shape the server does not know is an error.
 - A run seals only the days that had a CGM reading written, changed or deleted since the run before. A site that

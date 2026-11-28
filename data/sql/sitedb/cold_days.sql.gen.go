@@ -233,6 +233,101 @@ func (q *Queries) DeleteSealedCGMReadings(ctx context.Context, arg DeleteSealedC
 	return result.RowsAffected()
 }
 
+const deviceReportDaysWrittenSince = `-- name: DeviceReportDaysWrittenSince :many
+SELECT DISTINCT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM device_reports
+WHERE updated_at >= ?1 AND occurred_at < ?2
+ORDER BY 1 LIMIT 5000
+`
+
+type DeviceReportDaysWrittenSinceParams struct {
+	Since  int64
+	Before int64
+}
+
+// The UTC days, as days since 1970, up to Before that had a device report written, changed or deleted since Since:
+// the days whose device series are sealed again
+func (q *Queries) DeviceReportDaysWrittenSince(ctx context.Context, arg DeviceReportDaysWrittenSinceParams) ([]int64, error) {
+	rows, err := q.query(ctx, q.deviceReportDaysWrittenSinceStmt, deviceReportDaysWrittenSince, arg.Since, arg.Before)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var day int64
+		if err := rows.Scan(&day); err != nil {
+			return nil, err
+		}
+		items = append(items, day)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const deviceReportNumbersOfDay = `-- name: DeviceReportNumbersOfDay :many
+SELECT occurred_at, deleted_at, loop_name, loop_iob, loop_iob_basal, loop_cob, pump_reservoir, pump_battery_percent, device_battery_percent
+FROM device_reports
+WHERE occurred_at >= ?1 AND occurred_at < ?2
+ORDER BY occurred_at LIMIT 5000
+`
+
+type DeviceReportNumbersOfDayParams struct {
+	From int64
+	To   int64
+}
+
+type DeviceReportNumbersOfDayRow struct {
+	OccurredAt           int64
+	DeletedAt            *int64
+	LoopName             *string
+	LoopIob              *float64
+	LoopIobBasal         *float64
+	LoopCob              *float64
+	PumpReservoir        *float64
+	PumpBatteryPercent   *float64
+	DeviceBatteryPercent *float64
+}
+
+// The numbers of a day's device reports that are sealed as series, the oldest first, without the JSON, which is
+// most of a report; the deleted too, as a deleted one clears its step
+func (q *Queries) DeviceReportNumbersOfDay(ctx context.Context, arg DeviceReportNumbersOfDayParams) ([]*DeviceReportNumbersOfDayRow, error) {
+	rows, err := q.query(ctx, q.deviceReportNumbersOfDayStmt, deviceReportNumbersOfDay, arg.From, arg.To)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*DeviceReportNumbersOfDayRow
+	for rows.Next() {
+		var i DeviceReportNumbersOfDayRow
+		if err := rows.Scan(
+			&i.OccurredAt,
+			&i.DeletedAt,
+			&i.LoopName,
+			&i.LoopIob,
+			&i.LoopIobBasal,
+			&i.LoopCob,
+			&i.PumpReservoir,
+			&i.PumpBatteryPercent,
+			&i.DeviceBatteryPercent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getColdDay = `-- name: GetColdDay :one
 SELECT kind, date, body, created_at, updated_at FROM cold_days WHERE kind = ?1 AND date = ?2
 `

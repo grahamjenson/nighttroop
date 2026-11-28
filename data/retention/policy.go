@@ -72,6 +72,18 @@ type Policy struct {
 // Glucose is a CGM's glucose in whole mg/dL every 5 minutes: the newest reading of the best source in each
 var Glucose = Series{Name: "glucose", Step: fiveMinutes, Scale: 1}
 
+// What a loop's phone reports: the loop's insulin on board, to 0.01 U, the part of it that is basal, and its carbs on
+// board, to 0.1 g, each the newest report's in its 5 minutes; and the pump's reservoir, to 0.1 U, its battery and the
+// loop's phone's, in percent, each the newest report's in its hour
+var (
+	IOB           = Series{Name: "iob", Step: fiveMinutes, Scale: 100}
+	IOBBasal      = Series{Name: "iob_basal", Step: fiveMinutes, Scale: 100}
+	COB           = Series{Name: "cob", Step: fiveMinutes, Scale: 10}
+	PumpReservoir = Series{Name: "pump_reservoir", Step: hour, Scale: 10}
+	PumpBattery   = Series{Name: "pump_battery", Step: hour, Scale: 1}
+	PhoneBattery  = Series{Name: "phone_battery", Step: hour, Scale: 1}
+)
+
 const (
 	fiveMinutes = 5 * time.Minute
 	hour        = time.Hour
@@ -105,8 +117,7 @@ var Policies = map[string]Policy{
 	"event_groups": {Shape: EventsShape, Keep: []string{"group_type", "entered_by", "duration_minutes", "sensor_code", "transmitter_id"},
 		Lost: "The app's own IDs of a treatment (uuid, sent_hash, pump_id, sync_identifier) and its bolus calculator. A group's kept columns move onto its event; a group with no event (a site change) is an event."},
 	"device_reports": {Shape: SeriesShape,
-		Series: []Series{{Name: "iob", Step: fiveMinutes, Scale: 100}, {Name: "iob_basal", Step: fiveMinutes, Scale: 100}, {Name: "cob", Step: fiveMinutes, Scale: 10},
-			{Name: "pump_reservoir", Step: hour, Scale: 10}, {Name: "pump_battery", Step: hour, Scale: 1}, {Name: "phone_battery", Step: hour, Scale: 1}},
+		Series: []Series{IOB, IOBBasal, COB, PumpReservoir, PumpBattery, PhoneBattery},
 		Lost: "The loop's reasons and predictions, and each report."},
 	"loop_settings":    {Shape: DictionaryShape},
 	"profile_presets":  {Shape: ConfigShape},

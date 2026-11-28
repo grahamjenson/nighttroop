@@ -17,11 +17,18 @@ import (
 // dayMs is a UTC day, which a cold day is
 const dayMs = int64(24 * time.Hour / time.Millisecond)
 
-// sealSite seals the site's days that ended and had a CGM reading written since since, in ms, 0 for all of them:
-// each day's glucose is written to cold_days as a series, the newest reading of the best source in each 5 minutes.
-// A site never sealed has all its days sealed. Then, when the server deletes rows (RETENTION_DELETE_ROWS), the CGM
-// readings older than its hot days are deleted, but only those their cold day has. Only glucose is sealed yet: see
-// docs/retention.md for the other tables, the summaries and the truncation this is to take the place of.
+// sealSite seals the site's days that had a row written since since, in ms, 0 for all of them, into cold_days, each
+// kind of data as a series. A site never sealed has all its days sealed.
+//
+// Glucose: each day that ended, the newest CGM reading of the best source in each 5 minutes. When the server deletes
+// rows (RETENTION_DELETE_ROWS), the CGM readings older than its hot days are then deleted, but only those their cold
+// day has.
+//
+// What a loop's phone reports (its IOB and COB, the pump's reservoir, the batteries): each day up to now, today too,
+// as device reports are thinned from an hour old (truncateSite), so it runs before they are, and a day keeps the
+// values it has.
+//
+// See docs/retention.md for the other tables, the summaries and the truncation this is to take the place of.
 func (db *ControlDB) sealSite(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
 	q, today := site.Queries(), now.UTC().Truncate(24*time.Hour)
 	hot := retention.HotSince(now, db.ServerConfig.RetentionHotDays)
@@ -30,14 +37,28 @@ func (db *ControlDB) sealSite(ctx context.Context, site *SiteDB, since int64, no
 	} else if !sealed {
 		since = 0
 	}
+	sealed := func(day int64, err error) error {
+		if err == nil {
+			return nil
+		}
+		return fmt.Errorf("cannot seal %s of site %s: %w", time.UnixMilli(day*dayMs).UTC().Format(time.DateOnly), site.Subdomain, err)
+	}
 	days, err := q.CGMDaysWrittenSince(ctx, sitedb.CGMDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()})
 	if err != nil {
 		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
 	}
 	for _, day := range days {
 		// A day whose rows may be deleted keeps what it has, and takes what was written since
-		if err := sealGlucoseDay(ctx, q, day*dayMs, db.ServerConfig.RetentionDeleteRows && day*dayMs < hot.UnixMilli()); err != nil {
-			return fmt.Errorf("cannot seal %s of site %s: %w", time.UnixMilli(day*dayMs).UTC().Format(time.DateOnly), site.Subdomain, err)
+		if err := sealed(day, sealGlucoseDay(ctx, q, day*dayMs, db.ServerConfig.RetentionDeleteRows && day*dayMs < hot.UnixMilli())); err != nil {
+			return err
+		}
+	}
+	if days, err = q.DeviceReportDaysWrittenSince(ctx, sitedb.DeviceReportDaysWrittenSinceParams{Since: since, Before: now.UnixMilli() + 1}); err != nil {
+		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
+	}
+	for _, day := range days {
+		if err := sealed(day, sealDeviceDay(ctx, q, day*dayMs)); err != nil {
+			return err
 		}
 	}
 	if db.ServerConfig.RetentionDeleteRows {
@@ -48,17 +69,18 @@ func (db *ControlDB) sealSite(ctx context.Context, site *SiteDB, since int64, no
 	return nil
 }
 
-// sealGlucoseDay writes the glucose series of the UTC day that starts at start, in ms, from its CGM readings. With
-// merge, the day's rows may be gone, so it starts from the day as it was sealed before: a reading written since takes
-// its step, and a deleted one clears its step. It reads the day back before it is kept, so a day is never sealed as
-// what cannot be read, or with a different number of values.
-func sealGlucoseDay(ctx context.Context, q *sitedb.Queries, start int64, merge bool) error {
-	rows, err := q.CGMReadingsOfDay(ctx, sitedb.CGMReadingsOfDayParams{From: start, To: start + dayMs})
-	if err != nil {
-		return err
-	}
-	series, date := retention.Glucose, time.UnixMilli(start).UTC().Format(time.DateOnly)
-	values, step := series.Empty(), func(row *sitedb.GlucoseReading) int64 { return (row.OccurredAt - start) / series.Step.Milliseconds() }
+// point is a value of a series at a time, in ms
+type point struct {
+	at    int64
+	value float64
+}
+
+// sealSeriesDay writes one series of the UTC day that starts at start, in ms: each point, the oldest first, takes the
+// step it is in, so a step keeps its newest. With merge, the day's rows may be gone or thinned, so it starts from the
+// day as it was sealed before, with the steps at cleared emptied, and takes the points. It reads the day back before
+// it is kept, so a day is never sealed as what cannot be read, or with other values.
+func sealSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Series, start int64, merge bool, cleared []int64, points []point) error {
+	date, values := time.UnixMilli(start).UTC().Format(time.DateOnly), series.Empty()
 	if merge {
 		switch sealed, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: series.Name, Date: date}); {
 		case err == nil:
@@ -69,21 +91,89 @@ func sealGlucoseDay(ctx context.Context, q *sitedb.Queries, start int64, merge b
 			return err
 		}
 	}
-	live := slices.DeleteFunc(slices.Clone(rows), func(row *sitedb.GlucoseReading) bool { return row.DeletedAt != nil })
-	for _, row := range rows {
-		if row.DeletedAt != nil {
-			values[step(row)] = math.NaN()
-		}
+	step := func(at int64) int64 { return min(max((at-start)/series.Step.Milliseconds(), 0), int64(len(values))-1) }
+	for _, at := range cleared {
+		values[step(at)] = math.NaN()
 	}
-	// Newest first, so the oldest is written first and the newest reading of a step is the one kept
-	cleaned := glucose.CleanReadings(live)
-	for _, reading := range slices.Backward(cleaned) {
-		values[step(reading.Row)] = math.Round(reading.Row.Mgdl)
+	for _, p := range points {
+		values[step(p.at)] = math.Round(p.value*series.Scale) / series.Scale
 	}
 	packed := retention.PackGrid(series, values)
 	read, err := retention.UnpackGrid(packed)
 	if err != nil || !slices.EqualFunc(values, read, func(a, b float64) bool { return a == b || (math.IsNaN(a) && math.IsNaN(b)) }) {
-		return fmt.Errorf("the sealed day does not read back as it was written: %v", err)
+		return fmt.Errorf("the sealed day of %s does not read back as it was written: %v", series.Name, err)
 	}
 	return q.UpsertColdDay(ctx, sitedb.UpsertColdDayParams{Kind: series.Name, Date: date, Body: packed})
+}
+
+// sealGlucoseDay writes the glucose series of the UTC day that starts at start, in ms, from its CGM readings: the
+// newest reading of the best source in each step. With merge, a reading written since takes its step, and a deleted
+// one clears its step.
+func sealGlucoseDay(ctx context.Context, q *sitedb.Queries, start int64, merge bool) error {
+	rows, err := q.CGMReadingsOfDay(ctx, sitedb.CGMReadingsOfDayParams{From: start, To: start + dayMs})
+	if err != nil {
+		return err
+	}
+	var cleared []int64
+	for _, row := range rows {
+		if row.DeletedAt != nil {
+			cleared = append(cleared, row.OccurredAt)
+		}
+	}
+	// Newest first, so they are turned to the oldest first
+	live := slices.DeleteFunc(slices.Clone(rows), func(row *sitedb.GlucoseReading) bool { return row.DeletedAt != nil })
+	var points []point
+	for _, reading := range slices.Backward(glucose.CleanReadings(live)) {
+		points = append(points, point{reading.Row.OccurredAt, reading.Row.Mgdl})
+	}
+	return sealSeriesDay(ctx, q, retention.Glucose, start, merge, cleared, points)
+}
+
+// deviceSeries are the series a device report's numbers are sealed into, each with the number of a report it takes.
+// The phone's battery is only the loop's phone's, as a carer's phone reports its own too.
+var deviceSeries = []struct {
+	series retention.Series
+	value  func(*sitedb.DeviceReportNumbersOfDayRow) *float64
+}{
+	{retention.IOB, func(row *sitedb.DeviceReportNumbersOfDayRow) *float64 { return row.LoopIob }},
+	{retention.IOBBasal, func(row *sitedb.DeviceReportNumbersOfDayRow) *float64 { return row.LoopIobBasal }},
+	{retention.COB, func(row *sitedb.DeviceReportNumbersOfDayRow) *float64 { return row.LoopCob }},
+	{retention.PumpReservoir, func(row *sitedb.DeviceReportNumbersOfDayRow) *float64 { return row.PumpReservoir }},
+	{retention.PumpBattery, func(row *sitedb.DeviceReportNumbersOfDayRow) *float64 { return row.PumpBatteryPercent }},
+	{retention.PhoneBattery, func(row *sitedb.DeviceReportNumbersOfDayRow) *float64 {
+		if row.LoopName == nil {
+			return nil
+		}
+		return row.DeviceBatteryPercent
+	}},
+}
+
+// sealDeviceDay writes the device series of the UTC day that starts at start, in ms, from its device reports: each
+// series a step's newest report with that number. A day keeps the values it has, as its reports are thinned as they
+// age and deleted after a month, and a series no report has a number for is not written.
+func sealDeviceDay(ctx context.Context, q *sitedb.Queries, start int64) error {
+	rows, err := q.DeviceReportNumbersOfDay(ctx, sitedb.DeviceReportNumbersOfDayParams{From: start, To: start + dayMs})
+	if err != nil {
+		return err
+	}
+	for _, device := range deviceSeries {
+		var cleared []int64
+		var points []point
+		for _, row := range rows {
+			switch value := device.value(row); {
+			case value == nil:
+			case row.DeletedAt != nil:
+				cleared = append(cleared, row.OccurredAt)
+			default:
+				points = append(points, point{row.OccurredAt, *value})
+			}
+		}
+		if len(points) == 0 && len(cleared) == 0 {
+			continue
+		}
+		if err := sealSeriesDay(ctx, q, device.series, start, true, cleared, points); err != nil {
+			return err
+		}
+	}
+	return nil
 }

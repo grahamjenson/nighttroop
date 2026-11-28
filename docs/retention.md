@@ -1,7 +1,7 @@
 # Retention: hot rows and cold days
 
-**Status:** steps 1 and 2 are built for the Nightscout API. The server seals the CGM glucose of each day into
-`cold_days`, and the API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
+**Status:** steps 1 to 3 are built. The server seals the CGM glucose of each day, and what a loop's phone reports
+(IOB, COB, reservoir, batteries), into `cold_days`. The Nightscout API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
 `true`. The other steps are the plan. See [Build order](#build-order).
 
 ## The problem, measured
@@ -186,6 +186,10 @@ Sealing runs for each site before its backup, where the truncation runs (`sealSi
 - Reports will read series, not rows, for all days but today. Thus a day's series is written after the day
   ends, and its rows stay for the hot days.
 - For glucose, a CGM reading with a note, or one a treatment refers to, is not deleted. It is an event.
+- **Device reports are sealed each run, today too, before they are thinned.** They are thinned from 1 hour old, so
+  a day that waits for its end has only each 10 minutes. Their day always starts from the cold day as it is, so
+  it keeps each 5 minutes after the rows are thinned and deleted.
+- The phone's battery is the loop's phone's. A carer's phone reports its own battery, which is not sealed.
 
 ### Late data and edits
 
@@ -303,7 +307,7 @@ Each step is one PR, and the site works after each one.
 | 1 | `cold_days`, the versioned body, sealing of **glucose**, the delete rule | None | **Built** |
 | 2 | The reader of sealed glucose; the Nightscout API makes `entries` from sealed days | `entries` | **Built** |
 | 2b | The site's glucose page says that older readings are in Reports; a made entry by its `_id`; searches oldest first | Glucose page | |
-| 3 | Device reports fold into `iob`, `cob`, reservoir and battery series | The day view | |
+| 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4 | Events: the day's list, and the 15-minute insulin, basal and carbs totals; checks of totals | Data pages, `treatments`, daily dose | |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
