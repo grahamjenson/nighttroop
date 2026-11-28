@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// SummariesMonths is how many months before this one the summaries report goes back, the year regenerating builds
+// SummariesMonths is how many months before this one the summaries report goes back
 const SummariesMonths = 12
 
 // SummariesMonth is the first day of the month the summaries report shows, in location: month, as 2026-10, or this
