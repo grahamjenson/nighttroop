@@ -171,7 +171,6 @@ site:
   alarms:
     alarm: "Alarm: {{.AlarmName}}"
     snooze: "Snooze 30 min"
-    snoozed: "Snoozed: {{.AlarmName}}"
     snoozed_until: "Snoozed: {{.AlarmName}} until {{.Until}}"
     urgent_low: "Urgent low"
     low: "Low"
