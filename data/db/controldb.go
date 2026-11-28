@@ -804,9 +804,13 @@ func (db *ControlDB) recordSiteTableSizes(ctx context.Context, site *SiteDB) err
 	if err != nil {
 		return fmt.Errorf("cannot measure site %s tables: %w", site.Subdomain, err)
 	}
-	tables := types.TableSizes{}
+	byName := map[string]types.TableSize{}
 	for _, size := range sizes {
-		tables[size.Name] = types.TableSize{Bytes: size.Bytes, Records: size.Records}
+		byName[size.Name] = types.TableSize{Bytes: size.Bytes, Records: size.Records}
+	}
+	tables, err := types.NewTableSizes(byName)
+	if err != nil {
+		return err
 	}
 	return db.Queries.UpdateSiteTableSizes(ctx, controldb.UpdateSiteTableSizesParams{TableSizesJson: tables, ID: site.Subdomain})
 }
@@ -907,8 +911,12 @@ func (db *ControlDB) SiteTableSizes(ctx context.Context, subdomain string) ([]si
 	if err != nil {
 		return nil, err
 	}
+	tables, err := site.TableSizesJson.Tables()
+	if err != nil {
+		return nil, err
+	}
 	sizes := []sitedb.TableSize{}
-	for name, size := range site.TableSizesJson {
+	for name, size := range tables {
 		sizes = append(sizes, sitedb.TableSize{Name: name, Bytes: size.Bytes, Records: size.Records})
 	}
 	slices.SortFunc(sizes, func(a, b sitedb.TableSize) int {
