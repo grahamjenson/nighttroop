@@ -74,15 +74,8 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_LENGTH 5 "@result.agp.0"
 
-// Yesterday's week, fortnight and month are built from it, and today if they have it, named by their
-// first date, with yesterday's noon readings in their AGP
-NAME build_yesterday
-POST http://{{ site }}/data/summary-daily
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"date": "{{ date -1 }}"}
-ASSERT_STATUS 201
-
+// Yesterday's week, fortnight and month are built from it, and today if they have it, named by their first date,
+// with yesterday's noon readings in their AGP
 NAME get_week
 GET http://{{ site }}/data/summary-periods/week-{{ date -1 }}
 H Authorization: Bearer {{ jwt }}

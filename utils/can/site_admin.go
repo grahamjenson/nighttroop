@@ -18,12 +18,6 @@ func IdentityReadSiteSettings(role consts.IdentityRole) bool {
 	return role == consts.IdentityRoleAdmin
 }
 
-// IdentityRegenerateSummaries is whether the role tells the server to build the summaries of the site again: only an
-// admin, as a build reads a year of the site's data.
-func IdentityRegenerateSummaries(role consts.IdentityRole) bool {
-	return role == consts.IdentityRoleAdmin
-}
-
 // IdentitySeeAllPushRegistrations is whether the role sees, tests and deletes the push registrations of all identities
 // of the site: only an admin. Other roles see only their own push registrations.
 func IdentitySeeAllPushRegistrations(role consts.IdentityRole) bool {

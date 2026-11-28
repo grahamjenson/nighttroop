@@ -23,8 +23,6 @@ errors:
     title_required: "title is required"
     name_required: "name is required"
     profile_name_taken: "another profile in this store is called {{.Name}}"
-    day: "date must be a day, like 2026-01-31"
-    day_in_range: "date must be before today and within a year"
     dose: "dose must not be 0"
     targets: "the low target must be at most the high target"
     rate_or_multiplier: "a temp basal has a rate or a basal percent, not both"

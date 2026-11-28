@@ -2236,9 +2236,6 @@ type ClientInterface interface {
 	// GetLoopSettings request
 	GetLoopSettings(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// RegenerateSummaries request
-	RegenerateSummaries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// RemoveSiteEmail request
 	RemoveSiteEmail(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -3394,18 +3391,6 @@ func (c *Client) DeleteLoopSettings(ctx context.Context, id Id, reqEditors ...Re
 
 func (c *Client) GetLoopSettings(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetLoopSettingsRequest(c.Server, id)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) RegenerateSummaries(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRegenerateSummariesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -7225,33 +7210,6 @@ func NewGetLoopSettingsRequest(server string, id Id) (*http.Request, error) {
 	return req, nil
 }
 
-// NewRegenerateSummariesRequest generates requests for RegenerateSummaries
-func NewRegenerateSummariesRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/reports/summaries/regenerate")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewRemoveSiteEmailRequest generates requests for RemoveSiteEmail
 func NewRemoveSiteEmailRequest(server string) (*http.Request, error) {
 	var err error
@@ -8061,9 +8019,6 @@ type ClientWithResponsesInterface interface {
 
 	// GetLoopSettingsWithResponse request
 	GetLoopSettingsWithResponse(ctx context.Context, id Id, reqEditors ...RequestEditorFn) (*GetLoopSettingsResponse, error)
-
-	// RegenerateSummariesWithResponse request
-	RegenerateSummariesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RegenerateSummariesResponse, error)
 
 	// RemoveSiteEmailWithResponse request
 	RemoveSiteEmailWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RemoveSiteEmailResponse, error)
@@ -9771,34 +9726,6 @@ func (r GetLoopSettingsResponse) StatusCode() int {
 	return 0
 }
 
-type RegenerateSummariesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON202      *struct {
-		Result *struct {
-			Regenerating *bool `json:"regenerating,omitempty"`
-		} `json:"result,omitempty"`
-		Status *int `json:"status,omitempty"`
-	}
-	JSONDefault *Error
-}
-
-// Status returns HTTPResponse.Status
-func (r RegenerateSummariesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r RegenerateSummariesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type RemoveSiteEmailResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -10934,15 +10861,6 @@ func (c *ClientWithResponses) GetLoopSettingsWithResponse(ctx context.Context, i
 		return nil, err
 	}
 	return ParseGetLoopSettingsResponse(rsp)
-}
-
-// RegenerateSummariesWithResponse request returning *RegenerateSummariesResponse
-func (c *ClientWithResponses) RegenerateSummariesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*RegenerateSummariesResponse, error) {
-	rsp, err := c.RegenerateSummaries(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseRegenerateSummariesResponse(rsp)
 }
 
 // RemoveSiteEmailWithResponse request returning *RemoveSiteEmailResponse
@@ -13441,44 +13359,6 @@ func ParseGetLoopSettingsResponse(rsp *http.Response) (*GetLoopSettingsResponse,
 			return nil, err
 		}
 		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseRegenerateSummariesResponse parses an HTTP response from a RegenerateSummariesWithResponse call
-func ParseRegenerateSummariesResponse(rsp *http.Response) (*RegenerateSummariesResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &RegenerateSummariesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
-		var dest struct {
-			Result *struct {
-				Regenerating *bool `json:"regenerating,omitempty"`
-			} `json:"result,omitempty"`
-			Status *int `json:"status,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON202 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error

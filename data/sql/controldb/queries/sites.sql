@@ -227,9 +227,6 @@ SELECT * FROM sites WHERE
 -- name: UpdateSiteTableSizes :exec
 UPDATE sites SET table_sizes_json = sqlc.arg('TableSizesJson') WHERE id = sqlc.arg('ID');
 
--- name: UpdateSiteSummariesCheckedAt :exec
-UPDATE sites SET summaries_checked_at = sqlc.arg('SummariesCheckedAt') WHERE id = sqlc.arg('ID');
-
 -- name: GetSiteEmails :many
 -- Each live site's email, encrypted, to find the site an email was sent to
 SELECT id, email_enc FROM sites WHERE state = 'live' AND email_enc IS NOT NULL ORDER BY id LIMIT 1000;

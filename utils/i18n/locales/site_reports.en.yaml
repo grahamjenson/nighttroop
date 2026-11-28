@@ -15,7 +15,6 @@ site:
     nav:
       previous: "Previous {{.Unit}}"
       next: "Next {{.Unit}}"
-    out_of_date: "This report's data changed since its numbers were worked out, so they may be out of date. They are being worked out again: reload the page in a minute or two to see them."
     # Numbers more than one report shows
     metrics:
       average_glucose: "Average glucose"
@@ -115,11 +114,6 @@ site:
       above_range: "Above range"
       none_in: "No {{.Period}}s kept in {{.In}}."
       none_yet: "No {{.Period}}s kept yet. Each is made from whole days, so the first shows the day after readings arrive."
-      maintenance: "Summaries look wrong, e.g. after changing the timezone or uploading old readings? Regenerate the last year of them from the site's data."
-      regenerate_confirm: "Regenerate the last year of summaries from the site's data? It runs in the background and takes a minute."
-      regenerate: "Regenerate summaries"
-      regenerating: "Regenerating summaries"
-      regenerating_message: "The last year of summaries is being built again from the site's data."
     print:
       title: "Report"
       sign_out: "Sign out"

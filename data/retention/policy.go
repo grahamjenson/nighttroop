@@ -138,6 +138,5 @@ var Policies = map[string]Policy{
 	"profile_presets":  {Shape: ConfigShape},
 	"food_presets":     {Shape: ConfigShape},
 	"general_settings": {Shape: ConfigShape},
-	"summary_period":   {Shape: DerivedShape},
 	"cold_days":        {Shape: ColdShape},
 }

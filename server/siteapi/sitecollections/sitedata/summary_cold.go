@@ -25,10 +25,10 @@ const packagedMargin = time.Hour
 // builtSummaryDays are the site's days from the date first to last, as 2026-01-31, up to today, at most a year and a fortnight of
 // them, oldest first, from midnight in its timezone, each built as it is read and not kept. A day that ended before
 // coldBefore is built from its cold days, which are there when its rows are deleted. A later day, and today so far,
-// is built from its rows up to now, as is a day with data written since the site was last packaged while its rows
-// are all there, so a day is never behind its data. A day with no data is left out, but, with gaps, one after
+// is built from its rows up to now, as is a day with data written since the site was last packaged, or marked to be
+// packaged again, while its rows are all there, so a day is never behind its data. A day with no data is left out, but, with gaps, one after
 // a day with data, so the days read on with none missing.
-func builtSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, last string, now time.Time, gaps bool) ([]*sitedb.SummaryPeriod, error) {
+func builtSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, last string, now time.Time, gaps bool) ([]*sitemodels.SummaryRow, error) {
 	location := siteContext.GetSiteTimezone()
 	from, err := time.ParseInLocation(time.DateOnly, first, location)
 	if err != nil {
@@ -71,11 +71,22 @@ func builtSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httpu
 	if err != nil {
 		return nil, err
 	}
+	// And the days marked to be packaged again, as a record was deleted from them for good or moved away
+	stale, err := q.StaleColdDays(ctx, sitedb.StaleColdDaysParams{FromDate: time.UnixMilli(start).UTC().Format(time.DateOnly)})
+	if err != nil {
+		return nil, err
+	}
+	for _, date := range stale {
+		if at, err := time.Parse(time.DateOnly, date); err == nil {
+			// Its first and last 15 minutes, as a site's day has one of them
+			written = append(written, at.UnixMilli(), at.Add(24*time.Hour-15*time.Minute).UnixMilli())
+		}
+	}
 	low, high := siteContext.GetSiteRangeMgdl()
-	var days []*sitedb.SummaryPeriod
+	var days []*sitemodels.SummaryRow
 	for i, midnight := range midnights[:len(midnights)-1] {
 		dayStart, dayEnd := midnight.UnixMilli(), midnights[i+1].UnixMilli()
-		var day *sitedb.SummaryPeriod
+		var day *sitemodels.SummaryRow
 		notPackaged := dayStart >= rowsFrom && slices.ContainsFunc(written, func(at int64) bool { return at >= dayStart && at < dayEnd })
 		if i >= cold || notPackaged {
 			if day, err = buildSummaryDaily(ctx, q, siteContext, midnight.Format(time.DateOnly), now.UnixMilli()); err != nil {
@@ -104,7 +115,7 @@ func builtSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httpu
 // site's days and newest first: by "day", the month's days with data that are over; by "week" and "fortnight", those
 // that are over with a day in the month and a day with data; and by "month", the months of its year that are over
 // and have a day with data.
-func BuiltSummaries(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, now time.Time) (map[string][]*sitedb.SummaryPeriod, error) {
+func BuiltSummaries(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, now time.Time) (map[string][]*sitemodels.SummaryRow, error) {
 	location, weekStart := siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()
 	year, monthEnd := time.Date(first.Year(), 1, 1, 0, 0, 0, 0, location), first.AddDate(0, 1, 0)
 	// All the days the page's periods are of, read once: from the fortnight the year starts in to the year's end
@@ -113,9 +124,9 @@ func BuiltSummaries(ctx context.Context, q *sitedb.Queries, siteContext *httputi
 	if err != nil {
 		return nil, err
 	}
-	days = slices.DeleteFunc(days, func(day *sitedb.SummaryPeriod) bool { return day.EndAt > now.UnixMilli() })
-	within := func(start, end time.Time) []*sitedb.SummaryPeriod {
-		var of []*sitedb.SummaryPeriod
+	days = slices.DeleteFunc(days, func(day *sitemodels.SummaryRow) bool { return day.EndAt > now.UnixMilli() })
+	within := func(start, end time.Time) []*sitemodels.SummaryRow {
+		var of []*sitemodels.SummaryRow
 		for _, day := range days {
 			if day.StartAt >= start.UnixMilli() && day.StartAt < end.UnixMilli() {
 				of = append(of, day)
@@ -123,14 +134,14 @@ func BuiltSummaries(ctx context.Context, q *sitedb.Queries, siteContext *httputi
 		}
 		return of
 	}
-	built := map[string][]*sitedb.SummaryPeriod{"day": within(first, monthEnd)}
+	built := map[string][]*sitemodels.SummaryRow{"day": within(first, monthEnd)}
 	slices.Reverse(built["day"])
 	// add is the period from start, when it is over and has a day with data
 	add := func(period string, start time.Time) {
 		end := PeriodEnd(period, start)
 		if of := within(start, end); len(of) > 0 && !end.After(now) {
 			row := sitemodels.NewSummaryPeriod(period, start.Format(time.DateOnly), location.String(), start.UnixMilli(), end.UnixMilli(), now.UnixMilli(), of)
-			built[period] = append([]*sitedb.SummaryPeriod{row}, built[period]...)
+			built[period] = append([]*sitemodels.SummaryRow{row}, built[period]...)
 		}
 	}
 	for _, period := range []string{"week", "fortnight"} {

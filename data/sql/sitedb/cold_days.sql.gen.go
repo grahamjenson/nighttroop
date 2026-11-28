@@ -107,6 +107,21 @@ func (q *Queries) CGMReadingsOfDay(ctx context.Context, arg CGMReadingsOfDayPara
 	return items, nil
 }
 
+const clearStaleColdDays = `-- name: ClearStaleColdDays :exec
+UPDATE cold_days SET updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE updated_at = 0 AND date >= ?1
+`
+
+type ClearStaleColdDaysParams struct {
+	FromDate string
+}
+
+// A run that packaged the marked days again clears the mark of a cold day it did not write, as one of a series the
+// day no longer has a value of
+func (q *Queries) ClearStaleColdDays(ctx context.Context, arg ClearStaleColdDaysParams) error {
+	_, err := q.exec(ctx, q.clearStaleColdDaysStmt, clearStaleColdDays, arg.FromDate)
+	return err
+}
+
 const coldDayTotals = `-- name: ColdDayTotals :one
 SELECT COUNT(*) AS total, CAST(COALESCE(SUM(length(body)), 0) AS INTEGER) AS bytes FROM cold_days
 `
@@ -670,6 +685,105 @@ func (q *Queries) HasColdDays(ctx context.Context) (bool, error) {
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const markColdDaysStale = `-- name: MarkColdDaysStale :exec
+UPDATE cold_days SET updated_at = 0 WHERE date = ?1
+`
+
+type MarkColdDaysStaleParams struct {
+	Date string
+}
+
+// A record of the day was deleted for good, or moved to another day, which leaves no row that says the day changed:
+// its cold days are marked, by a time written of 0, to be packaged again from its rows
+func (q *Queries) MarkColdDaysStale(ctx context.Context, arg MarkColdDaysStaleParams) error {
+	_, err := q.exec(ctx, q.markColdDaysStaleStmt, markColdDaysStale, arg.Date)
+	return err
+}
+
+const staleColdDays = `-- name: StaleColdDays :many
+SELECT DISTINCT date FROM cold_days WHERE updated_at = 0 AND date >= ?1 ORDER BY date LIMIT 5000
+`
+
+type StaleColdDaysParams struct {
+	FromDate string
+}
+
+// The dates from From that are marked to be packaged again
+func (q *Queries) StaleColdDays(ctx context.Context, arg StaleColdDaysParams) ([]string, error) {
+	rows, err := q.query(ctx, q.staleColdDaysStmt, staleColdDays, arg.FromDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var date string
+		if err := rows.Scan(&date); err != nil {
+			return nil, err
+		}
+		items = append(items, date)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const summaryDataWrittenSince = `-- name: SummaryDataWrittenSince :many
+SELECT DISTINCT CAST(written.occurred_at / 900000 * 900000 AS INTEGER) AS occurred_at FROM (
+    SELECT glucose_readings.occurred_at FROM glucose_readings
+        WHERE glucose_readings.updated_at > ?1 AND +glucose_readings.occurred_at < ?2
+    UNION ALL SELECT insulin_doses.occurred_at FROM insulin_doses
+        WHERE insulin_doses.updated_at > ?1 AND +insulin_doses.occurred_at < ?2
+    UNION ALL SELECT food_intakes.occurred_at FROM food_intakes
+        WHERE food_intakes.updated_at > ?1 AND +food_intakes.occurred_at < ?2
+    UNION ALL SELECT temp_basals.occurred_at FROM temp_basals
+        WHERE temp_basals.updated_at > ?1 AND +temp_basals.occurred_at < ?2
+    UNION ALL SELECT temp_targets.occurred_at FROM temp_targets
+        WHERE temp_targets.updated_at > ?1 AND +temp_targets.occurred_at < ?2
+    UNION ALL SELECT profile_switches.occurred_at FROM profile_switches
+        WHERE profile_switches.updated_at > ?1 AND +profile_switches.occurred_at < ?2
+    UNION ALL SELECT event_groups.occurred_at FROM event_groups
+        WHERE event_groups.updated_at > ?1 AND +event_groups.occurred_at < ?2
+    UNION ALL SELECT device_reports.occurred_at FROM device_reports
+        WHERE device_reports.updated_at > ?1 AND +device_reports.occurred_at < ?2
+) AS written
+`
+
+type SummaryDataWrittenSinceParams struct {
+	Since  int64
+	Before int64
+}
+
+// When the data a day's summary is built from, which a report reads from the day's cold days, that was written, changed or deleted after Since, and happened before
+// Before, happened, by the 15 minutes each is in, as every timezone's midnight starts one. The + keeps SQLite on
+// updated_at's index, as few rows are written since, while nearly all happened before
+func (q *Queries) SummaryDataWrittenSince(ctx context.Context, arg SummaryDataWrittenSinceParams) ([]int64, error) {
+	rows, err := q.query(ctx, q.summaryDataWrittenSinceStmt, summaryDataWrittenSince, arg.Since, arg.Before)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var occurred_at int64
+		if err := rows.Scan(&occurred_at); err != nil {
+			return nil, err
+		}
+		items = append(items, occurred_at)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const treatmentDaysWrittenSince = `-- name: TreatmentDaysWrittenSince :many

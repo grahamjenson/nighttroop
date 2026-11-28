@@ -12,7 +12,6 @@ import (
 	"nighttroop.t1d.nz/server/components/heading"
 	"nighttroop.t1d.nz/server/components/nav"
 	"nighttroop.t1d.nz/server/components/stat"
-	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/server/components/ui/table"
@@ -79,15 +78,6 @@ func link(report, period string, date time.Time) string {
 		return "/reports/" + report + "/" + period + "-" + day
 	}
 	return ""
-}
-
-// OutOfDate says a report's numbers are being worked out again, as data in its days changed since they were, as a
-// backfill or a late sync writes
-templ OutOfDate() {
-	<div id="site--reports--out-of-date" class="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
-		@icon.RefreshCw(icon.Props{Class: "size-4 shrink-0"})
-		{ i18n.T(ctx, "site.reports.out_of_date") }
-	</div>
 }
 
 // periodHeader is the report's name, as AGP, over its dates, with arrow buttons either side to the period before and
@@ -217,11 +207,10 @@ templ arrowButton(id, path, label string) {
 	}
 }
 
-// SummariesReport is the site's kept summaries of the month starting first as tables of their numbers, their time below,
+// SummariesReport is the site's summaries of the month starting first as tables of their numbers, their time below,
 // in and above range among them, a table for each period, the longest first, each newest first and opening its AGP report: the months of its year, the
-// fortnights and weeks with a day in it, and the month's days. Arrows beside the month go to the month before and after. An admin can have them all
-// regenerated from the site's data.
-templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSummaryPeriod, admin bool) {
+// fortnights and weeks with a day in it, and the month's days. Arrows beside the month go to the month before and after.
+templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSummaryPeriod) {
 	{{ previous, next := summariesLinks(first, time.Now()) }}
 	@heading.Title(i18n.T(ctx, "site.reports.summaries.title"))
 	<div id="site--summaries" class="w-full space-y-4 py-4">
@@ -284,28 +273,5 @@ templ SummariesReport(first time.Time, summaries map[string][]*sitemodels.SiteSu
 				}
 			}
 		}
-		if admin {
-			@regenerateSummaries()
-		}
 	</div>
-}
-
-// regenerateSummaries offers an admin, below the summaries rather than as the page's main action, to build them again
-// from the site's data, for when they look wrong, as after changing its timezone or uploading old readings
-templ regenerateSummaries() {
-	<section id="site--summaries--maintenance" class="flex flex-wrap items-center justify-between gap-3 panel border-dashed p-4 text-sm text-gray-500">
-		<p>{ i18n.T(ctx, "site.reports.summaries.maintenance") }</p>
-		@button.Button(button.Props{ID: "site--summaries--regenerate", Variant: button.VariantOutline, Size: button.SizeSm,
-			Attributes: templ.Attributes{"hx-post": "/reports/summaries/regenerate", "hx-swap": "none", "hx-status:4xx": "target:#toaster swap:beforeend",
-				"hx-status:5xx": "target:#toaster swap:beforeend",
-				"hx-confirm": i18n.T(ctx, "site.reports.summaries.regenerate_confirm")}}) {
-			@icon.RefreshCw()
-			{ i18n.T(ctx, "site.reports.summaries.regenerate") }
-		}
-	</section>
-}
-
-// SummariesRegenerating is a toast saying the summaries are being regenerated
-templ SummariesRegenerating() {
-	@successtoast.TitledOOB(i18n.T(ctx, "site.reports.summaries.regenerating"), i18n.T(ctx, "site.reports.summaries.regenerating_message"), 5000)
 }

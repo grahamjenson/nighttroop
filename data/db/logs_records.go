@@ -159,11 +159,6 @@ func (l *LogsDB) SiteWeekStartChangedEvent(ctx context.Context, siteID string, b
 	l.event(ctx, siteID, events.SiteWeekStartChanged, SiteTimezoneChangedAttributes{By: by, From: from, To: to})
 }
 
-// SummariesRegenerationRequestedEvent records a site's admin asking for its summaries to be built again
-func (l *LogsDB) SummariesRegenerationRequestedEvent(ctx context.Context, siteID string, by string) {
-	l.event(ctx, siteID, events.SummariesRegenerationRequested, SiteArchivedAttributes{By: by})
-}
-
 type SiteTruncatedAttributes struct {
 	By           string `json:"by"`
 	BeforeSizeKB *int64 `json:"before_size_kb"`

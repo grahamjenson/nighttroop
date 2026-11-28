@@ -125,10 +125,10 @@ func TestNewSummaryDailyLoop(t *testing.T) {
 
 // A week's loop IOB and COB at each time of day are the means of its days' then, rounded
 func TestNewSummaryPeriodLoop(t *testing.T) {
-	day := func(withData int64, iob, cob string) *sitedb.SummaryPeriod {
-		return &sitedb.SummaryPeriod{Days: withData, GlucoseMgdlJson: "[]", LoopIobJson: iob, LoopIobBasalJson: iob, LoopIobTreatmentJson: "[]", LoopCobJson: cob}
+	day := func(withData int64, iob, cob string) *SummaryRow {
+		return &SummaryRow{Days: withData, GlucoseMgdlJson: "[]", LoopIobJson: iob, LoopIobBasalJson: iob, LoopIobTreatmentJson: "[]", LoopCobJson: cob}
 	}
-	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, 2, []*sitedb.SummaryPeriod{
+	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, 2, []*SummaryRow{
 		day(1, "[1,null,2.5]", "[10,20]"), day(1, "[2,null,null,-1]", "[null,25]"), day(1, "[1.005]", "[11]"), day(0, "[100]", "[100]")})
 	tail := func(set int) string { return strings.Repeat(",null", 288-set) + "]" }
 	for name, got := range map[string][2]string{
@@ -144,28 +144,28 @@ func TestNewSummaryPeriodLoop(t *testing.T) {
 }
 
 func TestNewSummaryPeriod(t *testing.T) {
-	day := func(inRange *float64, dose, carbs float64) *sitedb.SummaryPeriod {
+	day := func(inRange *float64, dose, carbs float64) *SummaryRow {
 		withData := int64(0)
 		if inRange != nil || dose > 0 || carbs > 0 {
 			withData = 1
 		}
-		return &sitedb.SummaryPeriod{Days: withData, TimeInRange: inRange, TotalDailyDose: dose, TotalDailyCarbs: carbs, GlucoseMgdlJson: "[]"}
+		return &SummaryRow{Days: withData, TimeInRange: inRange, TotalDailyDose: dose, TotalDailyCarbs: carbs, GlucoseMgdlJson: "[]"}
 	}
 	tests := []struct {
 		name    string
-		days    []*sitedb.SummaryPeriod
+		days    []*SummaryRow
 		count   int64
 		inRange *float64
 		dose    float64
 		carbs   float64
 	}{
 		{name: "no days is no data", days: nil},
-		{name: "a day without data is left out", days: []*sitedb.SummaryPeriod{day(nil, 0, 0)}},
-		{name: "the means are of the days with data", days: []*sitedb.SummaryPeriod{day(new(50.0), 30, 100), day(new(75.0), 40, 150), day(nil, 0, 0)},
+		{name: "a day without data is left out", days: []*SummaryRow{day(nil, 0, 0)}},
+		{name: "the means are of the days with data", days: []*SummaryRow{day(new(50.0), 30, 100), day(new(75.0), 40, 150), day(nil, 0, 0)},
 			count: 2, inRange: new(62.5), dose: 35, carbs: 125},
 		{name: "a day with insulin but no readings counts for the dose, not the time in range",
-			days: []*sitedb.SummaryPeriod{day(new(80.0), 30, 0), day(nil, 31, 0)}, count: 2, inRange: new(80.0), dose: 30.5},
-		{name: "the means are rounded", days: []*sitedb.SummaryPeriod{day(new(10.0), 1, 1), day(new(20.0), 1, 1), day(new(20.0), 2, 0)},
+			days: []*SummaryRow{day(new(80.0), 30, 0), day(nil, 31, 0)}, count: 2, inRange: new(80.0), dose: 30.5},
+		{name: "the means are rounded", days: []*SummaryRow{day(new(10.0), 1, 1), day(new(20.0), 1, 1), day(new(20.0), 2, 0)},
 			count: 3, inRange: new(16.7), dose: 1.33, carbs: 0.7},
 	}
 	for _, tt := range tests {
@@ -183,8 +183,8 @@ func TestNewSummaryPeriod(t *testing.T) {
 }
 
 func TestNewSummaryPeriodGlucose(t *testing.T) {
-	day := func(withData int64, glucose string) *sitedb.SummaryPeriod {
-		return &sitedb.SummaryPeriod{Days: withData, GlucoseMgdlJson: glucose}
+	day := func(withData int64, glucose string) *SummaryRow {
+		return &SummaryRow{Days: withData, GlucoseMgdlJson: glucose}
 	}
 	// at is the period's glucose at slots, the rest of its 288 null
 	at := func(values map[int]int64) string {
@@ -199,16 +199,16 @@ func TestNewSummaryPeriodGlucose(t *testing.T) {
 	longDay := strings.TrimSuffix(at(map[int]int64{287: 80}), "]") + ",200" + strings.Repeat(",null", 11) + "]"
 	tests := []struct {
 		name string
-		days []*sitedb.SummaryPeriod
+		days []*SummaryRow
 		want string
 	}{
 		{name: "no days is no glucose", want: at(nil)},
 		{name: "each time of day is the mean of the days with a reading then",
-			days: []*sitedb.SummaryPeriod{day(1, "[100,null,120]"), day(1, "[200,150]"), day(1, "[null,null,null,90]")},
+			days: []*SummaryRow{day(1, "[100,null,120]"), day(1, "[200,150]"), day(1, "[null,null,null,90]")},
 			want: at(map[int]int64{0: 150, 1: 150, 2: 120, 3: 90})},
-		{name: "the mean is rounded", days: []*sitedb.SummaryPeriod{day(1, "[100]"), day(1, "[101]")}, want: at(map[int]int64{0: 101})},
-		{name: "a day without data is left out", days: []*sitedb.SummaryPeriod{day(1, "[100]"), day(0, "[300]")}, want: at(map[int]int64{0: 100})},
-		{name: "a day the clocks go back keeps only its first 24 hours", days: []*sitedb.SummaryPeriod{day(1, longDay)}, want: at(map[int]int64{287: 80})},
+		{name: "the mean is rounded", days: []*SummaryRow{day(1, "[100]"), day(1, "[101]")}, want: at(map[int]int64{0: 101})},
+		{name: "a day without data is left out", days: []*SummaryRow{day(1, "[100]"), day(0, "[300]")}, want: at(map[int]int64{0: 100})},
+		{name: "a day the clocks go back keeps only its first 24 hours", days: []*SummaryRow{day(1, longDay)}, want: at(map[int]int64{287: 80})},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -220,8 +220,8 @@ func TestNewSummaryPeriodGlucose(t *testing.T) {
 }
 
 func TestNewSummaryPeriodAGP(t *testing.T) {
-	day := func(withData int64, glucose string) *sitedb.SummaryPeriod {
-		return &sitedb.SummaryPeriod{Days: withData, GlucoseMgdlJson: glucose}
+	day := func(withData int64, glucose string) *SummaryRow {
+		return &SummaryRow{Days: withData, GlucoseMgdlJson: glucose}
 	}
 	// agp is the 288 AGP slots, with the percentiles at the slots given and the rest null
 	agp := func(slots map[int][]int64) string {
@@ -234,18 +234,18 @@ func TestNewSummaryPeriodAGP(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		days []*sitedb.SummaryPeriod
+		days []*SummaryRow
 		want string
 	}{
 		{name: "no days has no percentiles", want: agp(nil)},
 		{name: "one reading is every percentile of its 5 minutes and those either side",
-			days: []*sitedb.SummaryPeriod{day(1, "[null,120]")}, want: agp(map[int][]int64{0: {120, 120, 120, 120, 120}, 1: {120, 120, 120, 120, 120}, 2: {120, 120, 120, 120, 120}})},
+			days: []*SummaryRow{day(1, "[null,120]")}, want: agp(map[int][]int64{0: {120, 120, 120, 120, 120}, 1: {120, 120, 120, 120, 120}, 2: {120, 120, 120, 120, 120}})},
 		{name: "each 5 minutes is the readings of the 15 minutes around it on every day",
-			days: []*sitedb.SummaryPeriod{day(1, "[100,110,120]"), day(1, "[130,null,140]")},
+			days: []*SummaryRow{day(1, "[100,110,120]"), day(1, "[130,null,140]")},
 			// 100, 110 and 130 by the first 5 minutes, all five by the second, 110, 120 and 140 by the third, and 120 and
 			// 140 by the fourth
 			want: agp(map[int][]int64{0: {101, 105, 110, 120, 128}, 1: {102, 110, 120, 130, 138}, 2: {111, 115, 120, 130, 138}, 3: {121, 125, 130, 135, 139}})},
-		{name: "a day without data is left out", days: []*sitedb.SummaryPeriod{day(1, "[100]"), day(0, "[300]")},
+		{name: "a day without data is left out", days: []*SummaryRow{day(1, "[100]"), day(0, "[300]")},
 			want: agp(map[int][]int64{0: {100, 100, 100, 100, 100}, 1: {100, 100, 100, 100, 100}})},
 	}
 	for _, tt := range tests {
@@ -282,12 +282,12 @@ func TestNewSummaryDailyGlucoseStats(t *testing.T) {
 // A week's readings are its days' added up, with the mean and standard deviation of all of them, and its times in each
 // range the means of its days'
 func TestNewSummaryPeriodGlucoseStats(t *testing.T) {
-	day := func(readings, meter, cgm int64, mean, sd float64, times ...float64) *sitedb.SummaryPeriod {
-		return &sitedb.SummaryPeriod{Days: 1, GlucoseMgdlJson: "[]", GlucoseReadings: readings, MeterReadings: meter, CgmSlots: cgm,
+	day := func(readings, meter, cgm int64, mean, sd float64, times ...float64) *SummaryRow {
+		return &SummaryRow{Days: 1, GlucoseMgdlJson: "[]", GlucoseReadings: readings, MeterReadings: meter, CgmSlots: cgm,
 			GlucoseMeanMgdl: &mean, GlucoseSdMgdl: &sd, TimeVeryLow: &times[0], TimeLow: &times[1], TimeInRange: &times[2], TimeHigh: &times[3], TimeVeryHigh: &times[4]}
 	}
 	// 100 twice and 200 twice have a mean of 150 and a standard deviation of 50
-	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, 2, []*sitedb.SummaryPeriod{
+	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 1, 2, 2, []*SummaryRow{
 		day(2, 1, 2, 100, 0, 10, 20, 70, 0, 0), day(2, 0, 1, 200, 0, 0, 0, 50, 30, 20), {Days: 0, GlucoseMgdlJson: "[]", GlucoseReadings: 9}})
 	got := []any{week.GlucoseReadings, week.MeterReadings, week.CgmSlots, *week.GlucoseMeanMgdl, *week.GlucoseSdMgdl,
 		*week.TimeVeryLow, *week.TimeLow, *week.TimeInRange, *week.TimeHigh, *week.TimeVeryHigh}
@@ -300,17 +300,17 @@ func TestNewSummaryPeriodGlucoseStats(t *testing.T) {
 // A week's times in each range are of all its readings, so a day of a few, as today so far, counts for little, and its
 // daily dose and carbs are of its days over, unless none is
 func TestNewSummaryPeriodWeighsDays(t *testing.T) {
-	day := func(end, readings int64, inRange, dose, carbs float64) *sitedb.SummaryPeriod {
-		return &sitedb.SummaryPeriod{Days: 1, EndAt: end, GlucoseReadings: readings, TimeInRange: &inRange, TimeLow: new(100 - inRange),
+	day := func(end, readings int64, inRange, dose, carbs float64) *SummaryRow {
+		return &SummaryRow{Days: 1, EndAt: end, GlucoseReadings: readings, TimeInRange: &inRange, TimeLow: new(100 - inRange),
 			TotalDailyDose: dose, TotalDailyCarbs: carbs, GlucoseMgdlJson: "[]"}
 	}
 	// A whole day of 288 readings all in range, and today so far, not over at 5, of 6 readings all low
-	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 0, 10, 5, []*sitedb.SummaryPeriod{day(1, 288, 100, 40, 200), day(10, 6, 0, 3, 20)})
+	week := NewSummaryPeriod("week", "2026-10-26", "UTC", 0, 10, 5, []*SummaryRow{day(1, 288, 100, 40, 200), day(10, 6, 0, 3, 20)})
 	require.Equal(t, 98.0, *week.TimeInRange)
 	require.Equal(t, 2.0, *week.TimeLow)
 	require.Equal(t, []any{int64(2), 40.0, 200.0}, []any{week.Days, week.TotalDailyDose, week.TotalDailyCarbs})
 	// With no day over, its daily dose and carbs are today's so far
-	today := NewSummaryPeriod("week", "2026-10-26", "UTC", 0, 10, 5, []*sitedb.SummaryPeriod{day(10, 6, 0, 3, 20)})
+	today := NewSummaryPeriod("week", "2026-10-26", "UTC", 0, 10, 5, []*SummaryRow{day(10, 6, 0, 3, 20)})
 	require.Equal(t, []any{3.0, 20.0}, []any{today.TotalDailyDose, today.TotalDailyCarbs})
 }
 
@@ -325,7 +325,7 @@ func TestSummaryBasal(t *testing.T) {
 	}
 	day := NewSummaryDaily("1970-01-01", "UTC", hour, 2*hour, 2*hour, 70, 180, nil, []*sitedb.InsulinDose{{OccurredAt: hour, Dose: 4}}, nil, nil, hour, minutes)
 	require.Equal(t, []float64{5.5, 1.5}, []float64{day.TotalDailyDose, day.TotalDailyBasal})
-	week := NewSummaryPeriod("week", "1970-01-01", "UTC", 0, 2, 2, []*sitedb.SummaryPeriod{
+	week := NewSummaryPeriod("week", "1970-01-01", "UTC", 0, 2, 2, []*SummaryRow{
 		{Days: 1, TotalDailyDose: 40, TotalDailyBasal: 20, GlucoseMgdlJson: "[]"}, {Days: 1, TotalDailyDose: 30, TotalDailyBasal: 10, GlucoseMgdlJson: "[]"}})
 	require.Equal(t, []float64{35, 15}, []float64{week.TotalDailyDose, week.TotalDailyBasal})
 

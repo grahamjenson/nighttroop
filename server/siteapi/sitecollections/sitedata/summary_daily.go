@@ -4,12 +4,10 @@ import (
 	"cmp"
 	"context"
 	"database/sql"
-	"errors"
 	"slices"
 	"time"
 
 	"github.com/a-h/templ"
-	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ/site_data_templ"
@@ -18,14 +16,10 @@ import (
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/glucose"
 	"nighttroop.t1d.nz/utils/httputils"
-	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // summaryDailyMaxDays is how many days back a summary day can be built, so a request cannot build years of them
 const summaryDailyMaxDays = 366
-
-// RebuildDays is how many days, up to yesterday, are built again when the site's timezone changes
-const RebuildDays = 7
 
 // SummaryDailyCollection is the site's days, each built from its data: searched newest first, built again for a date
 // by a create, and deleted for good
@@ -40,7 +34,7 @@ func (s *SummaryDailyCollection) GetRoute() string {
 	return "summary-daily"
 }
 
-func (s *SummaryDailyCollection) ToModel(row *sitedb.SummaryPeriod, siteContext *httputils.SiteContext) *sitemodels.SiteSummaryDaily {
+func (s *SummaryDailyCollection) ToModel(row *sitemodels.SummaryRow, siteContext *httputils.SiteContext) *sitemodels.SiteSummaryDaily {
 	if row == nil {
 		return nil
 	}
@@ -48,7 +42,7 @@ func (s *SummaryDailyCollection) ToModel(row *sitedb.SummaryPeriod, siteContext 
 }
 
 // GetRow is the day named by the id, built as it is read, or not found for a day with no data
-func (s *SummaryDailyCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitedb.SummaryPeriod, error) {
+func (s *SummaryDailyCollection) GetRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) (*sitemodels.SummaryRow, error) {
 	q, err := collectionTx.Site()
 	if err != nil {
 		return nil, err
@@ -65,7 +59,7 @@ func (s *SummaryDailyCollection) GetRow(ctx context.Context, collectionTx *sitea
 
 // SearchRows is the days, newest first, from today so far back to the first with data: a page is the limit of dates,
 // back from the skip of them before today
-func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitedb.SummaryPeriod, error) {
+func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *siteapiutils.CollectionTx, query *apiutils.Query, siteContext *httputils.SiteContext) ([]*sitemodels.SummaryRow, error) {
 	q, err := collectionTx.Site()
 	if err != nil || query.Skip >= summaryDailyMaxDays {
 		return nil, err
@@ -75,27 +69,6 @@ func (s *SummaryDailyCollection) SearchRows(ctx context.Context, collectionTx *s
 	days, err := builtSummaryDays(ctx, q, siteContext, LocalDate(now, location, last+1-int(min(query.Limit, summaryDailyMaxDays))), LocalDate(now, location, last), now, true)
 	slices.Reverse(days)
 	return days, err
-}
-
-// CreateRow builds the model's date again, a day before today in the site's timezone and no more than a year ago
-func (s *SummaryDailyCollection) CreateRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id *string, siteContext *httputils.SiteContext, model *sitemodels.SiteSummaryDaily) (*sitedb.SummaryPeriod, error) {
-	q, err := collectionTx.Site()
-	if err != nil {
-		return nil, err
-	}
-	location, now := siteContext.GetSiteTimezone(), time.Now()
-	if _, err := time.Parse(time.DateOnly, model.Date); err != nil {
-		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.data.day"))
-	}
-	if model.Date >= LocalDate(now, location, 0) || model.Date < LocalDate(now, location, -summaryDailyMaxDays) {
-		return nil, apiutils.ErrBadBodyWithHint(i18n.NewError("errors.data.day_in_range"))
-	}
-	return RebuildSummaryDaily(ctx, q, siteContext, model.Date, now)
-}
-
-func (s *SummaryDailyCollection) DeleteRow(ctx context.Context, collectionTx *siteapiutils.CollectionTx, id string, siteContext *httputils.SiteContext) error {
-	_, err := siteapiutils.SiteQuery(ctx, collectionTx, (*sitedb.Queries).HardDeleteSummaryPeriod, sitedb.HardDeleteSummaryPeriodParams{Period: "day", Date: id})
-	return err
 }
 
 // A day is only read as JSON for now, so pages get nothing
@@ -108,17 +81,9 @@ func (s *SummaryDailyCollection) SearchHTMXResponse(models []*sitemodels.SiteSum
 	return site_data_templ.GlucoseDays(models)
 }
 
-func (s *SummaryDailyCollection) CreateHTMXResponse(*sitemodels.SiteSummaryDaily) templ.Component {
-	return templ.NopComponent
-}
-
-func (s *SummaryDailyCollection) DeleteHTMXResponse(*sitemodels.SiteSummaryDaily) templ.Component {
-	return templ.NopComponent
-}
-
 // SummaryDaysSoFar are the site's days with data from the date first to last, as 2026-01-31, oldest first, and today so
 // far after them when last is today (see builtSummaryDays)
-func SummaryDaysSoFar(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, last string, now time.Time) ([]*sitedb.SummaryPeriod, error) {
+func SummaryDaysSoFar(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, last string, now time.Time) ([]*sitemodels.SummaryRow, error) {
 	return builtSummaryDays(ctx, q, siteContext, first, last, now, false)
 }
 
@@ -126,157 +91,6 @@ func SummaryDaysSoFar(ctx context.Context, q *sitedb.Queries, siteContext *httpu
 func LocalDate(now time.Time, location *time.Location, days int) string {
 	return now.In(location).AddDate(0, 0, days).Format(time.DateOnly)
 }
-
-// RebuildSummaryDaily builds the site's day named date again and keeps it
-func RebuildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, date string, now time.Time) (*sitedb.SummaryPeriod, error) {
-	day, err := buildSummaryDaily(ctx, q, siteContext, date, now.UnixMilli())
-	if err != nil {
-		return nil, err
-	}
-	return upsertSummaryPeriod(ctx, q, day)
-}
-
-// upsertSummaryPeriod keeps the summary built, or is the frozen one, which is kept as it is
-func upsertSummaryPeriod(ctx context.Context, q *sitedb.Queries, row *sitedb.SummaryPeriod) (*sitedb.SummaryPeriod, error) {
-	kept, err := q.UpsertSummaryPeriod(ctx, sitedb.UpsertSummaryPeriodParams{Period: row.Period, Date: row.Date, Timezone: row.Timezone,
-		StartAt: row.StartAt, EndAt: row.EndAt, Days: row.Days, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose,
-		TotalDailyCarbs: row.TotalDailyCarbs, GlucoseMgdlJson: row.GlucoseMgdlJson, AgpMgdlJson: row.AgpMgdlJson, LoopIobJson: row.LoopIobJson,
-		LoopIobBasalJson: row.LoopIobBasalJson, LoopIobTreatmentJson: row.LoopIobTreatmentJson, LoopCobJson: row.LoopCobJson,
-		GlucoseReadings: row.GlucoseReadings, MeterReadings: row.MeterReadings, CgmSlots: row.CgmSlots, GlucoseMeanMgdl: row.GlucoseMeanMgdl,
-		GlucoseSdMgdl: row.GlucoseSdMgdl, TimeVeryLow: row.TimeVeryLow, TimeLow: row.TimeLow, TimeHigh: row.TimeHigh, TimeVeryHigh: row.TimeVeryHigh, TotalDailyBasal: row.TotalDailyBasal})
-	if errors.Is(err, sql.ErrNoRows) {
-		return q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: row.Period, Date: row.Date})
-	}
-	return kept, err
-}
-
-// FreezeSummaries freezes each summary that ended over a month ago, db.DeviceReportsKeptFor, and was built before then,
-// while it had all the data it is built from: no rebuild, timezone or week start change, or record changed after,
-// builds it again or deletes it, as its device reports, and later its other data, are deleted. One first built after,
-// as from a backfill of old data, is not frozen, and is built again as its data changes.
-func FreezeSummaries(ctx context.Context, q *sitedb.Queries, now time.Time) error {
-	_, err := q.FreezeSummaries(ctx, sitedb.FreezeSummariesParams{Now: new(now.UnixMilli()), Before: now.Add(-db.DeviceReportsKeptFor).UnixMilli(),
-		FullDataMs: db.DeviceReportsKeptFor.Milliseconds()})
-	return err
-}
-
-// RebuildSummaryDailyWeek deletes all the site's days and periods but the frozen ones, as from a timezone they no
-// longer follow, and builds the RebuildDays up to yesterday, and the last week and month of what days there are, again.
-// A frozen day keeps the timezone it was built in.
-func RebuildSummaryDailyWeek(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
-	if err := FreezeSummaries(ctx, q, now); err != nil {
-		return err
-	}
-	if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{}); err != nil {
-		return err
-	}
-	for days := -RebuildDays; days < 0; days++ {
-		if _, err := RebuildSummaryDaily(ctx, q, siteContext, LocalDate(now, siteContext.GetSiteTimezone(), days), now); err != nil {
-			return err
-		}
-	}
-	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
-}
-
-// RebuildSummaryYear deletes all the site's days and periods but the frozen ones, and builds again each day of the
-// last year with data, and yesterday, and each whole week, fortnight and month of them with data, as when its admin
-// asks for them to be. The frozen ones are kept as they are.
-func RebuildSummaryYear(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
-	if err := FreezeSummaries(ctx, q, now); err != nil {
-		return err
-	}
-	if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{}); err != nil {
-		return err
-	}
-	location, weekStart := siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()
-	for days := -summaryDailyMaxDays; days < 0; days++ {
-		day, err := buildSummaryDaily(ctx, q, siteContext, LocalDate(now, location, days), now.UnixMilli())
-		if err == nil && (day.Days > 0 || days == -1) {
-			_, err = upsertSummaryPeriod(ctx, q, day)
-		}
-		if err != nil {
-			return err
-		}
-	}
-	today := PeriodStart("day", now, location, weekStart)
-	for _, period := range SummaryPeriods {
-		for start := PeriodStart(period, now.AddDate(0, 0, -summaryDailyMaxDays), location, weekStart); !PeriodEnd(period, start).After(today); start = PeriodEnd(period, start) {
-			row, _, err := summaryPeriodFrom(ctx, q, period, start, now)
-			if err == nil && row.Days > 0 {
-				_, err = upsertSummaryPeriod(ctx, q, row)
-			}
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// RebuildSummaryDays builds again each of the site's days with one of the times in it, before today and within a
-// year, and then each whole week, fortnight and month with one of those days in it, so data a backfill or sync adds to
-// old days is in their summaries without building all of them again
-func RebuildSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, times []time.Time, now time.Time) error {
-	if err := FreezeSummaries(ctx, q, now); err != nil {
-		return err
-	}
-	location, weekStart := siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()
-	today := PeriodStart("day", now, location, weekStart)
-	days, periods := map[time.Time]bool{}, map[string]map[time.Time]bool{}
-	for _, at := range times {
-		if day := PeriodStart("day", at, location, weekStart); day.Before(today) && !day.Before(today.AddDate(0, 0, -summaryDailyMaxDays)) {
-			days[day] = true
-		}
-	}
-	for day := range days {
-		if _, err := RebuildSummaryDaily(ctx, q, siteContext, day.Format(time.DateOnly), now); err != nil {
-			return err
-		}
-		for _, period := range SummaryPeriods {
-			if start := PeriodStart(period, day, location, weekStart); !PeriodEnd(period, start).After(today) {
-				if periods[period] == nil {
-					periods[period] = map[time.Time]bool{}
-				}
-				periods[period][start] = true
-			}
-		}
-	}
-	for period, starts := range periods {
-		for start := range starts {
-			// The kept one is deleted, so it is built from its days again rather than read
-			_, err := q.HardDeleteSummaryPeriod(ctx, sitedb.HardDeleteSummaryPeriodParams{Period: period, Date: start.Format(time.DateOnly)})
-			if err != nil {
-				return err
-			}
-			row, _, err := summaryPeriodFrom(ctx, q, period, start, now)
-			if err == nil && row.Days > 0 {
-				_, err = upsertSummaryPeriod(ctx, q, row)
-			}
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// RebuildSummaryWeeks deletes all the site's weeks and fortnights, as from a week start day they no longer follow,
-// and builds the last ones again
-func RebuildSummaryWeeks(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
-	if err := FreezeSummaries(ctx, q, now); err != nil {
-		return err
-	}
-	for _, period := range []string{"week", "fortnight"} {
-		if _, err := q.DeleteSummaryPeriods(ctx, sitedb.DeleteSummaryPeriodsParams{Period: &period}); err != nil {
-			return err
-		}
-	}
-	return BuildLastSummaryPeriods(ctx, q, siteContext, now)
-}
-
-// SummaryPeriods are what the summary days are put together into: weeks and fortnights from the site's week start
-// day, and months
-var SummaryPeriods = []string{"week", "fortnight", "month"}
 
 // PeriodStart is the midnight, in location, that starts the day, week or fortnight, from weekStart (monday or sunday),
 // or month that at is in. Fortnights are every other week from the first weekStart of 1970, so each week is always in
@@ -314,7 +128,7 @@ func PeriodEnd(period string, start time.Time) time.Time {
 }
 
 // builtSummaryPeriod is the site's week, fortnight or month from start, built as it is read from its days so far
-func builtSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, period string, start, now time.Time) (*sitedb.SummaryPeriod, error) {
+func builtSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, period string, start, now time.Time) (*sitemodels.SummaryRow, error) {
 	date, end := start.Format(time.DateOnly), PeriodEnd(period, start)
 	days, err := builtSummaryDays(ctx, q, siteContext, date, end.AddDate(0, 0, -1).Format(time.DateOnly), now, false)
 	if err != nil {
@@ -323,53 +137,13 @@ func builtSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *htt
 	return sitemodels.NewSummaryPeriod(period, date, start.Location().String(), start.UnixMilli(), end.UnixMilli(), now.UnixMilli(), days), nil
 }
 
-// LastSummaryPeriod is the site's last whole week, fortnight or month, and whether it was built, built from its days
-// if not
-func LastSummaryPeriod(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, period string, now time.Time) (*sitedb.SummaryPeriod, bool, error) {
-	return summaryPeriodFrom(ctx, q, period, LastPeriodStart(period, now, siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()), now)
-}
-
-// summaryPeriodFrom is the site's week, fortnight or month from start, and whether it was built, built from the days
-// kept in it, and any more days given, if not
-func summaryPeriodFrom(ctx context.Context, q *sitedb.Queries, period string, start, now time.Time, more ...*sitedb.SummaryPeriod) (*sitedb.SummaryPeriod, bool, error) {
-	date := start.Format(time.DateOnly)
-	row, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: period, Date: date})
-	if !errors.Is(err, sql.ErrNoRows) {
-		return row, err == nil, err
-	}
-	end := PeriodEnd(period, start)
-	last := end.AddDate(0, 0, -1).Format(time.DateOnly)
-	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", DateGTE: &date, DateLTE: &last, Limit: 31})
-	if err != nil {
-		return nil, false, err
-	}
-	return sitemodels.NewSummaryPeriod(period, date, start.Location().String(), start.UnixMilli(), end.UnixMilli(), now.UnixMilli(), append(days, more...)), false, nil
-}
-
-// BuildLastSummaryPeriods builds and keeps the site's last whole week, fortnight and month, when they are not yet built
-func BuildLastSummaryPeriods(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, now time.Time) error {
-	for _, period := range SummaryPeriods {
-		row, built, err := LastSummaryPeriod(ctx, q, siteContext, period, now)
-		if err != nil {
-			return err
-		}
-		if built {
-			continue
-		}
-		if _, err := upsertSummaryPeriod(ctx, q, row); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // extendedLookback is the longest a dose's extended part runs, as its column takes
 const extendedLookback = 7 * 24 * time.Hour
 
 // buildSummaryDaily is the site's day named date, from midnight in its timezone, built from its clean readings,
 // insulin, basal, food and loop reports up to until, so a day not yet over is its part so far. Its time in range is from the site's
 // range low to its range high.
-func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, date string, until int64) (*sitedb.SummaryPeriod, error) {
+func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, date string, until int64) (*sitemodels.SummaryRow, error) {
 	location := siteContext.GetSiteTimezone()
 	midnight, err := time.ParseInLocation(time.DateOnly, date, location)
 	if err != nil {

@@ -18,7 +18,7 @@ import (
 // A site over 1.5 times its DB size limit (20 MB, so over 30720 KB) is truncated harder by each backup:
 // first the JSON that matters only while recent is cleared and device reports over 7 days old are deleted; then, only
 // if it is still over, readings and treatments over 90 days old are deleted, but the newest of each type, and its
-// summaries are kept. A site under 1.5 times its limit gets only the job's usual truncate.
+// cold days are kept. A site under 1.5 times its limit gets only the job's usual truncate.
 func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 	tests := []struct {
 		name string
@@ -80,10 +80,6 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 			_, err := q.SoftDeleteEventGroup(ctx, sitedb.SoftDeleteEventGroupParams{ID: "bolus-deleted", UpdatedByIdentityName: new("phone")})
 			require.NoError(t, err)
 			_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: "sgv-deleted", UpdatedByIdentityName: new("phone")})
-			require.NoError(t, err)
-			oldDate := now.Add(-100 * day).Format(time.DateOnly)
-			_, err = q.UpsertSummaryPeriod(ctx, sitedb.UpsertSummaryPeriodParams{Period: "day", Date: oldDate, Timezone: "UTC", StartAt: ago(100 * day), EndAt: ago(99 * day),
-				Days: 1, TotalDailyDose: 30, GlucoseMgdlJson: "[]", LoopIobJson: "[]", LoopIobBasalJson: "[]", LoopIobTreatmentJson: "[]", LoopCobJson: "[]"})
 			require.NoError(t, err)
 
 			measured := 0
@@ -150,10 +146,10 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 				_, err := getGroup(id)
 				require.False(t, gone(err), "%s, the newest of its type, is kept", id)
 			}
-			summary, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: oldDate})
-			require.NoError(t, err, "the summaries are kept")
-			require.Nil(t, summary.StaleAt, "and are not marked stale, so they are not built again from no data")
-			require.Equal(t, 30.0, summary.TotalDailyDose)
+			// The old day was packaged before its rows were deleted, so its cold day is kept
+			oldDay, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "glucose", Date: now.Add(-100 * day).UTC().Format(time.DateOnly)})
+			require.NoError(t, err, "the cold days are kept")
+			require.NotZero(t, oldDay.UpdatedAt, "and are not marked to be packaged again from no data")
 
 			// What changed is recorded, with the size after, in a "Site truncated" event
 			truncated, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_truncated"), Limit: 10})

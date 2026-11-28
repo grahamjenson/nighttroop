@@ -1002,9 +1002,6 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - For a week or fortnight: 7 or 14 days before or after, or to today when fewer are over.
   - Disabled past today and one year ago.
 - Back and forward move between reports.
-- If data in its days before today changed after they were calculated, a blue notice above says its numbers can be
-  out of date and tells you to reload the page.
-  - Examples of such a change: a backfill, a late sync, a record moved or deleted.
   - A reload after the rebuild removes the notice.
 - Under average glucose, GMI, coefficient of variation, time CGM active and time in range: ▲ or ▼ with the amount, or
   "No change", from the previous report.
@@ -1071,18 +1068,11 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - A past month's empty table says none in that month (or year, for months).
 - Arrows beside the month: before (to one year ago) and after (to this month). Other months are refused.
 - **Printable report** opens `/reports/print` in a new tab.
-- Regenerate summaries:
-  - Below the tables, not the main action, for summaries that look wrong (after a timezone change).
-  - Admins only, after a confirm.
-  - A background job rebuilds from site data the last year's days with data, yesterday, and their weeks, fortnights
-    and months, but not the frozen ones (see Summary builds).
-  - Recorded as an event. A repeat before it runs gives one job.
-  - Shares the site's few downloads a minute with Truncate and Download Data. Over it, the site refuses it (429).
 
 #### Days built when read
 
 The reports (overview, AGP, TDD, print), the summary's yesterday, last week, last fortnight and last month,
-`/data/summary-daily` and `/data/summary-periods` build each day when they read it. They do not read a kept summary.
+`/data/summary-daily` and `/data/summary-periods` build each day when they read it. The server keeps no summary.
 
 - A day that ended before the UTC day before today is built from its cold days (see Packaging of old days).
   - Its mean, SD and times in range are of the CGM value of each 5 minutes.
@@ -1096,33 +1086,13 @@ The reports (overview, AGP, TDD, print), the summary's yesterday, last week, las
   not a date.
 - `GET /data/summary-daily` gives the days from today back to the first day with data, newest first. `limit` and
   `skip` count dates.
-- `POST` and `DELETE` of `/data/summary-daily` change only the kept summaries, which no page reads.
-
-#### Summary builds
-
-No page reads the kept summaries. The builds stay until they are removed (`docs/retention.md`, step 5c).
-
-- Data for a day before today written (backfill, late sync), changed or deleted rebuilds only that day, the day a
-  record moved from, and the whole weeks, fortnights and months with them.
-- Counted: glucose, insulin, food, temp basals, temp targets, profile switches, device statuses.
-- Starts after 2 minutes with no new site data, or 15 minutes of writes at most, so a backfill gets one build.
-- Today is built when read.
-- Within one minute of a restart, the server builds:
-  - Days marked stale in the site's DB at the write: a record moved away (site or Nightscout API) or permanently
-    deleted (Nightscout API).
-  - Data found by `updated_at` since the site's last check, `summaries_checked_at`, written just before the stop, to a day built or not.
-- A connector's finished backfill: its days are built on the next run, within one minute, with no wait for quiet.
-- Data from the last 15 minutes (a phone uploading) does not delay older days. With a looping phone, they build 2
-  minutes after their writes stop.
-- Frozen summaries: a day, week, fortnight or month that ended over 30 days ago, and was built in the 30 days after it
-  ended, while it had all its data, is frozen (`frozen_at`). 30 days is how long device reports are kept.
-  - It is frozen each night, and before each rebuild.
-  - Regenerate summaries, a timezone change and a week start change do not build it again or delete it. It keeps the
-    timezone it was built in.
-  - Data written, changed or deleted in it does not mark it stale or build it again. Deleting it does nothing.
-  - So it is kept as built when its data is deleted.
-  - One first built more than 30 days after it ended, as from a backfill of old data, is not frozen, and is built
-    again as its data changes.
+- `/data/summary-daily` has no `POST` and no `DELETE` (405). A day is not kept, so there is none to make or delete.
+- A record deleted for good (Nightscout API), or changed through the site API, can leave no row that says its day
+  changed.
+  - The server marks the cold days of that day when it writes the change.
+  - A report builds a marked day from the site's rows.
+  - The next package run packages the marked days again and clears the marks.
+  - If `RETENTION_DELETE_ROWS` is `true`, this applies only to the days of `RETENTION_HOT_DAYS`.
 
 #### TDD report
 
@@ -1194,7 +1164,7 @@ No page reads the kept summaries. The builds stay until they are removed (`docs/
   activities, notifications or event groups says that a new site has nothing until an app or a connector sends it,
   with a link to Getting Started. A table with a row does not.
 - The device status page with no device says the same, under "No device has reported in the last week."
-- Each main button has an icon before its words: save, add, delete, reset, backfill, filter, print and regenerate.
+- Each main button has an icon before its words: save, add, delete, reset, backfill, filter and print.
 - On a phone, a wide table scrolls sideways in its card, not the page. Cells do not wrap (a time, or a value and
   unit, stays together), except notes.
 - Every table is close set: small headings on a grey band, and each row as tall as its text or its button.
@@ -2752,7 +2722,7 @@ harder:
    - It deletes readings and treatments over 90 days old, deleted ones too.
    - It keeps the newest of each treatment type, of each reading type, and of each event table. The current
      profile, and sensor, site and insulin ages, read the newest however old.
-   - It keeps the summaries of those days, weeks and months. They are not marked stale.
+   - It keeps the cold days of those days, so the reports still show them.
 - After each step that changed records, the job shrinks the DB only if 10% or more of it is free pages. If less is
   free, the next records fill the free pages.
 - The job measures the DB without its free pages, to find if the site is over 1.5 times its limit.
@@ -2760,8 +2730,6 @@ harder:
   before and after.
 - If the DB is not on disk (in memory), or the site has no limit, the job does not do this.
 - Records keep their `updated_at`, so clients do not read them again.
-- **Note:** Regenerate summaries rebuilds from site data. It removes the summaries of days whose records step 2
-  deleted.
 
 #### Rate limits
 
@@ -3103,7 +3071,7 @@ harder:
   - Shrinks the DB, and keeps all else, as the card says.
   - Shows the storage again, a toast of the new DB size, and a "Site truncated" event with the admin.
 - "Download Data" downloads `<site>-<date>.zip`, with a DB snapshot `<site>-<date>.sqlite`.
-- Truncate, Download Data and Regenerate summaries share the site's few downloads a minute.
+- Truncate and Download Data share the site's few downloads a minute.
 - The JSON API (in `openapi.json`) gives the same storage, in `result`:
   - `GET /usage`: `size_kb`, `limit_kb`, `before_size_kb` (null) and `tables`.
   - Each table has `name`, `bytes` and `records`, the largest first, as last measured.

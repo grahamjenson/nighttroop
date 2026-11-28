@@ -41,17 +41,10 @@ CLICK #site--settings--virtual-connector--backfill
 ASSERT_TEXT_VISIBLE Backfilling Virtual
 RUN_BACKGROUND_JOBS
 
-// An admin regenerates the summaries, after confirming (the test accepts), which a background job builds again from
-// the site's data, so yesterday is kept, with its numbers, and opens its AGP report
+// The summaries are built from the site's data when the page is read, so yesterday is there with its numbers, and
+// opens its AGP report. No button builds them.
 GOTO /reports
-// It is offered below the summaries, saying when it is wanted, not beside the page's title as its main action
-ASSERT_VISIBLE #site--summaries--maintenance >> text=Summaries look wrong
-ASSERT_VISIBLE #site--summaries--maintenance #site--summaries--regenerate
-SCROLL 3000
-SCREENSHOT summaries_regenerate
-CLICK #site--summaries--regenerate
-ASSERT_TEXT_VISIBLE Regenerating summaries
-RUN_BACKGROUND_JOBS
+ASSERT_NOT_VISIBLE #site--summaries--regenerate
 // Yesterday's month, which on the 1st is the month before
 GOTO /reports/summaries?month={{ slice (date -1) 0 7 }}
 ASSERT_STATUS 200

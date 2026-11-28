@@ -366,9 +366,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSiteSettingsStmt, err = db.PrepareContext(ctx, updateSiteSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteSettings: %w", err)
 	}
-	if q.updateSiteSummariesCheckedAtStmt, err = db.PrepareContext(ctx, updateSiteSummariesCheckedAt); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSiteSummariesCheckedAt: %w", err)
-	}
 	if q.updateSiteTableSizesStmt, err = db.PrepareContext(ctx, updateSiteTableSizes); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSiteTableSizes: %w", err)
 	}
@@ -959,11 +956,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSiteSettingsStmt: %w", cerr)
 		}
 	}
-	if q.updateSiteSummariesCheckedAtStmt != nil {
-		if cerr := q.updateSiteSummariesCheckedAtStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSiteSummariesCheckedAtStmt: %w", cerr)
-		}
-	}
 	if q.updateSiteTableSizesStmt != nil {
 		if cerr := q.updateSiteTableSizesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSiteTableSizesStmt: %w", cerr)
@@ -1142,7 +1134,6 @@ type Queries struct {
 	updateSiteIdentitySettingsStmt          *sql.Stmt
 	updateSiteIdentityTOTPStmt              *sql.Stmt
 	updateSiteSettingsStmt                  *sql.Stmt
-	updateSiteSummariesCheckedAtStmt        *sql.Stmt
 	updateSiteTableSizesStmt                *sql.Stmt
 	updateSitesBackupUploadedStmt           *sql.Stmt
 	upsertPushRegistrationStmt              *sql.Stmt
@@ -1268,7 +1259,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSiteIdentitySettingsStmt:          q.updateSiteIdentitySettingsStmt,
 		updateSiteIdentityTOTPStmt:              q.updateSiteIdentityTOTPStmt,
 		updateSiteSettingsStmt:                  q.updateSiteSettingsStmt,
-		updateSiteSummariesCheckedAtStmt:        q.updateSiteSummariesCheckedAtStmt,
 		updateSiteTableSizesStmt:                q.updateSiteTableSizesStmt,
 		updateSitesBackupUploadedStmt:           q.updateSitesBackupUploadedStmt,
 		upsertPushRegistrationStmt:              q.upsertPushRegistrationStmt,

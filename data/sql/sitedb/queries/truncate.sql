@@ -96,7 +96,7 @@ UPDATE profile_switches SET icfg_json = NULL WHERE profile_switches.occurred_at 
 -- If such a site is still over, its treatments and readings that occurred before Before, 90 days ago, are deleted, the
 -- deleted ones too, but the newest not deleted of each group type, reading type and table, as a sensor's, site's or
 -- profile's age and the current profile read the newest however old. The groups go first, so the events they refer to
--- are kept. The summaries are kept and are not marked stale.
+-- are kept. Their cold days are kept, so the reports still show those days.
 -- name: DeleteOldEventGroups :execrows
 DELETE FROM event_groups WHERE event_groups.occurred_at < @before
     AND event_groups.occurred_at < (SELECT MAX(newest.occurred_at)

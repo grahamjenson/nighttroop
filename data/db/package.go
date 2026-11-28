@@ -49,11 +49,27 @@ func (db *ControlDB) packageSite(ctx context.Context, site *SiteDB, since int64,
 		}
 		return fmt.Errorf("cannot package %s of site %s: %w", time.UnixMilli(day*dayMs).UTC().Format(time.DateOnly), site.Subdomain, err)
 	}
+	// The days marked to be packaged again, as a record was deleted from them for good or moved away: those whose rows
+	// are all there, so the hot days where the server deletes rows
+	staleFrom := ""
+	if db.ServerConfig.RetentionDeleteRows {
+		staleFrom = hot.Format(time.DateOnly)
+	}
+	staleDates, err := q.StaleColdDays(ctx, sitedb.StaleColdDaysParams{FromDate: staleFrom})
+	if err != nil {
+		return fmt.Errorf("cannot package site %s: %w", site.Subdomain, err)
+	}
+	var stale []int64
+	for _, date := range staleDates {
+		if at, err := time.Parse(time.DateOnly, date); err == nil && at.Before(today) {
+			stale = append(stale, at.UnixMilli()/dayMs)
+		}
+	}
 	days, err := q.CGMDaysWrittenSince(ctx, sitedb.CGMDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()})
 	if err != nil {
 		return fmt.Errorf("cannot package site %s: %w", site.Subdomain, err)
 	}
-	for _, day := range days {
+	for _, day := range slices.Compact(slices.Sorted(slices.Values(append(days, stale...)))) {
 		// A day whose rows may be deleted keeps what it has, and takes what was written since
 		if err := packaged(day, packageGlucoseDay(ctx, q, day*dayMs, db.ServerConfig.RetentionDeleteRows && day*dayMs < hot.UnixMilli())); err != nil {
 			return err
@@ -67,8 +83,11 @@ func (db *ControlDB) packageSite(ctx context.Context, site *SiteDB, since int64,
 			return err
 		}
 	}
-	if err := db.packageTreatmentDays(ctx, site, since, now); err != nil {
+	if err := db.packageTreatmentDays(ctx, site, since, now, stale); err != nil {
 		return fmt.Errorf("cannot package the treatments of site %s: %w", site.Subdomain, err)
+	}
+	if err := q.ClearStaleColdDays(ctx, sitedb.ClearStaleColdDaysParams{FromDate: staleFrom}); err != nil {
+		return fmt.Errorf("cannot package site %s: %w", site.Subdomain, err)
 	}
 	if db.ServerConfig.RetentionDeleteRows {
 		if _, err := q.DeletePackagedCGMReadings(ctx, sitedb.DeletePackagedCGMReadingsParams{Before: hot.UnixMilli()}); err != nil {
@@ -109,13 +128,13 @@ func lastDays(days []int64, today time.Time) []int64 {
 var PackagedSettle = 24 * time.Hour
 
 // packageTreatmentDays packages the treatment series and then the events of the days that ended and had a treatment or
-// an event written since since, and of the last days that ended, from their rows alone. The events are written last,
+// an event written since since, of the stale days, and of the last days that ended, from their rows alone. The events are written last,
 // as a day's events say the day was packaged: when the server deletes rows, the rows of a day older than the hot days
 // are deleted once its events were packaged after them and have then settled (see deletePackagedTreatments), and such
 // a day is never packaged again, as its rows are not all there. A row written for it later stays a row.
 //
 // A series with no value in a day is written only to empty a day that had some.
-func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
+func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, since int64, now time.Time, stale []int64) error {
 	q, today := site.Queries(), now.UTC().Truncate(24*time.Hour)
 	hot, settled := retention.HotSince(now, db.ServerConfig.RetentionHotDays).UnixMilli(), now.Add(-PackagedSettle).UnixMilli()
 	days, err := q.EventDaysWrittenSince(ctx, sitedb.EventDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()})
@@ -126,7 +145,7 @@ func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, sin
 	if err != nil {
 		return err
 	}
-	for _, day := range treatmentDays {
+	for _, day := range append(treatmentDays, stale...) {
 		if !slices.Contains(days, day) {
 			days = append(days, day)
 		}

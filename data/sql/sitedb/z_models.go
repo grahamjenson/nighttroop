@@ -512,38 +512,6 @@ type ProfileSwitchesVw struct {
 	CreatedByIdentityName    *string
 }
 
-type SummaryPeriod struct {
-	Period               string
-	Date                 string
-	Timezone             string
-	StartAt              int64
-	EndAt                int64
-	Days                 int64
-	TimeInRange          *float64
-	TotalDailyDose       float64
-	TotalDailyBasal      float64
-	TotalDailyCarbs      float64
-	GlucoseMgdlJson      string
-	AgpMgdlJson          *string
-	GlucoseReadings      int64
-	MeterReadings        int64
-	CgmSlots             int64
-	GlucoseMeanMgdl      *float64
-	GlucoseSdMgdl        *float64
-	TimeVeryLow          *float64
-	TimeLow              *float64
-	TimeHigh             *float64
-	TimeVeryHigh         *float64
-	LoopIobJson          string
-	LoopIobBasalJson     string
-	LoopIobTreatmentJson string
-	LoopCobJson          string
-	StaleAt              *int64
-	FrozenAt             *int64
-	CreatedAt            int64
-	UpdatedAt            int64
-}
-
 type TempBasal struct {
 	ID                    string
 	DurationMinutes       int64

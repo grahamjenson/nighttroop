@@ -112,11 +112,6 @@ func BenchmarkSummary(b *testing.B) {
 			require.NoError(b, err)
 		}
 	}
-	// As the daily job keeps them, so the page builds only today
-	_, err := RebuildSummaryDaily(ctx, q, siteContext, LocalDate(now, siteContext.GetSiteTimezone(), -1), now)
-	require.NoError(b, err)
-	require.NoError(b, BuildLastSummaryPeriods(ctx, q, siteContext, now))
-
 	b.Run("page", func(b *testing.B) {
 		for b.Loop() {
 			tx := siteapiutils.NewCollectionTx(ctx, siteContext)

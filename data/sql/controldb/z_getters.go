@@ -962,16 +962,6 @@ func (m *UpdateSiteEmailParams) SetID(v string) {
 }
 
 // GetID returns the ID value.
-func (m UpdateSiteSummariesCheckedAtParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated UpdateSiteSummariesCheckedAtParams.
-func (m *UpdateSiteSummariesCheckedAtParams) SetID(v string) {
-	m.ID = v
-}
-
-// GetID returns the ID value.
 func (m UpdateSiteTableSizesParams) GetID() string {
 	return m.ID
 }

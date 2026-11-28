@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/consts"
 	"nighttroop.t1d.nz/utils/httputils"
 )
@@ -58,7 +57,7 @@ type SiteSummaryPeriod struct {
 var ReportDays = map[string]int{"week": 7, "fortnight": 14}
 
 // SummaryPeriodFromDB is the site model of a summary period, with its glucose and AGP in the site context's units
-func SummaryPeriodFromDB(row *sitedb.SummaryPeriod, siteContext *httputils.SiteContext) *SiteSummaryPeriod {
+func SummaryPeriodFromDB(row *SummaryRow, siteContext *httputils.SiteContext) *SiteSummaryPeriod {
 	day := SummaryDailyFromDB(row, siteContext)
 	model := &SiteSummaryPeriod{Period: row.Period, Date: row.Date, Timezone: row.Timezone, Start: row.StartAt, End: row.EndAt,
 		Days: row.Days, TimeInRange: row.TimeInRange, TotalDailyDose: row.TotalDailyDose, TotalDailyBasal: row.TotalDailyBasal, TotalDailyCarbs: row.TotalDailyCarbs,

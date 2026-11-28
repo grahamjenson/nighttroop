@@ -60,7 +60,7 @@ func TestSummariesReportOfAPastMonth(t *testing.T) {
 	first := time.Now().UTC().AddDate(0, -1, 0)
 	first = time.Date(first.Year(), first.Month(), 1, 0, 0, 0, 0, time.UTC)
 	var buf bytes.Buffer
-	require.NoError(t, SummariesReport(first, map[string][]*sitemodels.SiteSummaryPeriod{}, false).Render(t.Context(), &buf))
+	require.NoError(t, SummariesReport(first, map[string][]*sitemodels.SiteSummaryPeriod{}).Render(t.Context(), &buf))
 	html := buf.String()
 	require.Contains(t, html, `<span id="site--summaries--month" class="min-w-0 text-sm font-medium tabular-nums text-gray-700">`+first.Format("January 2006")+`</span>`)
 	require.Contains(t, html, "No days kept in "+first.Format("January 2006")+".")
@@ -73,7 +73,7 @@ func TestSummariesReportOfAPastMonth(t *testing.T) {
 func TestSummariesReportListsMonthsFirst(t *testing.T) {
 	first := time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.UTC)
 	var buf bytes.Buffer
-	require.NoError(t, SummariesReport(first, map[string][]*sitemodels.SiteSummaryPeriod{}, false).Render(t.Context(), &buf))
+	require.NoError(t, SummariesReport(first, map[string][]*sitemodels.SiteSummaryPeriod{}).Render(t.Context(), &buf))
 	html, at := buf.String(), -1
 	for _, period := range []string{"month", "fortnight", "week", "day"} {
 		next := strings.Index(html, `id="site--summaries--`+period+`"`)

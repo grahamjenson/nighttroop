@@ -23,15 +23,7 @@ POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
 B {"eventType": "Correction Bolus", "created_at": "{{ daytime -7 730 }}", "insulin": 2}
 ASSERT_STATUS 200
 
-NAME build_week_ago
-POST http://{{ site }}/data/summary-daily
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-B {"date": "{{ date -7 }}"}
-ASSERT_STATUS 201
-ASSERT_EQUALS 50 "@result.time_in_range"
-
-// Last week is its one day with data, built from the days while the job has not built it
+// Last week is its one day with data, built from its days as it is read
 NAME summary_last_week
 GET http://{{ site }}/summary
 H Authorization: Bearer {{ jwt }}
@@ -40,34 +32,14 @@ ASSERT_STATUS 200
 ASSERT_EQUALS 50 "@result.items.0.last_week.time_in_range"
 ASSERT_EQUALS 2 "@result.items.0.last_week.total_daily_dose"
 
-// The background job builds and keeps last week, so it stays after its day is deleted
-RUN_BACKGROUND_JOBS
-
-NAME delete_week_ago
-DELETE http://{{ site }}/data/summary-daily/{{ date -7 }}
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-ASSERT_STATUS 200
-
-NAME summary_kept_last_week
-GET http://{{ site }}/summary
-H Authorization: Bearer {{ jwt }}
-H Accept: application/json
-ASSERT_STATUS 200
-ASSERT_EQUALS 50 "@result.items.0.last_week.time_in_range"
-ASSERT_EQUALS 2 "@result.items.0.last_week.total_daily_dose"
-
-
-// A week is built from its days as it is read, and a day from its data, so a new week start day, and the delete of
-// the kept day, lose nothing: back on Monday, last week is as it was
+// A week is built from its days as it is read, so a new week start day loses nothing: back on Monday, last week is
+// as it was
 NAME week_start_sunday
 POST http://{{ site }}/settings/site
 H Authorization: Bearer {{ jwt }}
 H Accept: application/json
 B {"week_start_day": "sunday"}
 ASSERT_STATUS 200
-
-RUN_BACKGROUND_JOBS
 
 NAME week_start_monday
 POST http://{{ site }}/settings/site

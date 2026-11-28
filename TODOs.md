@@ -5,10 +5,7 @@
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
     1. P1: Retention step 2b (`docs/retention.md`): the glucose page says older readings are in Reports; a made
        entry can be read and deleted by its `_id`; a search oldest first has made entries
-    1. P1: Retention steps 5c and 6: remove the summaries, which nothing reads (table, job, freeze, Regenerate summaries, `POST` and `DELETE` of `/data/summary-daily`), hot days by
-       size (remove most of the truncation)
-    1. P1: With `RETENTION_DELETE_ROWS`, a kept summary that is not frozen (hot days below 31, or a late backfill)
-       is built again without the deleted rows. Nothing reads it now. Step 5c removes it
+    1. P1: Retention step 6: hot days by size (remove most of the truncation)
     1. P2: A treatment written late for a day whose rows are deleted stays a row for ever: add it to the day's
        cold days and delete it
     1. P3: A report of a site that was never backed up builds each day from rows, which is slow for a year

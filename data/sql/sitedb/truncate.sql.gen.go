@@ -191,7 +191,7 @@ type DeleteOldEventGroupsParams struct {
 // If such a site is still over, its treatments and readings that occurred before Before, 90 days ago, are deleted, the
 // deleted ones too, but the newest not deleted of each group type, reading type and table, as a sensor's, site's or
 // profile's age and the current profile read the newest however old. The groups go first, so the events they refer to
-// are kept. The summaries are kept and are not marked stale.
+// are kept. Their cold days are kept, so the reports still show those days.
 func (q *Queries) DeleteOldEventGroups(ctx context.Context, arg DeleteOldEventGroupsParams) (int64, error) {
 	result, err := q.exec(ctx, q.deleteOldEventGroupsStmt, deleteOldEventGroups, arg.Before)
 	if err != nil {
