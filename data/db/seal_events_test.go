@@ -42,15 +42,16 @@ func TestSealingEvents(t *testing.T) {
 	must(q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "gone", Carbs: new(10.0), OccurredAt: at(13), CreatedByIdentityName: by}))
 	must(q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{ID: "gone"}))
 
-	events := func() []map[string]any {
-		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "events", Date: day.Format(time.DateOnly)})
+	sealedDay := func(of time.Time) retention.EventsDay {
+		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "events", Date: of.Format(time.DateOnly)})
 		require.NoError(t, err)
 		require.Equal(t, retention.EventsShape, retention.ShapeOf(row.Body))
-		header, list, err := retention.ReadEvents(row.Body)
+		header, sealed, err := retention.ReadEvents(row.Body)
 		require.NoError(t, err)
-		require.Equal(t, retention.Header{Version: 1, Shape: retention.EventsShape, Deflated: true, Steps: len(list)}, header)
-		return list
+		require.Equal(t, retention.Header{Version: 2, Shape: retention.EventsShape, Deflated: true, Steps: len(sealed.Events)}, header)
+		return sealed
 	}
+	events := func() []map[string]any { return sealedDay(day).Events }
 	seal := func() {
 		_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 		require.NoError(t, err)
@@ -72,17 +73,49 @@ func TestSealingEvents(t *testing.T) {
 		"group_type": "Meal Bolus", "entered_by": "openaps://AAPS", "notes": "from the group"}, sealed[2])
 	require.Equal(t, 4.5, sealed[3]["dose"])
 	require.Equal(t, []any{140.0, 160.0, 60.0, "Exercise"}, []any{sealed[4]["low_target_mgdl"], sealed[4]["high_target_mgdl"], sealed[4]["duration_minutes"], sealed[4]["reason"]})
-	// The switch has its name and percent, not the profile it was made with
-	require.Equal(t, []any{"Sick day", 1.2}, []any{sealed[5]["name"], sealed[5]["multiplier"]})
-	require.NotContains(t, sealed[5], "basal_rates_json")
+	// The switch has its name and percent, and the profile it was made with
+	require.Equal(t, []any{"Sick day", 1.2, `[{"time":"00:00","value":1}]`}, []any{sealed[5]["name"], sealed[5]["multiplier"], sealed[5]["basal_rates_json"]})
+	// The day had nothing in force when it started
+	require.Empty(t, sealedDay(day).InForce)
+
+	// The day after starts with the switch in force, as it has no end, with its profile again, so the day is read
+	// alone, and with nothing of the temp target, which was over. It has no event of its own.
+	after := sealedDay(day.AddDate(0, 0, 1))
+	require.Empty(t, after.Events)
+	require.Len(t, after.InForce, 1)
+	require.Equal(t, []any{"profile_switches", "switch", `[{"time":"00:00","value":1}]`}, []any{after.InForce[0]["k"], after.InForce[0]["id"], after.InForce[0]["basal_rates_json"]})
 	require.Equal(t, map[string]any{"k": "event_groups", "id": "site-change", "occurred_at": ms(9), "group_type": "Site Change", "entered_by": "xDrip", "created_by_identity_name": by}, sealed[8])
 
 	// An event deleted is gone when its day is sealed again, and a day left with none is emptied
 	must(q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{ID: "bolus"}))
 	seal()
 	require.Len(t, events(), 8)
-	_, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "events", Date: day.AddDate(0, 0, 1).Format(time.DateOnly)})
-	require.Error(t, err, "a day with no event has no list")
+
+	// A switch with an end takes the place of the one with none until it is over, and a temp target not over is in
+	// force too: the newest of each
+	must(q.CreateProfileSwitch(ctx, sitedb.CreateProfileSwitchParams{ID: "for a day", Name: "Sick day", DurationMinutes: 26 * 60, OccurredAt: at(20), CreatedByIdentityName: by,
+		BasalRatesJson: new(`[{"time":"00:00","value":1}]`)}))
+	must(q.CreateTempTarget(ctx, sitedb.CreateTempTargetParams{ID: "over midnight", LowTargetMgdl: 100, HighTargetMgdl: 110, DurationMinutes: 120, OccurredAt: at(23), CreatedByIdentityName: by}))
+	seal()
+	after = sealedDay(day.AddDate(0, 0, 1))
+	require.Equal(t, []any{"switch", "for a day", "over midnight"}, []any{after.InForce[0]["id"], after.InForce[1]["id"], after.InForce[2]["id"]})
+	// 2 days after, the switch with an end is over, and the target long so
+	later := sealedDay(day.AddDate(0, 0, 2))
+	require.Len(t, later.InForce, 1)
+	require.Equal(t, "switch", later.InForce[0]["id"])
+}
+
+// A day's events of version 1, the list alone, are still read
+func TestEventsOfVersion1AreRead(t *testing.T) {
+	header, day, err := retention.ReadEvents(append([]byte{1, 2, 0}, []byte(`[{"k":"food_intakes","id":"a","carbs":10}]`)...))
+	require.NoError(t, err)
+	require.Equal(t, 1, header.Version)
+	require.Equal(t, []map[string]any{{"k": "food_intakes", "id": "a", "carbs": 10.0}}, day.Events)
+	require.Empty(t, day.InForce)
+	for _, bad := range [][]byte{nil, {3, 2, 0, '[', ']'}, {2, 1, 0, '{', '}'}, {2, 2, 4, '{', '}'}, {2, 2, 0, '['}} {
+		_, _, err := retention.ReadEvents(bad)
+		require.Error(t, err, "%v", bad)
+	}
 }
 
 // Each column a policy keeps is a column of its table, so a name spelt wrong does not lose what it was to keep

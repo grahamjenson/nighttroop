@@ -45,6 +45,9 @@ type ColdDay struct {
 	// Events are a day's events, the oldest first, each the columns kept of its row, with "k", its table, for one day
 	// of events opened, and nil in a list. For a day of events, Steps and Values are how many there are.
 	Events []map[string]any `json:"events,omitempty"`
+	// InForce are the events from before a day of events that were still in force when it started: a profile switch,
+	// a temp target
+	InForce []map[string]any `json:"in_force,omitempty"`
 }
 
 // ColdPoint is one step of a series that has a value: the time the step starts, in ms, and the value, as it is kept
@@ -62,9 +65,9 @@ func ColdDayFromDB(row *sitedb.ColdDay, points bool) *ColdDay {
 			day.Error = new(err.Error())
 			return day
 		}
-		day.Version, day.Shape, day.Deflated, day.Steps, day.Values = header.Version, string(header.Shape), header.Deflated, len(events), len(events)
+		day.Version, day.Shape, day.Deflated, day.Steps, day.Values = header.Version, string(header.Shape), header.Deflated, len(events.Events), len(events.Events)
 		if points {
-			day.Events = events
+			day.Events, day.InForce = events.Events, events.InForce
 		}
 		return day
 	}

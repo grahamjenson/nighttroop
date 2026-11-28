@@ -46,10 +46,10 @@ func coldEvent(event map[string]any) string {
 	return string(text)
 }
 
-// coldEventTime is an event's time of day, in UTC
-func coldEventTime(event map[string]any) string {
+// coldEventTime is an event's time in UTC, in layout: of the day for a day's own, with its date for one from before
+func coldEventTime(event map[string]any, layout string) string {
 	at, _ := event["occurred_at"].(float64)
-	return time.UnixMilli(int64(at)).UTC().Format("15:04")
+	return time.UnixMilli(int64(at)).UTC().Format(layout)
 }
 
 // coldNumber is a value as it is kept, with no more digits than it has
@@ -158,6 +158,19 @@ templ ColdDays(page *sitemodels.ColdDays, skip, limit int64) {
 	</div>
 }
 
+// coldEvents is a list of events, each with its UTC time in layout, its table, and its kept columns
+templ coldEvents(id string, events []map[string]any, layout string) {
+	<ol id={ id } class="space-y-1 font-mono text-sm">
+		for _, event := range events {
+			<li class="flex gap-4 border-b border-gray-100 py-0.5">
+				<span class="shrink-0 text-muted-foreground">{ coldEventTime(event, layout) }</span>
+				<span class="w-40 shrink-0">{ fmt.Sprint(event["k"]) }</span>
+				<span class="break-all">{ coldEvent(event) }</span>
+			</li>
+		}
+	</ol>
+}
+
 // coldFact is one thing a cold day says of itself
 templ coldFact(id, label, value string) {
 	<div>
@@ -193,16 +206,12 @@ templ ColdDay(day *sitemodels.ColdDay) {
 				@coldFact("site--cold-day--sealed", i18n.T(ctx, "site.settings.cold_days.sealed"), display.DateTime(&day.SealedAt))
 			</dl>
 			if day.Shape == "events" {
+				if len(day.InForce) > 0 {
+					<p class="text-sm text-muted-foreground">{ i18n.T(ctx, "site.settings.cold_days.in_force_note") }</p>
+					@coldEvents("site--cold-day--in-force", day.InForce, time.DateOnly+" 15:04")
+				}
 				<p class="text-sm text-muted-foreground">{ i18n.T(ctx, "site.settings.cold_days.events_note") }</p>
-				<ol id="site--cold-day--events" class="space-y-1 font-mono text-sm">
-					for _, event := range day.Events {
-						<li class="flex gap-4 border-b border-gray-100 py-0.5">
-							<span class="text-muted-foreground">{ coldEventTime(event) }</span>
-							<span class="w-40 shrink-0">{ fmt.Sprint(event["k"]) }</span>
-							<span class="break-all">{ coldEvent(event) }</span>
-						</li>
-					}
-				</ol>
+				@coldEvents("site--cold-day--events", day.Events, "15:04")
 			} else {
 				<p class="text-sm text-muted-foreground">{ i18n.T(ctx, "site.settings.cold_days.points_note") }</p>
 				<ol id="site--cold-day--points" class="columns-2 gap-6 font-mono text-sm sm:columns-4 lg:columns-6">
