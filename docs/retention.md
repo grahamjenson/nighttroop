@@ -173,6 +173,8 @@ A treatment and its `event_groups` row become one entry.
   that has a value. So the policy table is what decides what is kept. A test checks each `Keep` column is real.
 - The columns of an event's treatment (`group_type`, `entered_by`) are added where the event has none of that
   name, and `group_id`, the treatment's own ID, which an app knows it by.
+- An AAPS running mode (an `OpenAPS Offline`) keeps its `mode`, `auto_forced`, `reasons`, `original_duration_ms`
+  and `duration_ms`. If AAPS gets one without them, it reads the loop as disabled with no end.
 - A cold day holds 16 KB packed, some thousands of events. If a day has more, the most important are kept, and the
   day's body says how many are not (`dropped`). The server logs a warning. The rows of all of them are deleted.
   - The order: food and insulin a person gave; a meter reading or a reading with a note; a profile switch or a
@@ -198,6 +200,7 @@ Unless `RETENTION_DELETE_ROWS` is `false`, a run deletes the treatments and even
 | A treatment is deleted first, then each event that no treatment refers to. | An event of a treatment that stays, stays. |
 | The newest profile switch with no end, before the hot days, is kept. | The basal rate of the hot days is read from it. |
 | A profile switch with an end in the hot days is kept. | The same. |
+| The newest AAPS running mode (an `OpenAPS Offline`) with no end, before the hot days, is kept. One with an end in the hot days is kept. | AAPS reads the newest as the mode of the loop now. |
 | A meter reading is kept. | It is an event, not a part of the glucose series. |
 
 - The rows deleted: `event_groups`, `insulin_doses`, `food_intakes`, `temp_basals`, `temp_targets`, `activities`,
@@ -217,6 +220,10 @@ before are gone, a day cannot look back for them. So a day's events have two lis
 - `in_force` is: the newest profile switch with no end; each newer profile switch with an end not yet reached;
   and the newest temp target, if it is not over.
 - So each cold day is read alone.
+- An AAPS running mode is not in `in_force`. Its row is kept while it is in force (see the delete rules above), so
+  an app reads it as a row.
+- The length of a running mode is `original_duration_ms`. If it has none, its length is its duration. A length of 0
+  is no end.
 - A day with no event of its own is packaged if something is in force. The last 2 days that ended are packaged in
   each run for this.
 - Version 1 of the body, the list of events alone, is still read.

@@ -200,8 +200,8 @@ func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, sin
 // deletePackagedTreatments deletes the treatments and events from before before, in ms, whose day's events were
 // packaged after they were last written, and not since settled, so none is deleted that its cold days do not have:
 // the treatments first, then the events no treatment still refers to. A profile switch that may still be in force is
-// kept, as the basal of the days that are rows is read from it. A meter's reading is kept (see
-// DeletePackagedCGMReadings).
+// kept, as the basal of the days that are rows is read from it, and so is an AAPS running mode, as AAPS reads the
+// newest as the loop's mode now. A meter's reading is kept (see DeletePackagedCGMReadings).
 func deletePackagedTreatments(ctx context.Context, q *sitedb.Queries, before, settled int64) error {
 	_, err := q.DeletePackagedEventGroups(ctx, sitedb.DeletePackagedEventGroupsParams{Before: before, SettledBefore: settled})
 	deletes := []func() (int64, error){

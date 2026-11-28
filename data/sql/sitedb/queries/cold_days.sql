@@ -136,13 +136,22 @@ ORDER BY occurred_at LIMIT 5000;
 -- The treatments from before Before whose day's events were packaged after they were last written, and not since
 -- SettledBefore, so the day is as it will stay; or at once, one of no event, or only of events deleted at once
 -- (activities, temp targets and notes), as a day packaged again keeps their events (mergeEvents). A treatment goes
--- before its events, which it refers to.
+-- before its events, which it refers to. An AAPS running mode (an OpenAPS Offline) that may still be in force is kept,
+-- as a profile switch is: the newest with no end, and one with an end that is not before Before. Its length is as AAPS
+-- reads it: originalDuration, else its duration, and 0 is no end.
 DELETE FROM event_groups
 WHERE event_groups.occurred_at < sqlc.arg('Before')
 AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(event_groups.occurred_at / 1000, 'unixepoch')
     AND cold_days.updated_at >= event_groups.updated_at AND (cold_days.updated_at <= sqlc.arg('SettledBefore')
     OR (event_groups.glucose_reading_id IS NULL AND event_groups.insulin_dose_id IS NULL AND event_groups.food_intake_id IS NULL
-        AND event_groups.temp_basal_id IS NULL AND event_groups.profile_switch_id IS NULL)));
+        AND event_groups.temp_basal_id IS NULL AND event_groups.profile_switch_id IS NULL)))
+AND NOT (event_groups.group_type = 'OpenAPS Offline' AND event_groups.deleted_at IS NULL AND (
+    (COALESCE(event_groups.original_duration_ms, event_groups.duration_ms, event_groups.duration_minutes * 60000, 0) > 0
+        AND event_groups.occurred_at + COALESCE(event_groups.original_duration_ms, event_groups.duration_ms, event_groups.duration_minutes * 60000) >= sqlc.arg('Before'))
+    OR (COALESCE(event_groups.original_duration_ms, event_groups.duration_ms, event_groups.duration_minutes * 60000, 0) = 0
+        AND event_groups.occurred_at >= (SELECT COALESCE(MAX(newest.occurred_at), 0) FROM event_groups AS newest
+            WHERE newest.group_type = 'OpenAPS Offline' AND newest.deleted_at IS NULL AND newest.occurred_at < sqlc.arg('Before')
+            AND COALESCE(newest.original_duration_ms, newest.duration_ms, newest.duration_minutes * 60000, 0) = 0))));
 
 -- name: DeletePackagedInsulinDoses :execrows
 -- The insulin doses from before Before whose day was packaged after they were last written, and not since SettledBefore, that
