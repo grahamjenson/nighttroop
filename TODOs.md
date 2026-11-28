@@ -36,6 +36,10 @@
        site's or a control admin's Account: take the hour before the send, as control's email to a site does
     1. P4: The FCM and APNs token caches (`utils/push`) keep an entry for each credential ID, and a deleted
        credential's stays, so a site that adds, tests and deletes push credentials grows them: keep them in an LRU
+    1. P2: A test push to a registration with no push credential spends the site's push limit
+       (`SITE_PUSH_PER_MINUTE_LIMIT`), which Loop remote commands share. A read only device with a registration of its
+       own sends 10 test pushes a minute, and each remote command gets 429: look the credential up before the limit, and
+       keep a part of the limit for remote commands
     1. P2: Add a `script-src` Content-Security-Policy with nonces, as only `frame-ancestors` is set now: the templ and
        htmx pages use inline scripts and handlers (`onclick`, `hx-on`) that would need auditing
     1. Abuse levels: the score and level (`controldb.AbuseLevel`) are shown to control admins only. Check the levels

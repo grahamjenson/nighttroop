@@ -25,7 +25,7 @@ func IdentitySeeAllPushRegistrations(role consts.IdentityRole) bool {
 }
 
 // IdentityResetOthersCredentials is whether the role resets the password or TOTP of a different identity: only an
-// admin. All identities can reset their own.
+// admin. IdentityResetOwnCredentials (login.go) is who resets their own.
 func IdentityResetOthersCredentials(role consts.IdentityRole) bool {
 	return role == consts.IdentityRoleAdmin
 }

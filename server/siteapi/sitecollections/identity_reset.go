@@ -30,7 +30,7 @@ func IdentityNewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ResetIdentityPasswordHandler gives one of the site's identities a new random password, and a device the Nightscout
-// token made from it, shown once. An admin can reset any of the site's identities, and anyone their own.
+// token made from it, shown once. An admin can reset any of the site's identities, and an admin or a user their own.
 func ResetIdentityPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	resetIdentity(w, r, "password")
 }
@@ -50,7 +50,11 @@ func resetIdentity(w http.ResponseWriter, r *http.Request, credential string) {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrNotFound)
 		return
 	}
-	if identityID != you.ID && !can.IdentityResetOthersCredentials(you.Role) {
+	allowed := can.IdentityResetOthersCredentials(you.Role)
+	if identityID == you.ID {
+		allowed = can.IdentityResetOwnCredentials(you.Role)
+	}
+	if !allowed {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrForbidden)
 		return
 	}

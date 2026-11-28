@@ -25,26 +25,28 @@ func identity(role consts.IdentityRole) *controldb.SiteIdentity {
 // Columns: login.go, nightscout.go and device_tokens.go
 //   - login: IdentityLoginToWebsite
 //   - totp, totp+secret: IdentityMustLoginWithTotp, without and with a TOTP secret
+//   - resetOwn: IdentityResetOwnCredentials
 //   - nsToken: IdentityHaveNightscoutToken
 //   - useToken, useToken+secret: IdentityUseNightscoutToken, without and with a TOTP secret
 //   - pairAAPS: IdentityAuthorizeDevices
 //   - deviceTokens: IdentitySeeDeviceTokens
 //   - sensorGlucose: IdentityAddSensorGlucose
 const signInMatrix = `
-role               login  totp  totp+secret  nsToken  useToken  useToken+secret  pairAAPS  deviceTokens  sensorGlucose
-admin              yes    yes   yes          no       no        no               no        yes           yes
-user               yes    no    yes          yes      yes       no               no        yes           yes
-user_readonly      no     no    yes          yes      yes       no               no        no            yes
-clinician          yes    no    yes          no       yes       no               no        no            yes
-device_pwd_phone   no     no    yes          yes      yes       no               yes       yes           yes
-device_read        no     no    yes          yes      yes       no               no        no            yes
-device_read_write  no     no    yes          yes      yes       no               no        yes           no
+role               login  totp  totp+secret  resetOwn  nsToken  useToken  useToken+secret  pairAAPS  deviceTokens  sensorGlucose
+admin              yes    yes   yes          yes       no       no        no               no        yes           yes
+user               yes    no    yes          yes       yes      yes       no               no        yes           yes
+user_readonly      no     no    yes          no        yes      yes       no               no        no            yes
+clinician          yes    no    yes          no        no       yes       no               no        no            yes
+device_pwd_phone   no     no    yes          no        yes      yes       no               yes       yes           yes
+device_read        no     no    yes          no        yes      yes       no               no        no            yes
+device_read_write  no     no    yes          no        yes      yes       no               no        yes           no
 `
 
 var signInChecks = map[string]func(consts.IdentityRole) bool{
 	"login":           IdentityLoginToWebsite,
 	"totp":            func(role consts.IdentityRole) bool { return IdentityMustLoginWithTotp(role, false) },
 	"totp+secret":     func(role consts.IdentityRole) bool { return IdentityMustLoginWithTotp(role, true) },
+	"resetOwn":        IdentityResetOwnCredentials,
 	"nsToken":         IdentityHaveNightscoutToken,
 	"useToken":        func(role consts.IdentityRole) bool { return IdentityUseNightscoutToken(role, false) },
 	"useToken+secret": func(role consts.IdentityRole) bool { return IdentityUseNightscoutToken(role, true) },
@@ -195,6 +197,7 @@ func TestStoresMatrix(t *testing.T) {
 func TestUnknownRole(t *testing.T) {
 	unknown := consts.IdentityRole("owner")
 	require.False(t, IdentityLoginToWebsite(unknown))
+	require.False(t, IdentityResetOwnCredentials(unknown))
 	require.False(t, IdentityHaveNightscoutToken(unknown))
 	_, err := NightscoutPermissions(unknown, nil)
 	require.Error(t, err)
