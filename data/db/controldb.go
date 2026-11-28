@@ -616,7 +616,7 @@ const truncateLooksBack = 24 * time.Hour
 const DeviceReportsKeptFor = 30 * 24 * time.Hour
 
 // ThinParams are ThinOldDeviceReports's, for the reports written since since, at now, both in ms, with utils/thin's
-// ages and buckets, which a backfill keeps to as well
+// ages and buckets
 func ThinParams(since, now int64) sitedb.ThinOldDeviceReportsParams {
 	return sitedb.ThinOldDeviceReportsParams{Since: since, Now: now, KeepAllMs: thin.KeepAll.Milliseconds(),
 		WeekMs: thin.Week.Milliseconds(), FortnightMs: thin.Fortnight.Milliseconds(), SmallMs: thin.Small.Milliseconds(),
