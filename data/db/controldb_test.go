@@ -141,8 +141,11 @@ func TestArchiveSiteDuringBackup(t *testing.T) {
 	require.True(t, strings.HasPrefix(string(data), "SQLite format 3\x00"))
 }
 
-// Without S3, a site archives with no upload, its archive kept only here, and hydrates from it with its data, migrated
-// and live again; with S3 too, the archive here is used first, without a download
+// uploadWorks is an upload of a site's archive to S3 that works
+func uploadWorks(context.Context, string, s3utils.Retention, []string) error { return nil }
+
+// An archived site's archive is kept here too, and without S3 it hydrates from it with its data, migrated and live
+// again; with S3 too, the archive here is used first, without a download
 func TestArchiveAndHydrateHereWithoutS3(t *testing.T) {
 	cfg, controlDB := testutils.NewControlDB(t)
 	fileCfg := *cfg
@@ -157,7 +160,7 @@ func TestArchiveAndHydrateHereWithoutS3(t *testing.T) {
 	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
 
-	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, nil))
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, uploadWorks))
 	require.NoFileExists(t, sitedb.GetPath(siteID, &fileCfg))
 	require.FileExists(t, sitedb.GetBackupPath(siteID, &fileCfg))
 
@@ -178,7 +181,7 @@ func TestArchiveAndHydrateHereWithoutS3(t *testing.T) {
 	// Archived again with no archive here and no S3, it cannot be hydrated, and stays archived
 	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
-	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, nil))
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, uploadWorks))
 	require.NoError(t, os.Remove(sitedb.GetBackupPath(siteID, &fileCfg)))
 	require.ErrorContains(t, controlDB.HydrateSite(ctx, siteID, nil), "no archive here, and S3 is off")
 	row, err = controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
@@ -199,7 +202,7 @@ func TestHydrateSiteThatDoesNotOpenIsUnavailable(t *testing.T) {
 	siteID := site.SiteDB.Subdomain
 	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
 	require.NoError(t, err)
-	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, nil))
+	require.NoError(t, controlDB.ArchiveSite(ctx, siteID, uploadWorks))
 
 	// The archive here holds a file that is not a DB
 	file, err := os.Create(sitedb.GetBackupPath(siteID, &fileCfg))

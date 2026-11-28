@@ -111,7 +111,7 @@ AAPS, Trio) send.
 | `CONTROL_BACKUP_RETENTION_DAYS` | `90` | How long S3 keeps a file of the control DB's replica after Litestream replaces or deletes it. At least `1`. |
 | `SITE_BACKUP_RETENTION_DAYS` | `30` | The same, for a site backup or archive. At least `1`. |
 
-- `S3_URL` unset or empty: S3 is off. No restore on start, no backup upload, and sites cannot be deleted.
+- `S3_URL` unset or empty: S3 is off. No restore on start, no backup upload, and sites cannot be deleted or archived.
 - `S3_URL` set:
   - The server tests an upload at startup, and again over about half a minute. If it never works, a server with no
     control DB stops. A server with its control DB starts without S3, and restarts when S3 works again. It restarts by

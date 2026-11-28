@@ -1,0 +1,38 @@
+// The control admin cannot archive a site on a server whose S3 is off: its archive would be on this server only, so
+// the site is kept
+GOTO {{ .control_url }}/login
+INPUT #control--login--name admin
+INPUT #control--login--password password
+TYPE #control--login--otp-1 123123
+ASSERT_VISIBLE #control--nav--logo
+
+// A site is disabled first, as only a disabled site is archived
+GOTO {{ .control_url }}/sites/keepsite
+CLICK #control--site--disable
+ASSERT_TEXT_VISIBLE Site Disabled
+ASSERT_TEXT_EQUALS #control--site--state Disabled
+
+// Archive says it needs S3, and is refused, asking first (the test accepts), with an error toast that says why
+ASSERT_VISIBLE #control--status-banner--s3-off
+ASSERT_VISIBLE #control--site--action-archive >> text=It needs S3.
+CLICK #control--site--archive
+ASSERT_VISIBLE #toaster [data-tui-toast][data-variant="error"]:has-text("a site can only be archived when its data can be uploaded to S3")
+ASSERT_NOT_VISIBLE #toaster >> text=Site Archived
+SCROLL -3000
+SCREENSHOT archive_refused
+
+// The site is as it was: disabled, with its DB here, and not in the archived sites
+GOTO {{ .control_url }}/archived-sites
+ASSERT_TEXT_VISIBLE No archived sites.
+GOTO {{ .control_url }}/sites/keepsite
+ASSERT_TEXT_EQUALS #control--site--state Disabled
+ASSERT_VISIBLE #control--site--download-db
+ASSERT_VISIBLE #control--site--archive
+
+// Enabled, it is served again
+CLICK #control--site--enable
+ASSERT_TEXT_VISIBLE Site Enabled
+ASSERT_TEXT_EQUALS #control--site--state Live
+GOTO {{ .scheme }}://keepsite.{{ .host }}/login
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--login--name

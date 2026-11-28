@@ -149,24 +149,43 @@ ASSERT_STATUS 404
 // ARCHIVE
 //////
 
-// Archiving keeps the site's DB as its backup here, and uploads it to S3 when S3 is connected, so without S3, as on
-// staging, it archives too
+// Archiving uploads the site's DB to S3, which the tests do not have, so it is refused and the site is kept, disabled
 NAME archive_site_without_s3
 POST http://control.localhost/sites/{{ .site_id }}
 H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 B {"state": "archived"}
-ASSERT_STATUS 200
-ASSERT_EQUALS "archived" "@result.state"
+ASSERT_STATUS 400
+ASSERT_CONTAINS "a site can only be archived when its data can be uploaded to S3" "@message"
 
-// It is restored from its archive here, without S3, live again
-NAME restore_site_without_s3
+NAME site_kept_without_s3
+GET http://control.localhost/sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "disabled" "@result.state"
+
+// It is not archived, so there is nothing to restore
+NAME restore_site_not_archived
 POST http://control.localhost/archived-sites/{{ .site_id }}
+H Authorization: Bearer {{ .control_jwt }}
+H Accept: application/json
+B {"state": "live"}
+ASSERT_STATUS 400
+ASSERT_CONTAINS "only an archived site can be restored" "@message"
+
+// Enabled, it is served again
+NAME enable_site_kept_without_s3
+POST http://control.localhost/sites/{{ .site_id }}
 H Authorization: Bearer {{ .control_jwt }}
 H Accept: application/json
 B {"state": "live"}
 ASSERT_STATUS 200
 ASSERT_EQUALS "live" "@result.state"
+
+NAME site_served_after_archive_refused
+GET http://{{ .site_id }}.ns.localhost/api/v1/status.json?token={{ token }}
+ASSERT_STATUS 200
 
 NAME disable_unknown_site
 POST http://control.localhost/sites/not-a-site

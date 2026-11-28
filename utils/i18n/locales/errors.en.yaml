@@ -91,6 +91,7 @@ errors:
     disable_live_only: "only a live site can be disabled"
     enable_disabled_only: "only a disabled site can be enabled"
     archive_disabled_only: "only a disabled site can be archived"
+    archive_needs_s3: "a site can only be archived when its data can be uploaded to S3"
     site_id: "a site ID is {{.Length}} lowercase letters, a to z"
     email_off: "this server sends no email"
     emails_not_read: "the sent emails were not read from Resend: try again later"

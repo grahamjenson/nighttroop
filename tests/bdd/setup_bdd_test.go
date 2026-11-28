@@ -96,17 +96,25 @@ var ownServers = []ownServer{
 		controlDB.MakeSiteUnavailable("bkupsite", db.UnavailableCannotOpen)
 		return nil
 	}},
-	// A server that started without S3, as S3 was not working and its control DB was there
-	// A server without S3, as staging, with archivme, a site no one has used, to disable, archive and restore
+	// A server with S3, in memory, and archivme, a site no one has used, to disable, archive and restore
 	{"control/archive_restore.bdd", "192.0.2.20", nil, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
 		seedDevAdmin(t, controlDB)
+		testutils.FakeS3(t, controlDB.ServerConfig)
 		_, err := controlDB.CreateSiteWithID(t.Context(), "archivme")
 		require.NoError(t, err)
 		return nil
 	}},
+	// A server that started without S3, as S3 was not working and its control DB was there
 	{"s3down/banner.bdd", "192.0.2.18", func(c *config.ServerConfig) { c.Status.S3Down = true }, seedDevAdmin},
 	// A server that turned S3 off at start, as its control DB is not the one replicated in S3
 	{"s3off/banner.bdd", "192.0.2.19", func(c *config.ServerConfig) { c.Status.S3Off = config.S3OffConflict }, seedDevAdmin},
+	// The same, with keepsite, a site no one has used, to disable and try to archive
+	{"s3off/archive.bdd", "192.0.2.27", func(c *config.ServerConfig) { c.Status.S3Off = config.S3OffConflict }, func(t *testing.T, controlDB *db.ControlDB) map[string]any {
+		seedDevAdmin(t, controlDB)
+		_, err := controlDB.CreateSiteWithID(t.Context(), "keepsite")
+		require.NoError(t, err)
+		return nil
+	}},
 	// A server that sends email, through a Resend that takes every one
 	{"email/account.bdd", "192.0.2.21", func(c *config.ServerConfig) {
 		resend := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
