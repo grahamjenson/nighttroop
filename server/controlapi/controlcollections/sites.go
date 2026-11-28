@@ -115,19 +115,18 @@ func (s *SitesCollection) enable(ctx context.Context, controlContext *httputils.
 	return nil
 }
 
-// archive keeps a disabled site's DB as its backup here, uploads it to its archive in S3 when S3 works, and deletes the
-// DB, so a server without S3, as staging, archives too
+// archive uploads a disabled site's DB to its archive in S3, keeps it as its backup here, and deletes the DB. Without
+// S3 it is refused, as the site admin's delete is: the archive would be on this server only.
 func (s *SitesCollection) archive(ctx context.Context, controlContext *httputils.ControlContext, oldModel *controlmodels.Site) error {
 	config := controlContext.ControlDB.ServerConfig
 	if oldModel.State != "disabled" {
 		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.archive_disabled_only"))
 	}
-	var upload s3utils.UploadFunc
-	if config.Status.S3Working {
-		upload = s3utils.NewS3Client(config).UploadFilesToS3
+	if !config.Status.S3Working {
+		return apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.control.archive_needs_s3"))
 	}
 	started := time.Now()
-	if err := controlContext.ControlDB.ArchiveSite(ctx, oldModel.ID, upload); err != nil {
+	if err := controlContext.ControlDB.ArchiveSite(ctx, oldModel.ID, s3utils.NewS3Client(config).UploadFilesToS3); err != nil {
 		return err
 	}
 	controlContext.ControlDB.Logs.SiteArchivedEvent(ctx, oldModel.ID, controlContext.IdentityModel.Name, started)

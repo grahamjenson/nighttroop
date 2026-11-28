@@ -1,4 +1,4 @@
-// The control admin archives a site on a server without S3, as staging is, and restores it from the archive kept here
+// The control admin archives a site on a server with S3, and restores it from the archive kept here
 GOTO {{ .control_url }}/login
 INPUT #control--login--name admin
 INPUT #control--login--password password
@@ -11,8 +11,8 @@ CLICK #control--site--disable
 ASSERT_TEXT_VISIBLE Site Disabled
 ASSERT_TEXT_EQUALS #control--site--state Disabled
 
-// Archiving keeps a compressed copy of its DB here, without S3, asking first (the test accepts)
-ASSERT_VISIBLE #control--site--action-archive >> text=Keeps a compressed copy of its DB in the backup folder here
+// Archiving keeps a compressed copy of its DB here and in S3, asking first (the test accepts)
+ASSERT_VISIBLE #control--site--action-archive >> text=Keeps a compressed copy of its DB in the backup folder here and in S3, then deletes its DB. It needs S3.
 CLICK #control--site--archive
 ASSERT_TEXT_VISIBLE Site Archived
 ASSERT_TEXT_EQUALS #control--site--state Archived
@@ -24,7 +24,7 @@ ASSERT_VISIBLE #control--archived-site--archivme--hydrate
 SCROLL -3000
 SCREENSHOT archived
 
-// Restoring it, asking first (the test accepts), brings it back live from its archive here, without S3
+// Restoring it, asking first (the test accepts), brings it back live from its archive here
 CLICK #control--archived-site--archivme--hydrate
 ASSERT_TEXT_VISIBLE Site Restored: archivme is live again
 GOTO {{ .control_url }}/sites/archivme

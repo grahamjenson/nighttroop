@@ -453,7 +453,7 @@ control:
     truncate_intro: "Runs the site job for this site now, as before each backup, for all its data: it packages its days into cold days, deletes the rows that are packaged and older than the hot days, and thins its device statuses."
     truncate_confirm: "Truncate this site now? Its days are packaged, the packaged rows older than the hot days are deleted, and its device statuses are thinned."
     archive: "Archive"
-    archive_intro: "Keeps a compressed copy of its DB in the backup folder here, and in S3 when it is connected, then deletes its DB."
+    archive_intro: "Keeps a compressed copy of its DB in the backup folder here and in S3, then deletes its DB. It needs S3."
     archive_unavailable: "Offered once it is disabled."
     archive_confirm: "Archive this site? Its data is uploaded to S3 and deleted here."
     disabled_toast: "Site Disabled"

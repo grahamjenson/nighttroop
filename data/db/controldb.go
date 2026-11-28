@@ -402,7 +402,7 @@ func (db *ControlDB) DeleteSites(ctx context.Context, subdomains []string) error
 
 // ArchiveSite backs up a site's DB and uploads it, with upload, to its archive path, then marks the site archived and
 // deletes its DB, so it is no longer served or backed up. The copy is kept as its backup here, which HydrateSite
-// restores from first, so a server without S3 archives with a nil upload, keeping only that copy.
+// restores from first. A server without S3 has no upload, so it archives no site.
 func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s3utils.UploadFunc) error {
 	site := db.sites.get(subdomain)
 	if site == nil {
@@ -422,10 +422,8 @@ func (db *ControlDB) ArchiveSite(ctx context.Context, subdomain string, upload s
 	if err := backup.CompressedBackup(ctx, site.SQLiteDB, path); err != nil {
 		return fmt.Errorf("cannot back up site %s: %w", subdomain, err)
 	}
-	if upload != nil {
-		if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {
-			return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
-		}
+	if err := upload(ctx, sitedb.GetS3ArchivePath(subdomain, db.ServerConfig), s3utils.SiteRetention, []string{path}); err != nil {
+		return fmt.Errorf("cannot upload the archive of site %s: %w", subdomain, err)
 	}
 	bytes, _ := json.Marshal([]string{subdomain})
 	if _, err := db.Queries.ArchiveSites(ctx, controldb.ArchiveSitesParams{JsonEach: string(bytes)}); err != nil {

@@ -289,7 +289,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | Download DB | Live or disabled (DB here) | See below. |
 | Disable | Any live site, however recently used, after a confirmation | Not served. Socket.IO connections close. |
 | Enable | A disabled site, after a confirmation | Served again. Its data is as it was. |
-| Archive | After disable. S3 not needed. | A compressed copy of its DB is kept in the backup folder here (`data/backup/site/<letter>/<site>.sqlite.lz4`), and uploaded to S3 when S3 is connected. Its DB here is deleted. |
+| Archive | After disable. S3 is necessary. | A compressed copy of its DB is uploaded to S3, and kept in the backup folder here (`data/backup/site/<letter>/<site>.sqlite.lz4`). Its DB here is deleted. Without S3 (not connected, not working or off), it is refused: "a site can only be archived when its data can be uploaded to S3". The site stays disabled, with its DB here. |
 | Restore | From the archived sites page | Restored from the copy in the backup folder here first, else from S3, migrated, and live again. A restored DB that does not open or migrate still makes it live, but unavailable, its DB kept here, with a toast saying so, and its page offers the fixes. Without S3 and without a copy here, it is refused and stays archived. |
 | Truncate | Live or disabled, any size | Runs the site job's truncate for the site now, for all its data: packages its days, deletes the packaged rows older than the hot days, thins its device statuses. It does nothing that the job does not do. |
 

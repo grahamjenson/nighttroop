@@ -17,6 +17,7 @@ import (
 	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/consts"
@@ -71,6 +72,49 @@ func TestDisablingActiveSite(t *testing.T) {
 	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
 	require.NoError(t, err)
 	require.Equal(t, "site_enabled", events[0].Name)
+}
+
+// TestArchivingNeedsS3 checks an admin archives a disabled site only while S3 works, as its archive is uploaded there:
+// without S3 it is refused, and the site stays disabled with its DB here
+func TestArchivingNeedsS3(t *testing.T) {
+	cfg, controlDB := testutils.NewControlDB(t)
+	// A config of the test's own, with its backups in a folder of the test's, so its archive does not stay for other tests
+	s3Cfg := *cfg
+	s3Cfg.DataDir = t.TempDir()
+	controlDB.ServerConfig = &s3Cfg
+	ctx := t.Context()
+	site, err := controlDB.CreateSite(ctx)
+	require.NoError(t, err)
+	siteID := site.SiteDB.Subdomain
+	controlContext := &httputils.ControlContext{ControlDB: controlDB, IdentityModel: &controldb.ControlIdentity{Name: "admin", Role: consts.ControlRoleAdmin}}
+	_, err = controlDB.Queries.DisableSite(ctx, controldb.DisableSiteParams{ID: siteID})
+	require.NoError(t, err)
+	archive := func() (*controldb.Site, error) {
+		return (&SitesCollection{}).UpdateRow(ctx, controlContext, &controlmodels.Site{ID: siteID, State: "disabled"}, &controlmodels.Site{State: "archived"})
+	}
+
+	_, err = archive()
+	require.ErrorContains(t, err, "a site can only be archived when its data can be uploaded to S3")
+	row, err := controlDB.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: siteID})
+	require.NoError(t, err)
+	require.Equal(t, "disabled", row.State)
+	require.NoFileExists(t, site.SiteDB.BackupPath, "no archive is made")
+	_, err = controlDB.TruncateSite(ctx, siteID)
+	require.NoError(t, err, "its DB is still open here")
+
+	// With S3, in memory, it is archived, and its archive is uploaded
+	s3 := testutils.FakeS3(t, &s3Cfg)
+	row, err = archive()
+	require.NoError(t, err)
+	require.Equal(t, "archived", row.State)
+	_, found, err := s3.DownloadFilesFromS3(ctx, sitedb.GetS3ArchivePath(siteID, &s3Cfg), t.TempDir())
+	require.NoError(t, err)
+	require.True(t, found, "its archive is in S3")
+	require.FileExists(t, site.SiteDB.BackupPath, "its archive is kept here too")
+
+	events, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Limit: 10})
+	require.NoError(t, err)
+	require.Equal(t, "site_archived", events[0].Name)
 }
 
 func TestTruncateHandler(t *testing.T) {

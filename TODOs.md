@@ -15,7 +15,6 @@
        pages a truncate leaves, under 10% of it: measure it without them, as the truncate of a site far over its
        limit does
 1. e2e restore and archive testing
-    1. P2: Refuse to archive a site while S3 is off, as the site admin's delete does
 1. Performance testing (cost estimate for running full node)
     1. P3: A Nightscout token (`?token=`, as LoopFollow, xDrip4iOS and Nightguard send on each request) is checked
        with bcrypt again 5 minutes after it was first checked (`utils/security/password_verifier_cache.go`), about
