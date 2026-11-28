@@ -183,7 +183,7 @@ func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, sin
 			}
 		}
 		// A day with a treatment series has its events written though it has none, to say it was packaged
-		if err := packageEventsDay(ctx, q, day*dayMs, treated); err != nil {
+		if err := packageEventsDay(ctx, q, day*dayMs, treated, db.ServerConfig.RetentionDeleteRows && day*dayMs < hot); err != nil {
 			return fmt.Errorf("%s: %w", date, err)
 		}
 	}
@@ -211,13 +211,13 @@ func deletePackagedTreatments(ctx context.Context, q *sitedb.Queries, before, se
 			return q.DeletePackagedTempBasals(ctx, sitedb.DeletePackagedTempBasalsParams{Before: before, SettledBefore: settled})
 		},
 		func() (int64, error) {
-			return q.DeletePackagedTempTargets(ctx, sitedb.DeletePackagedTempTargetsParams{Before: before, SettledBefore: settled})
+			return q.DeletePackagedTempTargets(ctx, sitedb.DeletePackagedTempTargetsParams{Before: before})
 		},
 		func() (int64, error) {
-			return q.DeletePackagedActivities(ctx, sitedb.DeletePackagedActivitiesParams{Before: before, SettledBefore: settled})
+			return q.DeletePackagedActivities(ctx, sitedb.DeletePackagedActivitiesParams{Before: before})
 		},
 		func() (int64, error) {
-			return q.DeletePackagedNotificationEvents(ctx, sitedb.DeletePackagedNotificationEventsParams{Before: before, SettledBefore: settled})
+			return q.DeletePackagedNotificationEvents(ctx, sitedb.DeletePackagedNotificationEventsParams{Before: before})
 		},
 		func() (int64, error) {
 			return q.DeletePackagedProfileSwitches(ctx, sitedb.DeletePackagedProfileSwitchesParams{Before: before, SettledBefore: settled})

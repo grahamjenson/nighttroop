@@ -110,10 +110,15 @@ func ColdEvents(ctx context.Context, q *sitedb.Queries, from, to int64, limit in
 	return events, err
 }
 
-// EventAt is when a cold event occurred, in ms
+// EventAt is when an event occurred, in ms: one read from a cold day, or one built from a row
 func EventAt(event map[string]any) int64 {
-	at, _ := event["occurred_at"].(float64)
-	return int64(at)
+	switch at := event["occurred_at"].(type) {
+	case float64:
+		return int64(at)
+	case int64:
+		return at
+	}
+	return 0
 }
 
 // RowOf sets into, a row of table, from a cold event: each column the event kept, by its name, as eventOf read it. The

@@ -380,19 +380,18 @@ const deletePackagedActivities = `-- name: DeletePackagedActivities :execrows
 DELETE FROM activities
 WHERE activities.occurred_at < ?1
 AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(activities.occurred_at / 1000, 'unixepoch')
-    AND cold_days.updated_at >= activities.updated_at AND cold_days.updated_at <= ?2)
+    AND cold_days.updated_at >= activities.updated_at)
 AND id NOT IN (SELECT activity_id FROM event_groups WHERE activity_id IS NOT NULL)
 `
 
 type DeletePackagedActivitiesParams struct {
-	Before        int64
-	SettledBefore int64
+	Before int64
 }
 
-// The activities from before Before whose day was packaged after they were last written, and not since SettledBefore, that
-// no treatment still refers to
+// The activities from before Before whose day was packaged after they were last written, that no treatment still
+// refers to, at once, as a day packaged again keeps their events (mergeEvents)
 func (q *Queries) DeletePackagedActivities(ctx context.Context, arg DeletePackagedActivitiesParams) (int64, error) {
-	result, err := q.exec(ctx, q.deletePackagedActivitiesStmt, deletePackagedActivities, arg.Before, arg.SettledBefore)
+	result, err := q.exec(ctx, q.deletePackagedActivitiesStmt, deletePackagedActivities, arg.Before)
 	if err != nil {
 		return 0, err
 	}
@@ -425,7 +424,9 @@ const deletePackagedEventGroups = `-- name: DeletePackagedEventGroups :execrows
 DELETE FROM event_groups
 WHERE event_groups.occurred_at < ?1
 AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(event_groups.occurred_at / 1000, 'unixepoch')
-    AND cold_days.updated_at >= event_groups.updated_at AND cold_days.updated_at <= ?2)
+    AND cold_days.updated_at >= event_groups.updated_at AND (cold_days.updated_at <= ?2
+    OR (event_groups.glucose_reading_id IS NULL AND event_groups.insulin_dose_id IS NULL AND event_groups.food_intake_id IS NULL
+        AND event_groups.temp_basal_id IS NULL AND event_groups.profile_switch_id IS NULL)))
 `
 
 type DeletePackagedEventGroupsParams struct {
@@ -434,7 +435,9 @@ type DeletePackagedEventGroupsParams struct {
 }
 
 // The treatments from before Before whose day's events were packaged after they were last written, and not since
-// SettledBefore, so the day is as it will stay. A treatment goes before its events, which it refers to.
+// SettledBefore, so the day is as it will stay; or at once, one of no event, or only of events deleted at once
+// (activities, temp targets and notes), as a day packaged again keeps their events (mergeEvents). A treatment goes
+// before its events, which it refers to.
 func (q *Queries) DeletePackagedEventGroups(ctx context.Context, arg DeletePackagedEventGroupsParams) (int64, error) {
 	result, err := q.exec(ctx, q.deletePackagedEventGroupsStmt, deletePackagedEventGroups, arg.Before, arg.SettledBefore)
 	if err != nil {
@@ -493,19 +496,18 @@ const deletePackagedNotificationEvents = `-- name: DeletePackagedNotificationEve
 DELETE FROM notification_events
 WHERE notification_events.occurred_at < ?1
 AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(notification_events.occurred_at / 1000, 'unixepoch')
-    AND cold_days.updated_at >= notification_events.updated_at AND cold_days.updated_at <= ?2)
+    AND cold_days.updated_at >= notification_events.updated_at)
 AND id NOT IN (SELECT notification_event_id FROM event_groups WHERE notification_event_id IS NOT NULL)
 `
 
 type DeletePackagedNotificationEventsParams struct {
-	Before        int64
-	SettledBefore int64
+	Before int64
 }
 
-// The notifications from before Before whose day was packaged after they were last written, and not since SettledBefore, that
-// no treatment still refers to
+// The notifications from before Before whose day was packaged after they were last written, that no treatment still
+// refers to, at once, as a day packaged again keeps their events (mergeEvents)
 func (q *Queries) DeletePackagedNotificationEvents(ctx context.Context, arg DeletePackagedNotificationEventsParams) (int64, error) {
-	result, err := q.exec(ctx, q.deletePackagedNotificationEventsStmt, deletePackagedNotificationEvents, arg.Before, arg.SettledBefore)
+	result, err := q.exec(ctx, q.deletePackagedNotificationEventsStmt, deletePackagedNotificationEvents, arg.Before)
 	if err != nil {
 		return 0, err
 	}
@@ -566,19 +568,18 @@ const deletePackagedTempTargets = `-- name: DeletePackagedTempTargets :execrows
 DELETE FROM temp_targets
 WHERE temp_targets.occurred_at < ?1
 AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'events' AND date = date(temp_targets.occurred_at / 1000, 'unixepoch')
-    AND cold_days.updated_at >= temp_targets.updated_at AND cold_days.updated_at <= ?2)
+    AND cold_days.updated_at >= temp_targets.updated_at)
 AND id NOT IN (SELECT temp_target_id FROM event_groups WHERE temp_target_id IS NOT NULL)
 `
 
 type DeletePackagedTempTargetsParams struct {
-	Before        int64
-	SettledBefore int64
+	Before int64
 }
 
-// The temp targets from before Before whose day was packaged after they were last written, and not since SettledBefore, that
-// no treatment still refers to
+// The temp targets from before Before whose day was packaged after they were last written, that no treatment still
+// refers to, at once, as a day packaged again keeps their events (mergeEvents)
 func (q *Queries) DeletePackagedTempTargets(ctx context.Context, arg DeletePackagedTempTargetsParams) (int64, error) {
-	result, err := q.exec(ctx, q.deletePackagedTempTargetsStmt, deletePackagedTempTargets, arg.Before, arg.SettledBefore)
+	result, err := q.exec(ctx, q.deletePackagedTempTargetsStmt, deletePackagedTempTargets, arg.Before)
 	if err != nil {
 		return 0, err
 	}
