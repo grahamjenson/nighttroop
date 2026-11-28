@@ -11,6 +11,10 @@
     1. P3: A day gets the part of an extended bolus from the day before only if the day is packaged for another
        reason (it is one of the last 2 days, or has a treatment written)
     1. P2: The 31 hot days are about 11.5 MB of a looping site: no `event_groups` row for an automatic record
+    1. P3: A treatment's CGM-typed glucose (an AAPS Bolus Wizard's) whose treatment row is deleted becomes a CGM
+       reading row again if its day has no glucose cold day: delete it with its treatment, as it is in the events
+    1. P4: A cold day's summary counts a treatment's meter glucose only if it is an `mbg`, but a hot day's counts
+       each treatment's glucose as a meter reading
     1. P4: A site's DB size on its pages, and for its write limits (3 and 4 times its size limit), counts the free
        pages a truncate leaves, under 10% of it: measure it without them, as the truncate of a site far over its
        limit does

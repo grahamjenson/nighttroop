@@ -151,7 +151,7 @@ func buildSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *http
 	}
 	start, end := midnight.UnixMilli(), midnight.AddDate(0, 0, 1).UnixMilli()
 	upTo, excludeDeleted := min(end, until), false
-	rows, err := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateGTE: new(start - trendLookback.Milliseconds()), DateLT: &upTo, Limit: maxRawReadings})
+	rows, err := treatmentGlucoseAsMeter(ctx, q)(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateGTE: new(start - trendLookback.Milliseconds()), DateLT: &upTo, Limit: maxRawReadings}))
 	if err != nil {
 		return nil, err
 	}

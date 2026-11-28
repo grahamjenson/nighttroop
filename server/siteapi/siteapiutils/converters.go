@@ -12,7 +12,7 @@ import (
 // goverter:output:file ./z_converter.go
 type QueryConverter interface {
 	// goverter:useZeroValueOnPointerInconsistency
-	// goverter:ignore IncludeDeleted
+	// goverter:ignore IncludeDeleted EntriesOnly
 	QueryToAllGlucoseReadings(source *apiquery.Query) sitedb.AllGlucoseReadingsParams
 
 	// goverter:useZeroValueOnPointerInconsistency

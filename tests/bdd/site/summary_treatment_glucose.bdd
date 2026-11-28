@@ -1,0 +1,23 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// A falling sensor reading, then a BG typed into AAPS's Bolus Wizard, which AAPS sends with no glucoseType
+HTTP
+NAME sensor_reading
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 85, "direction": "SingleDown", "date": {{ itime 3 }}, "dateString": "{{ time 3 }}"}]
+ASSERT_STATUS 200
+
+NAME bolus_wizard
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Bolus Wizard", "glucose": 222, "units": "mg/dl", "created_at": "{{ time 1 }}", "enteredBy": "openaps://AAPS"}]
+ASSERT_STATUS 200
+BROWSE
+
+// The glucose tile shows the sensor's reading (85 mg/dL) and its arrow. The Bolus Wizard's glucose (222 mg/dL) is a
+// meter's, beside it, not in its place.
+GOTO /
+ASSERT_TEXT_EQUALS #site--summary--glucose--reading 4.7
+ASSERT_VISIBLE #site--summary--glucose >> text=↓
+ASSERT_VISIBLE #site--summary--glucose--meter >> text=/^Meter 12.3 mmol\/L, /
+SCREENSHOT treatment_glucose

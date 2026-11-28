@@ -14,8 +14,9 @@ import (
 
 const alarmGlucoseReadings = `-- name: AlarmGlucoseReadings :many
 SELECT id, mgdl, reading_type, units, measurement_method, delta, trend, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
-WHERE reading_type = 'sgv' AND deleted_at IS NULL
-AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
+WHERE reading_type = 'sgv' AND deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
+AND occurred_at >= (SELECT MAX(newest.occurred_at) FROM glucose_readings newest WHERE newest.reading_type = 'sgv'
+    AND newest.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups WHERE event_groups.glucose_reading_id = newest.id))
     - CAST(?1 AS INTEGER) * 60000
 ORDER BY occurred_at DESC
 LIMIT CAST(?2 AS INTEGER)
@@ -27,7 +28,7 @@ type AlarmGlucoseReadingsParams struct {
 }
 
 // The CGM readings back to Minutes before the newest, however old it is, newest first: no data is measured from the
-// newest, and an alarm lasts by its readings, not by the time now
+// newest, and an alarm lasts by its readings, not by the time now. A treatment's glucose is not a CGM reading.
 func (q *Queries) AlarmGlucoseReadings(ctx context.Context, arg AlarmGlucoseReadingsParams) ([]*GlucoseReading, error) {
 	rows, err := q.query(ctx, q.alarmGlucoseReadingsStmt, alarmGlucoseReadings, arg.Minutes, arg.Limit)
 	if err != nil {
@@ -82,14 +83,16 @@ const allGlucoseReadings = `-- name: AllGlucoseReadings :many
 
 SELECT id, mgdl, reading_type, units, measurement_method, delta, trend, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings 
 WHERE (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-AND occurred_at <= COALESCE(CAST(?2 AS INTEGER), 253402300799999)
-AND (?2 IS NULL OR occurred_at < ?2 OR id < CAST(?3 AS TEXT))
+AND (CAST(?2 AS BOOL) = FALSE OR NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id))
+AND occurred_at <= COALESCE(CAST(?3 AS INTEGER), 253402300799999)
+AND (?3 IS NULL OR occurred_at < ?3 OR id < CAST(?4 AS TEXT))
 ORDER BY occurred_at DESC, id DESC
-LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
+LIMIT CAST(?6 AS INTEGER) OFFSET CAST(?5 AS INTEGER)
 `
 
 type AllGlucoseReadingsParams struct {
 	IncludeDeleted bool
+	EntriesOnly    bool
 	Before         *int64
 	BeforeID       *string
 	Skip           int64
@@ -101,10 +104,11 @@ type AllGlucoseReadingsParams struct {
 // 2. Default order with search terms limit and skip
 // I wont optimize further or compromise on non-prepared statements (until it becomes necessary)!
 // Before pages by date from occurred_at's index: the rows older than a time, or than the row at it with BeforeID,
-// by time then id, so rows at the same time are each shown once
+// by time then id, so rows at the same time are each shown once. With EntriesOnly, only entries (see GetGlucoseReading).
 func (q *Queries) AllGlucoseReadings(ctx context.Context, arg AllGlucoseReadingsParams) ([]*GlucoseReading, error) {
 	rows, err := q.query(ctx, q.allGlucoseReadingsStmt, allGlucoseReadings,
 		arg.IncludeDeleted,
+		arg.EntriesOnly,
 		arg.Before,
 		arg.BeforeID,
 		arg.Skip,
@@ -300,19 +304,23 @@ const getGlucoseReading = `-- name: GetGlucoseReading :one
 
 SELECT id, mgdl, reading_type, units, measurement_method, delta, trend, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings WHERE 
 (CAST(?1 AS BOOL) = TRUE OR deleted_at IS NULL)
-AND id = ?2
+AND (CAST(?2 AS BOOL) = FALSE OR NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id))
+AND glucose_readings.id = ?3
 `
 
 type GetGlucoseReadingParams struct {
 	IncludeDeleted bool
+	EntriesOnly    bool
 	ID             string
 }
 
 // ------
 // READ
 // ------
+// With EntriesOnly, only an entry: a treatment's glucose, which its event group refers to, is the treatment's, not an
+// entry, as Nightscout keeps it, and a loop would take it for a CGM reading
 func (q *Queries) GetGlucoseReading(ctx context.Context, arg GetGlucoseReadingParams) (*GlucoseReading, error) {
-	row := q.queryRow(ctx, q.getGlucoseReadingStmt, getGlucoseReading, arg.IncludeDeleted, arg.ID)
+	row := q.queryRow(ctx, q.getGlucoseReadingStmt, getGlucoseReading, arg.IncludeDeleted, arg.EntriesOnly, arg.ID)
 	var i GlucoseReading
 	err := row.Scan(
 		&i.ID,
@@ -349,6 +357,7 @@ const getGlucoseReadingsByIDs = `-- name: GetGlucoseReadingsByIDs :many
 SELECT id, mgdl, reading_type, units, measurement_method, delta, trend, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
 WHERE id IN (SELECT value FROM json_each(CAST(?1 AS TEXT)))
     AND (CAST(?2 AS BOOL) = TRUE OR deleted_at IS NULL)
+    AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 `
 
 type GetGlucoseReadingsByIDsParams struct {
@@ -356,7 +365,8 @@ type GetGlucoseReadingsByIDsParams struct {
 	IncludeDeleted bool
 }
 
-// The readings with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+// The entries with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query: not
+// a treatment's glucose (see GetGlucoseReading)
 func (q *Queries) GetGlucoseReadingsByIDs(ctx context.Context, arg GetGlucoseReadingsByIDsParams) ([]*GlucoseReading, error) {
 	rows, err := q.query(ctx, q.getGlucoseReadingsByIDsStmt, getGlucoseReadingsByIDs, arg.IDs, arg.IncludeDeleted)
 	if err != nil {
@@ -412,6 +422,7 @@ SELECT id FROM glucose_readings
 WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?1 AS INTEGER), 0), COALESCE(CAST(?2 AS INTEGER) + 1, 0), COALESCE(CAST(?3 AS INTEGER), 0))
     AND MIN(COALESCE(CAST(?4 AS INTEGER), 253402300799999), COALESCE(CAST(?5 AS INTEGER) - 1, 253402300799999), COALESCE(?3, 253402300799999))
     AND (CAST(?6 AS BOOL) = TRUE OR deleted_at IS NULL)
+    AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 ORDER BY occurred_at LIMIT CAST(?8 AS INTEGER) OFFSET CAST(?7 AS INTEGER)
 `
 
@@ -426,7 +437,8 @@ type GlucoseReadingAscendingIDsParams struct {
 	Limit          int64
 }
 
-// The readings in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date
+// The entries in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date: not a
+// treatment's glucose (see GetGlucoseReading)
 func (q *Queries) GlucoseReadingAscendingIDs(ctx context.Context, arg GlucoseReadingAscendingIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.glucoseReadingAscendingIDsStmt, glucoseReadingAscendingIDs,
 		arg.DateGTE,
@@ -460,7 +472,7 @@ func (q *Queries) GlucoseReadingAscendingIDs(ctx context.Context, arg GlucoseRea
 }
 
 const glucoseReadingHistoryIDs = `-- name: GlucoseReadingHistoryIDs :many
-SELECT id FROM glucose_readings WHERE updated_at >= ?1
+SELECT id FROM glucose_readings WHERE glucose_readings.updated_at >= ?1 AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 ORDER BY updated_at, occurred_at, id LIMIT CAST(?2 AS INTEGER)
 `
 
@@ -469,8 +481,8 @@ type GlucoseReadingHistoryIDsParams struct {
 	Limit int64
 }
 
-// The readings changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
-// history
+// The entries changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+// history: not a treatment's glucose (see GetGlucoseReading)
 func (q *Queries) GlucoseReadingHistoryIDs(ctx context.Context, arg GlucoseReadingHistoryIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.glucoseReadingHistoryIDsStmt, glucoseReadingHistoryIDs, arg.Since, arg.Limit)
 	if err != nil {
@@ -501,6 +513,7 @@ SELECT id FROM (
     WHERE occurred_at BETWEEN MAX(COALESCE(CAST(?2 AS INTEGER), 0), COALESCE(CAST(?3 AS INTEGER) + 1, 0), COALESCE(CAST(?4 AS INTEGER), 0))
         AND MIN(COALESCE(CAST(?5 AS INTEGER), 253402300799999), COALESCE(CAST(?6 AS INTEGER) - 1, 253402300799999), COALESCE(?4, 253402300799999))
         AND (CAST(?7 AS BOOL) = TRUE OR deleted_at IS NULL)
+        AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 ) ORDER BY sort_key, id LIMIT CAST(?9 AS INTEGER) OFFSET CAST(?8 AS INTEGER)
 `
 
@@ -516,7 +529,8 @@ type GlucoseReadingSortedIDsParams struct {
 	Limit          int64
 }
 
-// The readings in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or srvCreated
+// The entries in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or
+// srvCreated: not a treatment's glucose (see GetGlucoseReading)
 func (q *Queries) GlucoseReadingSortedIDs(ctx context.Context, arg GlucoseReadingSortedIDsParams) ([]string, error) {
 	rows, err := q.query(ctx, q.glucoseReadingSortedIDsStmt, glucoseReadingSortedIDs,
 		arg.SortOrder,
@@ -585,6 +599,7 @@ func (q *Queries) HardDeleteGlucoseReading(ctx context.Context, arg HardDeleteGl
 const hardDeleteGlucoseReadingsByType = `-- name: HardDeleteGlucoseReadingsByType :execresult
 DELETE FROM glucose_readings WHERE id IN (
     SELECT g.id FROM glucose_readings g WHERE g.reading_type = CAST(?1 AS TEXT)
+        AND NOT EXISTS (SELECT 1 FROM event_groups WHERE event_groups.glucose_reading_id = g.id)
     ORDER BY g.occurred_at DESC LIMIT CAST(?2 AS INTEGER)
 )
 `
@@ -594,7 +609,8 @@ type HardDeleteGlucoseReadingsByTypeParams struct {
 	Limit       int64
 }
 
-// HardDeleteGlucoseReadingsByType deletes at most Limit of the type, soft deleted or not, the newest first
+// HardDeleteGlucoseReadingsByType deletes at most Limit entries of the type, soft deleted or not, the newest first, not
+// a treatment's glucose
 // Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) HardDeleteGlucoseReadingsByType(ctx context.Context, arg HardDeleteGlucoseReadingsByTypeParams) (sql.Result, error) {
 	return q.exec(ctx, q.hardDeleteGlucoseReadingsByTypeStmt, hardDeleteGlucoseReadingsByType, arg.ReadingType, arg.Limit)
@@ -764,8 +780,9 @@ WHERE
     AND (CAST(?27 AS INTEGER) IS NULL OR mgdl < ?27)
     
     AND (CAST(?28 AS BOOL) = TRUE OR deleted_at IS NULL)
+    AND (CAST(?29 AS BOOL) = FALSE OR NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id))
 ORDER BY occurred_at DESC
-LIMIT CAST(?30 AS INTEGER) OFFSET CAST(?29 AS INTEGER)
+LIMIT CAST(?31 AS INTEGER) OFFSET CAST(?30 AS INTEGER)
 `
 
 type SearchGlucoseReadingsParams struct {
@@ -797,10 +814,12 @@ type SearchGlucoseReadingsParams struct {
 	SgvLTE         *int64
 	SgvLT          *int64
 	IncludeDeleted bool
+	EntriesOnly    bool
 	Skip           int64
 	Limit          int64
 }
 
+// With EntriesOnly, only entries (see GetGlucoseReading)
 func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseReadingsParams) ([]*GlucoseReading, error) {
 	rows, err := q.query(ctx, q.searchGlucoseReadingsStmt, searchGlucoseReadings,
 		arg.DateGTE,
@@ -831,6 +850,7 @@ func (q *Queries) SearchGlucoseReadings(ctx context.Context, arg SearchGlucoseRe
 		arg.SgvLTE,
 		arg.SgvLT,
 		arg.IncludeDeleted,
+		arg.EntriesOnly,
 		arg.Skip,
 		arg.Limit,
 	)
@@ -910,6 +930,7 @@ UPDATE glucose_readings SET
     updated_by_identity_name = ?1
 WHERE id IN (
     SELECT g.id FROM glucose_readings g WHERE g.reading_type = CAST(?2 AS TEXT) AND g.deleted_at IS NULL
+        AND NOT EXISTS (SELECT 1 FROM event_groups WHERE event_groups.glucose_reading_id = g.id)
     ORDER BY g.occurred_at DESC LIMIT CAST(?3 AS INTEGER)
 )
 `
@@ -920,10 +941,47 @@ type SoftDeleteGlucoseReadingsByTypeParams struct {
 	Limit                 int64
 }
 
-// SoftDeleteGlucoseReadingsByType deletes at most Limit of the type, the newest first
+// SoftDeleteGlucoseReadingsByType deletes at most Limit entries of the type, the newest first, not a treatment's glucose
 // Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 func (q *Queries) SoftDeleteGlucoseReadingsByType(ctx context.Context, arg SoftDeleteGlucoseReadingsByTypeParams) (sql.Result, error) {
 	return q.exec(ctx, q.softDeleteGlucoseReadingsByTypeStmt, softDeleteGlucoseReadingsByType, arg.UpdatedByIdentityName, arg.ReadingType, arg.Limit)
+}
+
+const treatmentGlucoseReadingIDs = `-- name: TreatmentGlucoseReadingIDs :many
+SELECT glucose_readings.id FROM glucose_readings JOIN event_groups ON event_groups.glucose_reading_id = glucose_readings.id
+WHERE glucose_readings.occurred_at BETWEEN CAST(?1 AS INTEGER) AND CAST(?2 AS INTEGER)
+LIMIT CAST(?3 AS INTEGER)
+`
+
+type TreatmentGlucoseReadingIDsParams struct {
+	From  int64
+	To    int64
+	Limit int64
+}
+
+// The readings from From to To that a treatment refers to: its glucose, which the site shows as a meter's reading, as
+// it is typed in or read for the treatment, not a CGM's
+func (q *Queries) TreatmentGlucoseReadingIDs(ctx context.Context, arg TreatmentGlucoseReadingIDsParams) ([]string, error) {
+	rows, err := q.query(ctx, q.treatmentGlucoseReadingIDsStmt, treatmentGlucoseReadingIDs, arg.From, arg.To, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateGlucoseReading = `-- name: UpdateGlucoseReading :one

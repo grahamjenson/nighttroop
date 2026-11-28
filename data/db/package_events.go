@@ -30,25 +30,29 @@ func anys[T any](rows []*T, err error) ([]any, error) {
 	return all, err
 }
 
-// eventSource is a table whose rows are events: how a day's are read, which of them are events, and the member of a
-// treatment that refers to one
+// eventSource is a table whose rows are events: how a day's are read, which of them are events, by the row and whether
+// a treatment refers to it, and the member of a treatment that refers to one
 type eventSource struct {
 	table  string
 	rows   func(ctx context.Context, q *sitedb.Queries, from, to int64) ([]any, error)
-	keep   func(row any) bool
+	keep   func(row any, treated bool) bool
 	member func(group *sitedb.EventGroup) *string
 }
 
 // eventSources are the tables whose rows are events. Not every row is one: a CGM reading is in the glucose series,
-// unless it has a note, and a loop's own dose is in the insulin series. A temp basal is never one.
+// unless it has a note or is a treatment's glucose, and a loop's own dose is in the insulin series. A temp basal is
+// never one.
 var eventSources = []eventSource{
 	{"glucose_readings", func(ctx context.Context, q *sitedb.Queries, from, to int64) ([]any, error) {
 		return anys(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateGTE: &from, DateLT: &to, Limit: eventRows}))
-	}, func(row any) bool { r := row.(*sitedb.GlucoseReading); return r.ReadingType == "mbg" || r.Notes != nil },
+	}, func(row any, treated bool) bool {
+		r := row.(*sitedb.GlucoseReading)
+		return r.ReadingType == "mbg" || r.Notes != nil || treated
+	},
 		func(g *sitedb.EventGroup) *string { return g.GlucoseReadingID }},
 	{"insulin_doses", func(ctx context.Context, q *sitedb.Queries, from, to int64) ([]any, error) {
 		return anys(q.SearchInsulinDoses(ctx, sitedb.SearchInsulinDosesParams{DateGTE: &from, DateLT: &to, IncludeDeleted: new(false), Limit: eventRows}))
-	}, func(row any) bool { r := row.(*sitedb.InsulinDose); return r.Automatic == nil || !*r.Automatic },
+	}, func(row any, _ bool) bool { r := row.(*sitedb.InsulinDose); return r.Automatic == nil || !*r.Automatic },
 		func(g *sitedb.EventGroup) *string { return g.InsulinDoseID }},
 	{"food_intakes", func(ctx context.Context, q *sitedb.Queries, from, to int64) ([]any, error) {
 		return anys(q.SearchFoodIntakes(ctx, sitedb.SearchFoodIntakesParams{DateGTE: &from, DateLT: &to, IncludeDeleted: new(false), Limit: eventRows}))
@@ -187,8 +191,14 @@ func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, alway
 		if err != nil {
 			return err
 		}
+		treated := map[string]bool{}
+		for _, group := range groups {
+			if member := source.member(group); member != nil {
+				treated[*member] = true
+			}
+		}
 		for _, row := range rows {
-			if source.keep != nil && !source.keep(row) {
+			if source.keep != nil && !source.keep(row, treated[row.(interface{ GetID() string }).GetID()]) {
 				continue
 			}
 			event := eventOf(source.table, row)

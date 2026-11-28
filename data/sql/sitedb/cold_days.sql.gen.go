@@ -47,7 +47,8 @@ func (q *Queries) CGMDaysWrittenSince(ctx context.Context, arg CGMDaysWrittenSin
 
 const cGMReadingsOfDay = `-- name: CGMReadingsOfDay :many
 SELECT id, mgdl, reading_type, units, measurement_method, delta, trend, noise, filtered, unfiltered, rssi, is_calibration, sensor_mgdl_at_pairing, notes, reason, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM glucose_readings
-WHERE occurred_at >= ?1 AND occurred_at < ?2 AND reading_type = 'sgv'
+WHERE glucose_readings.occurred_at >= ?1 AND glucose_readings.occurred_at < ?2 AND reading_type = 'sgv'
+    AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 ORDER BY occurred_at LIMIT 5000
 `
 
@@ -56,7 +57,8 @@ type CGMReadingsOfDayParams struct {
 	To   int64
 }
 
-// A day's CGM readings, the deleted too, as a deleted one clears its step of a day packaged before
+// A day's CGM readings, the deleted too, as a deleted one clears its step of a day packaged before. A treatment's
+// glucose is not one: it is an event, and is not merged with a CGM reading near it, or kept in its place.
 func (q *Queries) CGMReadingsOfDay(ctx context.Context, arg CGMReadingsOfDayParams) ([]*GlucoseReading, error) {
 	rows, err := q.query(ctx, q.cGMReadingsOfDayStmt, cGMReadingsOfDay, arg.From, arg.To)
 	if err != nil {
@@ -687,7 +689,8 @@ const eventDaysWrittenSince = `-- name: EventDaysWrittenSince :many
 SELECT DISTINCT day FROM (
     SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM food_intakes WHERE food_intakes.updated_at >= ?1 AND food_intakes.occurred_at < ?2
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM insulin_doses WHERE insulin_doses.updated_at >= ?1 AND insulin_doses.occurred_at < ?2
-    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM glucose_readings WHERE glucose_readings.updated_at >= ?1 AND glucose_readings.occurred_at < ?2 AND (glucose_readings.reading_type = 'mbg' OR glucose_readings.notes IS NOT NULL)
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM glucose_readings WHERE glucose_readings.updated_at >= ?1 AND glucose_readings.occurred_at < ?2 AND (glucose_readings.reading_type = 'mbg' OR glucose_readings.notes IS NOT NULL
+        OR EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id))
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM activities WHERE activities.updated_at >= ?1 AND activities.occurred_at < ?2
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM temp_targets WHERE temp_targets.updated_at >= ?1 AND temp_targets.occurred_at < ?2
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM profile_switches WHERE profile_switches.updated_at >= ?1 AND profile_switches.occurred_at < ?2
@@ -702,8 +705,8 @@ type EventDaysWrittenSinceParams struct {
 }
 
 // The UTC days, as days since 1970, that ended before Before and had an event written, changed or deleted since
-// Since: a meal, a dose, a meter's reading or one with a note, an activity, a temp target, a profile switch, a
-// notification, or a treatment of them. The days whose events are packaged again.
+// Since: a meal, a dose, a meter's reading, one with a note or a treatment's, an activity, a temp target, a profile
+// switch, a notification, or a treatment of them. The days whose events are packaged again.
 func (q *Queries) EventDaysWrittenSince(ctx context.Context, arg EventDaysWrittenSinceParams) ([]int64, error) {
 	rows, err := q.query(ctx, q.eventDaysWrittenSinceStmt, eventDaysWrittenSince, arg.Since, arg.Before)
 	if err != nil {

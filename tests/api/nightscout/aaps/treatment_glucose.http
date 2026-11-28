@@ -1,0 +1,116 @@
+// A treatment's glucose is the treatment's, as Nightscout keeps it, never an entry. AAPS imports each sgv entry as a
+// CGM reading, and with "NSClient" as its BG source it loops on them: a meter BG typed into the Bolus Wizard came back
+// as a CGM reading, a jump in delta that can lead to an SMB. AAPS 4.0 also stores an mbg entry as a calibration.
+INCLUDE steps/new_ns_site.steps
+INCLUDE steps/ns_units_mgdl.steps
+
+// The CGM's reading, POSTed to entries, before the treatments
+NAME cgm_reading
+POST http://{{ site }}/api/v3/entries
+H Authorization: Bearer {{ jwt }}
+B {"type": "sgv", "sgv": 120, "date": {{ itime 12 }}, "direction": "Flat", "device": "AndroidAPS-DexcomG6", "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME entries_modified
+GET http://{{ site }}/api/v3/lastModified
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+SET entries_since {{ addms (dig "entries_modified.result.collections.entries") 1 }}
+
+// AAPS sends a Bolus Wizard's glucose with no glucoseType, a Carb Correction's glucose too, and a Question with the
+// sensor's glucose. A BG Check typed in is Manual, which would be an mbg.
+NAME bolus_wizard
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Bolus Wizard", "date": {{ itime 10 }}, "units": "mg/dl", "glucose": 222, "isValid": true, "app": "AAPS",
+   "bolusCalculatorResult": "{\"glucoseValue\":222.0,\"totalInsulin\":1.0,\"timestamp\":1700000000000}"}
+ASSERT_STATUS 201
+
+NAME carb_correction
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Carb Correction", "date": {{ itime 8 }}, "units": "mg/dl", "carbs": 5, "glucose": 255, "isValid": true, "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME question
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "Question", "date": {{ itime 6 }}, "units": "mg/dl", "glucose": 233, "glucoseType": "Sensor", "isValid": true, "app": "AAPS"}
+ASSERT_STATUS 201
+
+NAME bg_check
+POST http://{{ site }}/api/v3/treatments
+H Authorization: Bearer {{ jwt }}
+B {"eventType": "BG Check", "date": {{ itime 4 }}, "units": "mg/dl", "glucose": 140, "glucoseType": "Manual", "isValid": true, "app": "AAPS"}
+ASSERT_STATUS 201
+
+// AAPS's first load and its later loads give the CGM's reading alone
+NAME v3_entries
+GET http://{{ site }}/api/v3/entries?date$gt={{ itime 60 }}&sort$desc=date&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 120 "@result.0.sgv"
+
+NAME v3_history
+GET http://{{ site }}/api/v3/entries/history/0?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@result"
+ASSERT_EQUALS 120 "@result.0.sgv"
+
+// The treatments do not change the entries, so AAPS has no entry to load since it last looked
+NAME v3_history_since
+GET http://{{ site }}/api/v3/entries/history/{{ .entries_since }}?limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@result"
+
+NAME v1_entries
+GET http://{{ site }}/api/v1/entries.json?count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+ASSERT_EQUALS 120 "@0.sgv"
+
+NAME v1_entries_since
+GET http://{{ site }}/api/v1/entries.json?find[date][$gt]={{ itime 60 }}&count=10
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 1 "@"
+
+NAME v1_meter_entries
+GET http://{{ site }}/api/v1/entries/mbg.json
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 0 "@"
+
+// The current glucose is the CGM's, not a treatment's newer glucose
+NAME v2_bgnow
+GET http://{{ site }}/api/v2/properties/bgnow?token={{ token }}
+ASSERT_STATUS 200
+ASSERT_EQUALS 120 "@bgnow.last"
+
+// A delete of the sgv entries leaves the treatments' glucose
+NAME delete_sgv_entries
+DELETE http://{{ site }}/api/v1/entries/sgv
+H api-secret: {{ sha1 token }}
+ASSERT_STATUS 200
+
+// The treatments still give their glucose, as sent
+NAME treatments_keep_glucose
+GET http://{{ site }}/api/v3/treatments?date$gt={{ itime 60 }}&sort$desc=date&limit=500
+H Authorization: Bearer {{ jwt }}
+ASSERT_STATUS 200
+ASSERT_LENGTH 4 "@result"
+ASSERT_EQUALS "BG Check" "@result.0.eventType"
+ASSERT_EQUALS 140 "@result.0.glucose"
+ASSERT_EQUALS "Manual" "@result.0.glucoseType"
+ASSERT_EQUALS "Question" "@result.1.eventType"
+ASSERT_EQUALS 233 "@result.1.glucose"
+ASSERT_EQUALS "Sensor" "@result.1.glucoseType"
+ASSERT_EQUALS "Carb Correction" "@result.2.eventType"
+ASSERT_EQUALS 255 "@result.2.glucose"
+ASSERT_EQUALS 5 "@result.2.carbs"
+ASSERT_EQUALS "Bolus Wizard" "@result.3.eventType"
+ASSERT_EQUALS 222 "@result.3.glucose"

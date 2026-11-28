@@ -61,15 +61,20 @@ RETURNING *;
 --------
 
 -- name: GetGlucoseReading :one
+-- With EntriesOnly, only an entry: a treatment's glucose, which its event group refers to, is the treatment's, not an
+-- entry, as Nightscout keeps it, and a loop would take it for a CGM reading
 SELECT * FROM glucose_readings WHERE 
 (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
-AND id = sqlc.arg('ID');
+AND (CAST(sqlc.arg('EntriesOnly') AS BOOL) = FALSE OR NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id))
+AND glucose_readings.id = sqlc.arg('ID');
 
 -- name: GetGlucoseReadingsByIDs :many
--- The readings with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query
+-- The entries with the identifiers in IDs, a JSON array, in no order, each found by its primary key in one query: not
+-- a treatment's glucose (see GetGlucoseReading)
 SELECT * FROM glucose_readings
 WHERE id IN (SELECT value FROM json_each(CAST(sqlc.narg('IDs') AS TEXT)))
-    AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL);
+    AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
+    AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id);
 
 -- name: OldestGlucoseReadingAt :one
 -- When the oldest reading not deleted was, or 0 when there are none
@@ -83,9 +88,10 @@ SELECT CAST(COALESCE(MIN(occurred_at), 0) AS INTEGER) FROM glucose_readings WHER
 
 -- name: AllGlucoseReadings :many
 -- Before pages by date from occurred_at's index: the rows older than a time, or than the row at it with BeforeID,
--- by time then id, so rows at the same time are each shown once
+-- by time then id, so rows at the same time are each shown once. With EntriesOnly, only entries (see GetGlucoseReading).
 SELECT * FROM glucose_readings 
 WHERE (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
+AND (CAST(sqlc.arg('EntriesOnly') AS BOOL) = FALSE OR NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id))
 AND occurred_at <= COALESCE(CAST(sqlc.narg('Before') AS INTEGER), 253402300799999)
 AND (sqlc.narg('Before') IS NULL OR occurred_at < sqlc.narg('Before') OR id < CAST(sqlc.narg('BeforeID') AS TEXT))
 ORDER BY occurred_at DESC, id DESC
@@ -100,30 +106,35 @@ FROM glucose_readings WHERE deleted_at IS NULL;
 
 
 -- name: GlucoseReadingAscendingIDs :many
--- The readings in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date
+-- The entries in the dates searched, the oldest first, from occurred_at's index, for a search sorted by date: not a
+-- treatment's glucose (see GetGlucoseReading)
 SELECT id FROM glucose_readings
 WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0), COALESCE(CAST(sqlc.narg('DateGT') AS INTEGER) + 1, 0), COALESCE(CAST(sqlc.narg('DateEQ') AS INTEGER), 0))
     AND MIN(COALESCE(CAST(sqlc.narg('DateLTE') AS INTEGER), 253402300799999), COALESCE(CAST(sqlc.narg('DateLT') AS INTEGER) - 1, 253402300799999), COALESCE(sqlc.narg('DateEQ'), 253402300799999))
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
+    AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 ORDER BY occurred_at LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GlucoseReadingSortedIDs :many
--- The readings in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or srvCreated
+-- The entries in the dates searched, by changed (SortOrder 3, -3 newest first) or created (2, -2), for srvModified or
+-- srvCreated: not a treatment's glucose (see GetGlucoseReading)
 SELECT id FROM (
     SELECT id, CASE CAST(sqlc.arg('SortOrder') AS INTEGER) WHEN 3 THEN updated_at WHEN -3 THEN -updated_at WHEN 2 THEN created_at ELSE -created_at END AS sort_key
     FROM glucose_readings
     WHERE occurred_at BETWEEN MAX(COALESCE(CAST(sqlc.narg('DateGTE') AS INTEGER), 0), COALESCE(CAST(sqlc.narg('DateGT') AS INTEGER) + 1, 0), COALESCE(CAST(sqlc.narg('DateEQ') AS INTEGER), 0))
         AND MIN(COALESCE(CAST(sqlc.narg('DateLTE') AS INTEGER), 253402300799999), COALESCE(CAST(sqlc.narg('DateLT') AS INTEGER) - 1, 253402300799999), COALESCE(sqlc.narg('DateEQ'), 253402300799999))
         AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
+        AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 ) ORDER BY sort_key, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: GlucoseReadingHistoryIDs :many
--- The readings changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
--- history
-SELECT id FROM glucose_readings WHERE updated_at >= sqlc.arg('Since')
+-- The entries changed since Since, deleted ones too, the oldest change first, then by date and id as History sorts them, from updated_at's index, for API v3
+-- history: not a treatment's glucose (see GetGlucoseReading)
+SELECT id FROM glucose_readings WHERE glucose_readings.updated_at >= sqlc.arg('Since') AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 ORDER BY updated_at, occurred_at, id LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: SearchGlucoseReadings :many
+-- With EntriesOnly, only entries (see GetGlucoseReading)
 SELECT * FROM glucose_readings
 WHERE
     -- The date filters as one range, occurred_at's CHECK where unset, so SQLite reads only that range of its index
@@ -160,15 +171,24 @@ WHERE
     AND (CAST(sqlc.narg('SgvLT') AS INTEGER) IS NULL OR mgdl < sqlc.narg('SgvLT'))
     
     AND (CAST(sqlc.arg('IncludeDeleted') AS BOOL) = TRUE OR deleted_at IS NULL)
+    AND (CAST(sqlc.arg('EntriesOnly') AS BOOL) = FALSE OR NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id))
 ORDER BY occurred_at DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
+-- name: TreatmentGlucoseReadingIDs :many
+-- The readings from From to To that a treatment refers to: its glucose, which the site shows as a meter's reading, as
+-- it is typed in or read for the treatment, not a CGM's
+SELECT glucose_readings.id FROM glucose_readings JOIN event_groups ON event_groups.glucose_reading_id = glucose_readings.id
+WHERE glucose_readings.occurred_at BETWEEN CAST(sqlc.arg('From') AS INTEGER) AND CAST(sqlc.arg('To') AS INTEGER)
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
+
 -- name: AlarmGlucoseReadings :many
 -- The CGM readings back to Minutes before the newest, however old it is, newest first: no data is measured from the
--- newest, and an alarm lasts by its readings, not by the time now
+-- newest, and an alarm lasts by its readings, not by the time now. A treatment's glucose is not a CGM reading.
 SELECT * FROM glucose_readings
-WHERE reading_type = 'sgv' AND deleted_at IS NULL
-AND occurred_at >= (SELECT MAX(occurred_at) FROM glucose_readings WHERE reading_type = 'sgv' AND deleted_at IS NULL)
+WHERE reading_type = 'sgv' AND deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
+AND occurred_at >= (SELECT MAX(newest.occurred_at) FROM glucose_readings newest WHERE newest.reading_type = 'sgv'
+    AND newest.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM event_groups WHERE event_groups.glucose_reading_id = newest.id))
     - CAST(sqlc.arg('Minutes') AS INTEGER) * 60000
 ORDER BY occurred_at DESC
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
@@ -246,7 +266,7 @@ WHERE id = sqlc.arg('ID') AND deleted_at IS NULL;
 DELETE FROM glucose_readings WHERE id = ?;
 
 
--- SoftDeleteGlucoseReadingsByType deletes at most Limit of the type, the newest first
+-- SoftDeleteGlucoseReadingsByType deletes at most Limit entries of the type, the newest first, not a treatment's glucose
 -- name: SoftDeleteGlucoseReadingsByType :execresult
 -- Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 UPDATE glucose_readings SET 
@@ -255,13 +275,16 @@ UPDATE glucose_readings SET
     updated_by_identity_name = sqlc.arg('UpdatedByIdentityName')
 WHERE id IN (
     SELECT g.id FROM glucose_readings g WHERE g.reading_type = CAST(sqlc.arg('ReadingType') AS TEXT) AND g.deleted_at IS NULL
+        AND NOT EXISTS (SELECT 1 FROM event_groups WHERE event_groups.glucose_reading_id = g.id)
     ORDER BY g.occurred_at DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER)
 );
 
--- HardDeleteGlucoseReadingsByType deletes at most Limit of the type, soft deleted or not, the newest first
+-- HardDeleteGlucoseReadingsByType deletes at most Limit entries of the type, soft deleted or not, the newest first, not
+-- a treatment's glucose
 -- name: HardDeleteGlucoseReadingsByType :execresult
 -- Its type is CAST, as SQLite prepares a query again on each run when a bare parameter equals a column it plans around (data/sql/README.md)
 DELETE FROM glucose_readings WHERE id IN (
     SELECT g.id FROM glucose_readings g WHERE g.reading_type = CAST(sqlc.arg('ReadingType') AS TEXT)
+        AND NOT EXISTS (SELECT 1 FROM event_groups WHERE event_groups.glucose_reading_id = g.id)
     ORDER BY g.occurred_at DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER)
 );

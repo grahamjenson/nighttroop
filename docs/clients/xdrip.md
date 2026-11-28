@@ -196,8 +196,8 @@ Gson parses: whole numbers accept decimals and text; `{}` is an empty list.
     the fields sent over the entry with the same date and type. Test: `xdrip/follower_echo.http`.
 - **Fixed, authentication:** `api-secret` as the SHA1 of a device token (#512).
 - **Fixed, entries:**
-  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: kept once. It was kept twice,
-    as a reading with another device. The reading takes the values and device of the copy, as a Nightscout upsert does.
+  - A careportal `BG Check` sent back as an `mbg`, device `careportal via Nightscout`: one entry, as on Nightscout.
+    The BG Check's glucose is not an entry, so it was two. The BG Check keeps its own glucose.
   - Follower with Nightscout upload on and a Caregiver token: its readings are refused (403). xDrip+ then sends the
     batch again, and sends no device status or treatments. Turn upload off on a follower.
   - A `cal` (#512): left out, so the batch is not refused.

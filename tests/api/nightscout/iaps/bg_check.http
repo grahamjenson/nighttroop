@@ -30,13 +30,12 @@ ASSERT_EQUALS "mg/dl" "@0.units"
 ASSERT_EQUALS "iAPS" "@0.enteredBy"
 ASSERT_CONTAINS "T21:31:17.054Z" "@0.created_at"
 
-// A typed in finger stick is a meter reading (mbg), not a CGM reading
+// As on Nightscout, the finger stick is the treatment's, not an entry, so no follower takes it for a CGM reading
 NAME iaps_fetch_bg_check_entry
-GET http://{{ site }}/api/v1/entries.json?find[type]=mbg
+GET http://{{ site }}/api/v1/entries.json
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@"
-ASSERT_EQUALS "mbg" "@0.type"
+ASSERT_LENGTH 0 "@"
 
 // A glucoseType Nighttroop does not know is kept as sent, rather than refuse the upload
 NAME iaps_upload_unknown_glucose_type

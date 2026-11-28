@@ -72,9 +72,11 @@ WHERE updated_at >= sqlc.arg('Since') AND reading_type = 'sgv' AND occurred_at <
 ORDER BY 1 LIMIT 5000;
 
 -- name: CGMReadingsOfDay :many
--- A day's CGM readings, the deleted too, as a deleted one clears its step of a day packaged before
+-- A day's CGM readings, the deleted too, as a deleted one clears its step of a day packaged before. A treatment's
+-- glucose is not one: it is an event, and is not merged with a CGM reading near it, or kept in its place.
 SELECT * FROM glucose_readings
-WHERE occurred_at >= sqlc.arg('From') AND occurred_at < sqlc.arg('To') AND reading_type = 'sgv'
+WHERE glucose_readings.occurred_at >= sqlc.arg('From') AND glucose_readings.occurred_at < sqlc.arg('To') AND reading_type = 'sgv'
+    AND NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
 ORDER BY occurred_at LIMIT 5000;
 
 -- name: DeletePackagedCGMReadings :execrows
@@ -112,12 +114,13 @@ SELECT DISTINCT day FROM (
 
 -- name: EventDaysWrittenSince :many
 -- The UTC days, as days since 1970, that ended before Before and had an event written, changed or deleted since
--- Since: a meal, a dose, a meter's reading or one with a note, an activity, a temp target, a profile switch, a
--- notification, or a treatment of them. The days whose events are packaged again.
+-- Since: a meal, a dose, a meter's reading, one with a note or a treatment's, an activity, a temp target, a profile
+-- switch, a notification, or a treatment of them. The days whose events are packaged again.
 SELECT DISTINCT day FROM (
     SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM food_intakes WHERE food_intakes.updated_at >= sqlc.arg('Since') AND food_intakes.occurred_at < sqlc.arg('Before')
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM insulin_doses WHERE insulin_doses.updated_at >= sqlc.arg('Since') AND insulin_doses.occurred_at < sqlc.arg('Before')
-    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM glucose_readings WHERE glucose_readings.updated_at >= sqlc.arg('Since') AND glucose_readings.occurred_at < sqlc.arg('Before') AND (glucose_readings.reading_type = 'mbg' OR glucose_readings.notes IS NOT NULL)
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM glucose_readings WHERE glucose_readings.updated_at >= sqlc.arg('Since') AND glucose_readings.occurred_at < sqlc.arg('Before') AND (glucose_readings.reading_type = 'mbg' OR glucose_readings.notes IS NOT NULL
+        OR EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id))
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM activities WHERE activities.updated_at >= sqlc.arg('Since') AND activities.occurred_at < sqlc.arg('Before')
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM temp_targets WHERE temp_targets.updated_at >= sqlc.arg('Since') AND temp_targets.occurred_at < sqlc.arg('Before')
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM profile_switches WHERE profile_switches.updated_at >= sqlc.arg('Since') AND profile_switches.occurred_at < sqlc.arg('Before')

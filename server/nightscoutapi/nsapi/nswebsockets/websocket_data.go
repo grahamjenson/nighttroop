@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsutils"
 	"nighttroop.t1d.nz/socketio"
@@ -84,6 +85,13 @@ func (ws *Websocket) broadcastChange(main, alarm *socketio.Namespace, event even
 		return
 	}
 	siteContext := httputils.GetSiteContext(httputils.SetMgdlUnits(httputils.CreateSiteContext(ctx, ws.config, ws.controlDB, siteDB, siteModel, event.SiteID, "", httputils.HTTPActionRead, httputils.AcceptTypeJSON, httputils.ContentTypeJSON)))
+	// A treatment's glucose the site changes is the treatment's, not an entry (see EntriesCollection.SearchModels)
+	if reading, ok := event.Model.(*sitedb.GlucoseReading); ok {
+		treated, err := siteDB.Queries().TreatmentGlucoseReadingIDs(ctx, sitedb.TreatmentGlucoseReadingIDsParams{From: reading.OccurredAt, To: reading.OccurredAt, Limit: maxRecords})
+		if err != nil || slices.Contains(treated, reading.ID) {
+			return
+		}
+	}
 	for collection, store := range ws.collections {
 		r, ok := store.(recorder)
 		if !ok {
