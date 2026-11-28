@@ -2599,7 +2599,8 @@ Before it backs up a site written to, at most every hour, the server seals the s
   - Not events: a CGM reading with no note, a loop's insulin dose, a temp basal, and a deleted record.
   - An event has `k`, its table, and each column its table's policy keeps that has a value. It always has its
     `id` and `occurred_at`. It does not have the app or device that sent it.
-  - An event has the `group_type`, `entered_by` and notes of its treatment, if the event has none of that name.
+  - An event has the `group_type`, `entered_by` and notes of its treatment, if the event has none of that name,
+    and `group_id`, the ID of its treatment.
   - A profile switch has its name, percent, timeshift and duration, and its profile: its basal rates, ratios,
     sensitivities, targets, DIA, units and timezone.
   - Before its own events, the day has `in_force`: the events from before the day that were in force when it
@@ -2655,6 +2656,23 @@ If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries`
   deleted records; a search sorted oldest first or by `srvModified`; API v3 `history`.
 - A made entry is not found by its `_id` (404).
 - If `RETENTION_DELETE_ROWS` is not `true`, a search reads rows only.
+
+#### Treatments of sealed days
+
+If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the `treatments` of the days older than
+`RETENTION_HOT_DAYS` from the days' cold events. No treatment row is deleted yet, so this shows only when a
+treatment row is gone.
+
+- A search of `treatments`, newest first, gives the made treatments with the treatments that are rows, in order
+  of date. `count` and `skip` page through them as one list.
+- A made treatment has the `_id`, `eventType`, `created_at`, `enteredBy` and notes it had, and what its events
+  kept (example: `carbs`, `insulin`, `duration`, `targetTop`, `targetBottom`, `reason`).
+- A treatment with two events (example: a meal with its bolus) is one made treatment.
+- A treatment that is a row is given one time, as the row.
+- Searches that have made treatments: by date (`created_at`, `date`), by `eventType`.
+- Searches that have rows only: by another field (example: `carbs`, `insulin`, `enteredBy`, `duration`); a
+  search of deleted records; a search sorted oldest first or by `srvModified`; API v3 `history`.
+- A loop's insulin doses and temp basals are not made. A made treatment is not found by its `_id` (404).
 
 #### Device status truncation
 

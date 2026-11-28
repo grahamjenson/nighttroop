@@ -11,6 +11,7 @@ import (
 	"nighttroop.t1d.nz/data/retention"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/server/nightscoutapi/nsquery"
+	"nighttroop.t1d.nz/utils/config"
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
@@ -21,16 +22,7 @@ const lastMs = int64(253402300799999)
 // for by its date, its type and its glucose alone. A reading from a cold day has no device, app or time it was
 // written, and its ID is made, so a search by one of those is of rows only.
 func coldCanMatch(query nsquery.Query) bool {
-	for _, types := range []struct {
-		list *string
-		in   bool
-	}{{query.TypeIn, true}, {query.TypeNin, false}} {
-		var listed []string
-		if types.list != nil && (json.Unmarshal([]byte(*types.list), &listed) != nil || slices.Contains(listed, "sgv") != types.in) {
-			return false
-		}
-	}
-	if (query.TypeEq != nil && *query.TypeEq != "sgv") || (query.TypeNeq != nil && *query.TypeNeq == "sgv") || query.IncludeDeleted {
+	if !typeMatches(query, "sgv") || query.IncludeDeleted {
 		return false
 	}
 	query.TypeEq, query.TypeNeq, query.TypeIn, query.TypeNin = nil, nil, nil, nil
@@ -38,15 +30,9 @@ func coldCanMatch(query nsquery.Query) bool {
 	return query.DatesOnly()
 }
 
-// SearchWithCold is a search for readings, the newest first, with those of the sealed days whose rows are deleted,
-// and whether it was one: only where the server deletes rows, and only a search a cold day's reading can match that
-// reaches back before the hot days. The rows are read first. A step of a cold day that a row is still in is not made
-// again, and no cold day is read that is older than the last row of the page.
-func (c EntriesCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*sitedb.GlucoseReading, bool, error) {
-	cfg := siteContext.Config
-	if cfg == nil || !cfg.RetentionDeleteRows || !coldCanMatch(query) {
-		return nil, false, nil
-	}
+// coldRange is the times a query searches that are before the hot days, from from up to, not including, to, in ms:
+// what of it is read from cold days where their rows are deleted. It is empty when from is not before to.
+func coldRange(query nsquery.Query, cfg *config.ServerConfig) (int64, int64) {
 	orZero, orLast := func(at *int64, add int64) int64 {
 		if at == nil {
 			return 0
@@ -59,7 +45,33 @@ func (c EntriesCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context
 		return *at + add
 	}
 	from := max(orZero(query.DateGTE, 0), orZero(query.DateGT, 1), orZero(query.DateEQ, 0))
-	to := min(orLast(query.DateLTE, 1), orLast(query.DateLT, 0), orLast(query.DateEQ, 1), retention.HotSince(time.Now(), cfg.RetentionHotDays).UnixMilli())
+	return from, min(orLast(query.DateLTE, 1), orLast(query.DateLT, 0), orLast(query.DateEQ, 1), retention.HotSince(time.Now(), cfg.RetentionHotDays).UnixMilli())
+}
+
+// typeMatches is whether a record of type is one the query's type filters search for
+func typeMatches(query nsquery.Query, recordType string) bool {
+	for _, types := range []struct {
+		list *string
+		in   bool
+	}{{query.TypeIn, true}, {query.TypeNin, false}} {
+		var listed []string
+		if types.list != nil && (json.Unmarshal([]byte(*types.list), &listed) != nil || slices.Contains(listed, recordType) != types.in) {
+			return false
+		}
+	}
+	return (query.TypeEq == nil || *query.TypeEq == recordType) && (query.TypeNeq == nil || *query.TypeNeq != recordType)
+}
+
+// SearchWithCold is a search for readings, the newest first, with those of the sealed days whose rows are deleted,
+// and whether it was one: only where the server deletes rows, and only a search a cold day's reading can match that
+// reaches back before the hot days. The rows are read first. A step of a cold day that a row is still in is not made
+// again, and no cold day is read that is older than the last row of the page.
+func (c EntriesCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*sitedb.GlucoseReading, bool, error) {
+	cfg := siteContext.Config
+	if cfg == nil || !cfg.RetentionDeleteRows || !coldCanMatch(query) {
+		return nil, false, nil
+	}
+	from, to := coldRange(query, cfg)
 	if from >= to {
 		return nil, false, nil
 	}

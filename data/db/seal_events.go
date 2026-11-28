@@ -144,6 +144,8 @@ func sealEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 			for _, group := range groups {
 				if member := source.member(group); member != nil && *member == event["id"] {
 					used[group.ID] = true
+					// The treatment's own ID, as an app knows the treatment by it, not by its event's
+					event["group_id"] = group.ID
 					for column, value := range eventOf("event_groups", group) {
 						if _, has := event[column]; !has {
 							event[column] = value

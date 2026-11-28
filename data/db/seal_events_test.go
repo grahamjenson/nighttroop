@@ -68,9 +68,9 @@ func TestSealingEvents(t *testing.T) {
 	ms := func(hour int) float64 { return float64(at(hour)) }
 	require.Equal(t, map[string]any{"k": "glucose_readings", "id": "meter", "occurred_at": ms(1), "mgdl": 101.0, "reading_type": "mbg", "created_by_identity_name": by}, sealed[0])
 	require.Equal(t, "felt low", sealed[1]["notes"])
-	// The meal has what its treatment says of it, but keeps its own ID and has the treatment's notes, as it has none
+	// The meal has what its treatment says of it and its ID, but keeps its own ID, and has the treatment's notes, as it has none
 	require.Equal(t, map[string]any{"k": "food_intakes", "id": "lunch", "occurred_at": ms(3), "carbs": 40.0, "name": "Pasta", "created_by_identity_name": by,
-		"group_type": "Meal Bolus", "entered_by": "openaps://AAPS", "notes": "from the group"}, sealed[2])
+		"group_id": "lunch-group", "group_type": "Meal Bolus", "entered_by": "openaps://AAPS", "notes": "from the group"}, sealed[2])
 	require.Equal(t, 4.5, sealed[3]["dose"])
 	require.Equal(t, []any{140.0, 160.0, 60.0, "Exercise"}, []any{sealed[4]["low_target_mgdl"], sealed[4]["high_target_mgdl"], sealed[4]["duration_minutes"], sealed[4]["reason"]})
 	// The switch has its name and percent, and the profile it was made with

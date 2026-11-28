@@ -1,6 +1,6 @@
 # Retention: hot rows and cold days
 
-**Status:** steps 1 to 4c are built. The server seals the CGM glucose of each day, what a loop's phone reports
+**Status:** steps 1 to 4d are built, but the delete of treatment rows (4e). The server seals the CGM glucose of each day, what a loop's phone reports
 (IOB, COB, reservoir, batteries), the treatments (basal rate, insulin, carbs), and the day's events into
 `cold_days`. The Nightscout API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
 `true`. The other steps are the plan. See [Build order](#build-order).
@@ -170,7 +170,7 @@ A treatment and its `event_groups` row become one entry.
 - An event is `k`, its table, and each column of its row that its table's policy keeps (`Keep` in `policy.go`) and
   that has a value. So the policy table is what decides what is kept. A test checks each `Keep` column is real.
 - The columns of an event's treatment (`group_type`, `entered_by`) are added where the event has none of that
-  name.
+  name, and `group_id`, the treatment's own ID, which an app knows it by.
 - A day with more events than a cold day holds (16 KB packed, some thousands of events) is not sealed.
 - **Not yet:** the delete of event rows (4d). So a day's events are built from its rows alone.
 
@@ -286,7 +286,18 @@ API's search uses it (`SearchWithCold`):
   record was written has rows only. So has a search sorted oldest first, or by `srvModified`.
 - A made entry cannot be read, changed or deleted by its `_id` (404). To do, with the delete of a step.
 
-The other rows of this table are not built.
+**Built: `treatments`** (`treatments_cold.go`), by the same rules as `entries`:
+
+- A made treatment is built from the cold events with its ID (`group_id`): a meal and its bolus are one treatment.
+  It has its own `_id`, its type, its time and what its events kept.
+- A search by date or by `eventType`, newest first, has made treatments. A search by another field (carbs,
+  insulin, `enteredBy`, duration) has rows only.
+- A loop's boluses and temp basals are not made: they are series, not events. To decide: make them from the
+  series, one for each run of the same rate.
+- No treatment row is deleted yet (step 4e), so the API reads rows for all days, and a made treatment shows only
+  in a test that deletes rows.
+
+`devicestatus` of sealed days is not made.
 
 ## What a person sees (when all steps are built)
 
@@ -358,7 +369,8 @@ Each step is one PR, and the site works after each one.
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
 | 4b | Events: the day's list | The Cold Days page | **Built** |
 | 4c | What is in force at the start of a day; a profile switch keeps its profile | The Cold Days page | **Built** |
-| 4d | The Nightscout API makes `treatments` from sealed days; then the delete of treatment and event rows | Data pages, `treatments` | |
+| 4d | The Nightscout API makes `treatments` from sealed days | `treatments` | **Built** |
+| 4e | The delete of treatment and event rows older than the hot days; a sealed day keeps what it has when its rows are gone | Data pages | |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
