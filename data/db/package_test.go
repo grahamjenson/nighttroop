@@ -227,6 +227,10 @@ func TestPackagingDeviceReports(t *testing.T) {
 			loop(1+float64(i)*0.011, 0.25, 20-float64(i), 150-float64(i), 80, 60-float64(i)))
 	}
 	report("carer", day.Add(30*time.Minute), "carer", func(p *sitedb.CreateDeviceReportParams) { p.DeviceBatteryPercent = new(5.0) })
+	// The pump says it is suspended at 00:20 and 00:25, and not at 00:30; the loop's other reports do not say
+	for i, state := range []string{"suspended", "suspended", "normal"} {
+		report(fmt.Sprint("pump", i), day.Add(time.Duration(4+i)*5*time.Minute+2*time.Second), "loop://iPhone", func(p *sitedb.CreateDeviceReportParams) { p.PumpState = &state })
+	}
 	// Today, a report in the last minute
 	now := time.Now().UTC()
 	report("now", now.Add(-time.Minute), "loop://iPhone", loop(3.333, 0.5, 12.34, 99.96, 70, 40))
@@ -260,6 +264,8 @@ func TestPackagingDeviceReports(t *testing.T) {
 	require.Equal(t, map[int]float64{0: 139, 1: 127}, series("pump_reservoir", day))
 	require.Equal(t, map[int]float64{0: 80, 1: 80}, series("pump_battery", day))
 	require.Equal(t, map[int]float64{0: 49, 1: 37}, series("phone_battery", day))
+	// Whether the pump was suspended, every 5 minutes, where it said
+	require.Equal(t, map[int]float64{4: 1, 5: 1, 6: 0}, series("pump_suspended", day))
 	// Today is packaged as far as it has got
 	nowStep := int(now.Add(-time.Minute).Sub(now.Add(-time.Minute).Truncate(24*time.Hour)) / (5 * time.Minute))
 	require.Equal(t, map[int]float64{nowStep: 3.33}, series("iob", now.Add(-time.Minute)))

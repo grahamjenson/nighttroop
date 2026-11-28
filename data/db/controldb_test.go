@@ -493,65 +493,37 @@ func (f *deviceReportsFixture) remaining() map[string]bool {
 	return remaining
 }
 
-// A device's reports are all kept for the last hour, then the newest in every 10 minutes until a week old, 20 minutes
-// until two weeks and an hour until 30 days, when all are deleted. It keeps its newest however old, until 30 days.
-// A deleted report is neither removed, until 30 days, nor kept in another's place.
+// A device's reports are all kept for the last hour, then the newest in every 10 minutes until a week old, when all
+// are deleted. It keeps its newest however old, until a week. A deleted report is neither removed, until a week, nor
+// kept in another's place.
 func TestTruncateThinsOldDeviceReports(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	f := &deviceReportsFixture{t: t, q: site.SiteDB.Queries(), reports: map[string]deviceReportMade{}}
 	now, day := time.Now(), 24*time.Hour
-	// A loop reporting every 5 minutes for 3 hours now, and either side of a week, two weeks and 30 days old
-	for _, from := range []time.Duration{0, 7*day - 90*time.Minute, 14*day - 90*time.Minute, 30*day - 90*time.Minute} {
+	// A loop reporting every 5 minutes for 3 hours now, 3 days ago, and either side of a week old
+	for _, from := range []time.Duration{0, 3 * day, 7*day - 90*time.Minute} {
 		f.every("aaps", from, 3*time.Hour, now)
 	}
 	f.every("pump", 4*time.Hour, 5*time.Minute, now) // a pump that last reported 4 hours ago
-	f.every("phone", 31*day, 5*time.Minute, now)     // a phone that last reported 31 days ago
+	f.every("phone", 8*day, 5*time.Minute, now)      // a phone that last reported 8 days ago
 	f.delete("aaps-102")
-	f.delete(fmt.Sprintf("aaps-%d", (14*day+time.Hour)/time.Minute+2))
-	f.delete(fmt.Sprintf("aaps-%d", (30*day+time.Hour)/time.Minute+2))
+	f.delete(fmt.Sprintf("aaps-%d", (3*day+time.Hour)/time.Minute+2))
+	f.delete(fmt.Sprintf("aaps-%d", (7*day+time.Hour)/time.Minute+2))
 
 	require.NoError(t, controlDB.TruncateSites(t.Context(), controlDB.AllSites(), nil))
 	remaining := f.remaining()
 	removed := 0
 	for id, report := range f.reports {
 		age := time.Duration(now.UnixMilli()-report.occurredAt) * time.Millisecond
-		kept := age < 30*day && f.kept(id, now, func(deviceReportMade) bool { return true })
+		kept := age < 7*day && f.kept(id, now, func(deviceReportMade) bool { return true })
 		require.Equal(t, kept, remaining[id], id)
 		if !remaining[id] {
 			removed++
 		}
 	}
-	require.Greater(t, removed, 80, "most reports from before the last hour are removed")
+	require.Greater(t, removed, 40, "most reports from before the last hour are removed")
 	require.True(t, remaining["pump-242"] && remaining["aaps-2"] && remaining["aaps-57"] && remaining["aaps-102"])
-	require.False(t, remaining["phone-44642"], "a device's newest report goes once 30 days old")
-}
-
-// The job only looks at reports written in the last day, and those which turned a week or two weeks old in it, as
-// those are thinned again; other old reports were thinned by an earlier run
-func TestThinOldDeviceReportsLooksAtThoseThatChangedTier(t *testing.T) {
-	_, _, site := testutils.NewControlDBWithSite(t)
-	f := &deviceReportsFixture{t: t, q: site.SiteDB.Queries(), reports: map[string]deviceReportMade{}}
-	day := 24 * time.Hour
-	written := time.Now()
-	for _, from := range []time.Duration{6*day - 3*time.Hour, 13*day - 3*time.Hour} {
-		f.every("aaps", from, 30*time.Hour, written)
-	}
-	// A day after they were written, the job looks at those written since, none of them
-	since := time.Now().Add(time.Millisecond)
-	now := since.Add(day)
-	require.NoError(t, f.q.ThinOldDeviceReports(t.Context(), db.ThinParams(since.UnixMilli(), now.UnixMilli())))
-	remaining, removed := f.remaining(), 0
-	changedTier := func(report deviceReportMade) bool {
-		return (report.occurredAt >= since.Add(-7*day).UnixMilli() && report.occurredAt <= now.Add(-7*day).UnixMilli()) ||
-			(report.occurredAt >= since.Add(-14*day).UnixMilli() && report.occurredAt <= now.Add(-14*day).UnixMilli())
-	}
-	for id := range f.reports {
-		require.Equal(t, f.kept(id, now, changedTier), remaining[id], id)
-		if !remaining[id] {
-			removed++
-		}
-	}
-	require.Greater(t, removed, 300, "those that turned a week or two weeks old are thinned")
+	require.False(t, remaining[fmt.Sprintf("phone-%d", (8*day)/time.Minute+2)], "a device's newest report goes once a week old")
 }
 
 func TestNewControlDBOpensEverySite(t *testing.T) {

@@ -556,9 +556,8 @@ const hardTruncateSizeFactor = 1.5
 
 const (
 	// hardTruncateJSONKeptFor is how long a site over hardTruncateSizeFactor keeps the JSON of its device reports,
-	// which matters only while recent, and hardTruncateReportsKeptFor its device reports
-	hardTruncateJSONKeptFor    = 24 * time.Hour
-	hardTruncateReportsKeptFor = 7 * 24 * time.Hour
+	// which matters only while recent
+	hardTruncateJSONKeptFor = 24 * time.Hour
 	// hardTruncatedBy is who the "Site truncated" event of a hard truncate says truncated the site
 	hardTruncatedBy = "size limit"
 )
@@ -578,8 +577,7 @@ func vacuumIfMostlyFree(ctx context.Context, site *SiteDB) error {
 }
 
 // hardTruncateSite truncates the device reports of the site harder while its DB is over hardTruncateSizeFactor times
-// its limit, limitKB: it clears the JSON of those over a day old, and deletes those over 7 days old. It deletes no
-// other record: readings, treatments and events are deleted only once their day is packaged (see packageSite). If it
+// its limit, limitKB: it clears the JSON of those over a day old. It deletes no record: readings, treatments and events are deleted only once their day is packaged (see packageSite). If it
 // changed any, it shrinks the DB if enough of it is free, records the new size and logs a "Site truncated" event.
 func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB int64) error {
 	beforeKB := site.EstimatedSizeKB()
@@ -593,14 +591,13 @@ func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB
 	}
 	started, q := time.Now(), site.Queries()
 	cleared, err := q.ClearOldDeviceReportJSON(ctx, sitedb.ClearOldDeviceReportJSONParams{Before: started.Add(-hardTruncateJSONKeptFor).UnixMilli()})
-	deleted, deleteErr := q.DeleteOldDeviceReports(ctx, sitedb.DeleteOldDeviceReportsParams{Before: started.Add(-hardTruncateReportsKeptFor).UnixMilli()})
-	if err = errors.Join(err, deleteErr); err == nil && cleared+deleted > 0 {
+	if err == nil && cleared > 0 {
 		err = vacuumIfMostlyFree(ctx, site)
 	}
 	if err != nil {
 		return fmt.Errorf("cannot truncate site %s harder: %w", site.Subdomain, err)
 	}
-	if cleared+deleted == 0 {
+	if cleared == 0 {
 		return nil
 	}
 	afterKB := site.EstimatedSizeKB()
@@ -612,20 +609,20 @@ func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB
 // clear, as those before were cleared by an earlier run; a day covers a server down for a while
 const truncateLooksBack = 24 * time.Hour
 
-// DeviceReportsKeptFor is how long a device report is kept at all
-const DeviceReportsKeptFor = 30 * 24 * time.Hour
+// DeviceReportsKeptFor is how long a device report is kept at all. Its numbers of each 5 minutes (IOB, COB, the pump's
+// reservoir, battery and whether it was suspended, the phone's battery) are in its day's cold days for good; the row
+// is for the apps that read the last days of statuses, and for the Device Status page.
+const DeviceReportsKeptFor = 7 * 24 * time.Hour
 
 // ThinParams are ThinOldDeviceReports's, for the reports written since since, at now, both in ms, with utils/thin's
 // ages and buckets
 func ThinParams(since, now int64) sitedb.ThinOldDeviceReportsParams {
-	return sitedb.ThinOldDeviceReportsParams{Since: since, Now: now, KeepAllMs: thin.KeepAll.Milliseconds(),
-		WeekMs: thin.Week.Milliseconds(), FortnightMs: thin.Fortnight.Milliseconds(), SmallMs: thin.Small.Milliseconds(),
-		MediumMs: thin.Medium.Milliseconds(), LargeMs: thin.Large.Milliseconds()}
+	return sitedb.ThinOldDeviceReportsParams{Since: since, Now: now, KeepAllMs: thin.KeepAll.Milliseconds(), BucketMs: thin.Size.Milliseconds()}
 }
 
 // truncateSite clears the predictions from each device's loop statuses over a day old, keeps its pump as sent only on
-// its newest report with one, thins its reports from before the last hour to fewer the older they are, and deletes
-// those over 30 days old, looking at those written since since, 0 for all of them. Then it deletes the loop settings
+// its newest report with one, thins its reports from before the last hour to one each 10 minutes, and deletes
+// those over DeviceReportsKeptFor old, looking at those written since since, 0 for all of them. Then it deletes the loop settings
 // no record refers to any more.
 func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 	now := time.Now()

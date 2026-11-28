@@ -375,8 +375,8 @@ func TestBackfillCopiesNoDeviceStatusOlderThan30Days(t *testing.T) {
 }
 
 // A backfill copies every device status, not only those the site's truncation keeps, so that the site job packages
-// their IOB of each 5 minutes before it thins them: to each device's newest in every 20 minutes 10 days ago, in every
-// 10 minutes 3 days ago, and every one from the last hour
+// their IOB of each 5 minutes before it thins them: to none from 10 days ago, each device's newest in every 10 minutes
+// 3 days ago, and every one from the last hour
 func TestNightscoutBackfillCopiesEveryDeviceStatusForItsNumbersToBePackaged(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
@@ -421,10 +421,7 @@ func TestNightscoutBackfillCopiesEveryDeviceStatusForItsNumbersToBePackaged(t *t
 		return dates
 	}
 	want := []int64{}
-	for i := 0; i < 6; i++ {
-		// The newest of each 20 minutes: its third 5 minutes
-		want = append(want, tenDaysAgo+int64(i)*20*minute+15*minute)
-	}
+	// None from 10 days ago is kept as a row: a device status is kept a week
 	for i := 0; i < 6; i++ {
 		// The newest of each 10 minutes: its second 5 minutes
 		want = append(want, threeDaysAgo+int64(i)*10*minute+5*minute)
@@ -438,7 +435,7 @@ func TestNightscoutBackfillCopiesEveryDeviceStatusForItsNumbersToBePackaged(t *t
 	_, err := controlDB.TruncateSite(ctx, siteID)
 	require.NoError(t, err)
 	got := copied()
-	require.Len(t, got, len(want), "16 of the 40 statuses are kept as rows")
+	require.Len(t, got, len(want), "10 of the 40 statuses are kept as rows")
 	for i := range want {
 		require.Equal(t, want[i]/1000, got[i]/1000, "status %d", i)
 	}

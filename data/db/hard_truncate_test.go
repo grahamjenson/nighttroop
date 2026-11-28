@@ -16,7 +16,7 @@ import (
 )
 
 // A site over 1.5 times its DB size limit (20 MB, so over 30720 KB) has its device reports truncated harder by each
-// backup: the JSON of those over a day old is cleared, and those over 7 days old are deleted. No other record is
+// backup: the JSON of those over a day old is cleared. No other record is
 // touched, however old: a reading or a treatment is deleted only once its day is packaged. A site under 1.5 times its
 // limit gets only the job's usual truncate.
 func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
@@ -120,7 +120,7 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 			require.Equal(t, new(1.2), getReport("report-2d").LoopIob, "its IOB is kept")
 			require.NotNil(t, getReport("report-newest").LoopStatusJson, "the device's newest report keeps its JSON")
 			_, err = q.GetDeviceReport(ctx, sitedb.GetDeviceReportParams{ID: "report-10d"})
-			require.Equal(t, test.clearsJSON, gone(err), "a report over 7 days old is deleted")
+			require.True(t, gone(err), "a report over 7 days old is deleted, as it is for every site")
 			recent, err := getDose("dose-recent")
 			require.NoError(t, err)
 			require.NotNil(t, recent.IcfgJson, "a dose keeps its insulin")
