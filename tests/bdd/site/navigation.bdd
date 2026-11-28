@@ -15,8 +15,8 @@ ASSERT_VISIBLE #site--nav--search[aria-label="Search pages"]
 ASSERT_COUNT #footer > span[aria-hidden="true"] 4
 SCREENSHOT navigation_header
 
-// The user menu has who is signed in, their account, the guide, Settings, Connectors, Alarms, Logs & Events, Usage and
-// logout, none marked on the summary
+// The user menu has who is signed in, their account, the guide, Settings, Connectors, Alarms, Logs & Events, Usage, Cold
+// Storage and logout, none marked on the summary
 CLICK #site--settings-menu
 ASSERT_TEXT_VISIBLE Signed in as
 ASSERT_VISIBLE #site--settings--account-button
@@ -26,13 +26,15 @@ ASSERT_TEXT_EQUALS #site--nav--menu--connectors Connectors
 ASSERT_TEXT_EQUALS #site--nav--menu--alarms Alarms
 ASSERT_TEXT_EQUALS #site--nav--menu--logs Logs & Events
 ASSERT_TEXT_EQUALS #site--nav--menu--usage Usage
+ASSERT_TEXT_EQUALS #site--nav--menu--cold_storage Cold Storage
 ASSERT_VISIBLE #site--nav--menu--settings
 ASSERT_VISIBLE #site--nav--menu--connectors
 ASSERT_VISIBLE #site--nav--menu--alarms
 ASSERT_VISIBLE #site--nav--menu--logs
 ASSERT_VISIBLE #site--nav--menu--usage
+ASSERT_VISIBLE #site--nav--menu--cold_storage
 ASSERT_VISIBLE #site--settings--logout-button
-ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 8
+ASSERT_COUNT #site--settings-menu [data-tui-dropdown-item] 9
 ASSERT_COUNT #site--settings-menu [aria-current="page"] 0
 SCREENSHOT navigation_account_menu
 PRESS Escape
@@ -111,8 +113,8 @@ ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settin
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settings--connectors-button
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settings--alarms-button
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--usage-button
-// Cold Days, what the site keeps of its old days, is below Usage
-ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--cold-days-button
+// Cold Storage, what the site keeps of its old days, is below Usage, and in the account menu
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--cold-storage-button >> text=Cold Storage
 ASSERT_COUNT #site--hub--settings nav ul[aria-label="This site"] 1
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Presets"

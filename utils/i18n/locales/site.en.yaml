@@ -11,6 +11,7 @@ site:
       alarms: "Alarms"
       logs: "Logs & Events"
       usage: "Usage"
+      cold_storage: "Cold Storage"
     hub_pages: "{{.HubName}} pages"
     groups:
       readings_treatments: "Readings & treatments"
@@ -21,7 +22,7 @@ site:
       people_devices: "People & devices"
       push: "Push"
     pages:
-      cold_days: "Cold Days"
+      cold_storage: "Cold Storage"
       glucose_readings: "Glucose Readings"
       insulin_doses: "Insulin Doses"
       food_intakes: "Food Intakes"
@@ -57,6 +58,8 @@ site:
     no_match_guide: "Getting Started says where things are"
     # The headings and words on each page that the search finds it by, and shows when it does
     keywords:
+      cold_days: "Cold days"
+      packaged_days: "Packaged days"
       sensor_glucose: "Sensor Glucose"
       finger_prick: "Finger Prick"
       meter: "Meter"

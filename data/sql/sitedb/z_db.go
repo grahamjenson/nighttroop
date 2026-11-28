@@ -105,6 +105,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearStaleColdDaysStmt, err = db.PrepareContext(ctx, clearStaleColdDays); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearStaleColdDays: %w", err)
 	}
+	if q.coldDayKindsStmt, err = db.PrepareContext(ctx, coldDayKinds); err != nil {
+		return nil, fmt.Errorf("error preparing query ColdDayKinds: %w", err)
+	}
 	if q.coldDayTotalsStmt, err = db.PrepareContext(ctx, coldDayTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query ColdDayTotals: %w", err)
 	}
@@ -116,6 +119,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.coldDaysPageStmt, err = db.PrepareContext(ctx, coldDaysPage); err != nil {
 		return nil, fmt.Errorf("error preparing query ColdDaysPage: %w", err)
+	}
+	if q.coldDaysPageOldestStmt, err = db.PrepareContext(ctx, coldDaysPageOldest); err != nil {
+		return nil, fmt.Errorf("error preparing query ColdDaysPageOldest: %w", err)
 	}
 	if q.countGeneralSettingsStmt, err = db.PrepareContext(ctx, countGeneralSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query CountGeneralSettings: %w", err)
@@ -797,6 +803,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing clearStaleColdDaysStmt: %w", cerr)
 		}
 	}
+	if q.coldDayKindsStmt != nil {
+		if cerr := q.coldDayKindsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing coldDayKindsStmt: %w", cerr)
+		}
+	}
 	if q.coldDayTotalsStmt != nil {
 		if cerr := q.coldDayTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing coldDayTotalsStmt: %w", cerr)
@@ -815,6 +826,11 @@ func (q *Queries) Close() error {
 	if q.coldDaysPageStmt != nil {
 		if cerr := q.coldDaysPageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing coldDaysPageStmt: %w", cerr)
+		}
+	}
+	if q.coldDaysPageOldestStmt != nil {
+		if cerr := q.coldDaysPageOldestStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing coldDaysPageOldestStmt: %w", cerr)
 		}
 	}
 	if q.countGeneralSettingsStmt != nil {
@@ -1783,10 +1799,12 @@ type Queries struct {
 	clearOldProfileSwitchJSONStmt               *sql.Stmt
 	clearOldPumpsStmt                           *sql.Stmt
 	clearStaleColdDaysStmt                      *sql.Stmt
+	coldDayKindsStmt                            *sql.Stmt
 	coldDayTotalsStmt                           *sql.Stmt
 	coldDaysNewestFirstStmt                     *sql.Stmt
 	coldDaysOldestFirstStmt                     *sql.Stmt
 	coldDaysPageStmt                            *sql.Stmt
+	coldDaysPageOldestStmt                      *sql.Stmt
 	countGeneralSettingsStmt                    *sql.Stmt
 	createActivityStmt                          *sql.Stmt
 	createDeviceReportStmt                      *sql.Stmt
@@ -2000,10 +2018,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearOldProfileSwitchJSONStmt:               q.clearOldProfileSwitchJSONStmt,
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
 		clearStaleColdDaysStmt:                      q.clearStaleColdDaysStmt,
+		coldDayKindsStmt:                            q.coldDayKindsStmt,
 		coldDayTotalsStmt:                           q.coldDayTotalsStmt,
 		coldDaysNewestFirstStmt:                     q.coldDaysNewestFirstStmt,
 		coldDaysOldestFirstStmt:                     q.coldDaysOldestFirstStmt,
 		coldDaysPageStmt:                            q.coldDaysPageStmt,
+		coldDaysPageOldestStmt:                      q.coldDaysPageOldestStmt,
 		countGeneralSettingsStmt:                    q.countGeneralSettingsStmt,
 		createActivityStmt:                          q.createActivityStmt,
 		createDeviceReportStmt:                      q.createDeviceReportStmt,

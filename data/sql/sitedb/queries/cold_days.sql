@@ -17,13 +17,33 @@ SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date >= sqlc.arg('From
 ORDER BY date LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
 -- name: ColdDaysPage :many
--- Every cold day, the newest first, for the page that shows what the site keeps of its old days
-SELECT * FROM cold_days ORDER BY date DESC, kind
+-- The cold days of Kind, after DateGT and before DateLT (each when given), the newest first, for the Cold Storage page
+SELECT * FROM cold_days
+WHERE (CAST(sqlc.narg('Kind') AS TEXT) IS NULL OR kind = sqlc.narg('Kind'))
+    AND (CAST(sqlc.narg('DateGT') AS TEXT) IS NULL OR date > sqlc.narg('DateGT'))
+    AND (CAST(sqlc.narg('DateLT') AS TEXT) IS NULL OR date < sqlc.narg('DateLT'))
+ORDER BY date DESC, kind
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
+
+-- name: ColdDaysPageOldest :many
+-- ColdDaysPage, the oldest first
+SELECT * FROM cold_days
+WHERE (CAST(sqlc.narg('Kind') AS TEXT) IS NULL OR kind = sqlc.narg('Kind'))
+    AND (CAST(sqlc.narg('DateGT') AS TEXT) IS NULL OR date > sqlc.narg('DateGT'))
+    AND (CAST(sqlc.narg('DateLT') AS TEXT) IS NULL OR date < sqlc.narg('DateLT'))
+ORDER BY date, kind
 LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
 
 -- name: ColdDayTotals :one
--- How many cold days there are, and the bytes of their bodies
-SELECT COUNT(*) AS total, CAST(COALESCE(SUM(length(body)), 0) AS INTEGER) AS bytes FROM cold_days;
+-- How many cold days of Kind, after DateGT and before DateLT (each when given), there are, and the bytes of their bodies
+SELECT COUNT(*) AS total, CAST(COALESCE(SUM(length(body)), 0) AS INTEGER) AS bytes FROM cold_days
+WHERE (CAST(sqlc.narg('Kind') AS TEXT) IS NULL OR kind = sqlc.narg('Kind'))
+    AND (CAST(sqlc.narg('DateGT') AS TEXT) IS NULL OR date > sqlc.narg('DateGT'))
+    AND (CAST(sqlc.narg('DateLT') AS TEXT) IS NULL OR date < sqlc.narg('DateLT'));
+
+-- name: ColdDayKinds :many
+-- The kinds of data the site has cold days of, to filter by
+SELECT DISTINCT kind FROM cold_days ORDER BY kind;
 
 -- name: HasColdDays :one
 -- Whether any day was ever packaged: a site with none has all its days packaged, not only those written lately

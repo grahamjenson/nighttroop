@@ -330,9 +330,9 @@ API's search uses it (`SearchWithCold`):
 
 ## To look at the cold days
 
-A site's admin opens **Cold Days**, below Usage. It lists each cold day with what its bytes say they are (version,
-shape, step) and its size, and opens a day to show each value. It is read only. See `REQUIREMENTS.md`, "Cold Days
-page".
+A site's admin opens **Cold Storage**, in the account menu and the Settings side tabs. It lists each cold day with
+what its bytes say they are (version, shape, step) and its size, and opens a day to show each value. It filters by
+kind and date, and is read only. See `REQUIREMENTS.md`, "Cold Storage page".
 
 ## What is lost
 
@@ -390,8 +390,8 @@ Each step is one PR, and the site works after each one.
 | 2e | The site's data pages say that older records are in Reports | Data pages | |
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
-| 4b | Events: the day's list | The Cold Days page | **Built** |
-| 4c | What is in force at the start of a day; a profile switch keeps its profile | The Cold Days page | **Built** |
+| 4b | Events: the day's list | The Cold Storage page | **Built** |
+| 4c | What is in force at the start of a day; a profile switch keeps its profile | The Cold Storage page | **Built** |
 | 4d | The Nightscout API makes `treatments` from packaged days | `treatments` | **Built** |
 | 4e | The delete of treatment and event rows older than the hot days; a packaged day keeps what it has when its rows are gone | Data pages | **Built** |
 | 5a | A summary day built from the series of its cold days (`coldSummaryDaily`), for a day in any timezone | None yet | **Built** |

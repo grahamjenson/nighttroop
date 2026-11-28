@@ -290,21 +290,27 @@
         "responses": { "200": { "$ref": "#/components/responses/SiteUsageResult" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
-    "/usage/cold-days": {
+    "/cold-storage": {
       "get": {
         "operationId": "ListColdDays", "tags": ["Site"],
-        "summary": "What the site keeps of its old days: each kind of data of each UTC day, the newest first; admins only. Read only.",
+        "summary": "Cold Storage, what the site keeps of its old days: each kind of data of each UTC day, the newest first; admins only. Read only.",
+        "description": "The total and total_bytes are of the days the filter has. A date_gt or date_lt that is not a day is 400. The old address, /usage/cold-days, is a 301 to it.",
         "parameters": [
+          { "name": "kind", "in": "query", "schema": { "type": "string" }, "description": "Only days of this kind, e.g. glucose" },
+          { "name": "date_gt", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Only UTC days after this day" },
+          { "name": "date_lt", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Only UTC days before this day" },
+          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["newest", "oldest"], "default": "newest" }, "description": "The newest days first, or the oldest" },
           { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 100, "minimum": 1, "maximum": 1000 } },
           { "name": "skip", "in": "query", "schema": { "type": "integer", "default": 0, "minimum": 0 } }
         ],
         "responses": { "200": { "$ref": "#/components/responses/ColdDaysResult" }, "default": { "$ref": "#/components/responses/Error" } }
       }
     },
-    "/usage/cold-days/{kind}/{date}": {
+    "/cold-storage/{kind}/{date}": {
       "get": {
         "operationId": "GetColdDay", "tags": ["Site"],
         "summary": "One cold day, with each of its values at the time its step starts; admins only. Read only.",
+        "description": "The old address, /usage/cold-days/{kind}/{date}, is a 301 to it.",
         "parameters": [
           { "name": "kind", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The kind of data, e.g. glucose" },
           { "name": "date", "in": "path", "required": true, "schema": { "type": "string", "format": "date" }, "description": "The UTC day" }
@@ -1033,12 +1039,13 @@
       },
       "ColdDays": {
         "type": "object",
-        "description": "A page of a site's cold days, the newest first",
-        "required": ["days", "total", "total_bytes"],
+        "description": "A page of a site's cold days, the newest first unless the oldest are asked for",
+        "required": ["days", "total", "total_bytes", "kinds"],
         "properties": {
           "days": { "type": "array", "items": { "$ref": "#/components/schemas/ColdDay" } },
-          "total": { "type": "integer", "format": "int64", "description": "How many cold days the site has" },
-          "total_bytes": { "type": "integer", "format": "int64", "description": "The bytes of all their packed bodies" }
+          "total": { "type": "integer", "format": "int64", "description": "How many cold days the filter has" },
+          "total_bytes": { "type": "integer", "format": "int64", "description": "The bytes of all their packed bodies" },
+          "kinds": { "type": "array", "items": { "type": "string" }, "description": "Each kind the site has a cold day of, to filter by" }
         }
       },
       "ColdDay": {

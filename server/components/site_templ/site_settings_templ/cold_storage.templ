@@ -1,0 +1,310 @@
+package site_settings_templ
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"maps"
+	"net/url"
+	"strconv"
+	"time"
+
+	"nighttroop.t1d.nz/models/sitemodels"
+	"nighttroop.t1d.nz/server/components/heading"
+	"nighttroop.t1d.nz/server/components/listpage"
+	"nighttroop.t1d.nz/server/components/nav"
+	"nighttroop.t1d.nz/server/components/pager"
+	"nighttroop.t1d.nz/server/components/ui/button"
+	"nighttroop.t1d.nz/server/components/ui/icon"
+	"nighttroop.t1d.nz/server/components/ui/table"
+	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/i18n"
+)
+
+// ColdStoragePath is the Cold Storage page
+const ColdStoragePath = "/cold-storage"
+
+// coldDayPath is the page of one cold day
+func coldDayPath(day *sitemodels.ColdDay) string {
+	return ColdStoragePath + "/" + day.Kind + "/" + day.Date
+}
+
+// coldStoragePath is the first page of the cold days f lists, in the order oldest says
+func coldStoragePath(f *sitemodels.ColdStorageFilter, oldest bool) string {
+	values := url.Values{}
+	if f.Kind != nil {
+		values.Set("kind", *f.Kind)
+	}
+	if f.DateGT != nil {
+		values.Set("date_gt", *f.DateGT)
+	}
+	if f.DateLT != nil {
+		values.Set("date_lt", *f.DateLT)
+	}
+	if oldest {
+		values.Set("order", "oldest")
+	}
+	if len(values) == 0 {
+		return ColdStoragePath
+	}
+	return ColdStoragePath + "?" + values.Encode()
+}
+
+// orEmpty is a filter's value, or "" when it has none
+func orEmpty(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
+}
+
+// coldStep says a series' step: 5m0s, 1h0m0s, and nothing for a day of events, which has none
+func coldStep(seconds int64) string {
+	if seconds == 0 {
+		return "–"
+	}
+	return (time.Duration(seconds) * time.Second).String()
+}
+
+// coldCount says how many of a series' steps have a value, or how many events a day has
+func coldCount(day *sitemodels.ColdDay) string {
+	if day.StepSeconds == 0 {
+		return fmt.Sprint(day.Values)
+	}
+	return fmt.Sprintf("%d / %d", day.Values, day.Steps)
+}
+
+// coldEvent is an event without its table and time, which are shown beside it, as JSON, its keys in order
+func coldEvent(event map[string]any) string {
+	rest := maps.Clone(event)
+	delete(rest, "k")
+	delete(rest, "occurred_at")
+	text, _ := json.Marshal(rest)
+	return string(text)
+}
+
+// coldEventTime is an event's time in UTC, in layout: of the day for a day's own, with its date for one from before
+func coldEventTime(event map[string]any, layout string) string {
+	at, _ := event["occurred_at"].(float64)
+	return time.UnixMilli(int64(at)).UTC().Format(layout)
+}
+
+// coldNumber is a value as it is kept, with no more digits than it has
+func coldNumber(value float64) string {
+	return strconv.FormatFloat(value, 'f', -1, 64)
+}
+
+// coldPacking says how a series' values were packed
+func coldPacking(ctx context.Context, day *sitemodels.ColdDay) string {
+	if day.Shape == "events" {
+		if day.Deflated {
+			return "JSON, DEFLATE"
+		}
+		return "JSON"
+	}
+	packing := i18n.T(ctx, "site.settings.cold_storage.packing_change")
+	if day.SecondOrder {
+		packing = i18n.T(ctx, "site.settings.cold_storage.packing_second")
+	}
+	if day.Deflated {
+		packing += ", DEFLATE"
+	}
+	return packing
+}
+
+// ColdStorage is what the site keeps of its old days, for its admins to look at, as the Data pages' tables are: each
+// kind of data of each UTC day, filtered by kind and by the days after and before, the newest first or the oldest,
+// with what its packed bytes say they are and how small they are. Nothing is made or changed here.
+templ ColdStorage(page *sitemodels.ColdDays, f *sitemodels.ColdStorageFilter) {
+	{{ empty := i18n.T(ctx, "site.settings.cold_storage.none") }}
+	if len(page.Kinds) > 0 {
+		{{ empty = i18n.T(ctx, "site.settings.cold_storage.no_match") }}
+	}
+	@listpage.Page(listpage.Props{
+		ID:          "site--cold-storage",
+		Title:       i18n.T(ctx, "site.settings.cold_storage.title"),
+		Description: i18n.T(ctx, "site.settings.cold_storage.about"),
+		Above:       coldStorageTotals(page),
+		Toolbar:     coldStorageToolbar(page, f),
+		Table: listpage.TableProps{
+			ID:      "site--cold-storage--table",
+			Static:  true,
+			Rows:    len(page.Days),
+			EmptyID: "site--cold-storage--none",
+			Empty:   empty,
+			Columns: []table.Column{
+				{Label: i18n.T(ctx, "site.settings.cold_storage.date")}, {Label: i18n.T(ctx, "site.settings.cold_storage.kind")}, {Label: i18n.T(ctx, "site.settings.cold_storage.shape")},
+				{Label: i18n.T(ctx, "site.settings.cold_storage.step")}, {Label: i18n.T(ctx, "site.settings.cold_storage.values"), Numeric: true},
+				{Label: i18n.T(ctx, "site.settings.cold_storage.range"), Numeric: true}, {Label: i18n.T(ctx, "site.settings.cold_storage.size"), Numeric: true},
+				{Label: i18n.T(ctx, "site.settings.cold_storage.packaged")},
+			},
+		},
+		Pager: &pager.Props{ID: "site--cold-storage", Path: coldStoragePath(f, f.Oldest), Count: len(page.Days), Skip: f.Skip, Limit: f.Limit},
+	}) {
+		for _, day := range page.Days {
+			@coldDayRow(day)
+		}
+	}
+}
+
+// coldStorageTotals is how many cold days match the filter, and their size
+templ coldStorageTotals(page *sitemodels.ColdDays) {
+	<p id="site--cold-storage--totals" class="text-sm text-muted-foreground">
+		{ i18n.T(ctx, "site.settings.cold_storage.totals", i18n.Data{"Days": page.Total, "Size": display.Bytes(float64(page.TotalBytes))}) }
+	</p>
+}
+
+// coldStorageToolbar filters the cold days by kind and by the UTC days after and before, and orders them by date, each
+// from the first page, keeping the others
+templ coldStorageToolbar(page *sitemodels.ColdDays, f *sitemodels.ColdStorageFilter) {
+	<div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+		<form id="site--cold-storage--filter" { nav.Attributes(ColdStoragePath)... } class="flex flex-wrap items-center gap-2">
+			if f.Oldest {
+				<input type="hidden" name="order" value="oldest"/>
+			}
+			<select id="site--cold-storage--filter--kind" name="kind" aria-label={ i18n.T(ctx, "site.settings.cold_storage.kind") } class="h-9 rounded-md border border-gray-200 bg-white px-3 text-sm">
+				<option value="" selected?={ f.Kind == nil }>{ i18n.T(ctx, "site.settings.cold_storage.all_kinds") }</option>
+				for _, kind := range page.Kinds {
+					<option value={ kind } selected?={ f.Kind != nil && *f.Kind == kind }>{ kind }</option>
+				}
+			</select>
+			<label class="flex items-center gap-1 text-sm text-gray-600">
+				{ i18n.T(ctx, "site.settings.cold_storage.after") }
+				<input id="site--cold-storage--filter--date-gt" name="date_gt" type="date" value={ orEmpty(f.DateGT) } class="h-9 rounded-md border border-gray-200 bg-white px-2 text-sm"/>
+			</label>
+			<label class="flex items-center gap-1 text-sm text-gray-600">
+				{ i18n.T(ctx, "site.settings.cold_storage.before") }
+				<input id="site--cold-storage--filter--date-lt" name="date_lt" type="date" value={ orEmpty(f.DateLT) } class="h-9 rounded-md border border-gray-200 bg-white px-2 text-sm"/>
+			</label>
+			@button.Button(button.Props{ID: "site--cold-storage--filter--submit", Type: "submit", Variant: button.VariantOutline}) {
+				@icon.ListFilter()
+				{ i18n.T(ctx, "common.filter.filter") }
+			}
+			// Once a kind or a day is chosen, one click goes back to every cold day, in the same order
+			if f.Kind != nil || f.DateGT != nil || f.DateLT != nil {
+				{{ all := coldStoragePath(&sitemodels.ColdStorageFilter{}, f.Oldest) }}
+				@button.Button(button.Props{ID: "site--cold-storage--filter--clear", Href: all, Variant: button.VariantGhost, Attributes: nav.Attributes(all)}) {
+					{ i18n.T(ctx, "common.filter.clear") }
+				}
+			}
+		</form>
+		<div id="site--cold-storage--order" class="segmented flex w-fit">
+			@icon.ArrowUpDown(icon.Props{Class: "mx-1.5 size-4 text-gray-500"})
+			@nav.Toggle("site--cold-storage--order-newest", coldStoragePath(f, false), button.SizeSm, !f.Oldest) {
+				{ i18n.T(ctx, "site.settings.cold_storage.newest") }
+			}
+			@nav.Toggle("site--cold-storage--order-oldest", coldStoragePath(f, true), button.SizeSm, f.Oldest) {
+				{ i18n.T(ctx, "site.settings.cold_storage.oldest") }
+			}
+		</div>
+	</div>
+}
+
+// coldDayRow is one cold day, its date opening it
+templ coldDayRow(day *sitemodels.ColdDay) {
+	@table.Row(table.RowProps{ID: "site--cold-day--" + day.Kind + "--" + day.Date}) {
+		@table.Cell() {
+			@nav.Link("site--cold-day--"+day.Kind+"--"+day.Date+"--open", coldDayPath(day), "underline") {
+				{ day.Date }
+			}
+		}
+		@table.Cell() {
+			{ day.Kind }
+		}
+		if day.Error != nil {
+			@table.Cell(table.CellProps{Class: "text-red-700", Attributes: templ.Attributes{"colspan": "4"}}) {
+				{ i18n.T(ctx, "site.settings.cold_storage.unreadable") }
+			}
+		} else {
+			@table.Cell() {
+				{ day.Shape } v{ fmt.Sprint(day.Version) }
+			}
+			@table.Cell() {
+				{ coldStep(day.StepSeconds) }
+			}
+			@table.Cell(table.NumCell) {
+				{ coldCount(day) }
+			}
+			@table.Cell(table.NumCell) {
+				if day.Min != nil {
+					{ coldNumber(*day.Min) } – { coldNumber(*day.Max) }
+				}
+			}
+		}
+		@table.Cell(table.NumCell) {
+			{ i18n.T(ctx, "site.settings.cold_storage.bytes", i18n.Data{"Bytes": day.Bytes}) }
+		}
+		@table.Cell() {
+			<span title={ display.DateTime(&day.PackagedAt) }>{ display.Ago(ctx, &day.PackagedAt, time.Now()) }</span>
+		}
+	}
+}
+
+// coldEvents is a list of events, each with its UTC time in layout, its table, and its kept columns
+templ coldEvents(id string, events []map[string]any, layout string) {
+	<ol id={ id } class="space-y-1 font-mono text-sm">
+		for _, event := range events {
+			<li class="flex gap-4 border-b border-gray-100 py-0.5">
+				<span class="shrink-0 text-muted-foreground">{ coldEventTime(event, layout) }</span>
+				<span class="w-40 shrink-0">{ fmt.Sprint(event["k"]) }</span>
+				<span class="break-all">{ coldEvent(event) }</span>
+			</li>
+		}
+	</ol>
+}
+
+// coldFact is one thing a cold day says of itself
+templ coldFact(id, label, value string) {
+	<div>
+		<dt class="text-xs uppercase tracking-wide text-muted-foreground">{ label }</dt>
+		<dd id={ id } class="font-mono text-sm">{ value }</dd>
+	</div>
+}
+
+// ColdDay is one cold day opened: what its first bytes say it is, and each of its values at the time its step starts,
+// in UTC, as the number that is kept
+templ ColdDay(day *sitemodels.ColdDay) {
+	<div id="site--cold-day" class="mx-auto max-w-5xl space-y-6">
+		@heading.Page(i18n.T(ctx, "site.settings.cold_storage.day_title", i18n.Data{"Kind": day.Kind, "Date": day.Date})) {
+			@nav.Link("site--cold-day--back", ColdStoragePath, "underline") {
+				{ i18n.T(ctx, "site.settings.cold_storage.back") }
+			}
+		}
+		if day.Error != nil {
+			<p id="site--cold-day--error" class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+				{ i18n.T(ctx, "site.settings.cold_storage.unreadable") }: { *day.Error }
+			</p>
+		} else {
+			<dl id="site--cold-day--facts" class="grid grid-cols-2 gap-4 rounded-md border border-gray-200 bg-white p-4 sm:grid-cols-4">
+				@coldFact("site--cold-day--version", i18n.T(ctx, "site.settings.cold_storage.version"), fmt.Sprint(day.Version))
+				@coldFact("site--cold-day--shape", i18n.T(ctx, "site.settings.cold_storage.shape"), day.Shape)
+				@coldFact("site--cold-day--packing", i18n.T(ctx, "site.settings.cold_storage.packing"), coldPacking(ctx, day))
+				if day.Shape != "events" {
+					@coldFact("site--cold-day--step", i18n.T(ctx, "site.settings.cold_storage.step"), coldStep(day.StepSeconds))
+					@coldFact("site--cold-day--scale", i18n.T(ctx, "site.settings.cold_storage.scale"), coldNumber(day.Scale))
+				}
+				@coldFact("site--cold-day--values", i18n.T(ctx, "site.settings.cold_storage.values"), coldCount(day))
+				@coldFact("site--cold-day--size", i18n.T(ctx, "site.settings.cold_storage.size"), i18n.T(ctx, "site.settings.cold_storage.bytes", i18n.Data{"Bytes": day.Bytes}))
+				@coldFact("site--cold-day--packaged", i18n.T(ctx, "site.settings.cold_storage.packaged"), display.DateTime(&day.PackagedAt))
+			</dl>
+			if day.Shape == "events" {
+				if len(day.InForce) > 0 {
+					<p class="text-sm text-muted-foreground">{ i18n.T(ctx, "site.settings.cold_storage.in_force_note") }</p>
+					@coldEvents("site--cold-day--in-force", day.InForce, time.DateOnly+" 15:04")
+				}
+				<p class="text-sm text-muted-foreground">{ i18n.T(ctx, "site.settings.cold_storage.events_note") }</p>
+				@coldEvents("site--cold-day--events", day.Events, "15:04")
+			} else {
+				<p class="text-sm text-muted-foreground">{ i18n.T(ctx, "site.settings.cold_storage.points_note") }</p>
+				<ol id="site--cold-day--points" class="columns-2 gap-6 font-mono text-sm sm:columns-4 lg:columns-6">
+					for _, point := range day.Points {
+						<li class="flex justify-between border-b border-gray-100 py-0.5">
+							<span class="text-muted-foreground">{ time.UnixMilli(point.At).UTC().Format("15:04") }</span>
+							<span>{ coldNumber(point.Value) }</span>
+						</li>
+					}
+				</ol>
+			}
+		}
+	</div>
+}
