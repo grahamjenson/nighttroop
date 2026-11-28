@@ -5,8 +5,8 @@
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
     1. P1: Retention step 2b (`docs/retention.md`): the glucose page says older readings are in Reports; a made
        entry can be read and deleted by its `_id`; a search oldest first has made entries
-    1. P1: Retention steps 4e to 6: the delete of treatment and event rows, reports from series (remove the
-       summaries), hot days by size (remove most of the truncation)
+    1. P1: Retention steps 4e, 5b, 5c and 6: the delete of treatment and event rows, reports read the days built
+       from series, remove the summaries, hot days by size (remove most of the truncation)
     1. P2: The Nightscout API makes no temp basal or loop's bolus of a packaged day: make them from the series
     1. P3: A day gets the part of an extended bolus from the day before only if the day is packaged for another
        reason (it is one of the last 2 days, or has a treatment written)
