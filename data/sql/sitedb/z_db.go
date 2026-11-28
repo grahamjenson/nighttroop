@@ -204,8 +204,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deviceReportAscendingIDsStmt, err = db.PrepareContext(ctx, deviceReportAscendingIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportAscendingIDs: %w", err)
 	}
+	if q.deviceReportDaysWrittenSinceStmt, err = db.PrepareContext(ctx, deviceReportDaysWrittenSince); err != nil {
+		return nil, fmt.Errorf("error preparing query DeviceReportDaysWrittenSince: %w", err)
+	}
 	if q.deviceReportHistoryIDsStmt, err = db.PrepareContext(ctx, deviceReportHistoryIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportHistoryIDs: %w", err)
+	}
+	if q.deviceReportNumbersOfDayStmt, err = db.PrepareContext(ctx, deviceReportNumbersOfDay); err != nil {
+		return nil, fmt.Errorf("error preparing query DeviceReportNumbersOfDay: %w", err)
 	}
 	if q.deviceReportSortedIDsStmt, err = db.PrepareContext(ctx, deviceReportSortedIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportSortedIDs: %w", err)
@@ -938,9 +944,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deviceReportAscendingIDsStmt: %w", cerr)
 		}
 	}
+	if q.deviceReportDaysWrittenSinceStmt != nil {
+		if cerr := q.deviceReportDaysWrittenSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deviceReportDaysWrittenSinceStmt: %w", cerr)
+		}
+	}
 	if q.deviceReportHistoryIDsStmt != nil {
 		if cerr := q.deviceReportHistoryIDsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deviceReportHistoryIDsStmt: %w", cerr)
+		}
+	}
+	if q.deviceReportNumbersOfDayStmt != nil {
+		if cerr := q.deviceReportNumbersOfDayStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deviceReportNumbersOfDayStmt: %w", cerr)
 		}
 	}
 	if q.deviceReportSortedIDsStmt != nil {
@@ -1752,7 +1768,9 @@ type Queries struct {
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
+	deviceReportDaysWrittenSinceStmt            *sql.Stmt
 	deviceReportHistoryIDsStmt                  *sql.Stmt
+	deviceReportNumbersOfDayStmt                *sql.Stmt
 	deviceReportSortedIDsStmt                   *sql.Stmt
 	deviceReportTotalsStmt                      *sql.Stmt
 	deviceReportsForDeviceStmt                  *sql.Stmt
@@ -1961,7 +1979,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,
+		deviceReportDaysWrittenSinceStmt:            q.deviceReportDaysWrittenSinceStmt,
 		deviceReportHistoryIDsStmt:                  q.deviceReportHistoryIDsStmt,
+		deviceReportNumbersOfDayStmt:                q.deviceReportNumbersOfDayStmt,
 		deviceReportSortedIDsStmt:                   q.deviceReportSortedIDsStmt,
 		deviceReportTotalsStmt:                      q.deviceReportTotalsStmt,
 		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,

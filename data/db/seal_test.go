@@ -186,3 +186,86 @@ func TestColdGlucoseReadings(t *testing.T) {
 	require.Empty(t, read(today, first, 100, every))
 	require.Empty(t, read(first.AddDate(-1, 0, 0), first, 100, every))
 }
+
+// What a loop's phone reports is sealed as series: its IOB and COB every 5 minutes, and the pump's reservoir and the
+// batteries every hour, each a step's newest report. Today is sealed too, and a day keeps what it has once its
+// reports are thinned.
+func TestSealingDeviceReports(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	day := today.AddDate(0, 0, -3)
+	report := func(id string, at time.Time, device string, change func(*sitedb.CreateDeviceReportParams)) {
+		params := sitedb.CreateDeviceReportParams{ID: id, OccurredAt: at.UnixMilli(), CreatedByIdentityName: "phone", CreatedByDeviceName: &device}
+		change(&params)
+		_, err := q.CreateDeviceReport(ctx, params)
+		require.NoError(t, err)
+	}
+	loop := func(iob, basal, cob, reservoir, pump, phone float64) func(*sitedb.CreateDeviceReportParams) {
+		return func(p *sitedb.CreateDeviceReportParams) {
+			p.LoopName, p.LoopIob, p.LoopIobBasal, p.LoopCob = new("loop"), &iob, &basal, &cob
+			p.PumpReservoir, p.PumpBatteryPercent, p.DeviceBatteryPercent = &reservoir, &pump, &phone
+		}
+	}
+	// 3 days ago the loop's phone reports every 5 minutes for 2 hours, its IOB going up by 0.011 U. A carer's phone
+	// reports its own battery, which is not the loop's phone's.
+	for i := range 24 {
+		report(fmt.Sprint("loop", i), day.Add(time.Duration(i)*5*time.Minute+time.Second), "loop://iPhone",
+			loop(1+float64(i)*0.011, 0.25, 20-float64(i), 150-float64(i), 80, 60-float64(i)))
+	}
+	report("carer", day.Add(30*time.Minute), "carer", func(p *sitedb.CreateDeviceReportParams) { p.DeviceBatteryPercent = new(5.0) })
+	// Today, a report in the last minute
+	now := time.Now().UTC()
+	report("now", now.Add(-time.Minute), "loop://iPhone", loop(3.333, 0.5, 12.34, 99.96, 70, 40))
+
+	series := func(kind string, of time.Time) map[int]float64 {
+		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: kind, Date: of.Format(time.DateOnly)})
+		if err != nil {
+			return nil
+		}
+		values, err := retention.UnpackGrid(row.Body)
+		require.NoError(t, err)
+		steps := map[int]float64{}
+		for step, value := range values {
+			if !math.IsNaN(value) {
+				steps[step] = value
+			}
+		}
+		return steps
+	}
+	_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+
+	// IOB to 0.01 U and COB to 0.1 g, every 5 minutes
+	iob := series("iob", day)
+	require.Len(t, iob, 24)
+	require.Equal(t, 1.0, iob[0])
+	require.Equal(t, 1.25, iob[23])
+	require.Equal(t, map[int]float64{0: 20, 23: -3}, map[int]float64{0: series("cob", day)[0], 23: series("cob", day)[23]})
+	require.Len(t, series("iob_basal", day), 24)
+	// The reservoir and the batteries each hour, the hour's newest: of the loop's phone, not the carer's
+	require.Equal(t, map[int]float64{0: 139, 1: 127}, series("pump_reservoir", day))
+	require.Equal(t, map[int]float64{0: 80, 1: 80}, series("pump_battery", day))
+	require.Equal(t, map[int]float64{0: 49, 1: 37}, series("phone_battery", day))
+	// Today is sealed as far as it has got
+	nowStep := int(now.Add(-time.Minute).Sub(now.Add(-time.Minute).Truncate(24*time.Hour)) / (5 * time.Minute))
+	require.Equal(t, map[int]float64{nowStep: 3.33}, series("iob", now.Add(-time.Minute)))
+	require.Equal(t, 100.0, series("pump_reservoir", now.Add(-time.Minute))[now.Add(-time.Minute).Hour()])
+	// A day with no device report has no device series, and its glucose is not theirs
+	require.Nil(t, series("iob", day.AddDate(0, 0, -1)))
+	require.Nil(t, series("glucose", day))
+
+	// Truncating thinned the old day's reports to fewer, after it was sealed: the day keeps every value, and sealing
+	// it again, when its rows are written, keeps them too
+	rows, err := q.DeviceReportNumbersOfDay(ctx, sitedb.DeviceReportNumbersOfDayParams{From: day.UnixMilli(), To: day.Add(24 * time.Hour).UnixMilli()})
+	require.NoError(t, err)
+	require.Less(t, len(rows), 25)
+	report("late", day.Add(3*time.Hour), "loop://iPhone", loop(2, 0.25, 5, 100, 75, 30))
+	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	iob = series("iob", day)
+	require.Len(t, iob, 25)
+	require.Equal(t, 1.25, iob[23])
+	require.Equal(t, 2.0, iob[36])
+	require.Equal(t, map[int]float64{0: 139, 1: 127, 3: 100}, series("pump_reservoir", day))
+}

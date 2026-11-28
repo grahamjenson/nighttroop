@@ -45,3 +45,18 @@ WHERE reading_type = 'sgv' AND glucose_readings.occurred_at < sqlc.arg('Before')
 AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'glucose' AND date = date(glucose_readings.occurred_at / 1000, 'unixepoch')
     AND cold_days.updated_at >= glucose_readings.updated_at)
 AND id NOT IN (SELECT glucose_reading_id FROM event_groups WHERE glucose_reading_id IS NOT NULL);
+
+-- name: DeviceReportDaysWrittenSince :many
+-- The UTC days, as days since 1970, up to Before that had a device report written, changed or deleted since Since:
+-- the days whose device series are sealed again
+SELECT DISTINCT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM device_reports
+WHERE updated_at >= sqlc.arg('Since') AND occurred_at < sqlc.arg('Before')
+ORDER BY 1 LIMIT 5000;
+
+-- name: DeviceReportNumbersOfDay :many
+-- The numbers of a day's device reports that are sealed as series, the oldest first, without the JSON, which is
+-- most of a report; the deleted too, as a deleted one clears its step
+SELECT occurred_at, deleted_at, loop_name, loop_iob, loop_iob_basal, loop_cob, pump_reservoir, pump_battery_percent, device_battery_percent
+FROM device_reports
+WHERE occurred_at >= sqlc.arg('From') AND occurred_at < sqlc.arg('To')
+ORDER BY occurred_at LIMIT 5000;
