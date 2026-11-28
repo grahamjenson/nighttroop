@@ -22,14 +22,17 @@ ASSERT_TEXT_VISIBLE Showing 1 to 3
 ASSERT_VISIBLE #site--insulin--date
 ASSERT_TEXT_EQUALS #site--insulin--next Older
 ASSERT_NOT_VISIBLE #site--insulin--newest
+ASSERT_RIGHT_ALIGNED #site--insulin--next #insulinDosesTable
 SCREENSHOT insulin_first_page
 
-// Older shows the doses older than the last one shown, and Newest goes back
+// Older shows the doses older than the last one shown, and Newest goes back. Older stays at the right, in the same
+// place, so it can be pushed again and again.
 CLICK #site--insulin--next
 ASSERT_STATUS 200
 ASSERT_PATH /data/insulin
 ASSERT_COUNT #insulinDosesTable tbody tr:not([data-empty]) 3
 ASSERT_VISIBLE #site--insulin--newest
+ASSERT_RIGHT_ALIGNED #site--insulin--next #insulinDosesTable
 ASSERT_NOT_VISIBLE "Showing 1 to 3"
 SCREENSHOT insulin_older_page
 CLICK #site--insulin--newest

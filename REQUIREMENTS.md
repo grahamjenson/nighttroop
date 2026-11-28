@@ -1189,6 +1189,7 @@ The reports (overview, AGP, TDD, print), the summary's yesterday, last week, las
   intakes, temp basals, temp targets, profile switches, activities, notifications, event groups and a device's
   statuses:
   - Older shows the records older than the last record on the page. It shows while the page is full.
+  - Older stays at the right of the table, in the same place on each page.
   - The date box shows the records on or before that day, in the site's timezone. It keeps the day it shows.
   - Records at the same time show one time each, in the order of their IDs.
   - Newest goes back to the first page. A page by date shows no "Showing" count.
