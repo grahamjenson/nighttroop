@@ -99,6 +99,9 @@ var Pages = []Page{
 
 	// Usage is a hub of its own page, the site's DB size and a download of it, for its admins
 	{Hub: Usage, Group: "site.nav.groups.this_site", Label: "site.nav.pages.usage", Path: "/usage", ID: "site--usage-button", Icon: icon.HardDrive, Store: "site_settings"},
+	// Cold Days is what the site keeps of its old days, for its admins to look at
+	{Hub: Usage, Group: "site.nav.groups.this_site", Label: "site.nav.pages.cold_days", Path: "/usage/cold-days", ID: "site--cold-days-button", Icon: icon.Layers, Store: "site_settings",
+		Within: []string{"/usage/cold-days"}},
 }
 
 // keywords are the headings and words on a page, by its path, that the search also finds it by, showing the one found:

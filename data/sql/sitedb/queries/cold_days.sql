@@ -11,6 +11,15 @@ SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date = sqlc.arg('Date'
 SELECT * FROM cold_days WHERE kind = sqlc.arg('Kind') AND date >= sqlc.arg('FromDate') AND date <= sqlc.arg('ToDate')
 ORDER BY date DESC LIMIT CAST(sqlc.arg('Limit') AS INTEGER);
 
+-- name: ColdDaysPage :many
+-- Every cold day, the newest first, for the page that shows what the site keeps of its old days
+SELECT * FROM cold_days ORDER BY date DESC, kind
+LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER);
+
+-- name: ColdDayTotals :one
+-- How many cold days there are, and the bytes of their bodies
+SELECT COUNT(*) AS total, CAST(COALESCE(SUM(length(body)), 0) AS INTEGER) AS bytes FROM cold_days;
+
 -- name: HasColdDays :one
 -- Whether any day was ever sealed: a site with none has all its days sealed, not only those written lately
 SELECT EXISTS (SELECT 1 FROM cold_days);

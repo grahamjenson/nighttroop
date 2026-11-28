@@ -21,6 +21,7 @@ site:
       people_devices: "People & devices"
       push: "Push"
     pages:
+      cold_days: "Cold Days"
       glucose_readings: "Glucose Readings"
       insulin_doses: "Insulin Doses"
       food_intakes: "Food Intakes"

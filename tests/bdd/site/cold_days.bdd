@@ -1,0 +1,59 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// Cold Days, beside Usage, is empty until a day is sealed, and says when one is
+GOTO {{ .site_url }}/usage/cold-days
+ASSERT_STATUS 200
+ASSERT_TITLE Cold Days · Nighttroop
+ASSERT_VISIBLE #site--cold-days--none >> text=No day is sealed yet.
+ASSERT_VISIBLE #site--cold-days--totals >> text=Cold days: 0.
+
+// A CGM sends a reading for a day that has ended
+HTTP
+NAME entries
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 131, "date": {{ itime 2880 }}}]
+ASSERT_STATUS 200
+
+// Truncate, on the Usage page, seals the site's ended days now
+BROWSE
+GOTO {{ .site_url }}/usage
+CLICK_ASKS #site--usage--truncate
+CLICK #confirm--ok
+ASSERT_TEXT_VISIBLE Site Truncated
+
+// The day's glucose is one row: a series, version 1, every 5 minutes, with how many of its steps have a value and
+// how few bytes it is
+CLICK #site--cold-days-button
+ASSERT_PATH /usage/cold-days
+ASSERT_COUNT #site--cold-days--table tbody tr 1
+ASSERT_VISIBLE #site--cold-days--table tbody tr >> text=glucose
+ASSERT_VISIBLE #site--cold-days--table tbody tr >> text=series v1
+ASSERT_VISIBLE #site--cold-days--table tbody tr >> text=5m0s
+ASSERT_VISIBLE #site--cold-days--table tbody tr >> text="1 / 288"
+ASSERT_VISIBLE #site--cold-days--table tbody tr >> text=/^\d+ bytes$/
+ASSERT_VISIBLE #site--cold-days--totals >> text=/^Cold days: 1\. Total size: [\d.]+ B\.$/
+// It is only looked at: the page has no form and no button
+ASSERT_NOT_VISIBLE #site--cold-days button
+ASSERT_NOT_VISIBLE #site--cold-days input
+SCREENSHOT cold_days
+
+// Opened, the day says what its bytes are, and each value at the time its step starts
+CLICK #site--cold-days--table tbody tr a
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--cold-day--version >> text="1"
+ASSERT_VISIBLE #site--cold-day--shape >> text="series"
+ASSERT_VISIBLE #site--cold-day--step >> text="5m0s"
+ASSERT_VISIBLE #site--cold-day--scale >> text="1"
+ASSERT_VISIBLE #site--cold-day--size >> text=/^\d+ bytes$/
+ASSERT_VISIBLE #site--cold-day--values >> text="1 / 288"
+ASSERT_COUNT #site--cold-day--points li 1
+ASSERT_VISIBLE #site--cold-day--points li >> text=131
+ASSERT_NOT_VISIBLE #site--cold-day button
+SCREENSHOT cold_day
+
+// Back to the list, and a day there is not is not found
+CLICK #site--cold-day--back
+ASSERT_PATH /usage/cold-days
+GOTO {{ .site_url }}/usage/cold-days/glucose/1999-01-01
+ASSERT_STATUS 404

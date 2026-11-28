@@ -115,3 +115,88 @@ func TestEntriesOfSealedDaysAreMadeFromColdDays(t *testing.T) {
 	cfg.RetentionDeleteRows = false
 	require.Equal(t, []string{"recent2", "recent1", "recent0", "meter", "noted"}, ids(entries(all)))
 }
+
+// A site's admin looks at what the site keeps of its old days: each cold day with what its bytes say they are, and one
+// day with each of its values. It is only read, and only by an admin.
+func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
+	host, day := site.SiteDB.Subdomain+".localhost", time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -3)
+	call := func(method, host, path, token, body string) (int, map[string]any) {
+		req := httptest.NewRequest(method, "http://"+host+path, strings.NewReader(body))
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+		if token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+		var answer map[string]any
+		_ = json.Unmarshal(rr.Body.Bytes(), &answer)
+		return rr.Code, answer
+	}
+	status, signedIn := call("POST", host, "/login", "", `{"name": "admin", "password": "`+site.AdminPassword+`", "totp": "123123"}`)
+	require.Equal(t, http.StatusOK, status)
+	admin := signedIn["token"].(string)
+	status, phone := call("GET", site.SiteDB.Subdomain+".ns.localhost", "/api/v2/authorization/request/token="+site.PwdNSToken, "", "")
+	require.Equal(t, http.StatusOK, status)
+
+	// No day is sealed yet
+	status, none := call("GET", host, "/usage/cold-days", admin, "")
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, map[string]any{"days": []any{}, "total": 0.0, "total_bytes": 0.0}, none["result"])
+
+	// Two readings of a day, at 00:05 and 12:00, and one of the day after, are sealed
+	for i, at := range []time.Duration{5 * time.Minute, 12 * time.Hour, 24 * time.Hour} {
+		_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: fmt.Sprint("r", i), Mgdl: float64(100 + 10*i), ReadingType: "sgv", OccurredAt: day.Add(at).UnixMilli(), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+
+	// The list is the newest day first, each with what it is, and without its values
+	status, listed := call("GET", host, "/usage/cold-days", admin, "")
+	require.Equal(t, http.StatusOK, status)
+	result := listed["result"].(map[string]any)
+	require.Equal(t, 2.0, result["total"])
+	days := result["days"].([]any)
+	require.Len(t, days, 2)
+	first, second := days[0].(map[string]any), days[1].(map[string]any)
+	require.Equal(t, day.AddDate(0, 0, 1).Format(time.DateOnly), first["date"])
+	require.Equal(t, result["total_bytes"], first["bytes"].(float64)+second["bytes"].(float64))
+	sealedAt := second["sealed_at"]
+	require.Positive(t, sealedAt)
+	delete(second, "sealed_at")
+	delete(second, "bytes")
+	delete(second, "second_order")
+	delete(second, "deflated")
+	require.Equal(t, map[string]any{"kind": "glucose", "date": day.Format(time.DateOnly), "version": 1.0, "shape": "series", "step_seconds": 300.0,
+		"scale": 1.0, "steps": 288.0, "values": 2.0, "min": 100.0, "max": 110.0, "error": nil}, second)
+	// A page of them
+	status, paged := call("GET", host, "/usage/cold-days?limit=1&skip=1", admin, "")
+	require.Equal(t, http.StatusOK, status)
+	require.Len(t, paged["result"].(map[string]any)["days"], 1)
+	require.Equal(t, day.Format(time.DateOnly), paged["result"].(map[string]any)["days"].([]any)[0].(map[string]any)["date"])
+
+	// One day has each value at the time its step starts
+	status, opened := call("GET", host, "/usage/cold-days/glucose/"+day.Format(time.DateOnly), admin, "")
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, []any{
+		map[string]any{"at": float64(day.Add(5 * time.Minute).UnixMilli()), "value": 100.0},
+		map[string]any{"at": float64(day.Add(12 * time.Hour).UnixMilli()), "value": 110.0},
+	}, opened["result"].(map[string]any)["points"])
+	status, _ = call("GET", host, "/usage/cold-days/glucose/1999-01-01", admin, "")
+	require.Equal(t, http.StatusNotFound, status)
+
+	// Only an admin looks, and no one writes: there is no route to make, change or delete a cold day
+	status, _ = call("GET", host, "/usage/cold-days", phone["token"].(string), "")
+	require.Equal(t, http.StatusForbidden, status)
+	status, _ = call("GET", host, "/usage/cold-days/glucose/"+day.Format(time.DateOnly), phone["token"].(string), "")
+	require.Equal(t, http.StatusForbidden, status)
+	for _, method := range []string{"POST", "PUT", "PATCH", "DELETE"} {
+		for _, path := range []string{"/usage/cold-days", "/usage/cold-days/glucose/" + day.Format(time.DateOnly)} {
+			status, _ = call(method, host, path, admin, `{}`)
+			require.Contains(t, []int{http.StatusNotFound, http.StatusMethodNotAllowed}, status, method+" "+path)
+		}
+	}
+}

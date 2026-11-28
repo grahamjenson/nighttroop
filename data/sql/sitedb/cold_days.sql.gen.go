@@ -107,6 +107,23 @@ func (q *Queries) CGMReadingsOfDay(ctx context.Context, arg CGMReadingsOfDayPara
 	return items, nil
 }
 
+const coldDayTotals = `-- name: ColdDayTotals :one
+SELECT COUNT(*) AS total, CAST(COALESCE(SUM(length(body)), 0) AS INTEGER) AS bytes FROM cold_days
+`
+
+type ColdDayTotalsRow struct {
+	Total int64
+	Bytes int64
+}
+
+// How many cold days there are, and the bytes of their bodies
+func (q *Queries) ColdDayTotals(ctx context.Context) (*ColdDayTotalsRow, error) {
+	row := q.queryRow(ctx, q.coldDayTotalsStmt, coldDayTotals)
+	var i ColdDayTotalsRow
+	err := row.Scan(&i.Total, &i.Bytes)
+	return &i, err
+}
+
 const coldDaysNewestFirst = `-- name: ColdDaysNewestFirst :many
 SELECT kind, date, body, created_at, updated_at FROM cold_days WHERE kind = ?1 AND date >= ?2 AND date <= ?3
 ORDER BY date DESC LIMIT CAST(?4 AS INTEGER)
@@ -127,6 +144,46 @@ func (q *Queries) ColdDaysNewestFirst(ctx context.Context, arg ColdDaysNewestFir
 		arg.ToDate,
 		arg.Limit,
 	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ColdDay
+	for rows.Next() {
+		var i ColdDay
+		if err := rows.Scan(
+			&i.Kind,
+			&i.Date,
+			&i.Body,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const coldDaysPage = `-- name: ColdDaysPage :many
+SELECT kind, date, body, created_at, updated_at FROM cold_days ORDER BY date DESC, kind
+LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
+`
+
+type ColdDaysPageParams struct {
+	Skip  int64
+	Limit int64
+}
+
+// Every cold day, the newest first, for the page that shows what the site keeps of its old days
+func (q *Queries) ColdDaysPage(ctx context.Context, arg ColdDaysPageParams) ([]*ColdDay, error) {
+	rows, err := q.query(ctx, q.coldDaysPageStmt, coldDaysPage, arg.Skip, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

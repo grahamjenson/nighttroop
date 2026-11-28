@@ -246,6 +246,12 @@ The other rows of this table are not built.
 - **Download Data:** the cold days as CSV files, one for each series, and the events.
 - **A "Storage" page:** what each policy keeps and loses.
 
+## To look at the cold days
+
+A site's admin opens **Cold Days**, below Usage. It lists each cold day with what its bytes say they are (version,
+shape, step) and its size, and opens a day to show each value. It is read only. See `REQUIREMENTS.md`, "Cold Days
+page".
+
 ## What is lost
 
 | What | When | Why it is acceptable |

@@ -121,6 +121,9 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/settings/identities/{id}/password", sitecollections.ResetIdentityPasswordHandler)
 		r.Post("/settings/identities/{id}/totp", sitecollections.ResetIdentityTOTPHandler)
 		r.Get("/usage", sitecollections.UsageHandler)
+		// What the site keeps of its old days, to look at only
+		r.Get("/usage/cold-days", sitecollections.ColdDaysHandler)
+		r.Get("/usage/cold-days/{kind}/{date}", sitecollections.ColdDayHandler)
 		r.Post("/usage/truncate", sitecollections.TruncateHandler)
 		r.Get("/usage/download", sitecollections.DownloadDataHandler)
 		r.Post("/settings/site/delete", sitecollections.DeleteSiteHandler)

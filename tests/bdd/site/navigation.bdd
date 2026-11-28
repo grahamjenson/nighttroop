@@ -111,13 +111,15 @@ ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settin
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settings--connectors-button
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--settings--alarms-button
 ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--usage-button
+// Cold Days, what the site keeps of its old days, is below Usage
+ASSERT_VISIBLE #site--hub--settings nav ul[aria-label="This site"] #site--cold-days-button
 ASSERT_COUNT #site--hub--settings nav ul[aria-label="This site"] 1
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Troubleshooting"
 ASSERT_NOT_VISIBLE #site--hub--settings nav >> text="Presets"
 ASSERT_NOT_VISIBLE #site--logs--events-button
 ASSERT_NOT_VISIBLE #site--logs--errors-button
 ASSERT_NOT_VISIBLE #site--logs--logs-button
-ASSERT_COUNT #site--hub--settings nav a 7
+ASSERT_COUNT #site--hub--settings nav a 8
 SCREENSHOT navigation_settings_hub
 CLICK #site--settings-menu
 ASSERT_VISIBLE #site--nav--menu--settings[aria-current="page"]
