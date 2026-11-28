@@ -335,6 +335,14 @@ func parseBrowserAssert(l Line) (BrowserAssert, error) {
 	case "ASSERT_NO_PAGE_ERRORS":
 		// ASSERT_NO_PAGE_ERRORS is the page having thrown no uncaught error, nor htmx logged one, since the flow went to it
 		return &AssertNoPageErrors{TestPath: path, TestLine: lineNumber}, nil
+	case "ASSERT_RIGHT_ALIGNED":
+		// ASSERT_RIGHT_ALIGNED is the first locator's right edge in line with the second's, as a button kept at the
+		// right of the table above it
+		locators := strings.Fields(second)
+		if len(locators) != 2 {
+			return nil, fmt.Errorf("%s:%d: ASSERT_RIGHT_ALIGNED needs two locators: %q", path, lineNumber, second)
+		}
+		return &AssertRightAligned{Locator: locators[0], Other: locators[1], TestPath: path, TestLine: lineNumber}, nil
 	case "ASSERT_FITS":
 		// ASSERT_FITS is the whole page fitting in the window, so nothing on it needs scrolling to see
 		return &AssertFits{TestPath: path, TestLine: lineNumber}, nil

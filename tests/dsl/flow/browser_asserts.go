@@ -2,6 +2,7 @@ package flow
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -560,6 +561,32 @@ func (r *AssertCount) Execute(t *testing.T, ctx map[string]any, page playwright.
 
 func (r *AssertCount) ToErrorLine() string {
 	return fmt.Sprintf("%s:%d: expected %d visible elements for locator %s", r.TestPath, r.TestLine, r.Count, r.Locator)
+}
+
+// AssertRightAligned is an element's right edge in line with another's, to the pixel
+type AssertRightAligned struct {
+	Locator, Other string
+
+	TestPath string
+	TestLine int
+}
+
+func (r *AssertRightAligned) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
+	right := func(locator string) float64 {
+		box, err := page.Locator(locator).BoundingBox(playwright.LocatorBoundingBoxOptions{Timeout: readWait})
+		if err != nil || box == nil {
+			t.Fatalf("\n\n%s\n failed to measure %s: %v\n\n", r.ToErrorLine(), locator, err)
+		}
+		return box.X + box.Width
+	}
+	if element, other := right(r.Locator), right(r.Other); math.Abs(element-other) > 1 {
+		t.Fatalf("\n\n%s\n assertRightAligned failed: its right edge is at %.0fpx, and %s's at %.0fpx\n\n", r.ToErrorLine(), element, r.Other, other)
+	}
+	return nil
+}
+
+func (r *AssertRightAligned) ToErrorLine() string {
+	return fmt.Sprintf("%s:%d: expected %s's right edge in line with %s's", r.TestPath, r.TestLine, r.Locator, r.Other)
 }
 
 // AssertTitle checks the browser tab's title, e.g. ASSERT_TITLE Glucose Readings · Nighttroop

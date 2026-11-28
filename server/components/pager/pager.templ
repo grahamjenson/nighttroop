@@ -46,7 +46,8 @@ templ Pager(p Props) {
 				{ i18n.T(ctx, "common.pager.showing", i18n.Data{"From": p.Skip + 1, "To": p.Skip + int64(p.Count)}) }
 			}
 		</span>
-		<div class="flex items-center gap-2">
+		// At the right even when the rows shown are hidden, so Older stays in the same place page after page
+		<div class="ml-auto flex items-center gap-2">
 			if p.Dated {
 				<form { nav.Attributes(p.Path)... } hx-trigger="change">
 					<input type="hidden" name="limit" value={ strconv.FormatInt(p.Limit, 10) }/>
