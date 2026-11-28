@@ -111,6 +111,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.coldDaysNewestFirstStmt, err = db.PrepareContext(ctx, coldDaysNewestFirst); err != nil {
 		return nil, fmt.Errorf("error preparing query ColdDaysNewestFirst: %w", err)
 	}
+	if q.coldDaysOldestFirstStmt, err = db.PrepareContext(ctx, coldDaysOldestFirst); err != nil {
+		return nil, fmt.Errorf("error preparing query ColdDaysOldestFirst: %w", err)
+	}
 	if q.coldDaysPageStmt, err = db.PrepareContext(ctx, coldDaysPage); err != nil {
 		return nil, fmt.Errorf("error preparing query ColdDaysPage: %w", err)
 	}
@@ -802,6 +805,11 @@ func (q *Queries) Close() error {
 	if q.coldDaysNewestFirstStmt != nil {
 		if cerr := q.coldDaysNewestFirstStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing coldDaysNewestFirstStmt: %w", cerr)
+		}
+	}
+	if q.coldDaysOldestFirstStmt != nil {
+		if cerr := q.coldDaysOldestFirstStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing coldDaysOldestFirstStmt: %w", cerr)
 		}
 	}
 	if q.coldDaysPageStmt != nil {
@@ -1777,6 +1785,7 @@ type Queries struct {
 	clearStaleColdDaysStmt                      *sql.Stmt
 	coldDayTotalsStmt                           *sql.Stmt
 	coldDaysNewestFirstStmt                     *sql.Stmt
+	coldDaysOldestFirstStmt                     *sql.Stmt
 	coldDaysPageStmt                            *sql.Stmt
 	countGeneralSettingsStmt                    *sql.Stmt
 	createActivityStmt                          *sql.Stmt
@@ -1993,6 +2002,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		clearStaleColdDaysStmt:                      q.clearStaleColdDaysStmt,
 		coldDayTotalsStmt:                           q.coldDayTotalsStmt,
 		coldDaysNewestFirstStmt:                     q.coldDaysNewestFirstStmt,
+		coldDaysOldestFirstStmt:                     q.coldDaysOldestFirstStmt,
 		coldDaysPageStmt:                            q.coldDaysPageStmt,
 		countGeneralSettingsStmt:                    q.countGeneralSettingsStmt,
 		createActivityStmt:                          q.createActivityStmt,

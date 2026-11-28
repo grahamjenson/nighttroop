@@ -61,9 +61,10 @@ func treatmentsCanMatch(query nsquery.Query) bool {
 // back before the hot days. The rows are read first. A treatment that is still a row is not made again, and no cold
 // day is read that is older than the last row of the page. A made treatment has what its events kept: a meal, a dose
 // a person gave, a target, a switch, a note, a site change. A loop's doses and temp basals are series, not treatments.
-func (c TreatmentCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*sitedb.EventGroupsBundle, bool, error) {
+func (c TreatmentCollection) SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query, _ func(*sitedb.Queries, context.Context, nsquery.Query) ([]*sitedb.EventGroupsBundle, error)) ([]*sitedb.EventGroupsBundle, bool, error) {
 	cfg := siteContext.Config
-	if cfg == nil || !cfg.RetentionDeleteRows || !treatmentsCanMatch(query) {
+	// The newest first only: a search the oldest first is of rows
+	if cfg == nil || !cfg.RetentionDeleteRows || (query.SortOrder != nil && *query.SortOrder == nsquery.SortOccurredAtAsc) || !treatmentsCanMatch(query) {
 		return nil, false, nil
 	}
 	from, to := coldRange(query, cfg)

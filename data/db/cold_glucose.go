@@ -25,13 +25,17 @@ func ColdReadingID(at int64) string {
 	return fmt.Sprintf("%08x%s", at/1000, coldIDSuffix)
 }
 
-// eachColdDay reads the site's cold days of a kind from from up to, not including, to, in ms, the newest first, a
-// few at a time, giving each to visit with the time its day starts, while more says more are wanted. wanted is how
+// eachColdDay reads the site's cold days of a kind from from up to, not including, to, in ms, the newest first, or
+// the oldest, a few at a time, giving each to visit with the time its day starts, while more says more are wanted. wanted is how
 // many records are still wanted, of which a day has about perDay, so no more days are read than are needed.
-func eachColdDay(ctx context.Context, q *sitedb.Queries, kind string, from, to int64, perDay int, wanted func() int, visit func(start int64, body []byte) error) error {
+func eachColdDay(ctx context.Context, q *sitedb.Queries, kind string, from, to int64, perDay int, oldestFirst bool, wanted func() int, visit func(start int64, body []byte) error) error {
 	date := func(at int64) string { return time.UnixMilli(at).UTC().Format(time.DateOnly) }
-	for last := to - 1; from < to && wanted() > 0; {
-		days, err := q.ColdDaysNewestFirst(ctx, sitedb.ColdDaysNewestFirstParams{Kind: kind, FromDate: date(from), ToDate: date(last), Limit: int64(wanted()/perDay + 2)})
+	for last := to - 1; from <= last && wanted() > 0; {
+		params := sitedb.ColdDaysNewestFirstParams{Kind: kind, FromDate: date(from), ToDate: date(last), Limit: int64(wanted()/perDay + 2)}
+		days, err := q.ColdDaysNewestFirst(ctx, params)
+		if oldestFirst {
+			days, err = q.ColdDaysOldestFirst(ctx, sitedb.ColdDaysOldestFirstParams(params))
+		}
 		if err != nil || len(days) == 0 {
 			return err
 		}
@@ -43,28 +47,35 @@ func eachColdDay(ctx context.Context, q *sitedb.Queries, kind string, from, to i
 			if err := visit(start.UnixMilli(), day.Body); err != nil {
 				return fmt.Errorf("cannot read the cold day %s of %s: %w", day.Date, kind, err)
 			}
-			last = start.UnixMilli() - 1
+			if last = start.UnixMilli() - 1; oldestFirst {
+				from, last = start.UnixMilli()+dayMs, to-1
+			}
 		}
 	}
 	return nil
 }
 
 // ColdGlucoseReadings are the CGM readings of the site's packaged days from from up to, not including, to, in ms, the
-// newest first, at most limit of them: one for each step of a day's glucose series that has a value and that keep
-// takes, at the start of its step. They are made as rows are, so what reads rows reads them, but they are not in the
+// newest first, or the oldest, at most limit of them: one for each step of a day's glucose series that has a value
+// and that keep takes, at the start of its step. They are made as rows are, so what reads rows reads them, but they are not in the
 // DB: a day's rows are deleted once they are old (see packageSite), and its cold day is what is left of them.
-func ColdGlucoseReadings(ctx context.Context, q *sitedb.Queries, from, to int64, limit int, keep func(at int64, mgdl float64) bool) ([]*sitedb.GlucoseReading, error) {
+func ColdGlucoseReadings(ctx context.Context, q *sitedb.Queries, from, to int64, limit int, oldestFirst bool, keep func(at int64, mgdl float64) bool) ([]*sitedb.GlucoseReading, error) {
+	first, last := from, to
 	var readings []*sitedb.GlucoseReading
 	// A day has at most 288 readings every 5 minutes, and most have fewer
-	err := eachColdDay(ctx, q, retention.Glucose.Name, from, to, 200, func() int { return limit - len(readings) }, func(start int64, body []byte) error {
+	err := eachColdDay(ctx, q, retention.Glucose.Name, from, to, 200, oldestFirst, func() int { return limit - len(readings) }, func(start int64, body []byte) error {
 		values, err := retention.UnpackGrid(body)
 		if err != nil || len(values) == 0 {
 			return fmt.Errorf("not a series: %w", err)
 		}
 		step := dayMs / int64(len(values))
-		for i := len(values) - 1; i >= 0 && len(readings) < limit; i-- {
+		for n := range values {
+			i := len(values) - 1 - n
+			if oldestFirst {
+				i = n
+			}
 			at := start + int64(i)*step
-			if math.IsNaN(values[i]) || at < from || at >= to || !keep(at, values[i]) {
+			if len(readings) >= limit || math.IsNaN(values[i]) || at < first || at >= last || !keep(at, values[i]) {
 				continue
 			}
 			readings = append(readings, &sitedb.GlucoseReading{ID: ColdReadingID(at), Mgdl: values[i], ReadingType: "sgv", OccurredAt: at,
@@ -80,7 +91,7 @@ func ColdGlucoseReadings(ctx context.Context, q *sitedb.Queries, from, to int64,
 // (see packageEventsDay). What was in force when a day started is not one of its events.
 func ColdEvents(ctx context.Context, q *sitedb.Queries, from, to int64, limit int, keep func(event map[string]any) bool) ([]map[string]any, error) {
 	var events []map[string]any
-	err := eachColdDay(ctx, q, retention.EventsKind, from, to, 10, func() int { return limit - len(events) }, func(_ int64, body []byte) error {
+	err := eachColdDay(ctx, q, retention.EventsKind, from, to, 10, false, func() int { return limit - len(events) }, func(_ int64, body []byte) error {
 		_, day, err := retention.ReadEvents(body)
 		if err != nil {
 			return err
@@ -139,7 +150,7 @@ func ColdGlucoseReading(ctx context.Context, q *sitedb.Queries, id string) (*sit
 	if !ok {
 		return nil, sql.ErrNoRows
 	}
-	readings, err := ColdGlucoseReadings(ctx, q, at, at+1, 1, func(int64, float64) bool { return true })
+	readings, err := ColdGlucoseReadings(ctx, q, at, at+1, 1, false, func(int64, float64) bool { return true })
 	if err != nil || len(readings) == 0 {
 		return nil, cmp.Or(err, sql.ErrNoRows)
 	}
