@@ -95,6 +95,12 @@ const (
 	Treatments   NsCollection = "treatments"
 )
 
+// Defines values for ListColdDaysParamsOrder.
+const (
+	Newest ListColdDaysParamsOrder = "newest"
+	Oldest ListColdDaysParamsOrder = "oldest"
+)
+
 // CleanGlucoseReading defines model for CleanGlucoseReading.
 type CleanGlucoseReading struct {
 	CreatedAt             *int64   `json:"created_at,omitempty"`
@@ -184,11 +190,14 @@ type ColdDay struct {
 	Version int `json:"version"`
 }
 
-// ColdDays A page of a site's cold days, the newest first
+// ColdDays A page of a site's cold days, the newest first unless the oldest are asked for
 type ColdDays struct {
 	Days []ColdDay `json:"days"`
 
-	// Total How many cold days the site has
+	// Kinds Each kind the site has a cold day of, to filter by
+	Kinds []string `json:"kinds"`
+
+	// Total How many cold days the filter has
 	Total int64 `json:"total"`
 
 	// TotalBytes The bytes of all their packed bodies
@@ -545,13 +554,10 @@ type SiteTable struct {
 
 // SiteUsage A site's storage, as its Usage page shows it
 type SiteUsage struct {
-	// BeforeSizeKb The DB size in KB before a truncate; null in GET /usage, or when it was never measured
-	BeforeSizeKb *int64 `json:"before_size_kb"`
-
 	// LimitKb The DB size limit in KB, null when there is none
 	LimitKb *int64 `json:"limit_kb"`
 
-	// SizeKb The DB size in KB; after a truncate, the size after it. Null when it was never measured.
+	// SizeKb The DB size in KB, null when it was never measured
 	SizeKb *int64 `json:"size_kb"`
 
 	// Tables The DB's tables as last measured, largest first; empty when they cannot be measured
@@ -786,7 +792,7 @@ type ColdDayResult struct {
 
 // ColdDaysResult defines model for ColdDaysResult.
 type ColdDaysResult struct {
-	// Result A page of a site's cold days, the newest first
+	// Result A page of a site's cold days, the newest first unless the oldest are asked for
 	Result *ColdDays `json:"result,omitempty"`
 	Status *int      `json:"status,omitempty"`
 }
@@ -1131,6 +1137,26 @@ type NsV3ReadParams struct {
 	Fields *NsFields `form:"fields,omitempty" json:"fields,omitempty"`
 }
 
+// ListColdDaysParams defines parameters for ListColdDays.
+type ListColdDaysParams struct {
+	// Kind Only days of this kind, e.g. glucose
+	Kind *string `form:"kind,omitempty" json:"kind,omitempty"`
+
+	// DateGt Only UTC days after this day
+	DateGt *openapi_types.Date `form:"date_gt,omitempty" json:"date_gt,omitempty"`
+
+	// DateLt Only UTC days before this day
+	DateLt *openapi_types.Date `form:"date_lt,omitempty" json:"date_lt,omitempty"`
+
+	// Order The newest days first, or the oldest
+	Order *ListColdDaysParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+	Limit *int                     `form:"limit,omitempty" json:"limit,omitempty"`
+	Skip  *int                     `form:"skip,omitempty" json:"skip,omitempty"`
+}
+
+// ListColdDaysParamsOrder defines parameters for ListColdDays.
+type ListColdDaysParamsOrder string
+
 // ListEventGroupsParams defines parameters for ListEventGroups.
 type ListEventGroupsParams struct {
 	// Limit At most 1000
@@ -1251,12 +1277,6 @@ type AccountPasskeyFinishJSONBody map[string]interface{}
 // GetSummaryParams defines parameters for GetSummary.
 type GetSummaryParams struct {
 	Hours *int64 `form:"hours,omitempty" json:"hours,omitempty"`
-}
-
-// ListColdDaysParams defines parameters for ListColdDays.
-type ListColdDaysParams struct {
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Skip  *int `form:"skip,omitempty" json:"skip,omitempty"`
 }
 
 // WelcomePasskeyFinishJSONBody defines parameters for WelcomePasskeyFinish.
@@ -2129,6 +2149,12 @@ type ClientInterface interface {
 
 	NsV3Replace(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListColdDays request
+	ListColdDays(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetColdDay request
+	GetColdDay(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListEventGroups request
 	ListEventGroups(ctx context.Context, params *ListEventGroupsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2264,17 +2290,8 @@ type ClientInterface interface {
 	// GetUsage request
 	GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// ListColdDays request
-	ListColdDays(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetColdDay request
-	GetColdDay(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// DownloadSiteData request
 	DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// TruncateSite request
-	TruncateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// WelcomePasskeyBegin request
 	WelcomePasskeyBegin(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2933,6 +2950,30 @@ func (c *Client) NsV3Replace(ctx context.Context, collection NsCollection, ident
 	return c.Client.Do(req)
 }
 
+func (c *Client) ListColdDays(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListColdDaysRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetColdDay(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetColdDayRequest(c.Server, kind, date)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListEventGroups(ctx context.Context, params *ListEventGroupsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListEventGroupsRequest(c.Server, params)
 	if err != nil {
@@ -3521,44 +3562,8 @@ func (c *Client) GetUsage(ctx context.Context, reqEditors ...RequestEditorFn) (*
 	return c.Client.Do(req)
 }
 
-func (c *Client) ListColdDays(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListColdDaysRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetColdDay(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetColdDayRequest(c.Server, kind, date)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) DownloadSiteData(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDownloadSiteDataRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) TruncateSite(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTruncateSiteRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -5722,6 +5727,176 @@ func NewNsV3ReplaceRequestWithBody(server string, collection NsCollection, ident
 	return req, nil
 }
 
+// NewListColdDaysRequest generates requests for ListColdDays
+func NewListColdDaysRequest(server string, params *ListColdDaysParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/cold-storage")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Kind != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "kind", runtime.ParamLocationQuery, *params.Kind); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DateGt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "date_gt", runtime.ParamLocationQuery, *params.DateGt); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DateLt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "date_lt", runtime.ParamLocationQuery, *params.DateLt); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Order != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "order", runtime.ParamLocationQuery, *params.Order); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Skip != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetColdDayRequest generates requests for GetColdDay
+func NewGetColdDayRequest(server string, kind string, date openapi_types.Date) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "kind", runtime.ParamLocationPath, kind)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "date", runtime.ParamLocationPath, date)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/cold-storage/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListEventGroupsRequest generates requests for ListEventGroups
 func NewListEventGroupsRequest(server string, params *ListEventGroupsParams) (*http.Request, error) {
 	var err error
@@ -7492,112 +7667,6 @@ func NewGetUsageRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewListColdDaysRequest generates requests for ListColdDays
-func NewListColdDaysRequest(server string, params *ListColdDaysParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/usage/cold-days")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Limit != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.Skip != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "skip", runtime.ParamLocationQuery, *params.Skip); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetColdDayRequest generates requests for GetColdDay
-func NewGetColdDayRequest(server string, kind string, date openapi_types.Date) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "kind", runtime.ParamLocationPath, kind)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "date", runtime.ParamLocationPath, date)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/usage/cold-days/%s/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewDownloadSiteDataRequest generates requests for DownloadSiteData
 func NewDownloadSiteDataRequest(server string) (*http.Request, error) {
 	var err error
@@ -7618,33 +7687,6 @@ func NewDownloadSiteDataRequest(server string) (*http.Request, error) {
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewTruncateSiteRequest generates requests for TruncateSite
-func NewTruncateSiteRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/usage/truncate")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -7913,6 +7955,12 @@ type ClientWithResponsesInterface interface {
 
 	NsV3ReplaceWithResponse(ctx context.Context, collection NsCollection, identifier NsIdentifier, body NsV3ReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*NsV3ReplaceResponse, error)
 
+	// ListColdDaysWithResponse request
+	ListColdDaysWithResponse(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*ListColdDaysResponse, error)
+
+	// GetColdDayWithResponse request
+	GetColdDayWithResponse(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*GetColdDayResponse, error)
+
 	// ListEventGroupsWithResponse request
 	ListEventGroupsWithResponse(ctx context.Context, params *ListEventGroupsParams, reqEditors ...RequestEditorFn) (*ListEventGroupsResponse, error)
 
@@ -8048,17 +8096,8 @@ type ClientWithResponsesInterface interface {
 	// GetUsageWithResponse request
 	GetUsageWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetUsageResponse, error)
 
-	// ListColdDaysWithResponse request
-	ListColdDaysWithResponse(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*ListColdDaysResponse, error)
-
-	// GetColdDayWithResponse request
-	GetColdDayWithResponse(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*GetColdDayResponse, error)
-
 	// DownloadSiteDataWithResponse request
 	DownloadSiteDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DownloadSiteDataResponse, error)
-
-	// TruncateSiteWithResponse request
-	TruncateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*TruncateSiteResponse, error)
 
 	// WelcomePasskeyBeginWithResponse request
 	WelcomePasskeyBeginWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*WelcomePasskeyBeginResponse, error)
@@ -9053,6 +9092,52 @@ func (r NsV3ReplaceResponse) StatusCode() int {
 	return 0
 }
 
+type ListColdDaysResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ColdDaysResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListColdDaysResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListColdDaysResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetColdDayResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ColdDayResult
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetColdDayResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetColdDayResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListEventGroupsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -9910,52 +9995,6 @@ func (r GetUsageResponse) StatusCode() int {
 	return 0
 }
 
-type ListColdDaysResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ColdDaysResult
-	JSONDefault  *Error
-}
-
-// Status returns HTTPResponse.Status
-func (r ListColdDaysResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListColdDaysResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetColdDayResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ColdDayResult
-	JSONDefault  *Error
-}
-
-// Status returns HTTPResponse.Status
-func (r GetColdDayResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetColdDayResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type DownloadSiteDataResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -9972,29 +10011,6 @@ func (r DownloadSiteDataResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r DownloadSiteDataResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type TruncateSiteResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *SiteUsageResult
-	JSONDefault  *Error
-}
-
-// Status returns HTTPResponse.Status
-func (r TruncateSiteResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r TruncateSiteResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -10522,6 +10538,24 @@ func (c *ClientWithResponses) NsV3ReplaceWithResponse(ctx context.Context, colle
 	return ParseNsV3ReplaceResponse(rsp)
 }
 
+// ListColdDaysWithResponse request returning *ListColdDaysResponse
+func (c *ClientWithResponses) ListColdDaysWithResponse(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*ListColdDaysResponse, error) {
+	rsp, err := c.ListColdDays(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListColdDaysResponse(rsp)
+}
+
+// GetColdDayWithResponse request returning *GetColdDayResponse
+func (c *ClientWithResponses) GetColdDayWithResponse(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*GetColdDayResponse, error) {
+	rsp, err := c.GetColdDay(ctx, kind, date, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetColdDayResponse(rsp)
+}
+
 // ListEventGroupsWithResponse request returning *ListEventGroupsResponse
 func (c *ClientWithResponses) ListEventGroupsWithResponse(ctx context.Context, params *ListEventGroupsParams, reqEditors ...RequestEditorFn) (*ListEventGroupsResponse, error) {
 	rsp, err := c.ListEventGroups(ctx, params, reqEditors...)
@@ -10951,24 +10985,6 @@ func (c *ClientWithResponses) GetUsageWithResponse(ctx context.Context, reqEdito
 	return ParseGetUsageResponse(rsp)
 }
 
-// ListColdDaysWithResponse request returning *ListColdDaysResponse
-func (c *ClientWithResponses) ListColdDaysWithResponse(ctx context.Context, params *ListColdDaysParams, reqEditors ...RequestEditorFn) (*ListColdDaysResponse, error) {
-	rsp, err := c.ListColdDays(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseListColdDaysResponse(rsp)
-}
-
-// GetColdDayWithResponse request returning *GetColdDayResponse
-func (c *ClientWithResponses) GetColdDayWithResponse(ctx context.Context, kind string, date openapi_types.Date, reqEditors ...RequestEditorFn) (*GetColdDayResponse, error) {
-	rsp, err := c.GetColdDay(ctx, kind, date, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetColdDayResponse(rsp)
-}
-
 // DownloadSiteDataWithResponse request returning *DownloadSiteDataResponse
 func (c *ClientWithResponses) DownloadSiteDataWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*DownloadSiteDataResponse, error) {
 	rsp, err := c.DownloadSiteData(ctx, reqEditors...)
@@ -10976,15 +10992,6 @@ func (c *ClientWithResponses) DownloadSiteDataWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseDownloadSiteDataResponse(rsp)
-}
-
-// TruncateSiteWithResponse request returning *TruncateSiteResponse
-func (c *ClientWithResponses) TruncateSiteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*TruncateSiteResponse, error) {
-	rsp, err := c.TruncateSite(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseTruncateSiteResponse(rsp)
 }
 
 // WelcomePasskeyBeginWithResponse request returning *WelcomePasskeyBeginResponse
@@ -12397,6 +12404,72 @@ func ParseNsV3ReplaceResponse(rsp *http.Response) (*NsV3ReplaceResponse, error) 
 	return response, nil
 }
 
+// ParseListColdDaysResponse parses an HTTP response from a ListColdDaysWithResponse call
+func ParseListColdDaysResponse(rsp *http.Response) (*ListColdDaysResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListColdDaysResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ColdDaysResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetColdDayResponse parses an HTTP response from a GetColdDayWithResponse call
+func ParseGetColdDayResponse(rsp *http.Response) (*GetColdDayResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetColdDayResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ColdDayResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListEventGroupsResponse parses an HTTP response from a ListEventGroupsWithResponse call
 func ParseListEventGroupsResponse(rsp *http.Response) (*ListEventGroupsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -13633,72 +13706,6 @@ func ParseGetUsageResponse(rsp *http.Response) (*GetUsageResponse, error) {
 	return response, nil
 }
 
-// ParseListColdDaysResponse parses an HTTP response from a ListColdDaysWithResponse call
-func ParseListColdDaysResponse(rsp *http.Response) (*ListColdDaysResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ListColdDaysResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ColdDaysResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetColdDayResponse parses an HTTP response from a GetColdDayWithResponse call
-func ParseGetColdDayResponse(rsp *http.Response) (*GetColdDayResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetColdDayResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ColdDayResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseDownloadSiteDataResponse parses an HTTP response from a DownloadSiteDataWithResponse call
 func ParseDownloadSiteDataResponse(rsp *http.Response) (*DownloadSiteDataResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -13713,39 +13720,6 @@ func ParseDownloadSiteDataResponse(rsp *http.Response) (*DownloadSiteDataRespons
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseTruncateSiteResponse parses an HTTP response from a TruncateSiteWithResponse call
-func ParseTruncateSiteResponse(rsp *http.Response) (*TruncateSiteResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &TruncateSiteResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest SiteUsageResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {

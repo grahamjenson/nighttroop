@@ -27,7 +27,9 @@ ASSERT_VISIBLE #site--usage--db-table--device_reports
 ASSERT_VISIBLE #site--usage--db-table--device_reports >> text="Device Status"
 ASSERT_VISIBLE #site--usage--db-table--device_reports >> text=/^[\d,]+ records? · \d+\.\d\d MB · \d+%$/
 ASSERT_NOT_VISIBLE #site--usage--db-tables >> text=device_reports
-ASSERT_VISIBLE #site--usage--truncate-card >> text=Readings, treatments, profiles and everything else are kept.
+// It has no button to truncate the site: the server does that
+ASSERT_NOT_VISIBLE #site--usage--truncate
+ASSERT_NOT_VISIBLE #site--usage >> text=Truncate
 // It has Download Data, a link to a snapshot of the site's DB, to look through its data
 ASSERT_VISIBLE #site--usage--download >> text=All the site's data as it is now
 ASSERT_VISIBLE #site--usage--download-data[href="/usage/download"][download]
@@ -49,23 +51,6 @@ GOTO /settings
 ASSERT_STATUS 200
 ASSERT_NOT_VISIBLE #site--usage--download
 ASSERT_NOT_VISIBLE "Download Data"
-
-// Truncating, after confirming (the test accepts), clears and thins the device reports, and shows the storage again
-// with the DB's new size
-GOTO /usage
-ASSERT_STATUS 200
-CLICK #site--usage--truncate
-ASSERT_TEXT_VISIBLE Site Truncated
-// Its toast is a success toast like every page's, with a bar of the time it has left
-ASSERT_COUNT #toaster [data-tui-toast][data-variant="success"]:has-text("Site Truncated") .toast-progress 1
-ASSERT_VISIBLE #site--usage--db-size >> text=/^\d+\.\d\d$/
-ASSERT_VISIBLE #site--usage--db-table--Other
-ASSERT_NO_PAGE_ERRORS
-
-// The site's events record who truncated it
-GOTO /logs/events
-ASSERT_STATUS 200
-ASSERT_TEXT_VISIBLE Site truncated
 
 // On a phone the key, with each table's name and its records, size and share, fits the window. The window is tall enough
 // for the whole page, so fitting it checks only its width

@@ -64,12 +64,11 @@ type SiteTable struct {
 }
 
 // SiteUsage is a site's storage on its Usage page: its DB's size and limit in KB, and its tables as last measured,
-// which are empty when they cannot be. Only a truncate gives BeforeSizeKB, the size before it.
+// which are empty when they cannot be
 type SiteUsage struct {
-	SizeKB       *int64       `json:"size_kb"`
-	LimitKB      *int64       `json:"limit_kb"`
-	BeforeSizeKB *int64       `json:"before_size_kb"`
-	Tables       []*SiteTable `json:"tables"`
+	SizeKB  *int64       `json:"size_kb"`
+	LimitKB *int64       `json:"limit_kb"`
+	Tables  []*SiteTable `json:"tables"`
 }
 
 // HasSecret is whether an encrypted secret is set

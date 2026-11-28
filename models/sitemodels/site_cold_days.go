@@ -8,11 +8,24 @@ import (
 	"nighttroop.t1d.nz/data/sql/sitedb"
 )
 
-// ColdDays are a page of the site's cold days, the newest first, with how many there are and the bytes they take
+// ColdDays are a page of the site's cold storage: its cold days that match a filter, the newest first or the oldest,
+// with how many match and the bytes they take, and the kinds of data the site has cold days of, to filter by
 type ColdDays struct {
 	Days       []*ColdDay `json:"days"`
 	Total      int64      `json:"total"`
 	TotalBytes int64      `json:"total_bytes"`
+	Kinds      []string   `json:"kinds"`
+}
+
+// ColdStorageFilter is which cold days a page of cold storage lists: those of Kind, after DateGT and before DateLT,
+// each a UTC day as 2006-01-02, when given, the oldest first if Oldest, Limit of them after Skip
+type ColdStorageFilter struct {
+	Kind   *string
+	DateGT *string
+	DateLT *string
+	Oldest bool
+	Skip   int64
+	Limit  int64
 }
 
 // ColdDay is one kind of data of one UTC day as the site keeps it once its rows are old: what its packed bytes say

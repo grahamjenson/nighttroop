@@ -86,18 +86,22 @@ func ColdGlucoseReadings(ctx context.Context, q *sitedb.Queries, from, to int64,
 	return readings, err
 }
 
-// ColdEvents are the events of the site's packaged days from from up to, not including, to, in ms, the newest first, at
-// most limit of them, that keep takes: each as it is kept, the columns of its row by their names, with "k", its table
+// ColdEvents are the events of the site's packaged days from from up to, not including, to, in ms, the newest first, or
+// the oldest, at most limit of them, that keep takes: each as it is kept, the columns of its row by their names, with "k", its table
 // (see packageEventsDay). What was in force when a day started is not one of its events.
-func ColdEvents(ctx context.Context, q *sitedb.Queries, from, to int64, limit int, keep func(event map[string]any) bool) ([]map[string]any, error) {
+func ColdEvents(ctx context.Context, q *sitedb.Queries, from, to int64, limit int, oldestFirst bool, keep func(event map[string]any) bool) ([]map[string]any, error) {
 	var events []map[string]any
-	err := eachColdDay(ctx, q, retention.EventsKind, from, to, 10, false, func() int { return limit - len(events) }, func(_ int64, body []byte) error {
+	first, last := from, to
+	err := eachColdDay(ctx, q, retention.EventsKind, from, to, 10, oldestFirst, func() int { return limit - len(events) }, func(_ int64, body []byte) error {
 		_, day, err := retention.ReadEvents(body)
 		if err != nil {
 			return err
 		}
-		for _, event := range slices.Backward(day.Events) {
-			if at := EventAt(event); len(events) < limit && at >= from && at < to && keep(event) {
+		if !oldestFirst {
+			slices.Reverse(day.Events)
+		}
+		for _, event := range day.Events {
+			if at := EventAt(event); len(events) < limit && at >= first && at < last && keep(event) {
 				events = append(events, event)
 			}
 		}

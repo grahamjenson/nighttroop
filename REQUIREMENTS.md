@@ -291,7 +291,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | Enable | A disabled site, after a confirmation | Served again. Its data is as it was. |
 | Archive | After disable. S3 not needed. | A compressed copy of its DB is kept in the backup folder here (`data/backup/site/<letter>/<site>.sqlite.lz4`), and uploaded to S3 when S3 is connected. Its DB here is deleted. |
 | Restore | From the archived sites page | Restored from the copy in the backup folder here first, else from S3, migrated, and live again. A restored DB that does not open or migrate still makes it live, but unavailable, its DB kept here, with a toast saying so, and its page offers the fixes. Without S3 and without a copy here, it is refused and stays archived. |
-| Truncate | Live or disabled, any size | Truncates all device statuses (as each backup does the newest), deletes old loop settings no record refers to, shrinks the DB. |
+| Truncate | Live or disabled, any size | Runs the site job's truncate for the site now, for all its data: packages its days, deletes the packaged rows older than the hot days, thins its device statuses. It does nothing that the job does not do. |
 
 - Download DB (`/sites/{id}/db`):
   - the same zip and code as a site admin's Download Data: `<site>-<date>.zip` holding `<site>-<date>.sqlite`, a
@@ -662,7 +662,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - No site is created through `POST /site`: 507, `Full: the server's disk is nearly full`.
   - Each site's writes that add data are refused, as for a site far over its storage limit, with the message
     `The server's disk is nearly full, so nothing more is stored until its admin frees space`, and its connectors
-    store nothing. Deletes, Truncate, settings and sign in still work.
+    store nothing. Deletes, settings and sign in still work.
 - The last 3 days of checks are kept while the server runs, and reset at restart.
 - The usage page graphs the CPU, memory, goroutines and DB disk of each check. Hovering a graph shows the check nearest
   the pointer, and how long ago it was.
@@ -2607,7 +2607,7 @@ Before it backs up a site written to, at most every hour, the server packages th
 - The body of a row is packed bytes. Its first bytes say its version (1) and its shape (series), and its step and
   scale. A body with a version or a shape the server does not know is an error.
 - A run packages only the days that had a CGM reading written, changed or deleted since the run before. A site that
-  was never packaged has all its days packaged. The **Truncate** button packages all days.
+  was never packaged has all its days packaged. The control site's **Truncate** packages all days.
 - If `RETENTION_DELETE_ROWS` is `false`, the server deletes no reading. The default is that it deletes.
 - Unless `RETENTION_DELETE_ROWS` is `false`, the server deletes the CGM readings older than `RETENTION_HOT_DAYS` days
   (default 31, minimum 3).
@@ -2617,15 +2617,26 @@ Before it backs up a site written to, at most every hour, the server packages th
   - If a reading of such a day is deleted, its 5-minute step is cleared.
 - Each table of a site DB has a retention policy (`data/retention`). A table with no policy fails a test.
 
-#### Cold Days page
+#### Cold Storage page
 
-- Cold Days (Settings side tabs, below Usage; also found by the page search) is for a site's admins. Other
-  identities do not see it (403 from the API).
-- It lists the site's cold days, newest first: the UTC date, the kind (example: `glucose`), the shape and version,
-  the step, how many steps have a value, the least and greatest value, the size in bytes, and when it was packaged.
-- It shows how many cold days the site has and their total size.
+- Cold Storage (in the account menu, and in the Settings side tabs below Usage; also found by the page search) is for
+  a site's admins. Other identities do not see it (403 from the API).
+- It is at `/cold-storage`. The old address, `/usage/cold-days`, and an old address of a day go to it (301).
+- It lists the site's cold days in a table, as the Data pages do: the UTC date, the kind (example: `glucose`), the
+  shape and version, the step, how many steps have a value, the least and greatest value, the size in bytes, and when
+  it was packaged.
+- It shows how many cold days the filter has and their total size.
 - If no day is packaged, it says so and says when a day is packaged.
-- It shows 100 cold days. **Older** and **Newer** move through them (`limit`, at most 1000, and `skip`).
+- Filters, above the table:
+  - **Kind:** all kinds, or one kind the site has (`kind`).
+  - **After** and **Before:** only the UTC days after a date (`date_gt`) or before a date (`date_lt`). The days of
+    those dates are not included.
+  - **Filter** applies them. **Clear** removes them.
+  - If a date is not a day (example: `2026-13-01`), the API returns 400.
+  - If no day matches, it says "No day matches the filter."
+- **Newest first** and **Oldest first** sort the days by date (`order=oldest`). The filter stays.
+- It shows 100 cold days. The pager moves through them (`limit`, at most 1000, and `skip`). The filter and the order
+  stay.
 - A day of kind `events` shows shape `events`, how many events it has, and no step.
   - Opened, it shows each event: its UTC time, its table, and its kept columns as JSON.
   - If something was in force when the day started, it shows that first, each with its UTC date and time.
@@ -2635,7 +2646,7 @@ Before it backs up a site written to, at most every hour, the server packages th
 - If the server cannot read a day's bytes (example: a version it does not know), the row and the day say "Not
   readable by this server".
 - A kind and date with no cold day is 404.
-- The page is read only. It has no form and no button, and there is no API to create, change or delete a cold day.
+- The page is read only. Its only form is the filter, and there is no API to create, change or delete a cold day.
 
 #### Entries of packaged days
 
@@ -2677,7 +2688,7 @@ days: insulin doses, food intakes, temp basals, temp targets, activities, notes 
 Unless `RETENTION_DELETE_ROWS` is `false`, the Nightscout API makes the `treatments` of the days older than
 `RETENTION_HOT_DAYS` from the days' cold events.
 
-- A search of `treatments`, newest first, gives the made treatments with the treatments that are rows, in order
+- A search of `treatments`, newest first or oldest first, gives the made treatments with the treatments that are rows, in order
   of date. `count` and `skip` page through them as one list.
 - A made treatment has the `_id`, `eventType`, `created_at`, `enteredBy` and notes it had, and what its events
   kept (example: `carbs`, `insulin`, `duration`, `targetTop`, `targetBottom`, `reason`).
@@ -2710,8 +2721,9 @@ Before it backs up a site written to, at most every hour, the server truncates i
 - The job reads statuses written since the last backup of the site, or in the last day if that is longer.
   - It also reads statuses that became 1 day old in that time.
   - It thins again those that became 1 or 2 weeks old.
-- A site truncate reads all statuses.
+- The control site's **Truncate** reads all statuses.
   - It also clears those older than a day (e.g. a device's newest from before it stopped reports for a day).
+- Then the job deletes loop settings that no profile or device status refers to, except each app's last seen.
 
 #### Truncation of a site far over its size limit
 
@@ -2765,7 +2777,7 @@ harder:
     stored until some is deleted or the site is truncated`.
   - Live updates (`dbAdd`, `dbUpdate`, `dbUpdateUnset`): refused with that message.
   - Its connectors' syncs and backfills store nothing.
-  - Deletes, Truncate, its settings, identities and sign in and out still work, so the site can be made smaller.
+  - Deletes, its settings, identities and sign in and out still work, so the site can be made smaller.
 - A request's IP is its TCP peer.
   - Behind a trusted proxy (`TRUSTED_PROXIES`): the hop before it in `X-Forwarded-For`, or on Fly.io `Fly-Client-IP`.
   - Any other peer that sets these headers keeps its own IP's limits.
@@ -3070,20 +3082,14 @@ harder:
   - a bar and key of the largest tables with records, size and share, the rest as Other, as last measured.
 - The key names each table by the page that shows it, such as Glucose Readings or Device Status, not by its table name.
 - On a phone the key fits the window, with no sideways scroll.
-- "Truncate", after a confirmation, does as control's Truncate:
-  - Removes the predictions from loop statuses over 1 day old.
-  - Clears the pump as sent from all but each device's newest status.
-  - Thins device statuses, and deletes those over 30 days old.
-  - Deletes loop settings that no profile or device status refers to, except each app's last seen.
-  - Shrinks the DB, and keeps all else, as the card says.
-  - Shows the storage again, a toast of the new DB size, and a "Site truncated" event with the admin.
+- It has no button to truncate the site. The server truncates each site before its backup, and an admin of the
+  control site can run that for one site.
 - "Download Data" downloads `<site>-<date>.zip`, with a DB snapshot `<site>-<date>.sqlite`.
-- Truncate and Download Data share the site's few downloads a minute.
+- A site has only a few downloads a minute.
 - The JSON API (in `openapi.json`) gives the same storage, in `result`:
-  - `GET /usage`: `size_kb`, `limit_kb`, `before_size_kb` (null) and `tables`.
+  - `GET /usage`: `size_kb`, `limit_kb` and `tables`.
   - Each table has `name`, `bytes` and `records`, the largest first, as last measured.
   - If the server cannot measure the tables, `tables` is empty.
-  - `POST /usage/truncate`: the same fields. `size_kb` is the size after the truncate, `before_size_kb` the size before.
   - `GET /usage/download`: the zip of Download Data.
 
 ### Own settings and alarms

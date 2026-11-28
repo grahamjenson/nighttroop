@@ -122,18 +122,55 @@ func (q *Queries) ClearStaleColdDays(ctx context.Context, arg ClearStaleColdDays
 	return err
 }
 
+const coldDayKinds = `-- name: ColdDayKinds :many
+SELECT DISTINCT kind FROM cold_days ORDER BY kind
+`
+
+// The kinds of data the site has cold days of, to filter by
+func (q *Queries) ColdDayKinds(ctx context.Context) ([]string, error) {
+	rows, err := q.query(ctx, q.coldDayKindsStmt, coldDayKinds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var kind string
+		if err := rows.Scan(&kind); err != nil {
+			return nil, err
+		}
+		items = append(items, kind)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const coldDayTotals = `-- name: ColdDayTotals :one
 SELECT COUNT(*) AS total, CAST(COALESCE(SUM(length(body)), 0) AS INTEGER) AS bytes FROM cold_days
+WHERE (CAST(?1 AS TEXT) IS NULL OR kind = ?1)
+    AND (CAST(?2 AS TEXT) IS NULL OR date > ?2)
+    AND (CAST(?3 AS TEXT) IS NULL OR date < ?3)
 `
+
+type ColdDayTotalsParams struct {
+	Kind   *string
+	DateGT *string
+	DateLT *string
+}
 
 type ColdDayTotalsRow struct {
 	Total int64
 	Bytes int64
 }
 
-// How many cold days there are, and the bytes of their bodies
-func (q *Queries) ColdDayTotals(ctx context.Context) (*ColdDayTotalsRow, error) {
-	row := q.queryRow(ctx, q.coldDayTotalsStmt, coldDayTotals)
+// How many cold days of Kind, after DateGT and before DateLT (each when given), there are, and the bytes of their bodies
+func (q *Queries) ColdDayTotals(ctx context.Context, arg ColdDayTotalsParams) (*ColdDayTotalsRow, error) {
+	row := q.queryRow(ctx, q.coldDayTotalsStmt, coldDayTotals, arg.Kind, arg.DateGT, arg.DateLT)
 	var i ColdDayTotalsRow
 	err := row.Scan(&i.Total, &i.Bytes)
 	return &i, err
@@ -234,18 +271,84 @@ func (q *Queries) ColdDaysOldestFirst(ctx context.Context, arg ColdDaysOldestFir
 }
 
 const coldDaysPage = `-- name: ColdDaysPage :many
-SELECT kind, date, body, created_at, updated_at FROM cold_days ORDER BY date DESC, kind
-LIMIT CAST(?2 AS INTEGER) OFFSET CAST(?1 AS INTEGER)
+SELECT kind, date, body, created_at, updated_at FROM cold_days
+WHERE (CAST(?1 AS TEXT) IS NULL OR kind = ?1)
+    AND (CAST(?2 AS TEXT) IS NULL OR date > ?2)
+    AND (CAST(?3 AS TEXT) IS NULL OR date < ?3)
+ORDER BY date DESC, kind
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
 `
 
 type ColdDaysPageParams struct {
-	Skip  int64
-	Limit int64
+	Kind   *string
+	DateGT *string
+	DateLT *string
+	Skip   int64
+	Limit  int64
 }
 
-// Every cold day, the newest first, for the page that shows what the site keeps of its old days
+// The cold days of Kind, after DateGT and before DateLT (each when given), the newest first, for the Cold Storage page
 func (q *Queries) ColdDaysPage(ctx context.Context, arg ColdDaysPageParams) ([]*ColdDay, error) {
-	rows, err := q.query(ctx, q.coldDaysPageStmt, coldDaysPage, arg.Skip, arg.Limit)
+	rows, err := q.query(ctx, q.coldDaysPageStmt, coldDaysPage,
+		arg.Kind,
+		arg.DateGT,
+		arg.DateLT,
+		arg.Skip,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*ColdDay
+	for rows.Next() {
+		var i ColdDay
+		if err := rows.Scan(
+			&i.Kind,
+			&i.Date,
+			&i.Body,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const coldDaysPageOldest = `-- name: ColdDaysPageOldest :many
+SELECT kind, date, body, created_at, updated_at FROM cold_days
+WHERE (CAST(?1 AS TEXT) IS NULL OR kind = ?1)
+    AND (CAST(?2 AS TEXT) IS NULL OR date > ?2)
+    AND (CAST(?3 AS TEXT) IS NULL OR date < ?3)
+ORDER BY date, kind
+LIMIT CAST(?5 AS INTEGER) OFFSET CAST(?4 AS INTEGER)
+`
+
+type ColdDaysPageOldestParams struct {
+	Kind   *string
+	DateGT *string
+	DateLT *string
+	Skip   int64
+	Limit  int64
+}
+
+// ColdDaysPage, the oldest first
+func (q *Queries) ColdDaysPageOldest(ctx context.Context, arg ColdDaysPageOldestParams) ([]*ColdDay, error) {
+	rows, err := q.query(ctx, q.coldDaysPageOldestStmt, coldDaysPageOldest,
+		arg.Kind,
+		arg.DateGT,
+		arg.DateLT,
+		arg.Skip,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -167,7 +167,7 @@ func TestEntriesOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 
 // A site's admin looks at what the site keeps of its old days: each cold day with what its bytes say they are, and one
 // day with each of its values. It is only read, and only by an admin.
-func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
+func TestColdStorageIsLookedAtByAnAdmin(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
 	host, day := site.SiteDB.Subdomain+".localhost", time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -3)
@@ -191,9 +191,9 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 	require.Equal(t, http.StatusOK, status)
 
 	// No day is packaged yet
-	status, none := call("GET", host, "/usage/cold-days", admin, "")
+	status, none := call("GET", host, "/cold-storage", admin, "")
 	require.Equal(t, http.StatusOK, status)
-	require.Equal(t, map[string]any{"days": []any{}, "total": 0.0, "total_bytes": 0.0}, none["result"])
+	require.Equal(t, map[string]any{"days": []any{}, "total": 0.0, "total_bytes": 0.0, "kinds": []any{}}, none["result"])
 
 	// Two readings of a day, at 00:05 and 12:00, and one of the day after, are packaged
 	for i, at := range []time.Duration{5 * time.Minute, 12 * time.Hour, 24 * time.Hour} {
@@ -204,10 +204,11 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 	require.NoError(t, err)
 
 	// The list is the newest day first, each with what it is, and without its values
-	status, listed := call("GET", host, "/usage/cold-days", admin, "")
+	status, listed := call("GET", host, "/cold-storage", admin, "")
 	require.Equal(t, http.StatusOK, status)
 	result := listed["result"].(map[string]any)
 	require.Equal(t, 2.0, result["total"])
+	require.Equal(t, []any{"glucose"}, result["kinds"])
 	days := result["days"].([]any)
 	require.Len(t, days, 2)
 	first, second := days[0].(map[string]any), days[1].(map[string]any)
@@ -222,28 +223,66 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 	require.Equal(t, map[string]any{"kind": "glucose", "date": day.Format(time.DateOnly), "version": 1.0, "shape": "series", "step_seconds": 300.0,
 		"scale": 1.0, "steps": 288.0, "values": 2.0, "min": 100.0, "max": 110.0, "error": nil}, second)
 	// A page of them
-	status, paged := call("GET", host, "/usage/cold-days?limit=1&skip=1", admin, "")
+	status, paged := call("GET", host, "/cold-storage?limit=1&skip=1", admin, "")
 	require.Equal(t, http.StatusOK, status)
 	require.Len(t, paged["result"].(map[string]any)["days"], 1)
 	require.Equal(t, day.Format(time.DateOnly), paged["result"].(map[string]any)["days"].([]any)[0].(map[string]any)["date"])
 
+	// Filtered by kind, and after and before a day (neither day included), the oldest first or the newest; the totals
+	// are of the days the filter has, and the kinds are all the site has
+	dates := func(path string) []string {
+		status, found := call("GET", host, path, admin, "")
+		require.Equal(t, http.StatusOK, status, path)
+		result := found["result"].(map[string]any)
+		require.Equal(t, []any{"glucose"}, result["kinds"], path)
+		var dates []string
+		for _, d := range result["days"].([]any) {
+			dates = append(dates, d.(map[string]any)["date"].(string))
+		}
+		require.Equal(t, float64(len(dates)), result["total"], path)
+		return dates
+	}
+	oldest, newest := day.Format(time.DateOnly), day.AddDate(0, 0, 1).Format(time.DateOnly)
+	require.Equal(t, []string{newest, oldest}, dates("/cold-storage?kind=glucose"))
+	require.Equal(t, []string{oldest, newest}, dates("/cold-storage?order=oldest"))
+	require.Nil(t, dates("/cold-storage?kind=carbs"))
+	require.Equal(t, []string{newest}, dates("/cold-storage?date_gt="+oldest))
+	require.Equal(t, []string{oldest}, dates("/cold-storage?date_lt="+newest))
+	require.Nil(t, dates("/cold-storage?date_gt="+oldest+"&date_lt="+newest))
+	require.Equal(t, []string{oldest, newest}, dates("/cold-storage?kind=glucose&date_gt="+day.AddDate(0, 0, -1).Format(time.DateOnly)+"&date_lt="+day.AddDate(0, 0, 2).Format(time.DateOnly)+"&order=oldest"))
+	// A date that is not a day is refused
+	for _, path := range []string{"/cold-storage?date_gt=yesterday", "/cold-storage?date_lt=2026-13-01"} {
+		status, _ = call("GET", host, path, admin, "")
+		require.Equal(t, http.StatusBadRequest, status, path)
+	}
+
 	// One day has each value at the time its step starts
-	status, opened := call("GET", host, "/usage/cold-days/glucose/"+day.Format(time.DateOnly), admin, "")
+	status, opened := call("GET", host, "/cold-storage/glucose/"+day.Format(time.DateOnly), admin, "")
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, []any{
 		map[string]any{"at": float64(day.Add(5 * time.Minute).UnixMilli()), "value": 100.0},
 		map[string]any{"at": float64(day.Add(12 * time.Hour).UnixMilli()), "value": 110.0},
 	}, opened["result"].(map[string]any)["points"])
-	status, _ = call("GET", host, "/usage/cold-days/glucose/1999-01-01", admin, "")
+	status, _ = call("GET", host, "/cold-storage/glucose/1999-01-01", admin, "")
 	require.Equal(t, http.StatusNotFound, status)
 
+	// Its old addresses, under Usage, go to it
+	for old, now := range map[string]string{"/usage/cold-days": "/cold-storage", "/usage/cold-days/glucose/" + oldest: "/cold-storage/glucose/" + oldest} {
+		req := httptest.NewRequest("GET", "http://"+host+old, nil)
+		req.Header.Set("Authorization", "Bearer "+admin)
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusMovedPermanently, rr.Code, old)
+		require.Equal(t, now, rr.Header().Get("Location"), old)
+	}
+
 	// Only an admin looks, and no one writes: there is no route to make, change or delete a cold day
-	status, _ = call("GET", host, "/usage/cold-days", phone["token"].(string), "")
+	status, _ = call("GET", host, "/cold-storage", phone["token"].(string), "")
 	require.Equal(t, http.StatusForbidden, status)
-	status, _ = call("GET", host, "/usage/cold-days/glucose/"+day.Format(time.DateOnly), phone["token"].(string), "")
+	status, _ = call("GET", host, "/cold-storage/glucose/"+day.Format(time.DateOnly), phone["token"].(string), "")
 	require.Equal(t, http.StatusForbidden, status)
 	for _, method := range []string{"POST", "PUT", "PATCH", "DELETE"} {
-		for _, path := range []string{"/usage/cold-days", "/usage/cold-days/glucose/" + day.Format(time.DateOnly)} {
+		for _, path := range []string{"/cold-storage", "/cold-storage/glucose/" + day.Format(time.DateOnly)} {
 			status, _ = call(method, host, path, admin, `{}`)
 			require.Contains(t, []int{http.StatusNotFound, http.StatusMethodNotAllowed}, status, method+" "+path)
 		}
@@ -326,6 +365,32 @@ func TestTreatmentsOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	require.Equal(t, [][]any{of(before)[3]}, of(treatments(url.Values{"count": {"100"}, "find[eventType]": {"Temporary Target"}})))
 	require.Equal(t, of(before)[1:3], of(treatments(url.Values{"count": {"2"}, "skip": {"1"}})))
 	require.Empty(t, treatments(url.Values{"count": {"100"}, "find[date][$lt]": {ms(old)}}))
+
+	// A search the oldest first, as API v3's sort=date, has them too, the other way round, and a page of them
+	oldest := func(params string) []string {
+		req := httptest.NewRequest("GET", "http://"+site.SiteDB.Subdomain+".ns.localhost/api/v3/treatments?sort=date&"+params+"&token="+site.PwdNSToken, nil)
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+		var page struct {
+			Result []struct {
+				Identifier string `json:"identifier"`
+			} `json:"result"`
+		}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &page), rr.Body.String())
+		list := []string{}
+		for _, e := range page.Result {
+			list = append(list, e.Identifier)
+		}
+		return list
+	}
+	ascending := []string{}
+	for _, treatment := range slices.Backward(found) {
+		ascending = append(ascending, treatment["_id"].(string))
+	}
+	require.Equal(t, ascending, oldest("limit=100"))
+	require.Equal(t, ascending[:2], oldest("limit=2"))
+	require.Equal(t, ascending[2:4], oldest("limit=2&skip=2"))
 
 	// A server that does not delete rows reads only rows
 	cfg.RetentionDeleteRows = false

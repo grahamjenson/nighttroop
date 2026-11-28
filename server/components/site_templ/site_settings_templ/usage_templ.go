@@ -8,14 +8,10 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"context"
-	"fmt"
-
 	"nighttroop.t1d.nz/models/controlmodels"
 	"nighttroop.t1d.nz/server/components/card"
 	"nighttroop.t1d.nz/server/components/dbsize"
 	"nighttroop.t1d.nz/server/components/heading"
-	"nighttroop.t1d.nz/server/components/successtoast"
 	"nighttroop.t1d.nz/server/components/ui/button"
 	"nighttroop.t1d.nz/utils/i18n"
 )
@@ -57,7 +53,7 @@ func Usage(storage templ.Component) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.usage.about"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/usage.templ`, Line: 20, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/usage.templ`, Line: 16, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -89,7 +85,7 @@ func Usage(storage templ.Component) templ.Component {
 }
 
 // UsageStorage is the site's DB size against its limit and where its data builds up, by table, as the control site
-// shows it, with a button to truncate it, which says what truncating removes and keeps
+// shows it
 func UsageStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -115,55 +111,12 @@ func UsageStorage(sizeKB, limitKB *int64, tables []*controlmodels.SiteTable) tem
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = card.Card(card.Props{ID: "site--usage--truncate-card", Title: i18n.T(ctx, "site.settings.usage.truncate"),
-			Note: i18n.T(ctx, "site.settings.usage.truncate_note"),
-			Action: labelled(i18n.T(ctx, "site.settings.usage.truncate"), button.Props{ID: "site--usage--truncate", Variant: button.VariantOutline,
-				Attributes: templ.Attributes{"hx-post": "/usage/truncate", "hx-target": "#site--usage--storage", "hx-swap": "outerHTML",
-					"hx-status:4xx": "target:#toaster swap:beforeend", "hx-status:5xx": "target:#toaster swap:beforeend",
-					"hx-confirm": i18n.T(ctx, "site.settings.usage.truncate_confirm")}})}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		return nil
 	})
-}
-
-// UsageTruncated is a toast saying the site was truncated, and its size now
-func UsageTruncated(sizeKB *int64) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = successtoast.TitledOOB(i18n.T(ctx, "site.settings.usage.truncated"), truncatedSize(ctx, sizeKB), 5000).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-// truncatedSize says the site's DB size after truncating, when it is known
-func truncatedSize(ctx context.Context, sizeKB *int64) string {
-	if sizeKB == nil {
-		return i18n.T(ctx, "site.settings.usage.truncated_reports")
-	}
-	return i18n.T(ctx, "site.settings.usage.truncated_size", i18n.Data{"Size": fmt.Sprintf("%.2f", float64(*sizeKB)/1024)})
 }
 
 var _ = templruntime.GeneratedTemplate

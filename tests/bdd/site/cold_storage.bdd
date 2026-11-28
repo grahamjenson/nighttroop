@@ -1,0 +1,134 @@
+INCLUDE steps/new_site_admin.steps
+ASSERT_PATH /
+
+// Cold Storage, in the account menu, is empty until a day is packaged, and says when one is
+CLICK #site--settings-menu
+CLICK #site--nav--menu--cold_storage
+ASSERT_PATH /cold-storage
+ASSERT_TITLE Cold Storage · Nighttroop
+CLICK #site--settings-menu
+ASSERT_VISIBLE #site--nav--menu--cold_storage[aria-current="page"]
+PRESS Escape
+ASSERT_VISIBLE #site--cold-storage--none >> text=No day is packaged yet.
+ASSERT_VISIBLE #site--cold-storage--totals >> text=Days of data: 0.
+// Its old address, when it was Cold Days below Usage, goes to it
+GOTO {{ .site_url }}/usage/cold-days
+ASSERT_PATH /cold-storage
+
+// A CGM sends a reading for a day that has ended, and a person entered a meal in it
+HTTP
+NAME entries
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
+B [{"type": "sgv", "sgv": 131, "date": {{ itime 2880 }}}]
+ASSERT_STATUS 200
+NAME meal
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Carb Correction", "carbs": 45, "notes": "Pasta", "enteredBy": "xDrip", "created_at": "{{ time 2880 }}"}]
+ASSERT_STATUS 200
+// A temp target from the day before the meal, for 2 days, so it is in force when the meal's day starts
+NAME target
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Temporary Target", "targetTop": 120, "targetBottom": 110, "units": "mg/dl", "duration": 2880, "reason": "Illness", "created_at": "{{ time 4320 }}"}]
+ASSERT_STATUS 200
+
+// The site job, which runs before each backup, packages the site's ended days
+RUN_BACKGROUND_JOBS
+BROWSE
+GOTO {{ .site_url }}/usage
+
+// Cold Storage is a table in a panel, as the Data pages' are. The day's glucose is one row: a series, version 1, every
+// 5 minutes, with how many of its steps have a value and how few bytes it is. Its events are another, and its carbs,
+// and its basal rate if it has a profile.
+CLICK #site--cold-storage-button
+ASSERT_PATH /cold-storage
+ASSERT_VISIBLE #site--cold-storage section.panel #site--cold-storage--table
+ASSERT_COUNT #site--cold-storage--table tbody tr[id^="site--cold-day--glucose--"] 1
+ASSERT_VISIBLE #site--cold-storage--table tr[id^="site--cold-day--glucose--"] >> text=series v1
+ASSERT_VISIBLE #site--cold-storage--table tr[id^="site--cold-day--glucose--"] >> text=5m0s
+ASSERT_VISIBLE #site--cold-storage--table tr[id^="site--cold-day--glucose--"] >> text="1 / 288"
+ASSERT_VISIBLE #site--cold-storage--table tr[id^="site--cold-day--glucose--"] >> text=/^\d+ bytes$/
+ASSERT_VISIBLE #site--cold-storage--table tr[id^="site--cold-day--carbs--"] >> text="45 – 45"
+// Three days have events: the day the target was set, the meal's day, and the day after, which has only the target
+// in force
+ASSERT_COUNT #site--cold-storage--table tr[id^="site--cold-day--events--"] 3
+ASSERT_VISIBLE #site--cold-storage--table tr[id^="site--cold-day--events--"] >> nth=1 >> text=events v2
+ASSERT_VISIBLE #site--cold-storage--totals >> text=/^Days of data: \d+\. Total size: [\d.]+ B\.$/
+// It is only looked at: its rows have no button
+ASSERT_NOT_VISIBLE #site--cold-storage--table button
+// The newest are first
+ASSERT_VISIBLE #site--cold-storage--order.segmented > #site--cold-storage--order-newest
+ASSERT_VISIBLE #site--cold-storage--table tbody tr >> nth=0 >> text={{ date -1 }}
+SCREENSHOT cold_storage
+
+// Filtered by kind, it lists only that kind's days, and says how many match
+INPUT #site--cold-storage--filter--kind glucose
+CLICK #site--cold-storage--filter--submit
+ASSERT_COUNT #site--cold-storage--table tbody tr[id^="site--cold-day--"] 1
+ASSERT_VISIBLE #site--cold-storage--table tbody tr[id^="site--cold-day--glucose--"]
+ASSERT_VISIBLE #site--cold-storage--totals >> text=/^Days of data: 1\. /
+
+// Filtered by the days after and before, it lists the days between them: of the events, only the meal's day
+INPUT #site--cold-storage--filter--kind events
+INPUT #site--cold-storage--filter--date-gt {{ date -3 }}
+INPUT #site--cold-storage--filter--date-lt {{ date -1 }}
+CLICK #site--cold-storage--filter--submit
+ASSERT_COUNT #site--cold-storage--table tbody tr[id^="site--cold-day--"] 1
+ASSERT_VISIBLE #site--cold-storage--table tbody tr[id="site--cold-day--events--{{ date -2 }}"]
+SCREENSHOT cold_storage_filtered
+
+// Ordered oldest first, keeping the kind, the oldest events day is first
+CLICK #site--cold-storage--filter--clear
+INPUT #site--cold-storage--filter--kind events
+CLICK #site--cold-storage--filter--submit
+CLICK #site--cold-storage--order-oldest
+ASSERT_COUNT #site--cold-storage--table tbody tr[id^="site--cold-day--"] 3
+ASSERT_VISIBLE #site--cold-storage--table tbody tr >> nth=0 >> text={{ date -3 }}
+ASSERT_VISIBLE #site--cold-storage--table tbody tr >> nth=2 >> text={{ date -1 }}
+
+// A filter that matches nothing says so
+INPUT #site--cold-storage--filter--date-gt {{ date 0 }}
+CLICK #site--cold-storage--filter--submit
+ASSERT_VISIBLE #site--cold-storage--none >> text=No day matches the filter.
+CLICK #site--cold-storage--filter--clear
+ASSERT_COUNT #site--cold-storage--table tr[id^="site--cold-day--events--"] 3
+
+// Opened, the day says what its bytes are, and each value at the time its step starts
+CLICK #site--cold-storage--order-newest
+CLICK #site--cold-storage--table tr[id^="site--cold-day--glucose--"] a
+ASSERT_STATUS 200
+ASSERT_PATH /cold-storage/glucose/{{ date -2 }}
+ASSERT_VISIBLE #site--cold-day--version >> text="1"
+ASSERT_VISIBLE #site--cold-day--shape >> text="series"
+ASSERT_VISIBLE #site--cold-day--step >> text="5m0s"
+ASSERT_VISIBLE #site--cold-day--scale >> text="1"
+ASSERT_VISIBLE #site--cold-day--size >> text=/^\d+ bytes$/
+ASSERT_VISIBLE #site--cold-day--values >> text="1 / 288"
+ASSERT_COUNT #site--cold-day--points li 1
+ASSERT_VISIBLE #site--cold-day--points li >> text=131
+ASSERT_NOT_VISIBLE #site--cold-day button
+SCREENSHOT cold_day
+
+// Back to the list. The day's events, opened, are each event with its table and the columns kept of it.
+CLICK #site--cold-day--back
+ASSERT_PATH /cold-storage
+CLICK #site--cold-storage--table tr[id^="site--cold-day--events--"] >> nth=1 >> a
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--cold-day--shape >> text="events"
+ASSERT_VISIBLE #site--cold-day--packing >> text=JSON
+ASSERT_NOT_VISIBLE #site--cold-day--step
+ASSERT_COUNT #site--cold-day--events li 1
+ASSERT_VISIBLE #site--cold-day--events li >> text=food_intakes
+ASSERT_VISIBLE #site--cold-day--events li >> text=/"carbs":45/
+ASSERT_VISIBLE #site--cold-day--events li >> text=/"notes":"Pasta"/
+ASSERT_VISIBLE #site--cold-day--events li >> text=/"entered_by":"xDrip"/
+// Before them is what was in force when the day started: the temp target of the day before, with its date
+ASSERT_COUNT #site--cold-day--in-force li 1
+ASSERT_VISIBLE #site--cold-day--in-force li >> text=temp_targets
+ASSERT_VISIBLE #site--cold-day--in-force li >> text=/"reason":"Illness"/
+SCREENSHOT cold_day_events
+
+// A day there is not is not found, and an old address of a day goes to it
+GOTO {{ .site_url }}/cold-storage/glucose/1999-01-01
+ASSERT_STATUS 404
+GOTO {{ .site_url }}/usage/cold-days/glucose/{{ date -2 }}
+ASSERT_PATH /cold-storage/glucose/{{ date -2 }}

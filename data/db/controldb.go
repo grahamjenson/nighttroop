@@ -496,33 +496,22 @@ func (db *ControlDB) HydrateSite(ctx context.Context, subdomain string, download
 	return nil
 }
 
-// TruncateSite truncates a site as each backup does, but looking at all its device reports, so it clears
-// those the backup no longer looks at, such as the newest of a device that then went a day without reporting. It deletes
-// the loop settings no record refers to any more, then shrinks its DB, without its free pages, and records its new
-// size, which it returns.
+// TruncateSite runs the job's truncate of one site now (see TruncateSites), looking at all of it and not only at
+// what was written since its last backup: it packages its days, truncates it, and records its new size, which it
+// returns. It does nothing the job does not do.
 func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64, error) {
 	site := db.sites.get(subdomain)
 	if site == nil {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
 	}
-	// Packaged before it is truncated, as truncating thins the device reports a day's series are packaged from
-	if err := db.packageSite(ctx, site, 0, time.Now()); err != nil {
+	if err := db.TruncateSites(ctx, []*SiteDB{site}, map[string]int64{subdomain: 0}); err != nil {
 		return nil, err
-	}
-	if err := truncateSite(ctx, site, 0); err != nil {
-		return nil, err
-	}
-	if _, err := site.Queries().DeleteUnreferencedLoopSettings(ctx); err != nil {
-		return nil, fmt.Errorf("cannot delete the unreferenced loop settings of site %s: %w", subdomain, err)
-	}
-	if err := site.Vacuum(ctx); err != nil {
-		return nil, fmt.Errorf("cannot vacuum site %s: %w", subdomain, err)
 	}
 	sizeKB := site.EstimatedSizeKB()
 	if err := db.Queries.UpdateSiteDateFlags(ctx, controldb.UpdateSiteDateFlagsParams{EstimatedDbSizeKb: sizeKB, ID: subdomain}); err != nil {
 		return sizeKB, err
 	}
-	// Its tables are measured again now, as truncating changed them all, for the page that shows its new size
+	// Its tables are measured again now, for the page that shows its new size
 	return sizeKB, db.RecordSiteTableSizes(ctx, []*SiteDB{site})
 }
 
@@ -666,7 +655,8 @@ func ThinParams(since, now int64) sitedb.ThinOldDeviceReportsParams {
 
 // truncateSite clears the predictions from each device's loop statuses over a day old, keeps its pump as sent only on
 // its newest report with one, thins its reports from before the last hour to fewer the older they are, and deletes
-// those over 30 days old, looking at those written since since, 0 for all of them
+// those over 30 days old, looking at those written since since, 0 for all of them. Then it deletes the loop settings
+// no record refers to any more.
 func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 	now := time.Now()
 	if err := site.Queries().ClearOldLoopStatuses(ctx, sitedb.ClearOldLoopStatusesParams{Since: since, Now: now.UnixMilli()}); err != nil {
@@ -681,6 +671,10 @@ func truncateSite(ctx context.Context, site *SiteDB, since int64) error {
 	before := now.Add(-DeviceReportsKeptFor).UnixMilli()
 	if _, err := site.Queries().DeleteOldDeviceReports(ctx, sitedb.DeleteOldDeviceReportsParams{Before: before}); err != nil {
 		return fmt.Errorf("cannot delete the old device reports of site %s: %w", site.Subdomain, err)
+	}
+	// The loop settings that the reports just thinned or deleted were the last to refer to
+	if _, err := site.Queries().DeleteUnreferencedLoopSettings(ctx); err != nil {
+		return fmt.Errorf("cannot delete the unreferenced loop settings of site %s: %w", site.Subdomain, err)
 	}
 	return nil
 }
