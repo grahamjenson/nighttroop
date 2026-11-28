@@ -84,6 +84,17 @@ var (
 	PhoneBattery  = Series{Name: "phone_battery", Step: hour, Scale: 1}
 )
 
+// Treatments, each 5 minutes: the basal rate in force, in U/hr to 0.001, the mean of its minutes, from the profile,
+// its switches and the temp basals; the insulin given as boluses, a loop's and a person's, to 0.001 U, an extended
+// one as it is given; the basal insulin injected, as the long acting insulin of someone on injections; and the carbs
+// eaten, to 0.1 g. A step with none has no value.
+var (
+	BasalRate    = Series{Name: "basal_rate", Step: fiveMinutes, Scale: 1000}
+	InsulinBolus = Series{Name: "insulin_bolus", Step: fiveMinutes, Scale: 1000, Sum: true}
+	InsulinBasal = Series{Name: "insulin_basal", Step: fiveMinutes, Scale: 1000, Sum: true}
+	Carbs        = Series{Name: "carbs", Step: fiveMinutes, Scale: 10, Sum: true}
+)
+
 const (
 	fiveMinutes = 5 * time.Minute
 	hour        = time.Hour
@@ -102,13 +113,13 @@ var Policies = map[string]Policy{
 		Keep:   keep("mgdl", "reading_type", "measurement_method"), Where: "reading_type = 'mbg' OR notes IS NOT NULL",
 		Lost: "A CGM reading's exact second, its raw signal, and which app sent it. With two sources, the readings of the source not used."},
 	"insulin_doses": {Shape: EventsShape,
-		Series: []Series{{Name: "insulin_automatic", Step: hour, Scale: 1000, Sum: true}, {Name: "insulin_manual", Step: hour, Scale: 1000, Sum: true}},
+		Series: []Series{InsulinBolus, InsulinBasal},
 		Keep:   keep("dose", "dose_type", "extended_dose", "extended_duration_ms", "is_basal_insulin", "insulin_type"), Where: "automatic IS NOT 1",
-		Lost: "Each automatic dose's time and size inside its hour."},
+		Lost: "Each automatic dose's time and size inside its 5 minutes."},
 	"temp_basals": {Shape: SeriesShape,
-		Series: []Series{{Name: "basal_delivered", Step: hour, Scale: 1000, Sum: true}, {Name: "basal_suspended_minutes", Step: hour, Scale: 1, Sum: true}},
-		Lost:   "Each temp basal's start, rate and duration. The basal delivered in each hour is kept."},
-	"food_intakes":     {Shape: EventsShape, Series: []Series{{Name: "carbs", Step: hour, Scale: 10, Sum: true}}, Keep: keep("carbs", "name", "food_type", "absorption_time_minutes", "fat", "protein", "fibre", "energy")},
+		Series: []Series{BasalRate},
+		Lost:   "Each temp basal's start, rate and duration inside its 5 minutes. The rate in force each 5 minutes is kept."},
+	"food_intakes":     {Shape: EventsShape, Series: []Series{Carbs}, Keep: keep("carbs", "name", "food_type", "absorption_time_minutes", "fat", "protein", "fibre", "energy")},
 	"activities":       {Shape: EventsShape, Keep: keep("name", "activity_type", "duration_minutes", "calories", "steps", "heart_rate")},
 	"temp_targets":     {Shape: EventsShape, Keep: keep("low_target_mgdl", "high_target_mgdl", "duration_minutes")},
 	"profile_switches": {Shape: EventsShape, Keep: keep("name", "multiplier", "timeshift", "duration_minutes", "profile_id"), Lost: "A switch to the profile already in force. profile_id is new: the hash of the profile, kept once as a dictionary row."},
@@ -118,7 +129,7 @@ var Policies = map[string]Policy{
 		Lost: "The app's own IDs of a treatment (uuid, sent_hash, pump_id, sync_identifier) and its bolus calculator. A group's kept columns move onto its event; a group with no event (a site change) is an event."},
 	"device_reports": {Shape: SeriesShape,
 		Series: []Series{IOB, IOBBasal, COB, PumpReservoir, PumpBattery, PhoneBattery},
-		Lost: "The loop's reasons and predictions, and each report."},
+		Lost:   "The loop's reasons and predictions, and each report."},
 	"loop_settings":    {Shape: DictionaryShape},
 	"profile_presets":  {Shape: ConfigShape},
 	"food_presets":     {Shape: ConfigShape},

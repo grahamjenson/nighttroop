@@ -60,3 +60,12 @@ SELECT occurred_at, deleted_at, loop_name, loop_iob, loop_iob_basal, loop_cob, p
 FROM device_reports
 WHERE occurred_at >= sqlc.arg('From') AND occurred_at < sqlc.arg('To')
 ORDER BY occurred_at LIMIT 5000;
+
+-- name: TreatmentDaysWrittenSince :many
+-- The UTC days, as days since 1970, that ended before Before and had an insulin dose, a food intake or a temp basal
+-- written, changed or deleted since Since: the days whose treatment series are sealed again
+SELECT DISTINCT day FROM (
+    SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM insulin_doses WHERE insulin_doses.updated_at >= sqlc.arg('Since') AND insulin_doses.occurred_at < sqlc.arg('Before')
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) FROM food_intakes WHERE food_intakes.updated_at >= sqlc.arg('Since') AND food_intakes.occurred_at < sqlc.arg('Before')
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) FROM temp_basals WHERE temp_basals.updated_at >= sqlc.arg('Since') AND temp_basals.occurred_at < sqlc.arg('Before')
+) ORDER BY 1 LIMIT 5000;

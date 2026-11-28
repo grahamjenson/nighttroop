@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"nighttroop.t1d.nz/data/retention"
+	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/glucose"
 )
@@ -23,6 +24,8 @@ const dayMs = int64(24 * time.Hour / time.Millisecond)
 // Glucose: each day that ended, the newest CGM reading of the best source in each 5 minutes. When the server deletes
 // rows (RETENTION_DELETE_ROWS), the CGM readings older than its hot days are then deleted, but only those their cold
 // day has.
+//
+// Treatments (the basal rate, insulin and carbs every 5 minutes): each day that ended, see sealTreatmentDays.
 //
 // What a loop's phone reports (its IOB and COB, the pump's reservoir, the batteries): each day up to now, today too,
 // as device reports are thinned from an hour old (truncateSite), so it runs before they are, and a day keeps the
@@ -61,9 +64,68 @@ func (db *ControlDB) sealSite(ctx context.Context, site *SiteDB, since int64, no
 			return err
 		}
 	}
+	if err := db.sealTreatmentDays(ctx, site, since, today); err != nil {
+		return fmt.Errorf("cannot seal the treatments of site %s: %w", site.Subdomain, err)
+	}
 	if db.ServerConfig.RetentionDeleteRows {
 		if _, err := q.DeleteSealedCGMReadings(ctx, sitedb.DeleteSealedCGMReadingsParams{Before: hot.UnixMilli()}); err != nil {
 			return fmt.Errorf("cannot delete the sealed readings of site %s: %w", site.Subdomain, err)
+		}
+	}
+	return nil
+}
+
+// DaySeries is a day of one series, a value a step, NaN where there is none
+type DaySeries struct {
+	Series retention.Series
+	Values []float64
+}
+
+// TreatmentDaySeries builds the treatment series (the basal rate, insulin and carbs) of the site's UTC day that starts
+// at start, in ms, from its rows. It is set by the package that reads profiles and temp basals, sitedata, which this
+// package cannot import, and nil in a program without it, which then seals no treatment series.
+var TreatmentDaySeries func(ctx context.Context, q *sitedb.Queries, site *controldb.Site, start int64) ([]DaySeries, error)
+
+// treatmentDaysBack is how many of the days that just ended have their treatment series sealed though no treatment
+// was written in them, as a day has a basal rate from its profile alone
+const treatmentDaysBack = 2
+
+// sealTreatmentDays seals the treatment series of the days that ended and had a treatment written since since, and of
+// the last days that ended, from their rows alone, as none of their rows is deleted yet. A series with no value in a
+// day is written only to empty a day that had some.
+func (db *ControlDB) sealTreatmentDays(ctx context.Context, site *SiteDB, since int64, today time.Time) error {
+	if TreatmentDaySeries == nil {
+		return nil
+	}
+	q := site.Queries()
+	days, err := q.TreatmentDaysWrittenSince(ctx, sitedb.TreatmentDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()})
+	if err != nil {
+		return err
+	}
+	for back := int64(1); back <= treatmentDaysBack; back++ {
+		if day := today.UnixMilli()/dayMs - back; !slices.Contains(days, day) {
+			days = append(days, day)
+		}
+	}
+	model, err := db.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
+	if err != nil {
+		return err
+	}
+	for _, day := range days {
+		built, err := TreatmentDaySeries(ctx, q, model, day*dayMs)
+		if err != nil {
+			return err
+		}
+		date := time.UnixMilli(day * dayMs).UTC().Format(time.DateOnly)
+		for _, series := range built {
+			if !slices.ContainsFunc(series.Values, func(value float64) bool { return !math.IsNaN(value) }) {
+				if _, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: series.Series.Name, Date: date}); err != nil {
+					continue
+				}
+			}
+			if err := writeSeriesDay(ctx, q, series.Series, date, series.Values); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -97,6 +159,15 @@ func sealSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Seri
 	}
 	for _, p := range points {
 		values[step(p.at)] = math.Round(p.value*series.Scale) / series.Scale
+	}
+	return writeSeriesDay(ctx, q, series, date, values)
+}
+
+// writeSeriesDay keeps a day of a series, each value to the series' scale. It reads the day back before it is kept,
+// so a day is never sealed as what cannot be read, or with other values.
+func writeSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Series, date string, values []float64) error {
+	for i, value := range values {
+		values[i] = math.Round(value*series.Scale) / series.Scale
 	}
 	packed := retention.PackGrid(series, values)
 	read, err := retention.UnpackGrid(packed)

@@ -2577,6 +2577,22 @@ Before it backs up a site written to, at most every hour, the server seals the s
   - The site is sealed before its device statuses are thinned. A day keeps its values after its device statuses are
     thinned or deleted, and gets the values of a device status written late.
   - A kind with no number in a day has no row.
+- Each UTC day that ended has one `cold_days` row for each kind of treatment it has, a value for each 5 minutes:
+
+  | Kind | Kept to | A step holds |
+  | --- | --- | --- |
+  | `basal_rate` | 0.001 U/hr | The mean basal rate in force: the profile's, with its switches and the temp basals |
+  | `insulin_bolus` | 0.001 U | The insulin given as boluses |
+  | `insulin_basal` | 0.001 U | The basal insulin injected (long acting insulin) |
+  | `carbs` | 0.1 g | The carbs eaten |
+
+  - An extended bolus is in the steps it is given in. If it goes past midnight UTC, the part after is in the next
+    day.
+  - A step with no insulin or no carbs has no value. A day with no profile has no `basal_rate`.
+  - The total of a day's `basal_rate` divided by 12, with `insulin_basal`, is the day's basal. The total of
+    `insulin_bolus` is its boluses.
+  - The last 2 days that ended are sealed in each run, and each day with a treatment written since the run before.
+  - If a treatment is deleted, its day is sealed again without it.
 - The body of a row is packed bytes. Its first bytes say its version (1) and its shape (series), and its step and
   scale. A body with a version or a shape the server does not know is an error.
 - A run seals only the days that had a CGM reading written, changed or deleted since the run before. A site that

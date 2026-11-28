@@ -362,6 +362,44 @@ func (q *Queries) HasColdDays(ctx context.Context) (bool, error) {
 	return exists, err
 }
 
+const treatmentDaysWrittenSince = `-- name: TreatmentDaysWrittenSince :many
+SELECT DISTINCT day FROM (
+    SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM insulin_doses WHERE insulin_doses.updated_at >= ?1 AND insulin_doses.occurred_at < ?2
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) FROM food_intakes WHERE food_intakes.updated_at >= ?1 AND food_intakes.occurred_at < ?2
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) FROM temp_basals WHERE temp_basals.updated_at >= ?1 AND temp_basals.occurred_at < ?2
+) ORDER BY 1 LIMIT 5000
+`
+
+type TreatmentDaysWrittenSinceParams struct {
+	Since  int64
+	Before int64
+}
+
+// The UTC days, as days since 1970, that ended before Before and had an insulin dose, a food intake or a temp basal
+// written, changed or deleted since Since: the days whose treatment series are sealed again
+func (q *Queries) TreatmentDaysWrittenSince(ctx context.Context, arg TreatmentDaysWrittenSinceParams) ([]int64, error) {
+	rows, err := q.query(ctx, q.treatmentDaysWrittenSinceStmt, treatmentDaysWrittenSince, arg.Since, arg.Before)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var day int64
+		if err := rows.Scan(&day); err != nil {
+			return nil, err
+		}
+		items = append(items, day)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertColdDay = `-- name: UpsertColdDay :exec
 INSERT INTO cold_days (kind, date, body) VALUES (?1, ?2, ?3)
 ON CONFLICT(kind, date) DO UPDATE SET body = excluded.body, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
