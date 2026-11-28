@@ -1,60 +1,57 @@
 package retention
 
 import (
-	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"math"
 )
 
-// gridVersion is the first byte of a packed grid, so the packing can change and old days still be read
+// gridVersion is the "v" of a packed grid, so the packing can change and old days still be read
 const gridVersion = 1
 
-// PackGrid packs a day of one series: values has one entry a step of the grid, NaN where there is none. Each value is
-// kept as a whole number, value*scale. The bytes are a version, how many steps, a bit a step for whether it has a
-// value, then each value as its difference from the one before, as a varint: a CGM's glucose changes by a few mg/dL in
-// 5 minutes, so most values take one byte.
-func PackGrid(values []float64, scale float64) []byte {
-	packed := binary.AppendUvarint([]byte{gridVersion}, uint64(len(values)))
-	present := make([]byte, (len(values)+7)/8)
-	var deltas []byte
-	var last int64
+// grid is a day of one series as its cold day holds it, as JSON: D has one entry a step of the grid, null where there
+// is no value, and else the value's difference from the value before it, as a whole number
+type grid struct {
+	V int      `json:"v"`
+	D []*int64 `json:"d"`
+}
+
+// PackGrid packs a day of one series as JSON: values has one entry a step of the grid, NaN where there is none. Each
+// value is kept as a whole number, value*scale, and written as its difference from the one before: a CGM's glucose
+// changes by a few mg/dL in 5 minutes, so most entries are one or two characters. It is JSON, not bytes, so the
+// column is checked with json_valid, as every JSON column is, and a person can read it.
+func PackGrid(values []float64, scale float64) string {
+	packed, last := grid{V: gridVersion, D: make([]*int64, len(values))}, int64(0)
 	for i, value := range values {
 		if math.IsNaN(value) {
 			continue
 		}
-		present[i/8] |= 1 << (i % 8)
 		whole := int64(math.Round(value * scale))
-		deltas = binary.AppendVarint(deltas, whole-last)
-		last = whole
+		packed.D[i], last = new(whole-last), whole
 	}
-	return append(append(packed, present...), deltas...)
+	body, _ := json.Marshal(packed)
+	return string(body)
 }
 
+// maxSteps is the most steps a day's grid has: one a minute
+const maxSteps = 24 * 60
+
 // UnpackGrid is the values PackGrid packed, NaN where there is none
-func UnpackGrid(packed []byte, scale float64) ([]float64, error) {
-	if len(packed) == 0 || packed[0] != gridVersion {
+func UnpackGrid(packed string, scale float64) ([]float64, error) {
+	var unpacked grid
+	if err := json.Unmarshal([]byte(packed), &unpacked); err != nil {
+		return nil, err
+	}
+	if unpacked.V != gridVersion || len(unpacked.D) > maxSteps {
 		return nil, errors.New("retention: not a packed grid of a known version")
 	}
-	steps, read := binary.Uvarint(packed[1:])
-	rest := packed[1+max(read, 0):]
-	bitmap := (int(steps) + 7) / 8
-	if read <= 0 || steps > 24*60 || len(rest) < bitmap {
-		return nil, errors.New("retention: a packed grid is cut short")
-	}
-	present, deltas := rest[:bitmap], rest[bitmap:]
-	values := make([]float64, steps)
-	var last int64
-	for i := range values {
+	values, last := make([]float64, len(unpacked.D)), int64(0)
+	for i, delta := range unpacked.D {
 		values[i] = math.NaN()
-		if present[i/8]&(1<<(i%8)) == 0 {
-			continue
+		if delta != nil {
+			last += *delta
+			values[i] = float64(last) / scale
 		}
-		delta, read := binary.Varint(deltas)
-		if read <= 0 {
-			return nil, errors.New("retention: a packed grid is cut short")
-		}
-		deltas, last = deltas[read:], last+delta
-		values[i] = float64(last) / scale
 	}
 	return values, nil
 }

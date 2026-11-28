@@ -46,13 +46,13 @@ The result, with the prototype's numbers:
 
 | | Hot rows | Cold day |
 | --- | --- | --- |
-| A day of CGM glucose | 61 KB | 316 bytes |
-| A day of a looping site | about 370 KB, without device reports | about 3 KB |
-| A year of a looping site | 135 MB | about 1.1 MB |
+| A day of CGM glucose | 61 KB | 747 bytes |
+| A day of a looping site | about 370 KB, without device reports | about 5 KB |
+| A year of a looping site | 135 MB | about 1.8 MB |
 
 ## Five rules
 
-1. **Each table has a class.** The class says what sealing does. A table with no policy fails a test
+1. **Each table has a shape.** The shape is the form its rows take in a cold day, and says what sealing does. A table with no policy fails a test
    (`TestEveryTableHasAPolicy`), so a new table cannot be added without a decision.
 2. **A cold day is the truth, not a summary.** Reports, statistics and charts are built from cold days and can be
    built again at any time. There is no "frozen" summary that cannot be made again.
@@ -61,9 +61,9 @@ The result, with the prototype's numbers:
    reads hot rows, cold days, or both. No caller knows where the border is.
 5. **Each policy says what is lost**, in words a person can read. The site shows these words.
 
-## Classes
+## Shapes
 
-| Class | What it is | Sealing does | Tables |
+| Shape | What it is | Sealing does | Tables |
 | --- | --- | --- | --- |
 | **Signal** | A number a machine writes on a clock | Folds the rows into series on a grid. Deletes the rows. | `glucose_readings`, `temp_basals` |
 | **Event** | What a person did or decided, a few each day | Moves the rows into the day's event list, with the columns the policy keeps. Folds numbers into series. | `insulin_doses`, `food_intakes`, `activities`, `temp_targets`, `profile_switches`, `notification_events`, `event_groups` |
@@ -72,7 +72,7 @@ The result, with the prototype's numbers:
 | **Config** | A list a person manages | Never sealed | `food_presets`, `profile_presets`, `general_settings` |
 | **Derived** | Built from the other tables | A cache. Built again when needed. | `summary_period` |
 
-`data/retention/policy.go` has the policy of each table: its class, its series, the columns its events keep, and
+`data/retention/policy.go` has the policy of each table: its shape, its series, the columns its events keep, and
 what is lost.
 
 ## Cold days
@@ -83,7 +83,7 @@ One table holds all cold data:
 CREATE TABLE cold_days (
     kind TEXT NOT NULL CHECK(length(kind) <= 32),  -- a series ('glucose'), 'events', or 'seal'
     date TEXT NOT NULL CHECK(length(date) = 10),   -- the UTC day
-    body BLOB NOT NULL CHECK(length(body) <= 65536),
+    body_json TEXT NOT NULL CHECK(length(body_json) <= 65536 AND json_valid(body_json)),
     PRIMARY KEY (kind, date)
 ) STRICT, WITHOUT ROWID;
 ```
@@ -105,11 +105,20 @@ A series is one number through the day on a grid: one value for each step, or no
 | `carbs` | `food_intakes` | 1 hour | 0.1 g | The total |
 | `pump_reservoir`, `pump_battery`, `phone_battery` | `device_reports` | 1 hour | | The newest report |
 
-`PackGrid` (`data/retention/grid.go`) packs a day: a bit for each step (has a value or not), then each value as
-its difference from the value before. Glucose changes a few mg/dL in 5 minutes, so most values are 1 byte.
+`PackGrid` (`data/retention/grid.go`) packs a day as JSON: `{"v":1,"d":[140,2,-1,0,null,3,...]}`. `d` has one
+entry for each step: `null` for no value, or the difference from the value before. Glucose changes a few mg/dL in
+5 minutes, so most entries are 1 or 2 characters.
 
-- A day of glucose with an hour of no data is **316 bytes** (tested). The same day is 2 KB as the JSON list of
-  `summary_period`, and 61 KB as rows.
+| A day of glucose (276 readings, an hour with none) | Bytes |
+| --- | --- |
+| As rows, with indexes | 61,272 |
+| JSON, each value (`[140,142,141,...]`) | 1,122 |
+| **JSON, differences (proposed)** | **747** |
+| Packed bytes, not JSON | 316 |
+
+- It is JSON, so the column has `json_valid`, as each JSON column has, and a person can read a day with a query.
+- Packed bytes are half the size, but cannot be checked or read. JSON is the proposal. See Open question 8.
+- SQLite's JSONB is not smaller here: it keeps a number as its digits.
 - A new series is one line in the policy table. It needs no column and no migration.
 
 ### The day's events
@@ -162,7 +171,8 @@ Thus a cold day is never "frozen". It is only compact.
 
 ## Hot days
 
-One number for each site says how many days are hot rows.
+One number says how many days are hot rows: the env var `RETENTION_HOT_DAYS` (default 14,
+`retention.DefaultHotDays`). A site over its size limit has fewer.
 
 | Site | Hot days | Why |
 | --- | --- | --- |
@@ -171,7 +181,7 @@ One number for each site says how many days are hot rows.
 | Floor | 3 | Loops read hours; followers read 1 to 2 days |
 
 - Device reports keep their own, shorter schedule (as today): as sent for a day, then thinner, then only series.
-- Hot days are a setting of the server (an env var) and can be a setting of a site.
+- A site could have its own number later (Open question 9).
 
 ## What apps get
 
@@ -222,12 +232,13 @@ A looping site, with the measured numbers:
 | --- | --- |
 | 14 hot days at about 370 KB (without device reports) | about 5 MB |
 | Device reports, thinned as today | about 2 MB |
-| Cold days, each year | about 1.1 MB |
-| **After 1 year** | **about 8 MB** |
-| **After 10 years** | **about 18 MB** |
+| Cold days, each year (about 5 KB a day: 4 series each 5 minutes at 0.75 KB, hourly series, events) | about 1.8 MB |
+| **After 1 year** | **about 9 MB** |
+| **After 7 years** | **about 20 MB** |
 
 - Today the same site is 20 MB after about 5 weeks.
-- A site with a CGM and no loop is about 1 MB hot and 0.5 MB for each year.
+- A site with a CGM and no loop is about 1 MB hot and 0.7 MB for each year.
+- Without `iob_basal` (Open question 5), a looping site is about 1.5 MB for each year.
 - `summary_period` is about 2.5 MB a year today (lists of 288 numbers as JSON). It would be larger than the cold
   data it is built from. It must use packed grids, or become a small cache.
 
@@ -255,7 +266,7 @@ Each step is one PR, and the site works after each one. Sealing is off until an 
 | 6 | `summary_period` becomes a cache of packed grids and `Stats`; `frozen_at` goes | Reports |
 | 7 | Cheaper hot rows (the two changes above) | |
 
-Step 1 alone takes glucose from 63 KB a day to 0.3 KB, with the least risk: the glucose line of a day is already
+Step 1 alone takes glucose from 63 KB a day to 0.75 KB, with the least risk: the glucose line of a day is already
 what `summary_period` stores.
 
 ## Open questions
@@ -267,11 +278,11 @@ what `summary_period` stores.
 3. **Temp basals to apps:** for a sealed day, send one temp basal for each hour, or none?
 4. **Hourly or 15 minutes** for insulin and basal? 15 minutes is 4 times the bytes of a small number (about 150
    bytes more a day) and shows how the loop acted.
-5. **`iob_basal`:** keep it, or only total IOB? It is about 350 bytes a day.
+5. **`iob_basal`:** keep it, or only total IOB? It is about 770 bytes a day.
 6. **Profiles:** store each distinct profile one time by hash (a dictionary), and a switch refers to it. This
    needs one new column or table. Is the change wanted before the DB is frozen?
 7. **Events for 20 years:** 10 events a day are 0.4 MB a year. Is that acceptable for ever, or do events older
    than N years become counts?
-8. **The `body` column** holds packed bytes for a series and JSON for events. One BLOB column, or a second column
-   `events_json` with `json_valid`, to follow the rule for JSON columns?
+8. **JSON or packed bytes** for a series? JSON (proposed) is checked and readable, at about 1.8 MB a year. Packed
+   bytes are about 1.1 MB a year, and need an exception to the rule for JSON columns.
 9. **A site's own setting:** can a person choose "keep more days as rows" if their DB has space?
