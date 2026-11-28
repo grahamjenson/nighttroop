@@ -173,7 +173,11 @@ A treatment and its `event_groups` row become one entry.
   that has a value. So the policy table is what decides what is kept. A test checks each `Keep` column is real.
 - The columns of an event's treatment (`group_type`, `entered_by`) are added where the event has none of that
   name, and `group_id`, the treatment's own ID, which an app knows it by.
-- A day with more events than a cold day holds (16 KB packed, some thousands of events) is not packaged.
+- A cold day holds 16 KB packed, some thousands of events. If a day has more, the most important are kept, and the
+  day's body says how many are not (`dropped`). The server logs a warning. The rows of all of them are deleted.
+  - The order: food and insulin a person gave; a meter reading or a reading with a note; a profile switch or a
+    temp target; a treatment with no event (example: a site change); an activity; a notification.
+  - In one group, the oldest are kept first. What was in force when the day started is always kept.
 - A day's events are built from its rows alone. Thus a day whose rows are deleted is not packaged again.
 
 ### The delete of treatments and events

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"reflect"
 	"slices"
+	"sort"
 	"time"
 
 	"nighttroop.t1d.nz/data/retention"
@@ -120,12 +121,58 @@ func inForce(ctx context.Context, q *sitedb.Queries, start int64) ([]map[string]
 	return events, nil
 }
 
+// eventPriority is how important each table's events are when a day has more than a cold day holds, the most first:
+// what a person ate and gave, then a meter's or a noted reading, then what changes how insulin is given, then a
+// treatment with no event, as a site change, then exercise, then notes and what a device announced
+var eventPriority = map[string]int{"food_intakes": 0, "insulin_doses": 0, "glucose_readings": 1, "profile_switches": 2, "temp_targets": 2,
+	"event_groups": 3, "activities": 4, "notification_events": 5}
+
+// fitEvents packs a day's events with what was in force before it, and is the bytes and the events packed. When they
+// are more than a cold day holds (maxEventsBody), it keeps the most important of the events (eventPriority), the
+// oldest of each first, as many as fit, and says in the day how many it dropped. What was in force is always kept.
+func fitEvents(before, events []map[string]any) ([]byte, []map[string]any, error) {
+	pack := func(kept []map[string]any) ([]byte, error) {
+		return retention.PackEvents(retention.EventsDay{InForce: before, Events: kept, Dropped: len(events) - len(kept)})
+	}
+	packed, err := pack(events)
+	if err != nil || len(packed) <= maxEventsBody {
+		return packed, events, err
+	}
+	// The events by importance, each with its place in the day, so those kept are packed in the day's order
+	order := make([]int, len(events))
+	for i := range order {
+		order[i] = i
+	}
+	slices.SortStableFunc(order, func(a, b int) int {
+		return eventPriority[events[a]["k"].(string)] - eventPriority[events[b]["k"].(string)]
+	})
+	first := func(n int) []map[string]any {
+		kept := make([]map[string]any, 0, n)
+		for _, place := range slices.Sorted(slices.Values(order[:n])) {
+			kept = append(kept, events[place])
+		}
+		return kept
+	}
+	// The most that fit: more events are more bytes, but for what compressing them saves, so the count found is
+	// checked, and lowered until it fits
+	fits := sort.Search(len(events), func(n int) bool {
+		packed, err := pack(first(n + 1))
+		return err != nil || len(packed) > maxEventsBody
+	})
+	for ; fits >= 0; fits-- {
+		if packed, err = pack(first(fits)); err != nil || len(packed) <= maxEventsBody {
+			return packed, first(fits), err
+		}
+	}
+	return nil, nil, fmt.Errorf("what was in force before the day is more than a cold day holds: %d bytes", len(packed))
+}
+
 // packageEventsDay writes the events of the UTC day that starts at start, in ms, from its rows, the oldest first: each
 // row that is an event, with what its treatment says of it (who entered it, as what) where it has none, and each
 // treatment with no event, as a site change is, and before them what was in force when the day started (inForce).
 // They are built from the rows alone: a day whose rows are deleted is not packaged again (packageTreatmentDays). A day
 // with no event and nothing in force is written only to empty one that had some, or always, to say the day was
-// packaged, and a day whose events are more than a cold day holds is not packaged.
+// packaged. Of a day whose events are more than a cold day holds, the most important are kept (fitEvents).
 func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, always bool) error {
 	groups, err := q.EventGroupsOfDay(ctx, sitedb.EventGroupsOfDayParams{From: start, To: start + dayMs})
 	if err != nil {
@@ -174,13 +221,13 @@ func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, alway
 			return nil
 		}
 	}
-	packed, err := retention.PackEvents(retention.EventsDay{InForce: before, Events: events})
+	packed, kept, err := fitEvents(before, events)
 	if err != nil {
 		return err
 	}
-	if len(packed) > maxEventsBody {
-		slog.WarnContext(ctx, "A day has more events than a cold day holds, so it is not packaged", "date", date, "events", len(events), "bytes", len(packed))
-		return nil
+	if dropped := len(events) - len(kept); dropped > 0 {
+		slog.WarnContext(ctx, "A day has more events than a cold day holds, so the least important are not kept", "date", date, "events", len(events), "dropped", dropped)
+		events = kept
 	}
 	if _, read, err := retention.ReadEvents(packed); err != nil || len(read.Events) != len(events) || len(read.InForce) != len(before) {
 		return fmt.Errorf("the packaged events do not read back as they were written: %v", err)

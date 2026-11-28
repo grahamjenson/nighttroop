@@ -40,6 +40,8 @@ type EventsDay struct {
 	InForce []map[string]any `json:"in_force,omitempty"`
 	// Events are the day's own, the oldest first
 	Events []map[string]any `json:"events"`
+	// Dropped is how many of the day's events, the least important of them, are not here, as they did not fit
+	Dropped int `json:"dropped,omitempty"`
 }
 
 // packJSON packs a value as bytes: the version, the shape, how it was packed, then its JSON, DEFLATE compressed when
