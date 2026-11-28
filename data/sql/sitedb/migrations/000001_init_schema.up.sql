@@ -594,16 +594,6 @@ CREATE TABLE cold_days (
     PRIMARY KEY (kind, date)
 ) STRICT;
 
--- cold_values are what many cold days repeat, each kept once: a profile, which each profile switch of a day's events
--- refers to by id. id is the SHA-256 of its kind and its JSON, in hex, so the same value is always the same row. body
--- is packed bytes that say their version and shape, as a cold day's are. A row is never changed.
-CREATE TABLE cold_values (
-    id TEXT PRIMARY KEY CHECK(length(id) = 64),
-    kind TEXT NOT NULL CHECK(length(kind) <= 32),
-    body BLOB NOT NULL CHECK(length(body) <= 16384),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
-) STRICT;
-
 --
 -- INDEXES
 --

@@ -117,13 +117,6 @@ CREATE TABLE cold_days (
     PRIMARY KEY (kind, date)
 ) STRICT;
 
-CREATE TABLE cold_values (
-    id TEXT PRIMARY KEY CHECK(length(id) = 64),
-    kind TEXT NOT NULL CHECK(length(kind) <= 32),
-    body BLOB NOT NULL CHECK(length(body) <= 16384),
-    created_at INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
-) STRICT;
-
 CREATE TABLE device_reports (
     id TEXT PRIMARY KEY CHECK(length(id) <= 36),
     

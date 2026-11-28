@@ -46,7 +46,7 @@ type ColdDay struct {
 	// of events opened, and nil in a list. For a day of events, Steps and Values are how many there are.
 	Events []map[string]any `json:"events,omitempty"`
 	// InForce are the events from before a day of events that were still in force when it started: a profile switch,
-	// a temp target. A profile switch's "profile" is the ID of the profile it was made with.
+	// a temp target
 	InForce []map[string]any `json:"in_force,omitempty"`
 }
 

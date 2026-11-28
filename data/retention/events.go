@@ -3,8 +3,6 @@ package retention
 import (
 	"bytes"
 	"compress/flate"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -17,8 +15,8 @@ const maxJSONBytes = 1 << 20
 // is an object, with what was in force when the day started. Both are read.
 const EventsVersion = 2
 
-// errNotJSON is that bytes are not a body of JSON of a shape and version this code reads
-var errNotJSON = errors.New("retention: not a day's events, or a value, of a known version")
+// errNotJSON is that bytes are not a day's events of a version this code reads
+var errNotJSON = errors.New("retention: not a day's events of a known version")
 
 // ShapeOf is the shape a cold day's bytes say they are, "" when they say none this code knows
 func ShapeOf(packed []byte) Shape {
@@ -104,26 +102,4 @@ func ReadEvents(packed []byte) (Header, EventsDay, error) {
 	}
 	header.Steps = len(day.Events)
 	return header, day, nil
-}
-
-// PackValue packs a value many cold days repeat, such as a profile, with its ID: the SHA-256 of its kind and its JSON,
-// in hex, so the same value is always the same ID
-func PackValue(kind string, value map[string]any) (string, []byte, error) {
-	plain, err := json.Marshal(value)
-	if err != nil {
-		return "", nil, err
-	}
-	id := sha256.Sum256(append([]byte(kind+":"), plain...))
-	packed, err := packJSON(Version, DictionaryShape, value)
-	return hex.EncodeToString(id[:]), packed, err
-}
-
-// ReadValue is the value PackValue packed
-func ReadValue(packed []byte) (map[string]any, error) {
-	header, plain, err := readJSON(DictionaryShape, packed)
-	var value map[string]any
-	if err != nil || header.Version != Version || json.Unmarshal(plain, &value) != nil {
-		return nil, errNotJSON
-	}
-	return value, nil
 }

@@ -262,26 +262,6 @@ func (m *ColdDay) SetUpdatedAt(v int64) {
 }
 
 // GetID returns the ID value.
-func (m ColdValue) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated ColdValue.
-func (m *ColdValue) SetID(v string) {
-	m.ID = v
-}
-
-// GetCreatedAt returns the CreatedAt value.
-func (m ColdValue) GetCreatedAt() int64 {
-	return m.CreatedAt
-}
-
-// SetCreatedAt sets the CreatedAt value and returns the updated ColdValue.
-func (m *ColdValue) SetCreatedAt(v int64) {
-	m.CreatedAt = v
-}
-
-// GetID returns the ID value.
 func (m DeviceReport) GetID() string {
 	return m.ID
 }
@@ -2526,29 +2506,9 @@ func (m GetColdDayParams) GetDate() string {
 	return m.Date
 }
 
-// GetID returns the ID value.
-func (m GetColdValueParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated GetColdValueParams.
-func (m *GetColdValueParams) SetID(v string) {
-	m.ID = v
-}
-
 // GetDate returns the Date value.
 func (m UpsertColdDayParams) GetDate() string {
 	return m.Date
-}
-
-// GetID returns the ID value.
-func (m UpsertColdValueParams) GetID() string {
-	return m.ID
-}
-
-// SetID sets the ID value and returns the updated UpsertColdValueParams.
-func (m *UpsertColdValueParams) SetID(v string) {
-	m.ID = v
 }
 
 // SetLimit sets the Limit value and returns the updated AllDeviceReportsParams.

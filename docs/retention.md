@@ -68,7 +68,7 @@ from one table of policies.
 | --- | --- | --- | --- |
 | `series` | A number on a clock: a CGM's glucose, a loop's IOB | Folds the rows into series on a grid | `glucose_readings`, `temp_basals`, `device_reports` |
 | `events` | What a person did or decided, a few each day | Puts the rows into the day's event list, with the columns the policy keeps. Folds numbers into series. | `insulin_doses`, `food_intakes`, `activities`, `temp_targets`, `profile_switches`, `notification_events`, `event_groups` |
-| `dictionary` | A value many records repeat | Kept one time, by its hash, while a record refers to it | `loop_settings`, and each profile of a profile switch |
+| `dictionary` | A value many records repeat | Kept one time, by its hash, while a record refers to it | `loop_settings` |
 | `config` | A list a person manages | Never sealed | `food_presets`, `profile_presets`, `general_settings` |
 | `derived` | Built from the other tables | A cache. Built again when needed. | `summary_period` |
 | `cold` | The cold days | Already small | `cold_days` |
@@ -180,7 +180,7 @@ A profile set in March is in force in June, and a temp target can go past midnig
 before are gone, a day cannot look back for them. So a day's events have two lists (version 2 of the body):
 
 ```json
-{"in_force":[{"k":"profile_switches","id":"…","name":"Sick day","profile":"9f2c…"}],
+{"in_force":[{"k":"profile_switches","id":"…","name":"Sick day","basal_rates_json":"[…]"}],
  "events":[{"k":"food_intakes","id":"…","carbs":45}]}
 ```
 
@@ -191,23 +191,15 @@ before are gone, a day cannot look back for them. So a day's events have two lis
   each run for this.
 - Version 1 of the body, the list of events alone, is still read.
 
-### A profile is kept one time
+### A profile switch keeps its profile
 
-A profile switch has its profile (basal rates, ratios, sensitivities, targets: about 2 KB), and AAPS sends the
-same profile with each switch. `cold_values` keeps each distinct profile one time:
+A profile switch event has the profile it was made with: its basal rates, ratios, sensitivities, targets, DIA,
+units and timezone. It is in the event, not in a table of its own.
 
-```sql
-CREATE TABLE cold_values (
-    id TEXT PRIMARY KEY CHECK(length(id) = 64),    -- the SHA-256 of its kind and its JSON
-    kind TEXT NOT NULL CHECK(length(kind) <= 32),  -- 'profile'
-    body BLOB NOT NULL CHECK(length(body) <= 16384),
-    created_at INTEGER NOT NULL
-) STRICT;
-```
-
-- A profile switch event has `profile`, the `id` of its profile.
-- The body has a version and a shape (`3`, a value) as a cold day has, then the profile's columns as JSON.
-- A row is never changed. It is not deleted: a site has few distinct profiles.
+- AAPS sends the same profile with each switch, so a day can have the same profile many times, and each day has
+  it again in `in_force`. DEFLATE makes the copies in one day small. The copies in other days are not shared.
+- This is simple: a day is read alone, and there is one table. The cost is about 0.3 to 0.5 KB a day for a site
+  with a profile switch in force (an estimate).
 
 ### Statistics
 
@@ -365,7 +357,7 @@ Each step is one PR, and the site works after each one.
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
 | 4b | Events: the day's list | The Cold Days page | **Built** |
-| 4c | Each profile kept one time, by its hash (`cold_values`); what is in force at the start of a day | The Cold Days page | **Built** |
+| 4c | What is in force at the start of a day; a profile switch keeps its profile | The Cold Days page | **Built** |
 | 4d | The Nightscout API makes `treatments` from sealed days; then the delete of treatment and event rows | Data pages, `treatments` | |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
@@ -417,8 +409,8 @@ To check before the thinning goes: does a page or an app read a device report ov
 2. **Hot days:** is 3 a safe floor for each app (AAPS, Trio, Loop, xDrip+)?
 3. **Temp basals to apps:** for a sealed day, send one temp basal for each hour, or none?
 4. **`iob_basal`:** keep it, or only total IOB?
-5. **Profiles:** store each distinct profile one time by hash (a dictionary), and a switch refers to it. This
-   needs one new column or table.
+5. **Profiles:** each profile switch keeps its profile, and each day has it again when it is in force. This was
+   chosen over a table that keeps each profile one time: one table, and a day is read alone.
 6. **Events for 20 years:** 10 events a day are the largest part of a cold day. Is that acceptable for ever, or
    do events older than N years become counts?
 7. **A site's own setting:** can a person choose more hot days if their DB has space?

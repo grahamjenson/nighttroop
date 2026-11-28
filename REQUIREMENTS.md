@@ -2600,9 +2600,8 @@ Before it backs up a site written to, at most every hour, the server seals the s
   - An event has `k`, its table, and each column its table's policy keeps that has a value. It always has its
     `id` and `occurred_at`. It does not have the app or device that sent it.
   - An event has the `group_type`, `entered_by` and notes of its treatment, if the event has none of that name.
-  - A profile switch has its name, percent, timeshift and duration, and `profile`: the ID of its profile.
-  - The profile of a profile switch (its basal rates, ratios, sensitivities, targets, DIA, units and timezone) is
-    one `cold_values` row. Two switches with the same profile have the same ID, and there is one row.
+  - A profile switch has its name, percent, timeshift and duration, and its profile: its basal rates, ratios,
+    sensitivities, targets, DIA, units and timezone.
   - Before its own events, the day has `in_force`: the events from before the day that were in force when it
     started. These are the newest profile switch with no end, each newer profile switch that is not over, and
     the newest temp target if it is not over.

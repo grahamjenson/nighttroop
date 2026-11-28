@@ -73,26 +73,17 @@ func TestSealingEvents(t *testing.T) {
 		"group_type": "Meal Bolus", "entered_by": "openaps://AAPS", "notes": "from the group"}, sealed[2])
 	require.Equal(t, 4.5, sealed[3]["dose"])
 	require.Equal(t, []any{140.0, 160.0, 60.0, "Exercise"}, []any{sealed[4]["low_target_mgdl"], sealed[4]["high_target_mgdl"], sealed[4]["duration_minutes"], sealed[4]["reason"]})
-	// The switch has its name and percent, and the ID of the profile it was made with, which is kept once
-	require.Equal(t, []any{"Sick day", 1.2}, []any{sealed[5]["name"], sealed[5]["multiplier"]})
-	require.NotContains(t, sealed[5], "basal_rates_json")
-	profileID := sealed[5]["profile"].(string)
-	require.Len(t, profileID, 64)
-	value, err := q.GetColdValue(ctx, sitedb.GetColdValueParams{ID: profileID})
-	require.NoError(t, err)
-	require.Equal(t, "profile", value.Kind)
-	profile, err := retention.ReadValue(value.Body)
-	require.NoError(t, err)
-	require.Equal(t, map[string]any{"basal_rates_json": `[{"time":"00:00","value":1}]`}, profile)
+	// The switch has its name and percent, and the profile it was made with
+	require.Equal(t, []any{"Sick day", 1.2, `[{"time":"00:00","value":1}]`}, []any{sealed[5]["name"], sealed[5]["multiplier"], sealed[5]["basal_rates_json"]})
 	// The day had nothing in force when it started
 	require.Empty(t, sealedDay(day).InForce)
 
-	// The day after starts with the switch in force, as it has no end, with the same profile, and with nothing of
-	// the temp target, which was over. It has no event of its own.
+	// The day after starts with the switch in force, as it has no end, with its profile again, so the day is read
+	// alone, and with nothing of the temp target, which was over. It has no event of its own.
 	after := sealedDay(day.AddDate(0, 0, 1))
 	require.Empty(t, after.Events)
 	require.Len(t, after.InForce, 1)
-	require.Equal(t, []any{"profile_switches", "switch", profileID}, []any{after.InForce[0]["k"], after.InForce[0]["id"], after.InForce[0]["profile"]})
+	require.Equal(t, []any{"profile_switches", "switch", `[{"time":"00:00","value":1}]`}, []any{after.InForce[0]["k"], after.InForce[0]["id"], after.InForce[0]["basal_rates_json"]})
 	require.Equal(t, map[string]any{"k": "event_groups", "id": "site-change", "occurred_at": ms(9), "group_type": "Site Change", "entered_by": "xDrip", "created_by_identity_name": by}, sealed[8])
 
 	// An event deleted is gone when its day is sealed again, and a day left with none is emptied
@@ -101,14 +92,13 @@ func TestSealingEvents(t *testing.T) {
 	require.Len(t, events(), 8)
 
 	// A switch with an end takes the place of the one with none until it is over, and a temp target not over is in
-	// force too: the newest of each. A second switch with the same profile adds no profile.
+	// force too: the newest of each
 	must(q.CreateProfileSwitch(ctx, sitedb.CreateProfileSwitchParams{ID: "for a day", Name: "Sick day", DurationMinutes: 26 * 60, OccurredAt: at(20), CreatedByIdentityName: by,
 		BasalRatesJson: new(`[{"time":"00:00","value":1}]`)}))
 	must(q.CreateTempTarget(ctx, sitedb.CreateTempTargetParams{ID: "over midnight", LowTargetMgdl: 100, HighTargetMgdl: 110, DurationMinutes: 120, OccurredAt: at(23), CreatedByIdentityName: by}))
 	seal()
 	after = sealedDay(day.AddDate(0, 0, 1))
 	require.Equal(t, []any{"switch", "for a day", "over midnight"}, []any{after.InForce[0]["id"], after.InForce[1]["id"], after.InForce[2]["id"]})
-	require.Equal(t, profileID, after.InForce[1]["profile"])
 	// 2 days after, the switch with an end is over, and the target long so
 	later := sealedDay(day.AddDate(0, 0, 2))
 	require.Len(t, later.InForce, 1)

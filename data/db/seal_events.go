@@ -67,14 +67,7 @@ var eventSources = []eventSource{
 // eventOf is a row as an event: "k", its table, and each column its table's policy keeps that has a value, by the
 // column's name
 func eventOf(table string, row any) map[string]any {
-	event := columnsOf(table, row, retention.Policies[table].Keep)
-	event["k"] = table
-	return event
-}
-
-// columnsOf are those of a row's columns in keep that have a value, by the column's name
-func columnsOf(table string, row any, keep []string) map[string]any {
-	event := map[string]any{}
+	event, keep := map[string]any{"k": table}, retention.Policies[table].Keep
 	value := reflect.Indirect(reflect.ValueOf(row))
 	for i := range value.NumField() {
 		limit, ok := sitedb.ColumnLimitOf(table, value.Type().Field(i).Name)
@@ -85,25 +78,6 @@ func columnsOf(table string, row any, keep []string) map[string]any {
 		event[limit.Column] = reflect.Indirect(field).Interface()
 	}
 	return event
-}
-
-// switchEvent is a profile switch as an event, with "profile", the ID of the profile it was made with, which is kept
-// once as a cold value, as a loop sends the same profile with each of its switches
-func switchEvent(ctx context.Context, q *sitedb.Queries, row *sitedb.ProfileSwitch) (map[string]any, error) {
-	event := eventOf("profile_switches", row)
-	profile := columnsOf("profile_switches", row, retention.ProfileColumns)
-	if len(profile) == 0 {
-		return event, nil
-	}
-	id, packed, err := retention.PackValue(retention.ProfileKind, profile)
-	if err != nil {
-		return nil, err
-	}
-	if len(packed) > maxEventsBody {
-		return event, nil
-	}
-	event["profile"] = id
-	return event, q.UpsertColdValue(ctx, sitedb.UpsertColdValueParams{ID: id, Kind: retention.ProfileKind, Body: packed})
 }
 
 const (
@@ -128,11 +102,7 @@ func inForce(ctx context.Context, q *sitedb.Queries, start int64) ([]map[string]
 		if !forever && row.OccurredAt+row.DurationMinutes*time.Minute.Milliseconds() <= start {
 			continue
 		}
-		event, err := switchEvent(ctx, q, row)
-		if err != nil {
-			return nil, err
-		}
-		events = append(events, event)
+		events = append(events, eventOf("profile_switches", row))
 		if forever {
 			break
 		}
@@ -171,11 +141,6 @@ func sealEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 				continue
 			}
 			event := eventOf(source.table, row)
-			if profileSwitch, ok := row.(*sitedb.ProfileSwitch); ok {
-				if event, err = switchEvent(ctx, q, profileSwitch); err != nil {
-					return err
-				}
-			}
 			for _, group := range groups {
 				if member := source.member(group); member != nil && *member == event["id"] {
 					used[group.ID] = true

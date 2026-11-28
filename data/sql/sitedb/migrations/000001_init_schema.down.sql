@@ -1,2 +1,1 @@
-DROP TABLE IF EXISTS cold_values;
 DROP TABLE IF EXISTS cold_days;

@@ -473,26 +473,6 @@ func (q *Queries) GetColdDay(ctx context.Context, arg GetColdDayParams) (*ColdDa
 	return &i, err
 }
 
-const getColdValue = `-- name: GetColdValue :one
-SELECT id, kind, body, created_at FROM cold_values WHERE id = ?1
-`
-
-type GetColdValueParams struct {
-	ID string
-}
-
-func (q *Queries) GetColdValue(ctx context.Context, arg GetColdValueParams) (*ColdValue, error) {
-	row := q.queryRow(ctx, q.getColdValueStmt, getColdValue, arg.ID)
-	var i ColdValue
-	err := row.Scan(
-		&i.ID,
-		&i.Kind,
-		&i.Body,
-		&i.CreatedAt,
-	)
-	return &i, err
-}
-
 const hasColdDays = `-- name: HasColdDays :one
 SELECT EXISTS (SELECT 1 FROM cold_days)
 `
@@ -557,22 +537,5 @@ type UpsertColdDayParams struct {
 // Sealing a day again writes it again, and says when
 func (q *Queries) UpsertColdDay(ctx context.Context, arg UpsertColdDayParams) error {
 	_, err := q.exec(ctx, q.upsertColdDayStmt, upsertColdDay, arg.Kind, arg.Date, arg.Body)
-	return err
-}
-
-const upsertColdValue = `-- name: UpsertColdValue :exec
-INSERT INTO cold_values (id, kind, body) VALUES (?1, ?2, ?3)
-ON CONFLICT(id) DO NOTHING
-`
-
-type UpsertColdValueParams struct {
-	ID   string
-	Kind string
-	Body []byte
-}
-
-// A value is kept once: one sent again is the row there is
-func (q *Queries) UpsertColdValue(ctx context.Context, arg UpsertColdValueParams) error {
-	_, err := q.exec(ctx, q.upsertColdValueStmt, upsertColdValue, arg.ID, arg.Kind, arg.Body)
 	return err
 }
