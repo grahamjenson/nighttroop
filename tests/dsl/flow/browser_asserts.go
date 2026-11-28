@@ -541,25 +541,33 @@ type AssertCount struct {
 	TestLine int
 }
 
-// Execute counts the visible elements once, without waiting, as what it counts, such as toasts, can time out
+// Execute counts the visible elements, and passes at once when they are as many as expected, as what it counts, such
+// as toasts, can time out. Otherwise it counts again until they are or visibleWait passes, as an HTMX swap can take a
+// moment to show what a click loaded.
 func (r *AssertCount) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
 	locator := getLocator(r.Locator, page)
 	if locator == nil {
 		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n", r.ToErrorLine(), r.Locator)
 	}
-	all, err := locator.All()
-	if err != nil {
-		t.Fatalf("\n\n%s\n failed to find elements: %v\n\n", r.ToErrorLine(), err)
-	}
 	count := 0
-	for _, element := range all {
-		if visible, err := element.IsVisible(); err == nil && visible {
-			count++
+	for deadline := time.Now().Add(visibleWait * time.Millisecond); ; time.Sleep(50 * time.Millisecond) {
+		all, err := locator.All()
+		if err != nil {
+			t.Fatalf("\n\n%s\n failed to find elements: %v\n\n", r.ToErrorLine(), err)
+		}
+		count = 0
+		for _, element := range all {
+			if visible, err := element.IsVisible(); err == nil && visible {
+				count++
+			}
+		}
+		if count == r.Count || time.Now().After(deadline) {
+			break
 		}
 	}
 	if count != r.Count {
 		html, _ := page.Content()
-		t.Fatalf("\n\n%s\n assertCount failed: found %d visible\n\n%s\n\n", r.ToErrorLine(), count, PrettifyHTML(html))
+		t.Fatalf("\n\n%s\n assertCount failed: found %d visible after %dms\n\n%s\n\n", r.ToErrorLine(), count, visibleWait, PrettifyHTML(html))
 	}
 	return nil
 }
