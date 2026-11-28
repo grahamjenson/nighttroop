@@ -514,8 +514,8 @@ func periodReport(r *http.Request, siteContext *httputils.SiteContext, id string
 	return report, nil
 }
 
-// PrintReportHandler is the printable report of this month so far and the 3 months before it, each its overview and
-// AGP on pages of their own; a page for people, so it has no JSON. Each builds four months, so a site has only a few a
+// PrintReportHandler is the printable report of this month so far and the 3 months before it, each with data its
+// overview and AGP on pages of their own, as a month with none would be empty pages; a page for people, so it has no JSON. Each builds four months, so a site has only a few a
 // minute.
 func PrintReportHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), can.ActionGet)
@@ -540,7 +540,9 @@ func PrintReportHandler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, r, siteContext.AcceptType, herr)
 			return
 		}
-		months = append(months, report)
+		if report.Period.Days > 0 {
+			months = append(months, report)
+		}
 	}
 	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.Printable(now, months), false)
 }

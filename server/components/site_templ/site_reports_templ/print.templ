@@ -25,7 +25,7 @@ type PeriodReport struct {
 	Previous *sitemodels.SiteSummaryPeriod
 }
 
-// Printable is the report to print of months, newest first: each month's overview and AGP on a page of its own, laid
+// Printable is the report to print of months, newest first, or that none has data: each month's overview and AGP on a page of its own, laid
 // out as Dexcom Clarity's are, flat under ruled headings, each page saying Nighttroop generated it and, at its foot, its
 // number and when. On a screen the pages are sheets on grey, with a button to print them that is not printed.
 templ Printable(generated time.Time, months []*PeriodReport) {
@@ -46,6 +46,9 @@ templ Printable(generated time.Time, months []*PeriodReport) {
 					{ i18n.T(ctx, "site.reports.print.print") }
 				}
 			</div>
+			if len(months) == 0 {
+				<p id="site--print--none" class="mx-auto max-w-4xl px-4 text-gray-600">{ i18n.T(ctx, "site.reports.print.none", i18n.Data{"Months": PrintMonths - 1}) }</p>
+			}
 			for i, month := range months {
 				@sheet(sheetProps{ID: "site--print--overview-" + month.Period.Date, Name: i18n.T(ctx, "site.reports.overview.title"), Generated: generated, Period: month.Period, Page: 2*i + 1, Pages: 2 * len(months)}) {
 					@overviewCards(month.Period, month.Days, month.Previous, false)

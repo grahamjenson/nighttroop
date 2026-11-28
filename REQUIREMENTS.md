@@ -989,7 +989,7 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 | Overview | `/reports/overview`; `/reports/overview/{period}-{date}` | 7 days to yesterday |
 | AGP | `/reports/agp`; `/reports/agp/{period}-{date}` | 7 days to yesterday |
 | TDD | `/reports/tdd`; `?end=` last day (`2026-01-31`) | 30 days to today, today so far |
-| Printable report | `/reports/print` | This month so far and 3 before |
+| Printable report | `/reports/print` | This month so far and 3 before, each with data |
 
 #### Overview and AGP periods
 
@@ -1122,6 +1122,8 @@ The reports (overview, AGP, TDD, print), the summary's yesterday, last week, las
 #### Printable report
 
 - This month so far and 3 months before, newest first; each month's overview and AGP report on its own sheet.
+  - A month with no data has no sheets. The page numbers count only the sheets shown.
+  - If no month has data, the page says there is nothing to print.
 - No site header, links or period buttons.
 - Each page, laid out as Dexcom Clarity's:
   - Report name large, over its number of days and first and last day (this month to today).
