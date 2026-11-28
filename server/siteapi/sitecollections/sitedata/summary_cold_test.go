@@ -94,3 +94,37 @@ func TestSummaryDayFromColdDays(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, none)
 }
+
+// The Summaries page of a month has its days with data, and the weeks, fortnights and months that are over and have
+// one, each built from the site's days as it is read
+func TestBuiltSummaries(t *testing.T) {
+	_, _, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	siteContext := &httputils.SiteContext{SiteID: "site", SiteModel: &controldb.Site{ID: "site", SettingsJson: settings.StoredOf(settings.Settings{Timezone: new("UTC")})}}
+	// Now is Wednesday 18 March 2026. A reading in range on Monday 2 March, one high on Tuesday 10 March, one on
+	// 15 February, and one today
+	now := time.Date(2026, 3, 18, 12, 0, 0, 0, time.UTC)
+	for id, at := range map[string]time.Time{"feb": time.Date(2026, 2, 15, 12, 0, 0, 0, time.UTC), "first": time.Date(2026, 3, 2, 12, 0, 0, 0, time.UTC),
+		"second": time.Date(2026, 3, 10, 12, 0, 0, 0, time.UTC), "today": now.Add(-time.Hour)} {
+		_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: id, Mgdl: map[string]float64{"second": 250}[id] + 100, ReadingType: "sgv", OccurredAt: at.UnixMilli(), CreatedByIdentityName: "phone"})
+		require.NoError(t, err)
+	}
+	built, err := BuiltSummaries(ctx, q, siteContext, time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC), now)
+	require.NoError(t, err)
+	dates := func(period string) (of []string) {
+		for _, row := range built[period] {
+			of = append(of, row.Date)
+		}
+		return of
+	}
+	// Newest first. Today, and the week, fortnight and month it is in, are not over.
+	require.Equal(t, []string{"2026-03-10", "2026-03-02"}, dates("day"))
+	require.Equal(t, []string{"2026-03-09", "2026-03-02"}, dates("week"))
+	// Fortnights are from 2 March, with both days, and 16 March, which is not over
+	require.Equal(t, []string{"2026-03-02"}, dates("fortnight"))
+	require.Equal(t, 50.0, *built["fortnight"][0].TimeInRange)
+	require.Equal(t, []string{"2026-02-01"}, dates("month"))
+	require.Equal(t, 100.0, *built["week"][1].TimeInRange)
+	require.Equal(t, 0.0, *built["week"][0].TimeInRange)
+	require.Equal(t, int64(1), built["month"][0].Days)
+}

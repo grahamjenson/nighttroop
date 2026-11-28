@@ -37,18 +37,7 @@ func TestSummariesMonth(t *testing.T) {
 	}
 }
 
-// A month shows its days, the weeks and fortnights with a day in it, whichever day they start on, and its year's months
-func TestSummariesDates(t *testing.T) {
-	first := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-	require.Equal(t, map[string][2]string{
-		"day":       {"2026-02-01", "2026-02-28"},
-		"week":      {"2026-01-26", "2026-02-28"},
-		"fortnight": {"2026-01-19", "2026-02-28"},
-		"month":     {"2026-01-01", "2026-12-31"},
-	}, SummariesDates(first))
-}
 
-// The arrows go a month back as far as the year kept and forward to this month, which has no month query
 func TestSummariesLinks(t *testing.T) {
 	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
 	for _, test := range []struct {

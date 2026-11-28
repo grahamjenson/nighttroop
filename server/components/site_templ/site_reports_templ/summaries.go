@@ -24,20 +24,6 @@ func summariesKept(first, this time.Time) bool {
 	return !first.After(this) && !first.Before(this.AddDate(0, -SummariesMonths, 0))
 }
 
-// SummariesDates are the first and last dates of each period's summaries the report of the month starting first
-// shows: its days, the weeks and fortnights with a day in it, as they start up to 6 and 13 days before it, and the
-// months of its year
-func SummariesDates(first time.Time) map[string][2]string {
-	last := first.AddDate(0, 1, -1).Format(time.DateOnly)
-	year := time.Date(first.Year(), 1, 1, 0, 0, 0, 0, first.Location())
-	return map[string][2]string{
-		"day":       {first.Format(time.DateOnly), last},
-		"week":      {first.AddDate(0, 0, -6).Format(time.DateOnly), last},
-		"fortnight": {first.AddDate(0, 0, -13).Format(time.DateOnly), last},
-		"month":     {year.Format(time.DateOnly), year.AddDate(1, 0, -1).Format(time.DateOnly)},
-	}
-}
-
 // summariesLinks are the summaries reports of the month before and after the one starting first, "" where there is
 // none; this month's has no month query
 func summariesLinks(first, now time.Time) (previous, next string) {
