@@ -1747,6 +1747,14 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Missing credentials or permissions, rate limits or a server error: the batch stops with that error.
   - The site's client errors show a batch with documents left out.
   - A batch costs the same writes against the rate limits, with or without documents left out.
+- The documents of a batch are stored 100 at a time:
+  - Each 100 are one transaction of the site DB. The DB syncs to disk one time for them, not one time for each.
+  - Each stored document is published after its transaction is committed, in the sequence sent.
+  - The response gives each stored document as a search gives it after its 100 are stored.
+  - If a document of the 100 is a duplicate that does not change, or the site DB refuses it:
+    - The documents before it are stored in one transaction.
+    - That document and the documents after it are each stored in a transaction of their own.
+    - The response, the stored documents and the client errors are the same as when each document is stored alone.
 - One object sent alone, not in an array, with a problem: refused.
 
 #### Authentication and permissions

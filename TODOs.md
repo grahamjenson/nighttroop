@@ -21,8 +21,13 @@
        with bcrypt again 5 minutes after it was first checked (`utils/security/password_verifier_cache.go`), about
        70 ms each time and most of what such a client costs: decide a longer time, as a JWT from it lasts an hour
     1. P3: Each commit syncs the DB's write-ahead log to disk (`synchronous` is `FULL`, as the DSN in
-       `data/sql/gen/db.go` sets none), so a v1 upload of N records is N syncs: decide `NORMAL`, which can lose the
-       last commits when the power fails, for the site DBs or only the logs, jobs and live DBs
+       `data/sql/gen/db.go` sets none): decide `NORMAL`, which can lose the last commits when the power fails, for
+       the site DBs or only the logs, jobs and live DBs
+    1. P4: A v1 batch stores a duplicate that does not change, and each document after it in its 100, in a transaction
+       of its own (a sync for each one stored), as nothing undoes one document's writes in a shared transaction: sqlc
+       makes no query of a `SAVEPOINT`, which would
+    1. P4: A live update's `dbAdd` list and a Nightscout connector's sync store each document in a transaction of its
+       own: store them in one, as a v1 batch is (`nsutils.Batch`)
 1. Register with Resend and PagerDuty and .p8 push notifications to test all.
 1. Accounts
     1. P4: Add the icons of SugarPixel, Dexcom and FreeStyle Libre to `server/assets/static/logos`, and put them on the right pages.

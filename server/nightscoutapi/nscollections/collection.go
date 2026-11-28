@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -274,12 +275,21 @@ func (c Collection[NS, DM]) Create(ctx context.Context, siteContext *httputils.S
 	}
 
 	if deleted {
-		siteContext.PublishModelChange(events.Deleted, dbModel)
-		return c.document(dbModel, siteContext), false, nil
+		return c.published(ctx, siteContext, events.Deleted, dbModel, nil), false, nil
 	}
-	siteContext.PublishModelChange(events.Created, dbModel)
-	c.afterStored(ctx, siteContext, nsModel)
-	return c.document(dbModel, siteContext), false, nil
+	return c.published(ctx, siteContext, events.Created, dbModel, &nsModel), false, nil
+}
+
+// published is the document of the model a committed write stored, once it is published as action and, with stored,
+// the collection has done what more it does with it. In a batch, all of that waits for the batch to end.
+func (c Collection[NS, DM]) published(ctx context.Context, siteContext *httputils.SiteContext, action events.Action, dbModel *DM, stored *NS) nsutils.Document {
+	return nsutils.BatchOf(ctx).Stored(func() nsutils.Document {
+		siteContext.PublishModelChange(action, dbModel)
+		if stored != nil {
+			c.afterStored(ctx, siteContext, *stored)
+		}
+		return c.document(dbModel, siteContext)
+	})
 }
 
 // createdModel is the model a create stores: the fields sent decoded, given the site's UTC offset when sent without
@@ -364,7 +374,7 @@ func (c Collection[NS, DM]) softDeleted(q *sitedb.Queries, ctx context.Context, 
 // repeated is the duplicate a create repeats, with the fields sent merged into it when the collection is a
 // CollectionRefresher and it refreshes the duplicate. It is changed only when its document is, so the write is rolled
 // back otherwise, before the duplicate's document is read, as that may read the site's database.
-func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx *sql.Tx, q *sitedb.Queries, nsModel NS, data map[string]any, duplicate *DM) (nsutils.Document, bool, *nsutils.HTTPError) {
+func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils.SiteContext, tx driver.Tx, q *sitedb.Queries, nsModel NS, data map[string]any, duplicate *DM) (nsutils.Document, bool, *nsutils.HTTPError) {
 	refresher, ok := any(c.db).(CollectionRefresher[NS, DM])
 	if !ok || !refresher.Refreshes(nsModel, duplicate) {
 		_ = tx.Rollback()
@@ -381,9 +391,7 @@ func (c Collection[NS, DM]) repeated(ctx context.Context, siteContext *httputils
 	if httpErr := c.commit(ctx, tx, "refresh"); httpErr != nil {
 		return nil, false, httpErr
 	}
-	siteContext.PublishModelChange(events.Updated, refreshed)
-	c.afterStored(ctx, siteContext, merged)
-	return c.document(refreshed, siteContext), true, nil
+	return c.published(ctx, siteContext, events.Updated, refreshed, &merged), true, nil
 }
 
 // rewrite writes the stored model's document with the fields sent merged into it, see merged, converted and checked as
@@ -864,14 +872,11 @@ func (c Collection[NS, DM]) Replace(ctx context.Context, siteContext *httputils.
 		return nil, false, httpErr
 	}
 
-	creatingNewRecord := replaced == nil
+	creatingNewRecord, action := replaced == nil, events.Updated
 	if creatingNewRecord {
-		siteContext.PublishModelChange(events.Created, dbCreateModel)
-	} else {
-		siteContext.PublishModelChange(events.Updated, dbCreateModel)
+		action = events.Created
 	}
-	c.afterStored(ctx, siteContext, nsModel)
-	return c.document(dbCreateModel, siteContext), creatingNewRecord, nil
+	return c.published(ctx, siteContext, action, dbCreateModel, &nsModel), creatingNewRecord, nil
 }
 
 // replacingModel is the model a replace stores: checked against the record replaced, see validateReplace, given the
@@ -1056,16 +1061,16 @@ func ValidateNotChangingSharedFields[NS SharedNSFields, DM SharedDBFields](repla
 	return nil
 }
 
-// begin starts a write to the site's database, which is rolled back unless it is committed
-func (c Collection[NS, DM]) begin(ctx context.Context, siteContext *httputils.SiteContext) (*sql.Tx, *sitedb.Queries, *nsutils.HTTPError) {
-	tx, err := siteContext.SiteDB.SQLiteDB.BeginTx(ctx, nil)
+// begin starts a write to the site's database, which is rolled back unless it is committed, in ctx's batch if it has one
+func (c Collection[NS, DM]) begin(ctx context.Context, siteContext *httputils.SiteContext) (driver.Tx, *sitedb.Queries, *nsutils.HTTPError) {
+	write, tx, err := nsutils.BatchOf(ctx).Begin(ctx, siteContext.SiteDB.SQLiteDB)
 	if err != nil {
 		return nil, nil, c.failed(ctx, err, "begin")
 	}
-	return tx, siteContext.SiteDB.QueriesWithTx(tx), nil
+	return write, siteContext.SiteDB.QueriesWithTx(tx), nil
 }
 
-func (c Collection[NS, DM]) commit(ctx context.Context, tx *sql.Tx, action string) *nsutils.HTTPError {
+func (c Collection[NS, DM]) commit(ctx context.Context, tx driver.Tx, action string) *nsutils.HTTPError {
 	if err := tx.Commit(); err != nil {
 		return c.failed(ctx, err, "commit "+action)
 	}

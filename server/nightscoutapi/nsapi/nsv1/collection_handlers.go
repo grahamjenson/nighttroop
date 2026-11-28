@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -93,21 +95,13 @@ func Create(store nsutils.Store) http.HandlerFunc {
 
 		var created []nsutils.Document
 		var left leftOut
-		for _, document := range documents {
-			// xDrip+ and xDrip4iOS send their sensor calibrations (type cal) in the same batch as their readings.
-			// They are not kept, so the readings still are.
-			if doc, _ := document.(map[string]any); collection == nsutils.Entries && doc["type"] == "cal" {
-				continue
-			}
-			record, err := storeDocument(r, store, collection, document, canUpdate)
-			if isBatch && left.leaves(err) {
-				continue
-			}
+		for batch := range slices.Chunk(documents, consts.MaxBatchRecords) {
+			stored, err := storeBatch(r, store, collection, batch, canUpdate, isBatch, &left)
 			if err != nil {
 				nsutils.WriteError(w, err)
 				return
 			}
-			created = append(created, record)
+			created = append(created, stored...)
 		}
 		if err := left.reported(r, collection, len(created)); err != nil {
 			nsutils.WriteError(w, err)
@@ -115,6 +109,55 @@ func Create(store nsutils.Store) http.HandlerFunc {
 		}
 		nsutils.WriteRecordsV1(w, created, nil)
 	}
+}
+
+// storeBatch stores documents, at most MaxBatchRecords of a batch, in one transaction (nsutils.Batch), so the site's
+// database syncs to disk once for them, and its write lock is held no longer than for them. A document that undoes
+// the transaction, as a duplicate does, leaves those before it to be stored in one again, as they did not undo it. It
+// and those after it are then stored as before, each in a transaction of its own.
+func storeBatch(r *http.Request, store nsutils.Store, collection nsutils.Collection, documents []any, canUpdate, isBatch bool, left *leftOut) ([]nsutils.Document, *nsutils.HTTPError) {
+	for together := len(documents); together > 1; {
+		before, batch := *left, &nsutils.Batch{}
+		before.reasons, before.counts = slices.Clone(left.reasons), maps.Clone(left.counts)
+		stored, through, err := storeEach(r.WithContext(batch.In(r.Context())), store, collection, documents[:together], canUpdate, isBatch, left)
+		if batch.End(stored) {
+			if err != nil {
+				return stored, err
+			}
+			rest, _, err := storeEach(r, store, collection, documents[together:], canUpdate, isBatch, left)
+			return append(stored, rest...), err
+		}
+		// What the undone try left out is forgotten. A try that got through every document could not be committed, so
+		// none are tried together again.
+		*left, together = before, through%together
+	}
+	stored, _, err := storeEach(r, store, collection, documents, canUpdate, isBatch, left)
+	return stored, err
+}
+
+// storeEach stores the documents in their order. It is those stored, how many documents it got through before one
+// undid its batch or stopped it, and the error that stopped it, if any.
+func storeEach(r *http.Request, store nsutils.Store, collection nsutils.Collection, documents []any, canUpdate, isBatch bool, left *leftOut) ([]nsutils.Document, int, *nsutils.HTTPError) {
+	var created []nsutils.Document
+	for i, document := range documents {
+		// xDrip+ and xDrip4iOS send their sensor calibrations (type cal) in the same batch as their readings.
+		// They are not kept, so the readings still are.
+		if doc, _ := document.(map[string]any); collection == nsutils.Entries && doc["type"] == "cal" {
+			continue
+		}
+		record, err := storeDocument(r, store, collection, document, canUpdate)
+		if batch := nsutils.BatchOf(r.Context()); batch != nil && batch.Undone {
+			return created, i, nil
+		}
+		if isBatch && left.leaves(err) {
+			continue
+		}
+		if err != nil {
+			return created, i, err
+		}
+		created = append(created, record)
+	}
+	return created, len(documents), nil
 }
 
 // readDocuments is the documents of a create's body, one sent alone or an array of them, and whether it is an array
