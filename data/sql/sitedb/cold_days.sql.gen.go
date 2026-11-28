@@ -21,7 +21,7 @@ type CGMDaysWrittenSinceParams struct {
 }
 
 // The UTC days, as days since 1970, that ended before Before and had a CGM reading written, changed or deleted since
-// Since: the days to seal again
+// Since: the days to package again
 func (q *Queries) CGMDaysWrittenSince(ctx context.Context, arg CGMDaysWrittenSinceParams) ([]int64, error) {
 	rows, err := q.query(ctx, q.cGMDaysWrittenSinceStmt, cGMDaysWrittenSince, arg.Since, arg.Before)
 	if err != nil {
@@ -56,7 +56,7 @@ type CGMReadingsOfDayParams struct {
 	To   int64
 }
 
-// A day's CGM readings, the deleted too, as a deleted one clears its step of a day sealed before
+// A day's CGM readings, the deleted too, as a deleted one clears its step of a day packaged before
 func (q *Queries) CGMReadingsOfDay(ctx context.Context, arg CGMReadingsOfDayParams) ([]*GlucoseReading, error) {
 	rows, err := q.query(ctx, q.cGMReadingsOfDayStmt, cGMReadingsOfDay, arg.From, arg.To)
 	if err != nil {
@@ -211,7 +211,7 @@ func (q *Queries) ColdDaysPage(ctx context.Context, arg ColdDaysPageParams) ([]*
 	return items, nil
 }
 
-const deleteSealedCGMReadings = `-- name: DeleteSealedCGMReadings :execrows
+const deletePackagedCGMReadings = `-- name: DeletePackagedCGMReadings :execrows
 DELETE FROM glucose_readings
 WHERE reading_type = 'sgv' AND glucose_readings.occurred_at < ?1 AND notes IS NULL
 AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'glucose' AND date = date(glucose_readings.occurred_at / 1000, 'unixepoch')
@@ -219,14 +219,14 @@ AND EXISTS (SELECT 1 FROM cold_days WHERE kind = 'glucose' AND date = date(gluco
 AND id NOT IN (SELECT glucose_reading_id FROM event_groups WHERE glucose_reading_id IS NOT NULL)
 `
 
-type DeleteSealedCGMReadingsParams struct {
+type DeletePackagedCGMReadingsParams struct {
 	Before int64
 }
 
-// The CGM readings from before Before whose day's glucose was sealed after they were last written, so none is deleted
+// The CGM readings from before Before whose day's glucose was packaged after they were last written, so none is deleted
 // that its cold day does not have. One with a note, or that a treatment refers to, is kept: it is an event.
-func (q *Queries) DeleteSealedCGMReadings(ctx context.Context, arg DeleteSealedCGMReadingsParams) (int64, error) {
-	result, err := q.exec(ctx, q.deleteSealedCGMReadingsStmt, deleteSealedCGMReadings, arg.Before)
+func (q *Queries) DeletePackagedCGMReadings(ctx context.Context, arg DeletePackagedCGMReadingsParams) (int64, error) {
+	result, err := q.exec(ctx, q.deletePackagedCGMReadingsStmt, deletePackagedCGMReadings, arg.Before)
 	if err != nil {
 		return 0, err
 	}
@@ -245,7 +245,7 @@ type DeviceReportDaysWrittenSinceParams struct {
 }
 
 // The UTC days, as days since 1970, up to Before that had a device report written, changed or deleted since Since:
-// the days whose device series are sealed again
+// the days whose device series are packaged again
 func (q *Queries) DeviceReportDaysWrittenSince(ctx context.Context, arg DeviceReportDaysWrittenSinceParams) ([]int64, error) {
 	rows, err := q.query(ctx, q.deviceReportDaysWrittenSinceStmt, deviceReportDaysWrittenSince, arg.Since, arg.Before)
 	if err != nil {
@@ -293,7 +293,7 @@ type DeviceReportNumbersOfDayRow struct {
 	DeviceBatteryPercent *float64
 }
 
-// The numbers of a day's device reports that are sealed as series, the oldest first, without the JSON, which is
+// The numbers of a day's device reports that are packaged as series, the oldest first, without the JSON, which is
 // most of a report; the deleted too, as a deleted one clears its step
 func (q *Queries) DeviceReportNumbersOfDay(ctx context.Context, arg DeviceReportNumbersOfDayParams) ([]*DeviceReportNumbersOfDayRow, error) {
 	rows, err := q.query(ctx, q.deviceReportNumbersOfDayStmt, deviceReportNumbersOfDay, arg.From, arg.To)
@@ -348,7 +348,7 @@ type EventDaysWrittenSinceParams struct {
 
 // The UTC days, as days since 1970, that ended before Before and had an event written, changed or deleted since
 // Since: a meal, a dose, a meter's reading or one with a note, an activity, a temp target, a profile switch, a
-// notification, or a treatment of them. The days whose events are sealed again.
+// notification, or a treatment of them. The days whose events are packaged again.
 func (q *Queries) EventDaysWrittenSince(ctx context.Context, arg EventDaysWrittenSinceParams) ([]int64, error) {
 	rows, err := q.query(ctx, q.eventDaysWrittenSinceStmt, eventDaysWrittenSince, arg.Since, arg.Before)
 	if err != nil {
@@ -384,7 +384,7 @@ type EventGroupsOfDayParams struct {
 }
 
 // A day's treatments, without their events, but those of temp basals, which are not events: a loop writes one every
-// 5 minutes, and their rate is sealed as a series
+// 5 minutes, and their rate is packaged as a series
 func (q *Queries) EventGroupsOfDay(ctx context.Context, arg EventGroupsOfDayParams) ([]*EventGroup, error) {
 	rows, err := q.query(ctx, q.eventGroupsOfDayStmt, eventGroupsOfDay, arg.From, arg.To)
 	if err != nil {
@@ -477,7 +477,7 @@ const hasColdDays = `-- name: HasColdDays :one
 SELECT EXISTS (SELECT 1 FROM cold_days)
 `
 
-// Whether any day was ever sealed: a site with none has all its days sealed, not only those written lately
+// Whether any day was ever packaged: a site with none has all its days packaged, not only those written lately
 func (q *Queries) HasColdDays(ctx context.Context) (bool, error) {
 	row := q.queryRow(ctx, q.hasColdDaysStmt, hasColdDays)
 	var exists bool
@@ -499,7 +499,7 @@ type TreatmentDaysWrittenSinceParams struct {
 }
 
 // The UTC days, as days since 1970, that ended before Before and had an insulin dose, a food intake or a temp basal
-// written, changed or deleted since Since: the days whose treatment series are sealed again
+// written, changed or deleted since Since: the days whose treatment series are packaged again
 func (q *Queries) TreatmentDaysWrittenSince(ctx context.Context, arg TreatmentDaysWrittenSinceParams) ([]int64, error) {
 	rows, err := q.query(ctx, q.treatmentDaysWrittenSinceStmt, treatmentDaysWrittenSince, arg.Since, arg.Before)
 	if err != nil {
@@ -534,7 +534,7 @@ type UpsertColdDayParams struct {
 	Body []byte
 }
 
-// Sealing a day again writes it again, and says when
+// Packaging a day again writes it again, and says when
 func (q *Queries) UpsertColdDay(ctx context.Context, arg UpsertColdDayParams) error {
 	_, err := q.exec(ctx, q.upsertColdDayStmt, upsertColdDay, arg.Kind, arg.Date, arg.Body)
 	return err

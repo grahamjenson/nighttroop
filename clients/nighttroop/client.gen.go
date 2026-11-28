@@ -156,14 +156,14 @@ type ColdDay struct {
 	Max  *float32 `json:"max"`
 	Min  *float32 `json:"min"`
 
+	// PackagedAt When it was last packaged, in ms
+	PackagedAt int64 `json:"packaged_at"`
+
 	// Points Each value with the time its step starts; only for one day of a series
 	Points *[]ColdPoint `json:"points,omitempty"`
 
 	// Scale What each value was multiplied by to be kept as a whole number
 	Scale float32 `json:"scale"`
-
-	// SealedAt When it was last sealed, in ms
-	SealedAt int64 `json:"sealed_at"`
 
 	// SecondOrder Whether each value is kept as the change of its change
 	SecondOrder bool `json:"second_order"`

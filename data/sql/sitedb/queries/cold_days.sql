@@ -1,5 +1,5 @@
 -- name: UpsertColdDay :exec
--- Sealing a day again writes it again, and says when
+-- Packaging a day again writes it again, and says when
 INSERT INTO cold_days (kind, date, body) VALUES (sqlc.arg('Kind'), sqlc.arg('Date'), sqlc.arg('Body'))
 ON CONFLICT(kind, date) DO UPDATE SET body = excluded.body, updated_at = CAST(unixepoch('subsec') * 1000 AS INTEGER);
 
@@ -21,24 +21,24 @@ LIMIT CAST(sqlc.arg('Limit') AS INTEGER) OFFSET CAST(sqlc.arg('Skip') AS INTEGER
 SELECT COUNT(*) AS total, CAST(COALESCE(SUM(length(body)), 0) AS INTEGER) AS bytes FROM cold_days;
 
 -- name: HasColdDays :one
--- Whether any day was ever sealed: a site with none has all its days sealed, not only those written lately
+-- Whether any day was ever packaged: a site with none has all its days packaged, not only those written lately
 SELECT EXISTS (SELECT 1 FROM cold_days);
 
 -- name: CGMDaysWrittenSince :many
 -- The UTC days, as days since 1970, that ended before Before and had a CGM reading written, changed or deleted since
--- Since: the days to seal again
+-- Since: the days to package again
 SELECT DISTINCT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM glucose_readings
 WHERE updated_at >= sqlc.arg('Since') AND reading_type = 'sgv' AND occurred_at < sqlc.arg('Before')
 ORDER BY 1 LIMIT 5000;
 
 -- name: CGMReadingsOfDay :many
--- A day's CGM readings, the deleted too, as a deleted one clears its step of a day sealed before
+-- A day's CGM readings, the deleted too, as a deleted one clears its step of a day packaged before
 SELECT * FROM glucose_readings
 WHERE occurred_at >= sqlc.arg('From') AND occurred_at < sqlc.arg('To') AND reading_type = 'sgv'
 ORDER BY occurred_at LIMIT 5000;
 
--- name: DeleteSealedCGMReadings :execrows
--- The CGM readings from before Before whose day's glucose was sealed after they were last written, so none is deleted
+-- name: DeletePackagedCGMReadings :execrows
+-- The CGM readings from before Before whose day's glucose was packaged after they were last written, so none is deleted
 -- that its cold day does not have. One with a note, or that a treatment refers to, is kept: it is an event.
 DELETE FROM glucose_readings
 WHERE reading_type = 'sgv' AND glucose_readings.occurred_at < sqlc.arg('Before') AND notes IS NULL
@@ -48,13 +48,13 @@ AND id NOT IN (SELECT glucose_reading_id FROM event_groups WHERE glucose_reading
 
 -- name: DeviceReportDaysWrittenSince :many
 -- The UTC days, as days since 1970, up to Before that had a device report written, changed or deleted since Since:
--- the days whose device series are sealed again
+-- the days whose device series are packaged again
 SELECT DISTINCT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM device_reports
 WHERE updated_at >= sqlc.arg('Since') AND occurred_at < sqlc.arg('Before')
 ORDER BY 1 LIMIT 5000;
 
 -- name: DeviceReportNumbersOfDay :many
--- The numbers of a day's device reports that are sealed as series, the oldest first, without the JSON, which is
+-- The numbers of a day's device reports that are packaged as series, the oldest first, without the JSON, which is
 -- most of a report; the deleted too, as a deleted one clears its step
 SELECT occurred_at, deleted_at, loop_name, loop_iob, loop_iob_basal, loop_cob, pump_reservoir, pump_battery_percent, device_battery_percent
 FROM device_reports
@@ -63,7 +63,7 @@ ORDER BY occurred_at LIMIT 5000;
 
 -- name: TreatmentDaysWrittenSince :many
 -- The UTC days, as days since 1970, that ended before Before and had an insulin dose, a food intake or a temp basal
--- written, changed or deleted since Since: the days whose treatment series are sealed again
+-- written, changed or deleted since Since: the days whose treatment series are packaged again
 SELECT DISTINCT day FROM (
     SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM insulin_doses WHERE insulin_doses.updated_at >= sqlc.arg('Since') AND insulin_doses.occurred_at < sqlc.arg('Before')
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) FROM food_intakes WHERE food_intakes.updated_at >= sqlc.arg('Since') AND food_intakes.occurred_at < sqlc.arg('Before')
@@ -73,7 +73,7 @@ SELECT DISTINCT day FROM (
 -- name: EventDaysWrittenSince :many
 -- The UTC days, as days since 1970, that ended before Before and had an event written, changed or deleted since
 -- Since: a meal, a dose, a meter's reading or one with a note, an activity, a temp target, a profile switch, a
--- notification, or a treatment of them. The days whose events are sealed again.
+-- notification, or a treatment of them. The days whose events are packaged again.
 SELECT DISTINCT day FROM (
     SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM food_intakes WHERE food_intakes.updated_at >= sqlc.arg('Since') AND food_intakes.occurred_at < sqlc.arg('Before')
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM insulin_doses WHERE insulin_doses.updated_at >= sqlc.arg('Since') AND insulin_doses.occurred_at < sqlc.arg('Before')
@@ -87,7 +87,7 @@ SELECT DISTINCT day FROM (
 
 -- name: EventGroupsOfDay :many
 -- A day's treatments, without their events, but those of temp basals, which are not events: a loop writes one every
--- 5 minutes, and their rate is sealed as a series
+-- 5 minutes, and their rate is packaged as a series
 SELECT * FROM event_groups
 WHERE occurred_at >= sqlc.arg('From') AND occurred_at < sqlc.arg('To') AND temp_basal_id IS NULL AND deleted_at IS NULL
 ORDER BY occurred_at LIMIT 5000;

@@ -92,7 +92,7 @@ templ ColdDays(page *sitemodels.ColdDays, skip, limit int64) {
 				@table.Header() {
 					@table.Row() {
 						for _, head := range []string{"site.settings.cold_days.date", "site.settings.cold_days.kind", "site.settings.cold_days.shape", "site.settings.cold_days.step",
-							"site.settings.cold_days.values", "site.settings.cold_days.range", "site.settings.cold_days.size", "site.settings.cold_days.sealed"} {
+							"site.settings.cold_days.values", "site.settings.cold_days.range", "site.settings.cold_days.size", "site.settings.cold_days.packaged"} {
 							@table.Head() {
 								{ i18n.T(ctx, head) }
 							}
@@ -134,7 +134,7 @@ templ ColdDays(page *sitemodels.ColdDays, skip, limit int64) {
 								{ i18n.T(ctx, "site.settings.cold_days.bytes", i18n.Data{"Bytes": day.Bytes}) }
 							}
 							@table.Cell() {
-								<span title={ display.DateTime(&day.SealedAt) }>{ display.Ago(ctx, &day.SealedAt, time.Now()) }</span>
+								<span title={ display.DateTime(&day.PackagedAt) }>{ display.Ago(ctx, &day.PackagedAt, time.Now()) }</span>
 							}
 						}
 					}
@@ -203,7 +203,7 @@ templ ColdDay(day *sitemodels.ColdDay) {
 				}
 				@coldFact("site--cold-day--values", i18n.T(ctx, "site.settings.cold_days.values"), coldCount(day))
 				@coldFact("site--cold-day--size", i18n.T(ctx, "site.settings.cold_days.size"), i18n.T(ctx, "site.settings.cold_days.bytes", i18n.Data{"Bytes": day.Bytes}))
-				@coldFact("site--cold-day--sealed", i18n.T(ctx, "site.settings.cold_days.sealed"), display.DateTime(&day.SealedAt))
+				@coldFact("site--cold-day--packaged", i18n.T(ctx, "site.settings.cold_days.packaged"), display.DateTime(&day.PackagedAt))
 			</dl>
 			if day.Shape == "events" {
 				if len(day.InForce) > 0 {

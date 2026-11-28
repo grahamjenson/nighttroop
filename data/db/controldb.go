@@ -505,8 +505,8 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	if site == nil {
 		return nil, fmt.Errorf("site %s is not open", subdomain)
 	}
-	// Sealed before it is truncated, as truncating thins the device reports a day's series are sealed from
-	if err := db.sealSite(ctx, site, 0, time.Now()); err != nil {
+	// Packaged before it is truncated, as truncating thins the device reports a day's series are packaged from
+	if err := db.packageSite(ctx, site, 0, time.Now()); err != nil {
 		return nil, err
 	}
 	if err := truncateSite(ctx, site, 0); err != nil {
@@ -543,7 +543,7 @@ func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB, truncat
 		if at, ok := truncatedAt[site.Subdomain]; ok {
 			since = min(since, at)
 		}
-		err := db.sealSite(siteCtx, site, since, time.Now())
+		err := db.packageSite(siteCtx, site, since, time.Now())
 		if err == nil {
 			err = truncateSite(siteCtx, site, since)
 		}

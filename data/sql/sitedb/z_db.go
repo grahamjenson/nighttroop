@@ -192,8 +192,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteOldTempTargetsStmt, err = db.PrepareContext(ctx, deleteOldTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOldTempTargets: %w", err)
 	}
-	if q.deleteSealedCGMReadingsStmt, err = db.PrepareContext(ctx, deleteSealedCGMReadings); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteSealedCGMReadings: %w", err)
+	if q.deletePackagedCGMReadingsStmt, err = db.PrepareContext(ctx, deletePackagedCGMReadings); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedCGMReadings: %w", err)
 	}
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
@@ -933,9 +933,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteOldTempTargetsStmt: %w", cerr)
 		}
 	}
-	if q.deleteSealedCGMReadingsStmt != nil {
-		if cerr := q.deleteSealedCGMReadingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteSealedCGMReadingsStmt: %w", cerr)
+	if q.deletePackagedCGMReadingsStmt != nil {
+		if cerr := q.deletePackagedCGMReadingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedCGMReadingsStmt: %w", cerr)
 		}
 	}
 	if q.deleteSummaryPeriodsStmt != nil {
@@ -1788,7 +1788,7 @@ type Queries struct {
 	deleteOldProfileSwitchesStmt                *sql.Stmt
 	deleteOldTempBasalsStmt                     *sql.Stmt
 	deleteOldTempTargetsStmt                    *sql.Stmt
-	deleteSealedCGMReadingsStmt                 *sql.Stmt
+	deletePackagedCGMReadingsStmt               *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
@@ -2002,7 +2002,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteOldProfileSwitchesStmt:                q.deleteOldProfileSwitchesStmt,
 		deleteOldTempBasalsStmt:                     q.deleteOldTempBasalsStmt,
 		deleteOldTempTargetsStmt:                    q.deleteOldTempTargetsStmt,
-		deleteSealedCGMReadingsStmt:                 q.deleteSealedCGMReadingsStmt,
+		deletePackagedCGMReadingsStmt:               q.deletePackagedCGMReadingsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,

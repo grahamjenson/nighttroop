@@ -10,10 +10,10 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// What a person did in a day is sealed as one list, the oldest first: each with the columns its table's policy keeps
+// What a person did in a day is packaged as one list, the oldest first: each with the columns its table's policy keeps
 // that have a value, and what its treatment says of it. What a loop did is not in it: its doses and temp basals are
 // series, as a CGM's readings are.
-func TestSealingEvents(t *testing.T) {
+func TestPackagingEvents(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
 	day := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -3)
@@ -42,53 +42,53 @@ func TestSealingEvents(t *testing.T) {
 	must(q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "gone", Carbs: new(10.0), OccurredAt: at(13), CreatedByIdentityName: by}))
 	must(q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{ID: "gone"}))
 
-	sealedDay := func(of time.Time) retention.EventsDay {
+	packagedDay := func(of time.Time) retention.EventsDay {
 		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "events", Date: of.Format(time.DateOnly)})
 		require.NoError(t, err)
 		require.Equal(t, retention.EventsShape, retention.ShapeOf(row.Body))
-		header, sealed, err := retention.ReadEvents(row.Body)
+		header, packaged, err := retention.ReadEvents(row.Body)
 		require.NoError(t, err)
-		require.Equal(t, retention.Header{Version: 2, Shape: retention.EventsShape, Deflated: true, Steps: len(sealed.Events)}, header)
-		return sealed
+		require.Equal(t, retention.Header{Version: 2, Shape: retention.EventsShape, Deflated: true, Steps: len(packaged.Events)}, header)
+		return packaged
 	}
-	events := func() []map[string]any { return sealedDay(day).Events }
-	seal := func() {
+	events := func() []map[string]any { return packagedDay(day).Events }
+	packageDays := func() {
 		_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 		require.NoError(t, err)
 	}
-	seal()
-	sealed := events()
+	packageDays()
+	packaged := events()
 	ids := []any{}
-	for _, event := range sealed {
+	for _, event := range packaged {
 		ids = append(ids, event["id"])
 	}
 	require.Equal(t, []any{"meter", "noted", "lunch", "bolus", "target", "switch", "run", "note", "site-change"}, ids)
 
 	// An event has its table, and the columns kept that have a value: not the app that sent it, or a column with none
 	ms := func(hour int) float64 { return float64(at(hour)) }
-	require.Equal(t, map[string]any{"k": "glucose_readings", "id": "meter", "occurred_at": ms(1), "mgdl": 101.0, "reading_type": "mbg", "created_by_identity_name": by}, sealed[0])
-	require.Equal(t, "felt low", sealed[1]["notes"])
-	// The meal has what its treatment says of it, but keeps its own ID and has the treatment's notes, as it has none
+	require.Equal(t, map[string]any{"k": "glucose_readings", "id": "meter", "occurred_at": ms(1), "mgdl": 101.0, "reading_type": "mbg", "created_by_identity_name": by}, packaged[0])
+	require.Equal(t, "felt low", packaged[1]["notes"])
+	// The meal has what its treatment says of it and its ID, but keeps its own ID, and has the treatment's notes, as it has none
 	require.Equal(t, map[string]any{"k": "food_intakes", "id": "lunch", "occurred_at": ms(3), "carbs": 40.0, "name": "Pasta", "created_by_identity_name": by,
-		"group_type": "Meal Bolus", "entered_by": "openaps://AAPS", "notes": "from the group"}, sealed[2])
-	require.Equal(t, 4.5, sealed[3]["dose"])
-	require.Equal(t, []any{140.0, 160.0, 60.0, "Exercise"}, []any{sealed[4]["low_target_mgdl"], sealed[4]["high_target_mgdl"], sealed[4]["duration_minutes"], sealed[4]["reason"]})
+		"group_id": "lunch-group", "group_type": "Meal Bolus", "entered_by": "openaps://AAPS", "notes": "from the group"}, packaged[2])
+	require.Equal(t, 4.5, packaged[3]["dose"])
+	require.Equal(t, []any{140.0, 160.0, 60.0, "Exercise"}, []any{packaged[4]["low_target_mgdl"], packaged[4]["high_target_mgdl"], packaged[4]["duration_minutes"], packaged[4]["reason"]})
 	// The switch has its name and percent, and the profile it was made with
-	require.Equal(t, []any{"Sick day", 1.2, `[{"time":"00:00","value":1}]`}, []any{sealed[5]["name"], sealed[5]["multiplier"], sealed[5]["basal_rates_json"]})
+	require.Equal(t, []any{"Sick day", 1.2, `[{"time":"00:00","value":1}]`}, []any{packaged[5]["name"], packaged[5]["multiplier"], packaged[5]["basal_rates_json"]})
 	// The day had nothing in force when it started
-	require.Empty(t, sealedDay(day).InForce)
+	require.Empty(t, packagedDay(day).InForce)
 
 	// The day after starts with the switch in force, as it has no end, with its profile again, so the day is read
 	// alone, and with nothing of the temp target, which was over. It has no event of its own.
-	after := sealedDay(day.AddDate(0, 0, 1))
+	after := packagedDay(day.AddDate(0, 0, 1))
 	require.Empty(t, after.Events)
 	require.Len(t, after.InForce, 1)
 	require.Equal(t, []any{"profile_switches", "switch", `[{"time":"00:00","value":1}]`}, []any{after.InForce[0]["k"], after.InForce[0]["id"], after.InForce[0]["basal_rates_json"]})
-	require.Equal(t, map[string]any{"k": "event_groups", "id": "site-change", "occurred_at": ms(9), "group_type": "Site Change", "entered_by": "xDrip", "created_by_identity_name": by}, sealed[8])
+	require.Equal(t, map[string]any{"k": "event_groups", "id": "site-change", "occurred_at": ms(9), "group_type": "Site Change", "entered_by": "xDrip", "created_by_identity_name": by}, packaged[8])
 
-	// An event deleted is gone when its day is sealed again, and a day left with none is emptied
+	// An event deleted is gone when its day is packaged again, and a day left with none is emptied
 	must(q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{ID: "bolus"}))
-	seal()
+	packageDays()
 	require.Len(t, events(), 8)
 
 	// A switch with an end takes the place of the one with none until it is over, and a temp target not over is in
@@ -96,11 +96,11 @@ func TestSealingEvents(t *testing.T) {
 	must(q.CreateProfileSwitch(ctx, sitedb.CreateProfileSwitchParams{ID: "for a day", Name: "Sick day", DurationMinutes: 26 * 60, OccurredAt: at(20), CreatedByIdentityName: by,
 		BasalRatesJson: new(`[{"time":"00:00","value":1}]`)}))
 	must(q.CreateTempTarget(ctx, sitedb.CreateTempTargetParams{ID: "over midnight", LowTargetMgdl: 100, HighTargetMgdl: 110, DurationMinutes: 120, OccurredAt: at(23), CreatedByIdentityName: by}))
-	seal()
-	after = sealedDay(day.AddDate(0, 0, 1))
+	packageDays()
+	after = packagedDay(day.AddDate(0, 0, 1))
 	require.Equal(t, []any{"switch", "for a day", "over midnight"}, []any{after.InForce[0]["id"], after.InForce[1]["id"], after.InForce[2]["id"]})
 	// 2 days after, the switch with an end is over, and the target long so
-	later := sealedDay(day.AddDate(0, 0, 2))
+	later := packagedDay(day.AddDate(0, 0, 2))
 	require.Len(t, later.InForce, 1)
 	require.Equal(t, "switch", later.InForce[0]["id"])
 }

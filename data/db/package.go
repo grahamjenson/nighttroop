@@ -18,70 +18,70 @@ import (
 // dayMs is a UTC day, which a cold day is
 const dayMs = int64(24 * time.Hour / time.Millisecond)
 
-// sealSite seals the site's days that had a row written since since, in ms, 0 for all of them, into cold_days, each
-// kind of data as a series. A site never sealed has all its days sealed.
+// packageSite packages the site's days that had a row written since since, in ms, 0 for all of them, into cold_days, each
+// kind of data as a series. A site never packaged has all its days packaged.
 //
 // Glucose: each day that ended, the newest CGM reading of the best source in each 5 minutes. When the server deletes
 // rows (RETENTION_DELETE_ROWS), the CGM readings older than its hot days are then deleted, but only those their cold
 // day has.
 //
 // Events (what a person did: a meal, a dose, a meter's reading, a note, a target, a switch): each day that ended, as
-// one list, see sealEventsDay.
+// one list, see packageEventsDay.
 //
-// Treatments (the basal rate, insulin and carbs every 5 minutes): each day that ended, see sealTreatmentDays.
+// Treatments (the basal rate, insulin and carbs every 5 minutes): each day that ended, see packageTreatmentDays.
 //
 // What a loop's phone reports (its IOB and COB, the pump's reservoir, the batteries): each day up to now, today too,
 // as device reports are thinned from an hour old (truncateSite), so it runs before they are, and a day keeps the
 // values it has.
 //
 // See docs/retention.md for the other tables, the summaries and the truncation this is to take the place of.
-func (db *ControlDB) sealSite(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
+func (db *ControlDB) packageSite(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
 	q, today := site.Queries(), now.UTC().Truncate(24*time.Hour)
 	hot := retention.HotSince(now, db.ServerConfig.RetentionHotDays)
-	if sealed, err := q.HasColdDays(ctx); err != nil {
-		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
-	} else if !sealed {
+	if packaged, err := q.HasColdDays(ctx); err != nil {
+		return fmt.Errorf("cannot package site %s: %w", site.Subdomain, err)
+	} else if !packaged {
 		since = 0
 	}
-	sealed := func(day int64, err error) error {
+	packaged := func(day int64, err error) error {
 		if err == nil {
 			return nil
 		}
-		return fmt.Errorf("cannot seal %s of site %s: %w", time.UnixMilli(day*dayMs).UTC().Format(time.DateOnly), site.Subdomain, err)
+		return fmt.Errorf("cannot package %s of site %s: %w", time.UnixMilli(day*dayMs).UTC().Format(time.DateOnly), site.Subdomain, err)
 	}
 	days, err := q.CGMDaysWrittenSince(ctx, sitedb.CGMDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()})
 	if err != nil {
-		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
+		return fmt.Errorf("cannot package site %s: %w", site.Subdomain, err)
 	}
 	for _, day := range days {
 		// A day whose rows may be deleted keeps what it has, and takes what was written since
-		if err := sealed(day, sealGlucoseDay(ctx, q, day*dayMs, db.ServerConfig.RetentionDeleteRows && day*dayMs < hot.UnixMilli())); err != nil {
+		if err := packaged(day, packageGlucoseDay(ctx, q, day*dayMs, db.ServerConfig.RetentionDeleteRows && day*dayMs < hot.UnixMilli())); err != nil {
 			return err
 		}
 	}
 	if days, err = q.DeviceReportDaysWrittenSince(ctx, sitedb.DeviceReportDaysWrittenSinceParams{Since: since, Before: now.UnixMilli() + 1}); err != nil {
-		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
+		return fmt.Errorf("cannot package site %s: %w", site.Subdomain, err)
 	}
 	for _, day := range days {
-		if err := sealed(day, sealDeviceDay(ctx, q, day*dayMs)); err != nil {
+		if err := packaged(day, packageDeviceDay(ctx, q, day*dayMs)); err != nil {
 			return err
 		}
 	}
 	if days, err = q.EventDaysWrittenSince(ctx, sitedb.EventDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()}); err != nil {
-		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
+		return fmt.Errorf("cannot package site %s: %w", site.Subdomain, err)
 	}
 	// The days that just ended too, as a day with no event of its own still has what was in force at its start
 	for _, day := range lastDays(days, today) {
-		if err := sealed(day, sealEventsDay(ctx, q, day*dayMs)); err != nil {
+		if err := packaged(day, packageEventsDay(ctx, q, day*dayMs)); err != nil {
 			return err
 		}
 	}
-	if err := db.sealTreatmentDays(ctx, site, since, today); err != nil {
-		return fmt.Errorf("cannot seal the treatments of site %s: %w", site.Subdomain, err)
+	if err := db.packageTreatmentDays(ctx, site, since, today); err != nil {
+		return fmt.Errorf("cannot package the treatments of site %s: %w", site.Subdomain, err)
 	}
 	if db.ServerConfig.RetentionDeleteRows {
-		if _, err := q.DeleteSealedCGMReadings(ctx, sitedb.DeleteSealedCGMReadingsParams{Before: hot.UnixMilli()}); err != nil {
-			return fmt.Errorf("cannot delete the sealed readings of site %s: %w", site.Subdomain, err)
+		if _, err := q.DeletePackagedCGMReadings(ctx, sitedb.DeletePackagedCGMReadingsParams{Before: hot.UnixMilli()}); err != nil {
+			return fmt.Errorf("cannot delete the packaged readings of site %s: %w", site.Subdomain, err)
 		}
 	}
 	return nil
@@ -95,10 +95,10 @@ type DaySeries struct {
 
 // TreatmentDaySeries builds the treatment series (the basal rate, insulin and carbs) of the site's UTC day that starts
 // at start, in ms, from its rows. It is set by the package that reads profiles and temp basals, sitedata, which this
-// package cannot import, and nil in a program without it, which then seals no treatment series.
+// package cannot import, and nil in a program without it, which then packages no treatment series.
 var TreatmentDaySeries func(ctx context.Context, q *sitedb.Queries, site *controldb.Site, start int64) ([]DaySeries, error)
 
-// daysBack is how many of the days that just ended are sealed though nothing was written in them, as a day has a
+// daysBack is how many of the days that just ended are packaged though nothing was written in them, as a day has a
 // basal rate from its profile alone, and what was in force when it started
 const daysBack = 2
 
@@ -112,10 +112,10 @@ func lastDays(days []int64, today time.Time) []int64 {
 	return days
 }
 
-// sealTreatmentDays seals the treatment series of the days that ended and had a treatment written since since, and of
+// packageTreatmentDays packages the treatment series of the days that ended and had a treatment written since since, and of
 // the last days that ended, from their rows alone, as none of their rows is deleted yet. A series with no value in a
 // day is written only to empty a day that had some.
-func (db *ControlDB) sealTreatmentDays(ctx context.Context, site *SiteDB, since int64, today time.Time) error {
+func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, since int64, today time.Time) error {
 	if TreatmentDaySeries == nil {
 		return nil
 	}
@@ -155,16 +155,16 @@ type point struct {
 	value float64
 }
 
-// sealSeriesDay writes one series of the UTC day that starts at start, in ms: each point, the oldest first, takes the
+// packageSeriesDay writes one series of the UTC day that starts at start, in ms: each point, the oldest first, takes the
 // step it is in, so a step keeps its newest. With merge, the day's rows may be gone or thinned, so it starts from the
-// day as it was sealed before, with the steps at cleared emptied, and takes the points. It reads the day back before
-// it is kept, so a day is never sealed as what cannot be read, or with other values.
-func sealSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Series, start int64, merge bool, cleared []int64, points []point) error {
+// day as it was packaged before, with the steps at cleared emptied, and takes the points. It reads the day back before
+// it is kept, so a day is never packaged as what cannot be read, or with other values.
+func packageSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Series, start int64, merge bool, cleared []int64, points []point) error {
 	date, values := time.UnixMilli(start).UTC().Format(time.DateOnly), series.Empty()
 	if merge {
-		switch sealed, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: series.Name, Date: date}); {
+		switch packaged, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: series.Name, Date: date}); {
 		case err == nil:
-			if values, err = retention.UnpackGrid(sealed.Body); err != nil {
+			if values, err = retention.UnpackGrid(packaged.Body); err != nil {
 				return err
 			}
 		case !errors.Is(err, sql.ErrNoRows):
@@ -182,7 +182,7 @@ func sealSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Seri
 }
 
 // writeSeriesDay keeps a day of a series, each value to the series' scale. It reads the day back before it is kept,
-// so a day is never sealed as what cannot be read, or with other values.
+// so a day is never packaged as what cannot be read, or with other values.
 func writeSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Series, date string, values []float64) error {
 	for i, value := range values {
 		values[i] = math.Round(value*series.Scale) / series.Scale
@@ -190,15 +190,15 @@ func writeSeriesDay(ctx context.Context, q *sitedb.Queries, series retention.Ser
 	packed := retention.PackGrid(series, values)
 	read, err := retention.UnpackGrid(packed)
 	if err != nil || !slices.EqualFunc(values, read, func(a, b float64) bool { return a == b || (math.IsNaN(a) && math.IsNaN(b)) }) {
-		return fmt.Errorf("the sealed day of %s does not read back as it was written: %v", series.Name, err)
+		return fmt.Errorf("the packaged day of %s does not read back as it was written: %v", series.Name, err)
 	}
 	return q.UpsertColdDay(ctx, sitedb.UpsertColdDayParams{Kind: series.Name, Date: date, Body: packed})
 }
 
-// sealGlucoseDay writes the glucose series of the UTC day that starts at start, in ms, from its CGM readings: the
+// packageGlucoseDay writes the glucose series of the UTC day that starts at start, in ms, from its CGM readings: the
 // newest reading of the best source in each step. With merge, a reading written since takes its step, and a deleted
 // one clears its step.
-func sealGlucoseDay(ctx context.Context, q *sitedb.Queries, start int64, merge bool) error {
+func packageGlucoseDay(ctx context.Context, q *sitedb.Queries, start int64, merge bool) error {
 	rows, err := q.CGMReadingsOfDay(ctx, sitedb.CGMReadingsOfDayParams{From: start, To: start + dayMs})
 	if err != nil {
 		return err
@@ -215,10 +215,10 @@ func sealGlucoseDay(ctx context.Context, q *sitedb.Queries, start int64, merge b
 	for _, reading := range slices.Backward(glucose.CleanReadings(live)) {
 		points = append(points, point{reading.Row.OccurredAt, reading.Row.Mgdl})
 	}
-	return sealSeriesDay(ctx, q, retention.Glucose, start, merge, cleared, points)
+	return packageSeriesDay(ctx, q, retention.Glucose, start, merge, cleared, points)
 }
 
-// deviceSeries are the series a device report's numbers are sealed into, each with the number of a report it takes.
+// deviceSeries are the series a device report's numbers are packaged into, each with the number of a report it takes.
 // The phone's battery is only the loop's phone's, as a carer's phone reports its own too.
 var deviceSeries = []struct {
 	series retention.Series
@@ -237,10 +237,10 @@ var deviceSeries = []struct {
 	}},
 }
 
-// sealDeviceDay writes the device series of the UTC day that starts at start, in ms, from its device reports: each
+// packageDeviceDay writes the device series of the UTC day that starts at start, in ms, from its device reports: each
 // series a step's newest report with that number. A day keeps the values it has, as its reports are thinned as they
 // age and deleted after a month, and a series no report has a number for is not written.
-func sealDeviceDay(ctx context.Context, q *sitedb.Queries, start int64) error {
+func packageDeviceDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 	rows, err := q.DeviceReportNumbersOfDay(ctx, sitedb.DeviceReportNumbersOfDayParams{From: start, To: start + dayMs})
 	if err != nil {
 		return err
@@ -260,7 +260,7 @@ func sealDeviceDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 		if len(points) == 0 && len(cleared) == 0 {
 			continue
 		}
-		if err := sealSeriesDay(ctx, q, device.series, start, true, cleared, points); err != nil {
+		if err := packageSeriesDay(ctx, q, device.series, start, true, cleared, points); err != nil {
 			return err
 		}
 	}

@@ -16,13 +16,13 @@ type ColdDays struct {
 }
 
 // ColdDay is one kind of data of one UTC day as the site keeps it once its rows are old: what its packed bytes say
-// they are, and what is in them. It is only read: a cold day is written by sealing the day's rows.
+// they are, and what is in them. It is only read: a cold day is written by packaging the day's rows.
 type ColdDay struct {
 	Kind string `json:"kind"`
 	Date string `json:"date"`
-	// Bytes is the size of its packed body, and SealedAt when it was last sealed
+	// Bytes is the size of its packed body, and PackagedAt when it was last packaged
 	Bytes    int64 `json:"bytes"`
-	SealedAt int64 `json:"sealed_at"`
+	PackagedAt int64 `json:"packaged_at"`
 	// Version and Shape are what its first bytes say it is. SecondOrder is whether each value is kept as the change of
 	// its change, and Deflated whether its values are DEFLATE compressed.
 	Version     int    `json:"version"`
@@ -58,7 +58,7 @@ type ColdPoint struct {
 
 // ColdDayFromDB is a cold day as it is shown, with its points when asked for
 func ColdDayFromDB(row *sitedb.ColdDay, points bool) *ColdDay {
-	day := &ColdDay{Kind: row.Kind, Date: row.Date, Bytes: int64(len(row.Body)), SealedAt: row.UpdatedAt}
+	day := &ColdDay{Kind: row.Kind, Date: row.Date, Bytes: int64(len(row.Body)), PackagedAt: row.UpdatedAt}
 	if retention.ShapeOf(row.Body) == retention.EventsShape {
 		header, events, err := retention.ReadEvents(row.Body)
 		if err != nil {

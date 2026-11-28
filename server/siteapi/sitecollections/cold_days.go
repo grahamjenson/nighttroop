@@ -19,7 +19,7 @@ import (
 const coldDaysShown = 100
 
 // coldDaysAdmin is the context of an admin's request to look at the site's cold days, or nil after refusing it. They
-// are only looked at: a cold day is written by sealing its day's rows (see docs/retention.md), so there is no create,
+// are only looked at: a cold day is written by packaging its day's rows (see docs/retention.md), so there is no create,
 // change or delete.
 func coldDaysAdmin(w http.ResponseWriter, r *http.Request) *httputils.SiteContext {
 	return SiteContextFor(w, r, (&sitesettings.SettingsCollection{Site: true}).GetName(), can.ActionGet)

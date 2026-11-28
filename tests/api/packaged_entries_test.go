@@ -21,7 +21,7 @@ import (
 //
 // Where the server deletes the rows of old days, the Nightscout API still gives their CGM readings, made from the
 // days' cold glucose: an app that reads months back gets each 5 minutes, with the rows that are left, each once.
-func TestEntriesOfSealedDaysAreMadeFromColdDays(t *testing.T) {
+func TestEntriesOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	t.Cleanup(func() { cfg.RetentionDeleteRows, cfg.RetentionHotDays = false, retention.DefaultHotDays })
 	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
@@ -141,12 +141,12 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 	status, phone := call("GET", site.SiteDB.Subdomain+".ns.localhost", "/api/v2/authorization/request/token="+site.PwdNSToken, "", "")
 	require.Equal(t, http.StatusOK, status)
 
-	// No day is sealed yet
+	// No day is packaged yet
 	status, none := call("GET", host, "/usage/cold-days", admin, "")
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, map[string]any{"days": []any{}, "total": 0.0, "total_bytes": 0.0}, none["result"])
 
-	// Two readings of a day, at 00:05 and 12:00, and one of the day after, are sealed
+	// Two readings of a day, at 00:05 and 12:00, and one of the day after, are packaged
 	for i, at := range []time.Duration{5 * time.Minute, 12 * time.Hour, 24 * time.Hour} {
 		_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: fmt.Sprint("r", i), Mgdl: float64(100 + 10*i), ReadingType: "sgv", OccurredAt: day.Add(at).UnixMilli(), CreatedByIdentityName: "phone"})
 		require.NoError(t, err)
@@ -164,9 +164,9 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 	first, second := days[0].(map[string]any), days[1].(map[string]any)
 	require.Equal(t, day.AddDate(0, 0, 1).Format(time.DateOnly), first["date"])
 	require.Equal(t, result["total_bytes"], first["bytes"].(float64)+second["bytes"].(float64))
-	sealedAt := second["sealed_at"]
-	require.Positive(t, sealedAt)
-	delete(second, "sealed_at")
+	packagedAt := second["packaged_at"]
+	require.Positive(t, packagedAt)
+	delete(second, "packaged_at")
 	delete(second, "bytes")
 	delete(second, "second_order")
 	delete(second, "deflated")
@@ -199,4 +199,84 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 			require.Contains(t, []int{http.StatusNotFound, http.StatusMethodNotAllowed}, status, method+" "+path)
 		}
 	}
+}
+
+// Where the server deletes the rows of old days, the Nightscout API still gives their treatments, made from the days'
+// cold events: each with its own ID, type, time and values, the newest first with the treatments that are rows.
+func TestTreatmentsOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	t.Cleanup(func() { cfg.RetentionDeleteRows = false })
+	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
+	nsHost := "http://" + site.SiteDB.Subdomain + ".ns.localhost"
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	old, recent := today.AddDate(0, 0, -40), today.AddDate(0, 0, -2)
+	iso := func(at time.Time) string { return at.Format(time.RFC3339) }
+	do := func(method, path, body string) (int, []byte) {
+		req := httptest.NewRequest(method, nsHost+path, strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+		return rr.Code, rr.Body.Bytes()
+	}
+	// 40 days ago: a meal with its bolus, one treatment of two events; a temp target; a site change, which has no
+	// event; and a note. 2 days ago: a correction.
+	status, body := do("POST", "/api/v1/treatments?token="+site.PwdNSToken, `[
+		{"eventType": "Meal Bolus", "carbs": 45, "insulin": 4.5, "notes": "Pasta", "enteredBy": "xDrip", "created_at": "`+iso(old.Add(1*time.Hour))+`"},
+		{"eventType": "Temporary Target", "targetTop": 160, "targetBottom": 140, "units": "mg/dl", "duration": 60, "reason": "Exercise", "created_at": "`+iso(old.Add(2*time.Hour))+`"},
+		{"eventType": "Site Change", "enteredBy": "xDrip", "created_at": "`+iso(old.Add(3*time.Hour))+`"},
+		{"eventType": "Note", "notes": "Felt fine", "created_at": "`+iso(old.Add(4*time.Hour))+`"},
+		{"eventType": "Correction Bolus", "insulin": 1.5, "created_at": "`+iso(recent.Add(time.Hour))+`"}]`)
+	require.Equal(t, http.StatusOK, status, string(body))
+
+	treatments := func(params url.Values) []map[string]any {
+		params.Set("token", site.PwdNSToken)
+		status, body := do("GET", "/api/v1/treatments.json?"+params.Encode(), "")
+		require.Equal(t, http.StatusOK, status, string(body))
+		var found []map[string]any
+		require.NoError(t, json.Unmarshal(body, &found), string(body))
+		return found
+	}
+	// of is what of each treatment a cold event keeps
+	of := func(found []map[string]any) [][]any {
+		kept := [][]any{}
+		for _, treatment := range found {
+			kept = append(kept, []any{treatment["_id"], treatment["eventType"], treatment["created_at"], treatment["carbs"], treatment["insulin"], treatment["notes"],
+				treatment["enteredBy"], treatment["duration"], treatment["targetTop"], treatment["targetBottom"], treatment["reason"]})
+		}
+		return kept
+	}
+	all := url.Values{"count": {"100"}}
+	before := treatments(all)
+	require.Len(t, before, 5)
+
+	// The days are packaged, then the rows of the old day are deleted, as the server will once it deletes treatments
+	cfg.RetentionDeleteRows = true
+	_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	groups, err := q.EventGroupsOfDay(ctx, sitedb.EventGroupsOfDayParams{From: old.UnixMilli(), To: old.Add(24 * time.Hour).UnixMilli()})
+	require.NoError(t, err)
+	require.Len(t, groups, 4)
+	for _, group := range groups {
+		_, err := q.HardDeleteEventGroup(ctx, sitedb.HardDeleteEventGroupParams{ID: group.ID})
+		require.NoError(t, err)
+	}
+	require.Len(t, treatments(url.Values{"count": {"100"}, "find[eventType]": {"Meal Bolus"}, "find[carbs][$gte]": {"1"}}), 0, "a search by carbs is of rows only")
+
+	// A search still has every treatment, the newest first, each as it was: its own ID, and what its events kept
+	found := treatments(all)
+	require.Equal(t, of(before), of(found))
+	require.Equal(t, "Meal Bolus", found[4]["eventType"])
+	require.Equal(t, []any{45.0, 4.5, "Pasta", "xDrip"}, []any{found[4]["carbs"], found[4]["insulin"], found[4]["notes"], found[4]["enteredBy"]})
+
+	// By dates, by type, and a page of them
+	ms := func(at time.Time) string { return fmt.Sprint(at.UnixMilli()) }
+	inRange := treatments(url.Values{"count": {"100"}, "find[created_at][$gte]": {iso(old.Add(90 * time.Minute))}, "find[created_at][$lt]": {iso(old.Add(210 * time.Minute))}})
+	require.Equal(t, [][]any{of(before)[2], of(before)[3]}, of(inRange))
+	require.Equal(t, [][]any{of(before)[3]}, of(treatments(url.Values{"count": {"100"}, "find[eventType]": {"Temporary Target"}})))
+	require.Equal(t, of(before)[1:3], of(treatments(url.Values{"count": {"2"}, "skip": {"1"}})))
+	require.Empty(t, treatments(url.Values{"count": {"100"}, "find[date][$lt]": {ms(old)}}))
+
+	// A server that does not delete rows reads only rows
+	cfg.RetentionDeleteRows = false
+	require.Len(t, treatments(all), 1)
 }

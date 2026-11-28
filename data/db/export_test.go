@@ -43,7 +43,7 @@ func FailSiteIdentitiesAfterAdmin(t *testing.T) {
 	t.Cleanup(func() { createSiteIdentities = (*ControlDB).createSiteDefaultIdentities })
 }
 
-// SealSite is sealSite, for a test to say since when
-func (db *ControlDB) SealSite(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
-	return db.sealSite(ctx, site, since, now)
+// PackageSite is packageSite, for a test to say since when
+func (db *ControlDB) PackageSite(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
+	return db.packageSite(ctx, site, since, now)
 }

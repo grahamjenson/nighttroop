@@ -205,7 +205,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 						}
 						ctx = templ.InitializeContext(ctx)
 						for _, head := range []string{"site.settings.cold_days.date", "site.settings.cold_days.kind", "site.settings.cold_days.shape", "site.settings.cold_days.step",
-							"site.settings.cold_days.values", "site.settings.cold_days.range", "site.settings.cold_days.size", "site.settings.cold_days.sealed"} {
+							"site.settings.cold_days.values", "site.settings.cold_days.range", "site.settings.cold_days.size", "site.settings.cold_days.packaged"} {
 							templ_7745c5c3_Var9 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 								templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 								templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -557,9 +557,9 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 									return templ_7745c5c3_Err
 								}
 								var templ_7745c5c3_Var33 string
-								templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(display.DateTime(&day.SealedAt)).Resolve(ctx)
+								templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(display.DateTime(&day.PackagedAt)).Resolve(ctx)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 137, Col: 53}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 137, Col: 55}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 								if templ_7745c5c3_Err != nil {
@@ -570,9 +570,9 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 									return templ_7745c5c3_Err
 								}
 								var templ_7745c5c3_Var34 string
-								templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, &day.SealedAt, time.Now()))
+								templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, &day.PackagedAt, time.Now()))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 137, Col: 101}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 137, Col: 105}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 								if templ_7745c5c3_Err != nil {
@@ -974,7 +974,7 @@ func ColdDay(day *sitemodels.ColdDay) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = coldFact("site--cold-day--sealed", i18n.T(ctx, "site.settings.cold_days.sealed"), display.DateTime(&day.SealedAt)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = coldFact("site--cold-day--packaged", i18n.T(ctx, "site.settings.cold_days.packaged"), display.DateTime(&day.PackagedAt)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -15,8 +15,8 @@ import (
 	"nighttroop.t1d.nz/utils/settings"
 )
 
-// Sealing a site's day builds its treatment series here, where profiles and temp basals are read, for the DB package
-// that seals, which cannot import this one
+// Packaging a site's day builds its treatment series here, where profiles and temp basals are read, for the DB package
+// that packages, which cannot import this one
 func init() {
 	db.TreatmentDaySeries = treatmentDaySeries
 }
@@ -41,7 +41,7 @@ func treatmentDaySeries(ctx context.Context, q *sitedb.Queries, site *controldb.
 		return nil, err
 	}
 	basalRows, err := q.SearchTempBasals(ctx, sitedb.SearchTempBasalsParams{DateGTE: &start, DateLT: &end, IncludeDeleted: &excludeDeleted, Limit: maxRows})
-	basals, herr := apiutils.Searched(basalRows, err, "sealed temp basals", sitemodels.TempBasalFromDB)
+	basals, herr := apiutils.Searched(basalRows, err, "packaged temp basals", sitemodels.TempBasalFromDB)
 	if herr != nil {
 		return nil, herr
 	}
