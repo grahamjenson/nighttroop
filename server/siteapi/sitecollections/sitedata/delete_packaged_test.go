@@ -151,3 +151,29 @@ func TestDeletingPackagedTreatments(t *testing.T) {
 	require.Equal(t, 40.0, total("carbs", old))
 	require.Len(t, events(old).Events, 7)
 }
+
+// Truncating a site again before its old days have settled, as an admin may, packages them again unchanged, which does
+// not restart their wait, so their rows are still deleted once they settle
+func TestTruncatingAgainDoesNotHoldBackDeletingPackagedRows(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	settle := db.PackagedSettle
+	t.Cleanup(func() { db.PackagedSettle = settle })
+	db.PackagedSettle = 200 * time.Millisecond
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	old := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -40)
+	_, err := q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: "bolus", Dose: 4, OccurredAt: old.Add(5 * time.Hour).UnixMilli(), CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	doses := func() int {
+		_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+		rows, err := q.AllInsulinDoses(ctx, sitedb.AllInsulinDosesParams{Limit: 10})
+		require.NoError(t, err)
+		return len(rows)
+	}
+
+	require.Equal(t, 1, doses(), "packaged, and not yet settled")
+	time.Sleep(120 * time.Millisecond)
+	require.Equal(t, 1, doses(), "truncated again before it settled")
+	time.Sleep(120 * time.Millisecond)
+	require.Equal(t, 0, doses(), "settled since it was first packaged")
+}

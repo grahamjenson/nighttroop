@@ -453,6 +453,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.lastModifiedCollectionsStmt, err = db.PrepareContext(ctx, lastModifiedCollections); err != nil {
 		return nil, fmt.Errorf("error preparing query LastModifiedCollections: %w", err)
 	}
+	if q.lastWrittenOfDayStmt, err = db.PrepareContext(ctx, lastWrittenOfDay); err != nil {
+		return nil, fmt.Errorf("error preparing query LastWrittenOfDay: %w", err)
+	}
 	if q.markColdDaysStaleStmt, err = db.PrepareContext(ctx, markColdDaysStale); err != nil {
 		return nil, fmt.Errorf("error preparing query MarkColdDaysStale: %w", err)
 	}
@@ -1383,6 +1386,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing lastModifiedCollectionsStmt: %w", cerr)
 		}
 	}
+	if q.lastWrittenOfDayStmt != nil {
+		if cerr := q.lastWrittenOfDayStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing lastWrittenOfDayStmt: %w", cerr)
+		}
+	}
 	if q.markColdDaysStaleStmt != nil {
 		if cerr := q.markColdDaysStaleStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing markColdDaysStaleStmt: %w", cerr)
@@ -1915,6 +1923,7 @@ type Queries struct {
 	insulinDoseTotalsStmt                       *sql.Stmt
 	insulinDosesExtendedIntoStmt                *sql.Stmt
 	lastModifiedCollectionsStmt                 *sql.Stmt
+	lastWrittenOfDayStmt                        *sql.Stmt
 	markColdDaysStaleStmt                       *sql.Stmt
 	notificationEventTotalsStmt                 *sql.Stmt
 	oldestGlucoseReadingAtStmt                  *sql.Stmt
@@ -2134,6 +2143,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		insulinDoseTotalsStmt:                       q.insulinDoseTotalsStmt,
 		insulinDosesExtendedIntoStmt:                q.insulinDosesExtendedIntoStmt,
 		lastModifiedCollectionsStmt:                 q.lastModifiedCollectionsStmt,
+		lastWrittenOfDayStmt:                        q.lastWrittenOfDayStmt,
 		markColdDaysStaleStmt:                       q.markColdDaysStaleStmt,
 		notificationEventTotalsStmt:                 q.notificationEventTotalsStmt,
 		oldestGlucoseReadingAtStmt:                  q.oldestGlucoseReadingAtStmt,

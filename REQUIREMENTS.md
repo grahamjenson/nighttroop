@@ -2679,6 +2679,8 @@ days: insulin doses, food intakes, temp basals, temp targets, activities, notes 
 - If `RETENTION_DELETE_ROWS` is `false`, the server deletes none.
 - Only a row whose day's `events` cold day was written after the row was last written is deleted.
 - A row is deleted only when that cold day is 24 hours old.
+  - If a day is packaged again with no change and no row of it written since, its cold days keep their time. A
+    second **Truncate** does not make the wait start again.
 - The day's cold days keep the carbs, the insulin, the basal rate and the events of the deleted rows.
 - A treatment is deleted with its events. An event of a treatment that is not deleted is not deleted.
 - The newest profile switch with no end is not deleted. A profile switch that ends in the hot days is not deleted.

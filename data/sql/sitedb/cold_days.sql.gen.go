@@ -837,6 +837,34 @@ func (q *Queries) HasColdDays(ctx context.Context) (bool, error) {
 	return exists, err
 }
 
+const lastWrittenOfDay = `-- name: LastWrittenOfDay :one
+SELECT CAST(COALESCE(MAX(written.updated_at), 0) AS INTEGER) AS written_at FROM (
+    SELECT glucose_readings.updated_at FROM glucose_readings WHERE glucose_readings.occurred_at >= ?1 AND glucose_readings.occurred_at < ?2
+    UNION ALL SELECT insulin_doses.updated_at FROM insulin_doses WHERE insulin_doses.occurred_at >= ?1 AND insulin_doses.occurred_at < ?2
+    UNION ALL SELECT food_intakes.updated_at FROM food_intakes WHERE food_intakes.occurred_at >= ?1 AND food_intakes.occurred_at < ?2
+    UNION ALL SELECT temp_basals.updated_at FROM temp_basals WHERE temp_basals.occurred_at >= ?1 AND temp_basals.occurred_at < ?2
+    UNION ALL SELECT temp_targets.updated_at FROM temp_targets WHERE temp_targets.occurred_at >= ?1 AND temp_targets.occurred_at < ?2
+    UNION ALL SELECT activities.updated_at FROM activities WHERE activities.occurred_at >= ?1 AND activities.occurred_at < ?2
+    UNION ALL SELECT notification_events.updated_at FROM notification_events WHERE notification_events.occurred_at >= ?1 AND notification_events.occurred_at < ?2
+    UNION ALL SELECT profile_switches.updated_at FROM profile_switches WHERE profile_switches.occurred_at >= ?1 AND profile_switches.occurred_at < ?2
+    UNION ALL SELECT event_groups.updated_at FROM event_groups WHERE event_groups.occurred_at >= ?1 AND event_groups.occurred_at < ?2
+) AS written
+`
+
+type LastWrittenOfDayParams struct {
+	From int64
+	To   int64
+}
+
+// When a row that happened from From to before To, of the tables whose rows are deleted once their cold days have them,
+// was last written, deleted ones too, or 0 for none
+func (q *Queries) LastWrittenOfDay(ctx context.Context, arg LastWrittenOfDayParams) (int64, error) {
+	row := q.queryRow(ctx, q.lastWrittenOfDayStmt, lastWrittenOfDay, arg.From, arg.To)
+	var written_at int64
+	err := row.Scan(&written_at)
+	return written_at, err
+}
+
 const markColdDaysStale = `-- name: MarkColdDaysStale :exec
 UPDATE cold_days SET updated_at = 0 WHERE date = ?1
 `
@@ -985,7 +1013,7 @@ type UpsertColdDayParams struct {
 	Body []byte
 }
 
-// Packaging a day again writes it again, and says when
+// Packaging a day again writes it again, and says when. A day that would be written unchanged is not (see upsertColdDay).
 func (q *Queries) UpsertColdDay(ctx context.Context, arg UpsertColdDayParams) error {
 	_, err := q.exec(ctx, q.upsertColdDayStmt, upsertColdDay, arg.Kind, arg.Date, arg.Body)
 	return err

@@ -184,6 +184,7 @@ Unless `RETENTION_DELETE_ROWS` is `false`, a run deletes the treatments and even
 | A day's `events` cold day is written last, after its treatment series. | It is the mark that the day is packaged. |
 | A row is deleted only if its day's `events` cold day was written after the row was last written. | No row is deleted that its cold days do not have. |
 | A row is deleted only when that cold day is 24 hours old (`db.PackagedSettle`). | A backfill writes a day's rows over some runs. |
+| A cold day packaged again with no change, and no row of its day written since, is not written again. | Its age stays, so a second Truncate does not make the wait start again. |
 | A day older than the hot days, with an `events` cold day 24 hours old, is not packaged again. | Its rows are not all there. |
 | A row written later for such a day stays a row. | The Nightscout API gives it with the day's made treatments. |
 | A treatment is deleted first, then each event that no treatment refers to. | An event of a treatment that stays, stays. |
