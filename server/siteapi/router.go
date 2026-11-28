@@ -2,6 +2,7 @@ package siteapi
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/db"
@@ -121,8 +122,13 @@ func NewSiteRouter(controlDB *db.ControlDB, config *config.ServerConfig) chi.Rou
 		r.Post("/settings/identities/{id}/totp", sitecollections.ResetIdentityTOTPHandler)
 		r.Get("/usage", sitecollections.UsageHandler)
 		// What the site keeps of its old days, to look at only
-		r.Get("/usage/cold-days", sitecollections.ColdDaysHandler)
-		r.Get("/usage/cold-days/{kind}/{date}", sitecollections.ColdDayHandler)
+		r.Get("/cold-storage", sitecollections.ColdStorageHandler)
+		r.Get("/cold-storage/{kind}/{date}", sitecollections.ColdStorageDayHandler)
+		// Cold Storage was Cold Days, under Usage: its old addresses go to it
+		r.Get("/usage/cold-days", http.RedirectHandler("/cold-storage", http.StatusMovedPermanently).ServeHTTP)
+		r.Get("/usage/cold-days/{kind}/{date}", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/cold-storage/"+url.PathEscape(chi.URLParam(r, "kind"))+"/"+url.PathEscape(chi.URLParam(r, "date")), http.StatusMovedPermanently)
+		})
 		r.Post("/usage/truncate", sitecollections.TruncateHandler)
 		r.Get("/usage/download", sitecollections.DownloadDataHandler)
 		r.Post("/settings/site/delete", sitecollections.DeleteSiteHandler)

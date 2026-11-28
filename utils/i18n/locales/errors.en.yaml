@@ -29,6 +29,7 @@ errors:
   site:
     delete_needs_s3: "a site can only be deleted when its data can be archived to S3"
     backfill_off: "turn on and save this connector before backfilling it"
+    cold_storage_date: "a date to filter by is a day, as 2026-01-31"
     no_push_credential: "there is no push credential for the app {{.App}}: add one in Push Credentials"
     max_push_credentials: "a site can have at most {{.Max}} push credentials"
     email_off: "this server does not send email, so a site cannot have one"

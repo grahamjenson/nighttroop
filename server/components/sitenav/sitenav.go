@@ -26,13 +26,15 @@ const (
 	Alarms     Hub = "site.nav.hubs.alarms"
 	Logs       Hub = "site.nav.hubs.logs"
 	Usage      Hub = "site.nav.hubs.usage"
+	// ColdStorage is a hub of its own page, what the site keeps of its old days, so the account menu opens it
+	ColdStorage Hub = "site.nav.hubs.cold_storage"
 )
 
 // HeaderHubs are the hubs the header links to, in its order
 var HeaderHubs = []Hub{Data, Reports}
 
 // MenuHubs are the hubs the account menu opens, in its order
-var MenuHubs = []Hub{Settings, Connectors, Alarms, Logs, Usage}
+var MenuHubs = []Hub{Settings, Connectors, Alarms, Logs, Usage, ColdStorage}
 
 // Slug is the last part of the hub's message id, naming it in IDs, e.g. site--nav--menu--logs
 func (h Hub) Slug() string {
@@ -99,9 +101,8 @@ var Pages = []Page{
 
 	// Usage is a hub of its own page, the site's DB size and a download of it, for its admins
 	{Hub: Usage, Group: "site.nav.groups.this_site", Label: "site.nav.pages.usage", Path: "/usage", ID: "site--usage-button", Icon: icon.HardDrive, Store: "site_settings"},
-	// Cold Days is what the site keeps of its old days, for its admins to look at
-	{Hub: Usage, Group: "site.nav.groups.this_site", Label: "site.nav.pages.cold_days", Path: "/usage/cold-days", ID: "site--cold-days-button", Icon: icon.Layers, Store: "site_settings",
-		Within: []string{"/usage/cold-days"}},
+	// Cold Storage is a hub of its own page, what the site keeps of its old days, for its admins to look at
+	{Hub: ColdStorage, Group: "site.nav.groups.this_site", Label: "site.nav.pages.cold_storage", Path: "/cold-storage", ID: "site--cold-storage-button", Icon: icon.Archive, Store: "site_settings"},
 }
 
 // keywords are the headings and words on a page, by its path, that the search also finds it by, showing the one found:
@@ -122,6 +123,7 @@ var keywords = map[string][]string{
 	"/reports/agp":               {"site.nav.keywords.ambulatory_glucose_profile", "site.nav.keywords.time_in_range"},
 	"/reports/tdd":               {"site.nav.keywords.total_daily_dose"},
 	"/settings":                  {"site.nav.keywords.units", "mmol/L", "mg/dL", "site.nav.keywords.timezone", "site.nav.keywords.language", "site.nav.keywords.date_format", "site.nav.keywords.time_format", "site.nav.keywords.week_starts_on", "site.nav.keywords.number_format", "site.nav.keywords.password_totp", "site.nav.keywords.delete_site"},
+	"/cold-storage":              {"site.nav.keywords.cold_days", "site.nav.keywords.packaged_days"},
 	"/usage":                     {"site.nav.keywords.db_size", "site.nav.keywords.storage", "site.nav.keywords.truncate", "site.nav.keywords.download_data"},
 	"/settings/alarms":           {"site.nav.keywords.low_alarm", "site.nav.keywords.urgent_low_alarm", "site.nav.keywords.predicted_low_alarm", "site.nav.keywords.high_alarm", "site.nav.keywords.urgent_high_alarm", "site.nav.keywords.fast_drop_alarm", "site.nav.keywords.fast_rise_alarm", "site.nav.keywords.no_data_alarm"},
 	"/settings/identities":       {"site.nav.keywords.admins", "site.nav.keywords.read_only", "site.nav.keywords.pwd_phone"},
@@ -203,7 +205,7 @@ func Visible(identity *controldb.SiteIdentity, hubs ...Hub) []Page {
 
 // settingsTabs are the hubs whose pages are all tabs beside each other, as Settings' side tabs: the site is set up on
 // every one of them, so each is one click from the others, though the account menu opens each too
-var settingsTabs = []Hub{Settings, Connectors, Alarms, Usage}
+var settingsTabs = []Hub{Settings, Connectors, Alarms, Usage, ColdStorage}
 
 // TabsHub is the hub whose tabs show beside a page of hub: Settings for each of settingsTabs, and otherwise its own
 func TabsHub(hub Hub) Hub {

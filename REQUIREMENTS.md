@@ -2614,15 +2614,26 @@ Before it backs up a site written to, at most every hour, the server packages th
   - If a reading of such a day is deleted, its 5-minute step is cleared.
 - Each table of a site DB has a retention policy (`data/retention`). A table with no policy fails a test.
 
-#### Cold Days page
+#### Cold Storage page
 
-- Cold Days (Settings side tabs, below Usage; also found by the page search) is for a site's admins. Other
-  identities do not see it (403 from the API).
-- It lists the site's cold days, newest first: the UTC date, the kind (example: `glucose`), the shape and version,
-  the step, how many steps have a value, the least and greatest value, the size in bytes, and when it was packaged.
-- It shows how many cold days the site has and their total size.
+- Cold Storage (in the account menu, and in the Settings side tabs below Usage; also found by the page search) is for
+  a site's admins. Other identities do not see it (403 from the API).
+- It is at `/cold-storage`. The old address, `/usage/cold-days`, and an old address of a day go to it (301).
+- It lists the site's cold days in a table, as the Data pages do: the UTC date, the kind (example: `glucose`), the
+  shape and version, the step, how many steps have a value, the least and greatest value, the size in bytes, and when
+  it was packaged.
+- It shows how many cold days the filter has and their total size.
 - If no day is packaged, it says so and says when a day is packaged.
-- It shows 100 cold days. **Older** and **Newer** move through them (`limit`, at most 1000, and `skip`).
+- Filters, above the table:
+  - **Kind:** all kinds, or one kind the site has (`kind`).
+  - **After** and **Before:** only the UTC days after a date (`date_gt`) or before a date (`date_lt`). The days of
+    those dates are not included.
+  - **Filter** applies them. **Clear** removes them.
+  - If a date is not a day (example: `2026-13-01`), the API returns 400.
+  - If no day matches, it says "No day matches the filter."
+- **Newest first** and **Oldest first** sort the days by date (`order=oldest`). The filter stays.
+- It shows 100 cold days. The pager moves through them (`limit`, at most 1000, and `skip`). The filter and the order
+  stay.
 - A day of kind `events` shows shape `events`, how many events it has, and no step.
   - Opened, it shows each event: its UTC time, its table, and its kept columns as JSON.
   - If something was in force when the day started, it shows that first, each with its UTC date and time.
@@ -2632,7 +2643,7 @@ Before it backs up a site written to, at most every hour, the server packages th
 - If the server cannot read a day's bytes (example: a version it does not know), the row and the day say "Not
   readable by this server".
 - A kind and date with no cold day is 404.
-- The page is read only. It has no form and no button, and there is no API to create, change or delete a cold day.
+- The page is read only. Its only form is the filter, and there is no API to create, change or delete a cold day.
 
 #### Entries of packaged days
 
