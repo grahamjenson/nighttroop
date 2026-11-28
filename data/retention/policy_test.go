@@ -22,7 +22,7 @@ func TestEveryTableHasAPolicy(t *testing.T) {
 		policy, ok := retention.Policies[table.Name]
 		require.True(t, ok, "%s has no retention policy", table.Name)
 		if policy.Shape == retention.SeriesShape {
-			require.NotEmpty(t, policy.Series, "%s is deleted once its day is sealed, so it must fold into a series", table.Name)
+			require.NotEmpty(t, policy.Series, "%s is deleted once its day is packaged, so it must fold into a series", table.Name)
 			require.NotEmpty(t, policy.Lost, "%s must say what is lost", table.Name)
 		}
 	}

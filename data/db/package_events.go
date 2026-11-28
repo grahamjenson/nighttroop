@@ -120,12 +120,12 @@ func inForce(ctx context.Context, q *sitedb.Queries, start int64) ([]map[string]
 	return events, nil
 }
 
-// sealEventsDay writes the events of the UTC day that starts at start, in ms, from its rows, the oldest first: each
+// packageEventsDay writes the events of the UTC day that starts at start, in ms, from its rows, the oldest first: each
 // row that is an event, with what its treatment says of it (who entered it, as what) where it has none, and each
 // treatment with no event, as a site change is, and before them what was in force when the day started (inForce).
 // They are built from the rows alone, as no event row is deleted yet. A day with no event and nothing in force is
-// written only to empty one that had some, and a day whose events are more than a cold day holds is not sealed.
-func sealEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
+// written only to empty one that had some, and a day whose events are more than a cold day holds is not packaged.
+func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 	groups, err := q.EventGroupsOfDay(ctx, sitedb.EventGroupsOfDayParams{From: start, To: start + dayMs})
 	if err != nil {
 		return err
@@ -178,11 +178,11 @@ func sealEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 		return err
 	}
 	if len(packed) > maxEventsBody {
-		slog.WarnContext(ctx, "A day has more events than a cold day holds, so it is not sealed", "date", date, "events", len(events), "bytes", len(packed))
+		slog.WarnContext(ctx, "A day has more events than a cold day holds, so it is not packaged", "date", date, "events", len(events), "bytes", len(packed))
 		return nil
 	}
 	if _, read, err := retention.ReadEvents(packed); err != nil || len(read.Events) != len(events) || len(read.InForce) != len(before) {
-		return fmt.Errorf("the sealed events do not read back as they were written: %v", err)
+		return fmt.Errorf("the packaged events do not read back as they were written: %v", err)
 	}
 	return q.UpsertColdDay(ctx, sitedb.UpsertColdDayParams{Kind: retention.EventsKind, Date: date, Body: packed})
 }

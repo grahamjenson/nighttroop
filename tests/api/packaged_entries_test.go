@@ -21,7 +21,7 @@ import (
 //
 // Where the server deletes the rows of old days, the Nightscout API still gives their CGM readings, made from the
 // days' cold glucose: an app that reads months back gets each 5 minutes, with the rows that are left, each once.
-func TestEntriesOfSealedDaysAreMadeFromColdDays(t *testing.T) {
+func TestEntriesOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	t.Cleanup(func() { cfg.RetentionDeleteRows, cfg.RetentionHotDays = false, retention.DefaultHotDays })
 	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
@@ -141,12 +141,12 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 	status, phone := call("GET", site.SiteDB.Subdomain+".ns.localhost", "/api/v2/authorization/request/token="+site.PwdNSToken, "", "")
 	require.Equal(t, http.StatusOK, status)
 
-	// No day is sealed yet
+	// No day is packaged yet
 	status, none := call("GET", host, "/usage/cold-days", admin, "")
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, map[string]any{"days": []any{}, "total": 0.0, "total_bytes": 0.0}, none["result"])
 
-	// Two readings of a day, at 00:05 and 12:00, and one of the day after, are sealed
+	// Two readings of a day, at 00:05 and 12:00, and one of the day after, are packaged
 	for i, at := range []time.Duration{5 * time.Minute, 12 * time.Hour, 24 * time.Hour} {
 		_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: fmt.Sprint("r", i), Mgdl: float64(100 + 10*i), ReadingType: "sgv", OccurredAt: day.Add(at).UnixMilli(), CreatedByIdentityName: "phone"})
 		require.NoError(t, err)
@@ -164,9 +164,9 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 	first, second := days[0].(map[string]any), days[1].(map[string]any)
 	require.Equal(t, day.AddDate(0, 0, 1).Format(time.DateOnly), first["date"])
 	require.Equal(t, result["total_bytes"], first["bytes"].(float64)+second["bytes"].(float64))
-	sealedAt := second["sealed_at"]
-	require.Positive(t, sealedAt)
-	delete(second, "sealed_at")
+	packagedAt := second["packaged_at"]
+	require.Positive(t, packagedAt)
+	delete(second, "packaged_at")
 	delete(second, "bytes")
 	delete(second, "second_order")
 	delete(second, "deflated")
@@ -203,7 +203,7 @@ func TestColdDaysAreLookedAtByAnAdmin(t *testing.T) {
 
 // Where the server deletes the rows of old days, the Nightscout API still gives their treatments, made from the days'
 // cold events: each with its own ID, type, time and values, the newest first with the treatments that are rows.
-func TestTreatmentsOfSealedDaysAreMadeFromColdDays(t *testing.T) {
+func TestTreatmentsOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	t.Cleanup(func() { cfg.RetentionDeleteRows = false })
 	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
@@ -249,7 +249,7 @@ func TestTreatmentsOfSealedDaysAreMadeFromColdDays(t *testing.T) {
 	before := treatments(all)
 	require.Len(t, before, 5)
 
-	// The days are sealed, then the rows of the old day are deleted, as the server will once it deletes treatments
+	// The days are packaged, then the rows of the old day are deleted, as the server will once it deletes treatments
 	cfg.RetentionDeleteRows = true
 	_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)

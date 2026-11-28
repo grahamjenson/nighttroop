@@ -14,10 +14,10 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A site's ended days are sealed: each day's CGM glucose becomes one row of cold_days, a value every 5 minutes. Its
+// A site's ended days are packaged: each day's CGM glucose becomes one row of cold_days, a value every 5 minutes. Its
 // rows stay until the server deletes rows, and then only those older than its hot days go, and only those their cold
 // day has. A day whose rows are gone still takes a late reading, and loses a deleted one.
-func TestSealingASitesGlucose(t *testing.T) {
+func TestPackagingASitesGlucose(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	t.Cleanup(func() { cfg.RetentionDeleteRows, cfg.RetentionHotDays = false, retention.DefaultHotDays })
 	ctx, q, siteID := t.Context(), site.SiteDB.Queries(), site.SiteDB.Subdomain
@@ -51,8 +51,8 @@ func TestSealingASitesGlucose(t *testing.T) {
 	reading("recent", recent.Add(24*time.Hour-time.Second), 180, nil)
 	reading("today", today.Add(time.Minute), 190, nil)
 
-	// sealed is a day's glucose by its 5 minute step, without the steps with none, or nil when the day is not sealed
-	sealed := func(day time.Time) map[int]float64 {
+	// packaged is a day's glucose by its 5 minute step, without the steps with none, or nil when the day is not packaged
+	packaged := func(day time.Time) map[int]float64 {
 		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "glucose", Date: day.Format(time.DateOnly)})
 		if err != nil {
 			return nil
@@ -78,45 +78,45 @@ func TestSealingASitesGlucose(t *testing.T) {
 		}
 		return ids
 	}
-	seal := func() {
+	packageDays := func() {
 		_, err := controlDB.TruncateSite(ctx, siteID)
 		require.NoError(t, err)
 	}
 
-	// Sealing writes each ended day, in whole mg/dL, and deletes no row
+	// Packaging writes each ended day, in whole mg/dL, and deletes no row
 	before := rows()
-	seal()
-	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 48: 140, 60: 150}, sealed(old))
-	require.Equal(t, map[int]float64{287: 180}, sealed(recent))
-	require.Nil(t, sealed(today), "today has not ended")
+	packageDays()
+	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 48: 140, 60: 150}, packaged(old))
+	require.Equal(t, map[int]float64{287: 180}, packaged(recent))
+	require.Nil(t, packaged(today), "today has not ended")
 	require.Equal(t, before, rows())
 
 	// With rows deleted, the CGM readings older than the hot days go: not a hot day's, a meter's, one with a note, or
 	// one a treatment refers to. The deleted reading, which was read as deleted, goes too.
 	cfg.RetentionDeleteRows = true
-	seal()
+	packageDays()
 	require.ElementsMatch(t, []string{"noted", "treated", "meter", "recent", "today"}, rows())
-	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 48: 140, 60: 150}, sealed(old), "the day is as it was sealed")
+	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 48: 140, 60: 150}, packaged(old), "the day is as it was packaged")
 
 	// A reading written late for that day, as a backfill does, is added to it, and the day keeps what it had. A
 	// reading of it then deleted clears its step.
 	reading("late", old.Add(7*time.Hour), 170, nil)
 	_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: "noted"})
 	require.NoError(t, err)
-	seal()
-	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 60: 150, 84: 170}, sealed(old))
+	packageDays()
+	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 60: 150, 84: 170}, packaged(old))
 	require.NotContains(t, rows(), "late")
 
 	// Fewer hot days delete the readings of 2 days ago too, and their day is as it was
 	cfg.RetentionHotDays = 1
-	seal()
+	packageDays()
 	require.NotContains(t, rows(), "recent")
 	require.Contains(t, rows(), "today")
-	require.Equal(t, map[int]float64{287: 180}, sealed(recent))
+	require.Equal(t, map[int]float64{287: 180}, packaged(recent))
 }
 
-// A run seals the days written since the run before, but all the days of a site never sealed
-func TestSealingOnlyTheDaysWritten(t *testing.T) {
+// A run packages the days written since the run before, but all the days of a site never packaged
+func TestPackagingOnlyTheDaysWritten(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
 	today := time.Now().UTC().Truncate(24 * time.Hour)
@@ -124,26 +124,26 @@ func TestSealingOnlyTheDaysWritten(t *testing.T) {
 		_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: id, Mgdl: 120, ReadingType: "sgv", OccurredAt: today.AddDate(0, 0, -daysAgo).UnixMilli(), CreatedByIdentityName: "phone"})
 		require.NoError(t, err)
 	}
-	isSealed := func(daysAgo int) bool {
+	isPackaged := func(daysAgo int) bool {
 		_, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "glucose", Date: today.AddDate(0, 0, -daysAgo).Format(time.DateOnly)})
 		return err == nil
 	}
-	// A run that looks at nothing written before an hour from now still seals all of a site never sealed
+	// A run that looks at nothing written before an hour from now still packages all of a site never packaged
 	later := time.Now().Add(time.Hour).UnixMilli()
 	write("a", 400)
 	write("b", 3)
-	require.NoError(t, controlDB.SealSite(ctx, site.SiteDB, later, time.Now()))
-	require.True(t, isSealed(400) && isSealed(3))
+	require.NoError(t, controlDB.PackageSite(ctx, site.SiteDB, later, time.Now()))
+	require.True(t, isPackaged(400) && isPackaged(3))
 
-	// Once sealed, a run seals only the days written since: not one written before, but it with a run that looks back
+	// Once packaged, a run packages only the days written since: not one written before, but it with a run that looks back
 	write("c", 5)
-	require.NoError(t, controlDB.SealSite(ctx, site.SiteDB, later, time.Now()))
-	require.False(t, isSealed(5))
-	require.NoError(t, controlDB.SealSite(ctx, site.SiteDB, time.Now().Add(-time.Hour).UnixMilli(), time.Now()))
-	require.True(t, isSealed(5))
+	require.NoError(t, controlDB.PackageSite(ctx, site.SiteDB, later, time.Now()))
+	require.False(t, isPackaged(5))
+	require.NoError(t, controlDB.PackageSite(ctx, site.SiteDB, time.Now().Add(-time.Hour).UnixMilli(), time.Now()))
+	require.True(t, isPackaged(5))
 }
 
-// The readings of sealed days are read back the newest first, across as many days as are asked for, within the times
+// The readings of packaged days are read back the newest first, across as many days as are asked for, within the times
 // asked, and only those the caller keeps
 func TestColdGlucoseReadings(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
@@ -158,7 +158,7 @@ func TestColdGlucoseReadings(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
-	require.NoError(t, controlDB.SealSite(ctx, site.SiteDB, 0, time.Now()))
+	require.NoError(t, controlDB.PackageSite(ctx, site.SiteDB, 0, time.Now()))
 	every := func(int64, float64) bool { return true }
 	read := func(from, to time.Time, limit int, keep func(int64, float64) bool) []*sitedb.GlucoseReading {
 		readings, err := db.ColdGlucoseReadings(ctx, q, from.UnixMilli(), to.UnixMilli(), limit, keep)
@@ -187,10 +187,10 @@ func TestColdGlucoseReadings(t *testing.T) {
 	require.Empty(t, read(first.AddDate(-1, 0, 0), first, 100, every))
 }
 
-// What a loop's phone reports is sealed as series: its IOB and COB every 5 minutes, and the pump's reservoir and the
-// batteries every hour, each a step's newest report. Today is sealed too, and a day keeps what it has once its
+// What a loop's phone reports is packaged as series: its IOB and COB every 5 minutes, and the pump's reservoir and the
+// batteries every hour, each a step's newest report. Today is packaged too, and a day keeps what it has once its
 // reports are thinned.
-func TestSealingDeviceReports(t *testing.T) {
+func TestPackagingDeviceReports(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
 	today := time.Now().UTC().Truncate(24 * time.Hour)
@@ -247,7 +247,7 @@ func TestSealingDeviceReports(t *testing.T) {
 	require.Equal(t, map[int]float64{0: 139, 1: 127}, series("pump_reservoir", day))
 	require.Equal(t, map[int]float64{0: 80, 1: 80}, series("pump_battery", day))
 	require.Equal(t, map[int]float64{0: 49, 1: 37}, series("phone_battery", day))
-	// Today is sealed as far as it has got
+	// Today is packaged as far as it has got
 	nowStep := int(now.Add(-time.Minute).Sub(now.Add(-time.Minute).Truncate(24*time.Hour)) / (5 * time.Minute))
 	require.Equal(t, map[int]float64{nowStep: 3.33}, series("iob", now.Add(-time.Minute)))
 	require.Equal(t, 100.0, series("pump_reservoir", now.Add(-time.Minute))[now.Add(-time.Minute).Hour()])
@@ -255,7 +255,7 @@ func TestSealingDeviceReports(t *testing.T) {
 	require.Nil(t, series("iob", day.AddDate(0, 0, -1)))
 	require.Nil(t, series("glucose", day))
 
-	// Truncating thinned the old day's reports to fewer, after it was sealed: the day keeps every value, and sealing
+	// Truncating thinned the old day's reports to fewer, after it was packaged: the day keeps every value, and packaging
 	// it again, when its rows are written, keeps them too
 	rows, err := q.DeviceReportNumbersOfDay(ctx, sitedb.DeviceReportNumbersOfDayParams{From: day.UnixMilli(), To: day.Add(24 * time.Hour).UnixMilli()})
 	require.NoError(t, err)

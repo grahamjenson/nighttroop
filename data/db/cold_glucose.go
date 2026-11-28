@@ -45,10 +45,10 @@ func eachColdDay(ctx context.Context, q *sitedb.Queries, kind string, from, to i
 	return nil
 }
 
-// ColdGlucoseReadings are the CGM readings of the site's sealed days from from up to, not including, to, in ms, the
+// ColdGlucoseReadings are the CGM readings of the site's packaged days from from up to, not including, to, in ms, the
 // newest first, at most limit of them: one for each step of a day's glucose series that has a value and that keep
 // takes, at the start of its step. They are made as rows are, so what reads rows reads them, but they are not in the
-// DB: a day's rows are deleted once they are old (see sealSite), and its cold day is what is left of them.
+// DB: a day's rows are deleted once they are old (see packageSite), and its cold day is what is left of them.
 func ColdGlucoseReadings(ctx context.Context, q *sitedb.Queries, from, to int64, limit int, keep func(at int64, mgdl float64) bool) ([]*sitedb.GlucoseReading, error) {
 	var readings []*sitedb.GlucoseReading
 	// A day has at most 288 readings every 5 minutes, and most have fewer
@@ -71,9 +71,9 @@ func ColdGlucoseReadings(ctx context.Context, q *sitedb.Queries, from, to int64,
 	return readings, err
 }
 
-// ColdEvents are the events of the site's sealed days from from up to, not including, to, in ms, the newest first, at
+// ColdEvents are the events of the site's packaged days from from up to, not including, to, in ms, the newest first, at
 // most limit of them, that keep takes: each as it is kept, the columns of its row by their names, with "k", its table
-// (see sealEventsDay). What was in force when a day started is not one of its events.
+// (see packageEventsDay). What was in force when a day started is not one of its events.
 func ColdEvents(ctx context.Context, q *sitedb.Queries, from, to int64, limit int, keep func(event map[string]any) bool) ([]map[string]any, error) {
 	var events []map[string]any
 	err := eachColdDay(ctx, q, retention.EventsKind, from, to, 10, func() int { return limit - len(events) }, func(_ int64, body []byte) error {

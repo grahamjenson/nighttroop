@@ -2552,16 +2552,16 @@ With `S3_URL`:
   - Loop's indefinite duration.
   - A device status's pump and uploader, for fields with no column that Nightguard shows (e.g. AAPS's extended).
 
-#### Sealing of old days
+#### Packaging of old days
 
-Before it backs up a site written to, at most every hour, the server seals the site's days. See `docs/retention.md`.
+Before it backs up a site written to, at most every hour, the server packages the site's days. See `docs/retention.md`.
 
 - Each UTC day that ended has one `cold_days` row for its CGM glucose: one value for each 5 minutes, in whole
   mg/dL, or none.
   - A 5-minute step holds its newest CGM reading. If two sources read the same glucose, the step holds the
     reading of the best source (as the glucose page shows it).
   - A deleted reading, and a meter reading, are not in it.
-  - Today is not sealed.
+  - Today is not packaged.
 - Each UTC day with a device status has one `cold_days` row for each number its statuses have:
 
   | Kind | Step | Kept to | From |
@@ -2573,8 +2573,8 @@ Before it backs up a site written to, at most every hour, the server seals the s
   | `phone_battery` | 1 hour | 1 % | The battery of the loop's phone, not of a phone with no loop |
 
   - A step holds the number of its newest device status.
-  - Today is sealed too, as far as it is.
-  - The site is sealed before its device statuses are thinned. A day keeps its values after its device statuses are
+  - Today is packaged too, as far as it is.
+  - The site is packaged before its device statuses are thinned. A day keeps its values after its device statuses are
     thinned or deleted, and gets the values of a device status written late.
   - A kind with no number in a day has no row.
 - Each UTC day that ended has one `cold_days` row for each kind of treatment it has, a value for each 5 minutes:
@@ -2591,8 +2591,8 @@ Before it backs up a site written to, at most every hour, the server seals the s
   - A step with no insulin or no carbs has no value. A day with no profile has no `basal_rate`.
   - The total of a day's `basal_rate` divided by 12, with `insulin_basal`, is the day's basal. The total of
     `insulin_bolus` is its boluses.
-  - The last 2 days that ended are sealed in each run, and each day with a treatment written since the run before.
-  - If a treatment is deleted, its day is sealed again without it.
+  - The last 2 days that ended are packaged in each run, and each day with a treatment written since the run before.
+  - If a treatment is deleted, its day is packaged again without it.
 - Each UTC day that ended and has events has one `cold_days` row of kind `events`: a list, oldest first.
   - Events are: a meter reading; a CGM reading with a note; a food intake; an insulin dose a loop did not give;
     a temp target; a profile switch; an activity; a notification; a treatment with no event (example: a site change).
@@ -2607,15 +2607,15 @@ Before it backs up a site written to, at most every hour, the server seals the s
     started. These are the newest profile switch with no end, each newer profile switch that is not over, and
     the newest temp target if it is not over.
   - A day with no event of its own has a row if something is in force when it starts.
-  - If an event is deleted, its day is sealed again without it.
+  - If an event is deleted, its day is packaged again without it.
 - The body of a row is packed bytes. Its first bytes say its version (1) and its shape (series), and its step and
   scale. A body with a version or a shape the server does not know is an error.
-- A run seals only the days that had a CGM reading written, changed or deleted since the run before. A site that
-  was never sealed has all its days sealed. The **Truncate** button seals all days.
+- A run packages only the days that had a CGM reading written, changed or deleted since the run before. A site that
+  was never packaged has all its days packaged. The **Truncate** button packages all days.
 - If `RETENTION_DELETE_ROWS` is not `true` (the default), the server deletes no reading.
 - If `RETENTION_DELETE_ROWS` is `true`, the server deletes the CGM readings older than `RETENTION_HOT_DAYS` days
   (default 31, minimum 3).
-  - Only a reading whose day was sealed after the reading was last written is deleted.
+  - Only a reading whose day was packaged after the reading was last written is deleted.
   - Kept as rows: a meter reading, a reading with a note, and a reading a treatment refers to.
   - If a reading is written late for a day whose rows are deleted, the day keeps its values and gets the new one.
   - If a reading of such a day is deleted, its 5-minute step is cleared.
@@ -2626,22 +2626,22 @@ Before it backs up a site written to, at most every hour, the server seals the s
 - Cold Days (Settings side tabs, below Usage; also found by the page search) is for a site's admins. Other
   identities do not see it (403 from the API).
 - It lists the site's cold days, newest first: the UTC date, the kind (example: `glucose`), the shape and version,
-  the step, how many steps have a value, the least and greatest value, the size in bytes, and when it was sealed.
+  the step, how many steps have a value, the least and greatest value, the size in bytes, and when it was packaged.
 - It shows how many cold days the site has and their total size.
-- If no day is sealed, it says so and says when a day is sealed.
+- If no day is packaged, it says so and says when a day is packaged.
 - It shows 100 cold days. **Older** and **Newer** move through them (`limit`, at most 1000, and `skip`).
 - A day of kind `events` shows shape `events`, how many events it has, and no step.
   - Opened, it shows each event: its UTC time, its table, and its kept columns as JSON.
   - If something was in force when the day started, it shows that first, each with its UTC date and time.
 - A date opens the day: its version, shape, packing (change or change of change, with DEFLATE or not), step,
-  scale, values, size and sealed time, then each value with the UTC time its step starts.
+  scale, values, size and packaged time, then each value with the UTC time its step starts.
   - A value shows as the number that is kept. Glucose is in mg/dL, whatever the units of the site.
 - If the server cannot read a day's bytes (example: a version it does not know), the row and the day say "Not
   readable by this server".
 - A kind and date with no cold day is 404.
 - The page is read only. It has no form and no button, and there is no API to create, change or delete a cold day.
 
-#### Entries of sealed days
+#### Entries of packaged days
 
 If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries` of the days older than
 `RETENTION_HOT_DAYS` from `cold_days`.
@@ -2657,7 +2657,7 @@ If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries`
 - A made entry is not found by its `_id` (404).
 - If `RETENTION_DELETE_ROWS` is not `true`, a search reads rows only.
 
-#### Treatments of sealed days
+#### Treatments of packaged days
 
 If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the `treatments` of the days older than
 `RETENTION_HOT_DAYS` from the days' cold events. No treatment row is deleted yet, so this shows only when a

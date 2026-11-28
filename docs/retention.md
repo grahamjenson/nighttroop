@@ -1,8 +1,8 @@
 # Retention: hot rows and cold days
 
-**Status:** steps 1 to 4d are built, but the delete of treatment rows (4e). The server seals the CGM glucose of each day, what a loop's phone reports
+**Status:** steps 1 to 4d are built, but the delete of treatment rows (4e). The server packages the CGM glucose of each day, what a loop's phone reports
 (IOB, COB, reservoir, batteries), the treatments (basal rate, insulin, carbs), and the day's events into
-`cold_days`. The Nightscout API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
+`cold_days`. The Nightscout API makes `entries` from packaged days. It deletes no row unless `RETENTION_DELETE_ROWS` is
 `true`. The other steps are the plan. See [Build order](#build-order).
 
 ## The problem, measured
@@ -41,7 +41,8 @@ A site's data has two forms.
 | **Hot rows** | The tables of today: one row for each record, as the app sent it, with indexes | The last 31 days (`RETENTION_HOT_DAYS`): what apps sync, and what a person edits |
 | **Cold days** | One row for each kind of data for each UTC day, as packed bytes | All days: what a person looks back at |
 
-To **seal** a day is to write its cold days from its hot rows. A day is sealed after it ends, and again when
+To **package** a day is to write its cold days from its hot rows. A packaged day is not final: it is written again
+when its rows change. (To **pack** is a different word here: it is how the values of a day become bytes.) A day is packaged after it ends, and again when
 its rows change. The rows are deleted when they are older than the hot days. One job does it, for all tables,
 from one table of policies.
 
@@ -53,7 +54,7 @@ from one table of policies.
 
 ## Five rules
 
-1. **Each table has a shape.** The shape is the form its rows take in a cold day, and says what sealing does. A
+1. **Each table has a shape.** The shape is the form its rows take in a cold day, and says what packaging does. A
    table with no policy fails a test (`TestEveryTableHasAPolicy`), so a new table needs a decision.
 2. **A cold day is the truth, not a summary.** Reports, statistics and charts are built from cold days and can be
    built again at any time. There is no "frozen" summary that cannot be made again.
@@ -64,12 +65,12 @@ from one table of policies.
 
 ## Shapes
 
-| Shape | What it is | Sealing does | Tables |
+| Shape | What it is | Packaging does | Tables |
 | --- | --- | --- | --- |
 | `series` | A number on a clock: a CGM's glucose, a loop's IOB | Folds the rows into series on a grid | `glucose_readings`, `temp_basals`, `device_reports` |
 | `events` | What a person did or decided, a few each day | Puts the rows into the day's event list, with the columns the policy keeps. Folds numbers into series. | `insulin_doses`, `food_intakes`, `activities`, `temp_targets`, `profile_switches`, `notification_events`, `event_groups` |
 | `dictionary` | A value many records repeat | Kept one time, by its hash, while a record refers to it | `loop_settings` |
-| `config` | A list a person manages | Never sealed | `food_presets`, `profile_presets`, `general_settings` |
+| `config` | A list a person manages | Never packaged | `food_presets`, `profile_presets`, `general_settings` |
 | `derived` | Built from the other tables | A cache. Built again when needed. | `summary_period` |
 | `cold` | The cold days | Already small | `cold_days` |
 
@@ -88,7 +89,7 @@ CREATE TABLE cold_days (
     date TEXT NOT NULL CHECK(length(date) = 10),   -- the UTC day
     body BLOB NOT NULL CHECK(length(body) <= 16384),
     created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,                   -- when it was last sealed
+    updated_at INTEGER NOT NULL,                   -- when it was last packaged
     PRIMARY KEY (kind, date)
 ) STRICT;
 ```
@@ -112,7 +113,7 @@ A cold day is kept for years, so each body says what it is.
 - A body is read by what it says it is, not by what the policy is now. If the step of a series changes later,
   old days are still read with their own step.
 - To change the form, add a version and read each old version as it was written. Never change what an old
-  version means. A day gets the new version only when it is sealed again.
+  version means. A day gets the new version only when it is packaged again.
 - A body with a version, a shape or a packing the code does not know is an error, not a day of wrong numbers.
 
 ### A series
@@ -165,13 +166,13 @@ A treatment and its `event_groups` row become one entry.
 
 - Automatic records (temp basals, a loop's boluses) are not in the list. They are in the series. A CGM reading is
   in the list only if it has a note.
-- **Built** (`sealEventsDay`, `data/db/seal_events.go`). The body has shape `2`: the events as a JSON list, with
+- **Built** (`packageEventsDay`, `data/db/package_events.go`). The body has shape `2`: the events as a JSON list, with
   DEFLATE when that is smaller. JSON, as an event has other columns for each table.
 - An event is `k`, its table, and each column of its row that its table's policy keeps (`Keep` in `policy.go`) and
   that has a value. So the policy table is what decides what is kept. A test checks each `Keep` column is real.
 - The columns of an event's treatment (`group_type`, `entered_by`) are added where the event has none of that
   name, and `group_id`, the treatment's own ID, which an app knows it by.
-- A day with more events than a cold day holds (16 KB packed, some thousands of events) is not sealed.
+- A day with more events than a cold day holds (16 KB packed, some thousands of events) is not packaged.
 - **Not yet:** the delete of event rows (4d). So a day's events are built from its rows alone.
 
 ### What is in force when a day starts
@@ -187,7 +188,7 @@ before are gone, a day cannot look back for them. So a day's events have two lis
 - `in_force` is: the newest profile switch with no end; each newer profile switch with an end not yet reached;
   and the newest temp target, if it is not over.
 - So each cold day is read alone.
-- A day with no event of its own is sealed if something is in force. The last 2 days that ended are sealed in
+- A day with no event of its own is packaged if something is in force. The last 2 days that ended are packaged in
   each run for this.
 - Version 1 of the body, the list of events alone, is still read.
 
@@ -210,12 +211,12 @@ units and timezone. It is in the event, not in a table of its own.
   the new range. `summary_period` stores `time_in_range` for the range of the day it was built, and cannot do this.
 - A day's `Stats` comes from its glucose series in microseconds, so it is not stored.
 
-## Sealing
+## Packaging
 
-Sealing runs for each site before its backup, where the truncation runs (`sealSite`, `data/db/seal.go`).
+Packaging runs for each site before its backup, where the truncation runs (`packageSite`, `data/db/package.go`).
 
 1. Find the UTC days that ended and had a row written, changed or deleted since the last run. A site that was
-   never sealed has all its days.
+   never packaged has all its days.
 2. For each day, read its rows and build each series (and, later, the event list) from the policies.
 3. If the day's rows can be gone (it is older than the hot days), start from the cold day as it is: a row
    written since takes its step, and a deleted row clears its step. If not, build the day from its rows only.
@@ -228,23 +229,23 @@ Sealing runs for each site before its backup, where the truncation runs (`sealSi
 - Reports will read series, not rows, for all days but today. Thus a day's series is written after the day
   ends, and its rows stay for the hot days.
 - For glucose, a CGM reading with a note, or one a treatment refers to, is not deleted. It is an event.
-- **Device reports are sealed each run, today too, before they are thinned.** They are thinned from 1 hour old, so
+- **Device reports are packaged each run, today too, before they are thinned.** They are thinned from 1 hour old, so
   a day that waits for its end has only each 10 minutes. Their day always starts from the cold day as it is, so
   it keeps each 5 minutes after the rows are thinned and deleted.
 - **Treatments are built where the summaries are built** (`sitedata`), with the same code: the profile in force,
   the temp basals, and an extended bolus split over its time and over midnight. `data/db` cannot import that
   package, so it sets `db.TreatmentDaySeries` when the server starts.
-- A day's treatment series are sealed when it ends, for the last 2 days, and again for a day with a treatment
+- A day's treatment series are packaged when it ends, for the last 2 days, and again for a day with a treatment
   written. They are built from the rows alone, as no treatment row is deleted yet.
-- The phone's battery is the loop's phone's. A carer's phone reports its own battery, which is not sealed.
+- The phone's battery is the loop's phone's. A carer's phone reports its own battery, which is not packaged.
 
 ### Late data and edits
 
 | Case | What happens |
 | --- | --- |
-| An app sends a record for a sealed day (a backfill, a new connector with 2 years of history) | It is written as a hot row, as today. The next run seals the day again, with what the day had. |
-| A person deletes a CGM reading of a sealed day | Its step of the glucose series is cleared. |
-| A person edits or deletes an event of a sealed day (step 4) | The day's event list is written again with the change. |
+| An app sends a record for a packaged day (a backfill, a new connector with 2 years of history) | It is written as a hot row, as today. The next run packages the day again, with what the day had. |
+| A person deletes a CGM reading of a packaged day | Its step of the glucose series is cleared. |
+| A person edits or deletes an event of a packaged day (step 4) | The day's event list is written again with the change. |
 
 Thus a cold day is never "frozen". It is only compact.
 
@@ -262,20 +263,20 @@ Thus a cold day is never "frozen". It is only compact.
 
 Apps read through the Nightscout API. Most read the last hours or days, which are hot rows.
 
-| Request | Hot days | Sealed days |
+| Request | Hot days | Packaged days |
 | --- | --- | --- |
 | `entries` (CGM) | The rows | **Made from the glucose series:** one entry for each 5-minute step, with an ID made from its time |
 | `treatments`: meals, manual boluses, notes, changes | The rows | Made from the day's event list, with their own IDs |
 | `treatments`: temp basals, automatic boluses | The rows | One for each hour from the totals, or none (to decide) |
 | `devicestatus` | The rows | None |
-| API v3 `history` (changes since a time) | As today | Sealing is not a change, so nothing is sent again |
+| API v3 `history` (changes since a time) | As today | Packaging is not a change, so nothing is sent again |
 | A write or a delete by ID | As today | An event: found in its day's list. A CGM entry: by its time. |
 
 - A tool that reads months (Nightscout Reporter, a clinic's export) gets every 5-minute reading and every meal and
   bolus, as today. It does not get each temp basal.
-- A request that makes entries from many sealed days costs CPU. It needs a limit for each request, and the
+- A request that makes entries from many packaged days costs CPU. It needs a limit for each request, and the
   existing rate limits.
-**Built: `entries`.** `ColdGlucoseReadings` (`data/db/cold_glucose.go`) is the reader of sealed glucose. The
+**Built: `entries`.** `ColdGlucoseReadings` (`data/db/cold_glucose.go`) is the reader of packaged glucose. The
 API's search uses it (`SearchWithCold`):
 
 - Only if `RETENTION_DELETE_ROWS` is `true`, and only for the part of a search before the hot days.
@@ -297,7 +298,7 @@ API's search uses it (`SearchWithCold`):
 - No treatment row is deleted yet (step 4e), so the API reads rows for all days, and a made treatment shows only
   in a test that deletes rows.
 
-`devicestatus` of sealed days is not made.
+`devicestatus` of packaged days is not made.
 
 ## What a person sees (when all steps are built)
 
@@ -348,7 +349,7 @@ A looping site, with the measured numbers:
 
 ## Hot rows can be cheaper too
 
-Sealing does not help the hot days. Two changes, each on its own, make hot rows smaller:
+Packaging does not help the hot days. Two changes, each on its own, make hot rows smaller:
 
 1. **No `event_groups` row for an automatic record.** A temp basal and an automatic bolus with no notes carry
    nothing a person wrote. Their group row is 190 KB a day, a third of the site. The few fields an app needs back
@@ -362,20 +363,20 @@ Each step is one PR, and the site works after each one.
 
 | Step | What | Reads change | State |
 | --- | --- | --- | --- |
-| 1 | `cold_days`, the versioned body, sealing of **glucose**, the delete rule | None | **Built** |
-| 2 | The reader of sealed glucose; the Nightscout API makes `entries` from sealed days | `entries` | **Built** |
+| 1 | `cold_days`, the versioned body, packaging of **glucose**, the delete rule | None | **Built** |
+| 2 | The reader of packaged glucose; the Nightscout API makes `entries` from packaged days | `entries` | **Built** |
 | 2b | The site's glucose page says that older readings are in Reports; a made entry by its `_id`; searches oldest first | Glucose page | |
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
 | 4b | Events: the day's list | The Cold Days page | **Built** |
 | 4c | What is in force at the start of a day; a profile switch keeps its profile | The Cold Days page | **Built** |
-| 4d | The Nightscout API makes `treatments` from sealed days | `treatments` | **Built** |
-| 4e | The delete of treatment and event rows older than the hot days; a sealed day keeps what it has when its rows are gone | Data pages | |
+| 4d | The Nightscout API makes `treatments` from packaged days | `treatments` | **Built** |
+| 4e | The delete of treatment and event rows older than the hot days; a packaged day keeps what it has when its rows are gone | Data pages | |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
 
-`RETENTION_DELETE_ROWS` can now be `true` on staging: apps get the glucose of sealed days. The site's glucose page
+`RETENTION_DELETE_ROWS` can now be `true` on staging: apps get the glucose of packaged days. The site's glucose page
 shows only rows, and Reports show old days from the summaries, as before. It becomes the default when each
 table's reader is built.
 
@@ -405,11 +406,11 @@ Each field of `summary_period` can be built from cold days:
 | --- | --- |
 | Device reports thinned (10 min, 20 min, hourly) and deleted after 30 days; `utils/thin` | **Remove.** Their numbers are series. Device reports get short hot days of their own (2 days). |
 | A site over 1.5 times its limit: clear old JSON, delete device reports over 7 days old | **Remove.** The site gets fewer hot days. |
-| The same site, if still over: delete readings and treatments over 90 days old | **Remove.** This loses data. Sealing does not. |
-| The **Truncate** button | **Keep.** It seals now, with the fewest hot days, and vacuums. It seals now already. |
-| Delete loop settings no record refers to | **Keep**, in the seal run. |
+| The same site, if still over: delete readings and treatments over 90 days old | **Remove.** This loses data. Packaging does not. |
+| The **Truncate** button | **Keep.** It packages now, with the fewest hot days, and vacuums. It packages now already. |
+| Delete loop settings no record refers to | **Keep**, in the package run. |
 | Vacuum | **Keep.** |
-| The size limit, writes refused at 4 times the limit, the abuse score | **Keep.** Sealing does not help a site that writes too many rows today. |
+| The size limit, writes refused at 4 times the limit, the abuse score | **Keep.** Packaging does not help a site that writes too many rows today. |
 
 To check before the thinning goes: does a page or an app read a device report over 2 days old?
 
@@ -419,7 +420,7 @@ To check before the thinning goes: does a page or an app read a device report ov
    each month in the site's S3 folder. "Deleted" then means "not in the site DB", not "gone", and a month could be
    read back. It needs S3, storage for each site, and a way to restore. Is this wanted, as an option of a site?
 2. **Hot days:** is 3 a safe floor for each app (AAPS, Trio, Loop, xDrip+)?
-3. **Temp basals to apps:** for a sealed day, send one temp basal for each hour, or none?
+3. **Temp basals to apps:** for a packaged day, send one temp basal for each hour, or none?
 4. **`iob_basal`:** keep it, or only total IOB?
 5. **Profiles:** each profile switch keeps its profile, and each day has it again when it is in force. This was
    chosen over a table that keeps each profile one time: one table, and a day is read alone.

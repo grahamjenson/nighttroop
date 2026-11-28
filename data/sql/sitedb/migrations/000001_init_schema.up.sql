@@ -581,10 +581,10 @@ CREATE TABLE general_settings (
 ) STRICT;
 
 -- cold_days are a site's days in their small form, each kind of data of a UTC day in one row: a series, such as
--- 'glucose', is one number a step of the day. Its rows are sealed into it, then deleted once they are old (see
+-- 'glucose', is one number a step of the day. Its rows are packaged into it, then deleted once they are old (see
 -- docs/retention.md and data/retention). body is packed bytes, as small as they can be made, not JSON. Its first
--- bytes are its version and shape, so days sealed years ago are still read after the form changes. updated_at is
--- when it was last sealed: a row is deleted only when its day was sealed after the row was last written.
+-- bytes are its version and shape, so days packaged years ago are still read after the form changes. updated_at is
+-- when it was last packaged: a row is deleted only when its day was packaged after the row was last written.
 CREATE TABLE cold_days (
     kind TEXT NOT NULL CHECK(length(kind) <= 32),
     date TEXT NOT NULL CHECK(length(date) = 10),

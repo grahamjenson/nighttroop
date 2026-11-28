@@ -12,7 +12,7 @@ import (
 )
 
 // Version is the version of a cold day's bytes this code writes, a day's first byte. A day says its own, so the
-// form can change and the days sealed years ago still be read: add a case to UnpackGrid, never change what an old
+// form can change and the days packaged years ago still be read: add a case to UnpackGrid, never change what an old
 // version means.
 const Version = 1
 

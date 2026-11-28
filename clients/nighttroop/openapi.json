@@ -1063,12 +1063,12 @@
       "ColdDay": {
         "type": "object",
         "description": "One kind of data of one UTC day as the site keeps it once its rows are old: what its packed bytes say they are, and what is in them",
-        "required": ["kind", "date", "bytes", "sealed_at", "version", "shape", "second_order", "deflated", "step_seconds", "scale", "steps", "values", "min", "max", "error"],
+        "required": ["kind", "date", "bytes", "packaged_at", "version", "shape", "second_order", "deflated", "step_seconds", "scale", "steps", "values", "min", "max", "error"],
         "properties": {
           "kind": { "type": "string", "description": "The series, e.g. glucose" },
           "date": { "type": "string", "format": "date", "description": "The UTC day" },
           "bytes": { "type": "integer", "format": "int64", "description": "The size of its packed body" },
-          "sealed_at": { "type": "integer", "format": "int64", "description": "When it was last sealed, in ms" },
+          "packaged_at": { "type": "integer", "format": "int64", "description": "When it was last packaged, in ms" },
           "version": { "type": "integer", "description": "The version its first byte says" },
           "shape": { "type": "string", "description": "The shape its second byte says: series or events. For events, steps and values are how many there are, and step_seconds and scale are 0." },
           "second_order": { "type": "boolean", "description": "Whether each value is kept as the change of its change" },

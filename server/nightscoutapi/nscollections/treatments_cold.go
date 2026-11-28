@@ -55,7 +55,7 @@ func treatmentsCanMatch(query nsquery.Query) bool {
 	return query.DatesOnly()
 }
 
-// SearchWithCold is a search for treatments, the newest first, with those of the sealed days whose rows are deleted,
+// SearchWithCold is a search for treatments, the newest first, with those of the packaged days whose rows are deleted,
 // and whether it was one: only where the server deletes rows, and only a search a cold event can match that reaches
 // back before the hot days. The rows are read first. A treatment that is still a row is not made again, and no cold
 // day is read that is older than the last row of the page. A made treatment has what its events kept: a meal, a dose

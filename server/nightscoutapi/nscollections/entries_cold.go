@@ -62,7 +62,7 @@ func typeMatches(query nsquery.Query, recordType string) bool {
 	return (query.TypeEq == nil || *query.TypeEq == recordType) && (query.TypeNeq == nil || *query.TypeNeq != recordType)
 }
 
-// SearchWithCold is a search for readings, the newest first, with those of the sealed days whose rows are deleted,
+// SearchWithCold is a search for readings, the newest first, with those of the packaged days whose rows are deleted,
 // and whether it was one: only where the server deletes rows, and only a search a cold day's reading can match that
 // reaches back before the hot days. The rows are read first. A step of a cold day that a row is still in is not made
 // again, and no cold day is read that is older than the last row of the page.

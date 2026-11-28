@@ -12,10 +12,10 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A day's treatments are sealed as series every 5 minutes: the basal rate in force, from the profile and the temp
+// A day's treatments are packaged as series every 5 minutes: the basal rate in force, from the profile and the temp
 // basals, the insulin of its boluses, an extended one as it is given and over midnight, the basal insulin injected,
 // and the carbs. Their totals are the day's.
-func TestSealingTreatments(t *testing.T) {
+func TestPackagingTreatments(t *testing.T) {
 	_, controlDB, site := testutils.NewControlDBWithSite(t)
 	ctx, q := t.Context(), site.SiteDB.Queries()
 	day := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -3)
@@ -106,7 +106,7 @@ func TestSealingTreatments(t *testing.T) {
 	values, _, _ := series("carbs", day.AddDate(0, 0, 1))
 	require.Nil(t, values)
 
-	// A dose deleted empties its step when the day is sealed again
+	// A dose deleted empties its step when the day is packaged again
 	_, err = q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{ID: "lantus"})
 	require.NoError(t, err)
 	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)

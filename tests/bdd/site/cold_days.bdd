@@ -1,11 +1,11 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// Cold Days, beside Usage, is empty until a day is sealed, and says when one is
+// Cold Days, beside Usage, is empty until a day is packaged, and says when one is
 GOTO {{ .site_url }}/usage/cold-days
 ASSERT_STATUS 200
 ASSERT_TITLE Cold Days · Nighttroop
-ASSERT_VISIBLE #site--cold-days--none >> text=No day is sealed yet.
+ASSERT_VISIBLE #site--cold-days--none >> text=No day is packaged yet.
 ASSERT_VISIBLE #site--cold-days--totals >> text=Cold days: 0.
 
 // A CGM sends a reading for a day that has ended, and a person entered a meal in it
@@ -24,7 +24,7 @@ POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?toke
 B [{"eventType": "Temporary Target", "targetTop": 120, "targetBottom": 110, "units": "mg/dl", "duration": 2880, "reason": "Illness", "created_at": "{{ time 4320 }}"}]
 ASSERT_STATUS 200
 
-// Truncate, on the Usage page, seals the site's ended days now
+// Truncate, on the Usage page, packages the site's ended days now
 BROWSE
 GOTO {{ .site_url }}/usage
 CLICK_ASKS #site--usage--truncate

@@ -531,7 +531,7 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 			return c.inOrder(q, ctx, query, sortedIDs)
 		}
 	}
-	// A collection with sealed days whose rows are deleted searches those days too, when the newest is first
+	// A collection with packaged days whose rows are deleted searches those days too, when the newest is first
 	var models []*DM
 	var err error
 	searched := false
@@ -548,7 +548,7 @@ func (c Collection[NS, DM]) Search(ctx context.Context, siteContext *httputils.S
 	return c.documents(models, siteContext), nil
 }
 
-// coldSearcher is a collection that can search its sealed days whose rows are deleted (see docs/retention.md)
+// coldSearcher is a collection that can search its packaged days whose rows are deleted (see docs/retention.md)
 type coldSearcher[DM any] interface {
 	SearchWithCold(q *sitedb.Queries, ctx context.Context, siteContext *httputils.SiteContext, query nsquery.Query) ([]*DM, bool, error)
 }

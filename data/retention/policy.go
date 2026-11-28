@@ -1,9 +1,9 @@
 // Package retention is how a site's old data becomes small without the person losing what they look back for. See
-// docs/retention.md. Only glucose is sealed yet (data/db/seal.go); the other policies are the plan.
+// docs/retention.md. Only glucose is packaged yet (data/db/package.go); the other policies are the plan.
 //
 // A site's data is in two forms. Hot rows are what the tables hold: one row a record, indexed, as the apps sent it,
 // for the days the apps and pages read row by row. A cold day is everything of one kind for one UTC day in one row
-// of cold_days: a series on its time grid (grid.go), or a day's events as a short list. Sealing a day writes its
+// of cold_days: a series on its time grid (grid.go), or a day's events as a short list. Packaging a day writes its
 // cold days from its hot rows, by the policy of each table. The rows are deleted once they are older than the hot
 // days.
 package retention
@@ -33,9 +33,9 @@ const (
 	// EventsShape is what a person did or decided, a few a day, such as a meal: the day's list, each with the
 	// columns the policy keeps
 	EventsShape Shape = "events"
-	// DictionaryShape is a value many records repeat, such as a profile: kept once, by its hash, not sealed
+	// DictionaryShape is a value many records repeat, such as a profile: kept once, by its hash, not packaged
 	DictionaryShape Shape = "dictionary"
-	// ConfigShape is what a person manages as a list, such as food presets: never sealed
+	// ConfigShape is what a person manages as a list, such as food presets: never packaged
 	ConfigShape Shape = "config"
 	// ColdShape is the cold days themselves: already small
 	ColdShape Shape = "cold"
@@ -55,7 +55,7 @@ type Series struct {
 	Sum bool
 }
 
-// Policy is what sealing a day does with one table's rows of that day
+// Policy is what packaging a day does with one table's rows of that day
 type Policy struct {
 	// Shape is the form most of its rows take. A table can give both: its Series, and the rows in Keep as events.
 	Shape Shape
@@ -65,7 +65,7 @@ type Policy struct {
 	Keep []string
 	// Where narrows the rows the day's list keeps to those a person made; the others are only folded into Series
 	Where string
-	// Lost says, for the person, what cannot be read back once a day is sealed
+	// Lost says, for the person, what cannot be read back once a day is packaged
 	Lost string
 }
 
