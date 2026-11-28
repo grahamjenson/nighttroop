@@ -9,6 +9,8 @@ import (
 	"nighttroop.t1d.nz/background/liteq"
 	"nighttroop.t1d.nz/clients/libre_client"
 	"nighttroop.t1d.nz/clients/nightscout_client"
+	"nighttroop.t1d.nz/data/db"
+	"nighttroop.t1d.nz/data/retention"
 	"nighttroop.t1d.nz/data/sql/controldb"
 	"nighttroop.t1d.nz/data/sql/jobsdb"
 	"nighttroop.t1d.nz/data/sql/logsdb"
@@ -372,10 +374,10 @@ func TestBackfillCopiesNoDeviceStatusOlderThan30Days(t *testing.T) {
 	require.Greater(t, len(readings), 1)
 }
 
-// A backfill copies only the device statuses the site's truncation keeps, rather than writing each one for the next
-// truncation to delete: of each device, the newest in every 20 minutes 10 days ago, in every 10 minutes 3 days ago,
-// and every one from the last hour
-func TestNightscoutBackfillCopiesOnlyTheDeviceStatusesTruncationKeeps(t *testing.T) {
+// A backfill copies every device status, not only those the site's truncation keeps, so that the site job packages
+// their IOB of each 5 minutes before it thins them: to each device's newest in every 20 minutes 10 days ago, in every
+// 10 minutes 3 days ago, and every one from the last hour
+func TestNightscoutBackfillCopiesEveryDeviceStatusForItsNumbersToBePackaged(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	q, ctx, siteID, typ := controlDB.Queries, t.Context(), site.SiteDB.Subdomain, consts.ConnectorTypeNightscout
 	enc := func(s string) *string {
@@ -430,14 +432,22 @@ func TestNightscoutBackfillCopiesOnlyTheDeviceStatusesTruncationKeeps(t *testing
 	for i := 4; i >= 1; i-- {
 		want = append(want, now.UnixMilli()-int64(i)*5*minute)
 	}
+	require.Len(t, copied(), 40, "every status is copied")
+
+	// The site job packages their IOB of each 5 minutes, then thins the rows to what truncation keeps
+	_, err := controlDB.TruncateSite(ctx, siteID)
+	require.NoError(t, err)
 	got := copied()
-	require.Len(t, got, len(want), "16 of the 40 statuses")
+	require.Len(t, got, len(want), "16 of the 40 statuses are kept as rows")
 	for i := range want {
 		require.Equal(t, want[i]/1000, got[i]/1000, "status %d", i)
 	}
-
-	// Truncating the site now deletes none of them: the backfill copied what it keeps
-	_, err := controlDB.TruncateSite(ctx, siteID)
-	require.NoError(t, err)
-	require.Len(t, copied(), len(want))
+	for start, steps := range map[int64]int{tenDaysAgo: 24, threeDaysAgo: 12} {
+		values, err := db.ColdSeries(ctx, site.SiteDB.Queries(), retention.IOB, start, start+int64(steps)*5*minute)
+		require.NoError(t, err)
+		require.Len(t, values, steps)
+		for step, value := range values {
+			require.Equal(t, 1.5, value, "the IOB of 5 minute step %d is packaged", step)
+		}
+	}
 }

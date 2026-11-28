@@ -2,6 +2,7 @@ package sitedata
 
 import (
 	"database/sql"
+	"fmt"
 	"math"
 	"testing"
 	"time"
@@ -254,4 +255,87 @@ func TestEventsDeletedAtOnceStayInTheirDay(t *testing.T) {
 	}
 	require.Contains(t, inForce, "overnight")
 	require.ElementsMatch(t, []any{"breakfast", "late lunch"}, eventIDs(day(next)))
+}
+
+// A day with rows but no event, as one whose only meal was deleted, on a site with no profile, is packaged too, with
+// no events, so its rows are deleted: a day with no cold day of events kept its rows for ever
+func TestADayWithNoEventsIsPackagedAndItsRowsDeleted(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	settle := db.PackagedSettle
+	db.PackagedSettle = 0
+	t.Cleanup(func() { db.PackagedSettle = settle })
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	old := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -40)
+	at := old.Add(5 * time.Hour).UnixMilli()
+	_, err := q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "meal", Carbs: new(40.0), OccurredAt: at, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	_, err = q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{ID: "meal"})
+	require.NoError(t, err)
+	// And a temp basal, which is a series and not an event, with no profile to make a basal rate of
+	_, err = q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: "temp", DurationMinutes: 30, Multiplier: new(0.5), OccurredAt: at, CreatedByIdentityName: "loop"})
+	require.NoError(t, err)
+
+	for range 2 {
+		_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+	}
+	row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "events", Date: old.Format(time.DateOnly)})
+	require.NoError(t, err, "the day is packaged, though it has no event")
+	_, day, err := retention.ReadEvents(row.Body)
+	require.NoError(t, err)
+	require.Empty(t, day.Events)
+	food, err := q.AllFoodIntakes(ctx, sitedb.AllFoodIntakesParams{IncludeDeleted: true, Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, food, "the deleted meal's row is deleted")
+	basals, err := q.AllTempBasals(ctx, sitedb.AllTempBasalsParams{IncludeDeleted: true, Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, basals, "the temp basal's row is deleted")
+}
+
+// A day with more events than a cold day holds is packaged with the most important of them: what a person ate and
+// gave is kept before a device's notifications, as many of which are kept as fit. The day says how many it dropped,
+// and all its rows are deleted.
+func TestADayWithTooManyEventsKeepsTheMostImportant(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	settle := db.PackagedSettle
+	db.PackagedSettle = 0
+	t.Cleanup(func() { db.PackagedSettle = settle })
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	old := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -40)
+	// 600 notifications through the day, each with words that do not compress to nothing, and a meal and a bolus
+	// late in it, after most of them
+	for i := range 600 {
+		_, err := q.CreateNotificationEvent(ctx, sitedb.CreateNotificationEventParams{ID: fmt.Sprint("note", i), Title: fmt.Sprintf("Alert %x", i*7919),
+			Content: new(fmt.Sprintf("%x %x %x", i*104729, i*1299709, i*15485863)), NotificationType: "announcement",
+			OccurredAt: old.Add(time.Duration(i) * time.Minute).UnixMilli(), CreatedByIdentityName: "loop"})
+		require.NoError(t, err)
+	}
+	late := old.Add(20 * time.Hour).UnixMilli()
+	_, err := q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "meal", Carbs: new(40.0), OccurredAt: late, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	_, err = q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: "bolus", Dose: 4, OccurredAt: late + 1000, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+
+	for range 2 {
+		_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+	}
+	row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "events", Date: old.Format(time.DateOnly)})
+	require.NoError(t, err)
+	require.LessOrEqual(t, len(row.Body), 16384)
+	_, day, err := retention.ReadEvents(row.Body)
+	require.NoError(t, err)
+	// The meal and the bolus are kept, in the day's order, after the notifications that fit, the oldest of them
+	require.Greater(t, day.Dropped, 0)
+	require.Equal(t, 602, len(day.Events)+day.Dropped)
+	require.Greater(t, len(day.Events), 100, "as many notifications as fit are kept")
+	require.Equal(t, []any{"meal", "bolus"}, []any{day.Events[len(day.Events)-2]["id"], day.Events[len(day.Events)-1]["id"]})
+	require.Equal(t, "note0", day.Events[0]["id"])
+	// Its rows are deleted, those that did not fit too
+	notes, err := q.AllNotificationEvents(ctx, sitedb.AllNotificationEventsParams{Limit: 1000})
+	require.NoError(t, err)
+	require.Empty(t, notes)
+	food, err := q.AllFoodIntakes(ctx, sitedb.AllFoodIntakesParams{Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, food)
 }

@@ -172,7 +172,11 @@ A treatment and its `event_groups` row become one entry.
   that has a value. So the policy table is what decides what is kept. A test checks each `Keep` column is real.
 - The columns of an event's treatment (`group_type`, `entered_by`) are added where the event has none of that
   name, and `group_id`, the treatment's own ID, which an app knows it by.
-- A day with more events than a cold day holds (16 KB packed, some thousands of events) is not packaged.
+- A cold day holds 16 KB packed, some thousands of events. If a day has more, the most important are kept, and the
+  day's body says how many are not (`dropped`). The server logs a warning. The rows of all of them are deleted.
+  - The order: food and insulin a person gave; a meter reading or a reading with a note; a profile switch or a
+    temp target; a treatment with no event (example: a site change); an activity; a notification.
+  - In one group, the oldest are kept first. What was in force when the day started is always kept.
 - A day's events are built from its rows alone. Thus a day whose rows are deleted is not packaged again.
 
 ### The delete of treatments and events
@@ -224,15 +228,6 @@ units and timezone. It is in the event, not in a table of its own.
   it again in `in_force`. DEFLATE makes the copies in one day small. The copies in other days are not shared.
 - This is simple: a day is read alone, and there is one table. The cost is about 0.3 to 0.5 KB a day for a site
   with a profile switch in force (an estimate).
-
-### Statistics
-
-`Stats` (`data/retention/grid.go`) is count, sum, sum of squares, minimum, maximum and a count for each 5 mg/dL.
-
-- Two `Stats` merge into one that is exact. A week is the merge of its days, a year the merge of its weeks.
-- The counts give the time in **any** range. If a person changes their target range, old periods are right for
-  the new range. `summary_period` stores `time_in_range` for the range of the day it was built, and cannot do this.
-- A day's `Stats` comes from its glucose series in microseconds, so it is not stored.
 
 ## Packaging
 
@@ -448,7 +443,7 @@ Each field of `summary_period` can be built from cold days:
 | The same site, if still over: delete readings and treatments over 90 days old | **Removed.** It lost data. A row is deleted only once its day is packaged, and that is for all sites. |
 | The **Truncate** button | **Removed from the site.** The control site's Truncate runs the job's truncate for one site now, for all its data. It does nothing that the job does not do. |
 | Delete loop settings no record refers to | **Kept**, in the job's truncate. |
-| Vacuum | **Keep.** |
+| Vacuum | **Kept**, for all sites: the job shrinks a DB when 10% or more of it is free pages. |
 | The size limit, writes refused at 4 times the limit, the abuse score | **Keep.** Packaging does not help a site that writes too many rows today. |
 
 

@@ -21,8 +21,8 @@ import (
 // summaryDailyMaxDays is how many days back a summary day can be built, so a request cannot build years of them
 const summaryDailyMaxDays = 366
 
-// SummaryDailyCollection is the site's days, each built from its data: searched newest first, built again for a date
-// by a create, and deleted for good
+// SummaryDailyCollection is the site's days, each built from its data as it is read: searched newest first, or read by
+// its date
 type SummaryDailyCollection struct{}
 
 func (s *SummaryDailyCollection) GetName() string {

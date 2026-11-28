@@ -24,8 +24,8 @@ type CollectionTx struct {
 	siteTx      *sql.Tx
 	// reportedChanges are the changes to the site's models made in the transaction, published once it commits
 	reportedChanges []events.Event
-	// before are the rows updated, as they were, whose summaries are marked to be built again as it commits, as a row
-	// may have moved to another day
+	// before are the rows updated, as they were, whose cold days are marked to be packaged again as it commits, as a
+	// row may have moved to another day
 	before []any
 	// onCommit are called once everything is committed
 	onCommit []func()
@@ -111,7 +111,7 @@ func (t *CollectionTx) Finish(herr *apiutils.HTTPError) *apiutils.HTTPError {
 }
 
 // ReportChange reports a change to one of the site's models, its sitedb row, to be published once committed, with an
-// update's row before, or nil, whose summaries are marked to be built again
+// update's row before, or nil, whose cold days are marked to be packaged again
 func (t *CollectionTx) ReportChange(action events.Action, row, previous any) {
 	t.reportedChanges = append(t.reportedChanges, events.Event{Action: action, Model: row})
 	if previous != nil {

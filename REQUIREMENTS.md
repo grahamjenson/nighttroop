@@ -1513,9 +1513,9 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - Nightscout backfill device statuses drop the loop status (`openaps` or `loop`) and `pump` as sent, keeping IOB, COB,
   and the pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`. Existing ones
   are not changed.
-- A Nightscout backfill copies only the device statuses the truncation keeps (see Device status truncation): all from
-  the last hour, then each device's newest in each 10 minutes to 1 week old, each 20 minutes to 2 weeks, and each
-  hour after. It does not write the others, so the next truncation has none of them to delete.
+- A Nightscout backfill copies each device status of the last 30 days. Then the site job packages their IOB, COB,
+  reservoir and batteries of each 5 minutes, and thins the statuses (see Device status truncation). Thus a backfilled
+  day has its IOB and COB each 5 minutes.
 
 #### Connectors page status
 
@@ -2689,6 +2689,13 @@ days: insulin doses, food intakes, temp basals, temp targets, activities, notes 
 - A treatment is deleted with its events. An event of a treatment that is not deleted is not deleted.
 - The newest profile switch with no end is not deleted. A profile switch that ends in the hot days is not deleted.
 - A treatment of the hot days is not deleted.
+- If a day has more events than a cold day holds (16 KB packed), the cold day keeps the most important, as many as
+  fit, and says how many it does not have (`dropped`). The server logs a warning, and deletes the rows of all.
+  - The order: food and insulin a person gave, then a meter reading or a reading with a note, then a profile
+    switch or a temp target, then a treatment with no event, then an activity, then a notification.
+  - In one group, the oldest are kept first. What was in force when the day started is always kept.
+- A day with a row written, but no event, is packaged with no events, so its rows are deleted. Examples: a day
+  whose only meal was deleted; a day with only temp basals, on a site with no profile.
 - A day with deleted rows is not packaged again. A treatment written later for that day stays a row, and the day's
   cold days do not change.
 
@@ -2733,6 +2740,8 @@ Before it backs up a site written to, at most every hour, the server truncates i
 - The control site's **Truncate** reads all statuses.
   - It also clears those older than a day (e.g. a device's newest from before it stopped reports for a day).
 - Then the job deletes loop settings that no profile or device status refers to, except each app's last seen.
+- After it packages and truncates a site, the job shrinks the site's DB if 10% or more of it is free pages. Thus
+  the disk space of deleted rows is given back. If less is free, the next records fill the free pages.
 
 #### Truncation of a site far over its size limit
 
@@ -2744,8 +2753,6 @@ device statuses harder:
 - It deletes device statuses over 7 days old.
 - It changes no other record. A reading, a treatment or an event is deleted only after its day is packaged (see
   Packaging of old days), so no data is lost.
-- If it changed records, the job shrinks the DB only if 10% or more of it is free pages. If less is free, the next
-  records fill the free pages.
 - The job measures the DB without its free pages, to find if the site is over 1.5 times its limit.
 - If it changed records, the job records the new DB size. A "Site truncated" event by "size limit" shows the size
   before and after.

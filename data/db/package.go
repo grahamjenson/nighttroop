@@ -157,6 +157,9 @@ func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, sin
 			return err
 		}
 	}
+	// The days with a row written, which are packaged though they have no event and no series: the last days that
+	// ended, with none, are not
+	written := slices.Clone(days)
 	for _, day := range lastDays(days, today) {
 		date := time.UnixMilli(day * dayMs).UTC().Format(time.DateOnly)
 		if db.ServerConfig.RetentionDeleteRows && day*dayMs < hot {
@@ -182,8 +185,9 @@ func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, sin
 				}
 			}
 		}
-		// A day with a treatment series has its events written though it has none, to say it was packaged
-		if err := packageEventsDay(ctx, q, day*dayMs, treated, db.ServerConfig.RetentionDeleteRows && day*dayMs < hot); err != nil {
+		// A day with a treatment series, or with a row written, has its events written though it has none, to say it
+		// was packaged: its rows are deleted only then, as those of a deleted meal, or of a temp basal with no profile
+		if err := packageEventsDay(ctx, q, day*dayMs, treated || slices.Contains(written, day), db.ServerConfig.RetentionDeleteRows && day*dayMs < hot); err != nil {
 			return fmt.Errorf("%s: %w", date, err)
 		}
 	}

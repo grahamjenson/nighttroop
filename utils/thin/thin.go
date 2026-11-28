@@ -1,6 +1,6 @@
 // Package thin is how a site's device reports are thinned as they age: of each device's reports, all from the last
 // KeepAll are kept, then only its newest in each bucket, a bucket larger the older the report. The site's truncation
-// (ThinOldDeviceReports) deletes the others, and a backfill does not write them.
+// (ThinOldDeviceReports) deletes the others, after their numbers are packaged. Bucket is the rule, for its tests.
 package thin
 
 import "time"

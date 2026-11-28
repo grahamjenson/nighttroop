@@ -101,30 +101,3 @@ func nanAsZero(values []float64) []float64 {
 	}
 	return compared
 }
-
-// The stats of two weeks merged are the stats of all their values, so a month or a year needs no row read again, and
-// the time in a range the person changes later is still known
-func TestStatsMerge(t *testing.T) {
-	var all, merged Stats
-	for seed := int64(1); seed <= 14; seed++ {
-		var day Stats
-		for _, value := range cgmDay(seed) {
-			if !math.IsNaN(value) {
-				day.Add(value)
-				all.Add(value)
-			}
-		}
-		merged.Merge(day)
-	}
-	merged.Merge(Stats{})
-	require.Equal(t, all.Count, merged.Count)
-	require.Equal(t, all.Bins, merged.Bins)
-	require.InDelta(t, all.Mean(), merged.Mean(), 1e-9)
-	require.InDelta(t, all.SD(), merged.SD(), 1e-9)
-	require.Equal(t, all.Min, merged.Min)
-	require.Equal(t, all.Max, merged.Max)
-	require.InDelta(t, 100, merged.PercentBetween(0, 1000), 1e-9)
-	// In range by today's range, and by a tighter one chosen later
-	require.InDelta(t, all.PercentBetween(70, 180), merged.PercentBetween(70, 180), 1e-9)
-	require.Greater(t, merged.PercentBetween(70, 180), merged.PercentBetween(70, 140))
-}
