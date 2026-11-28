@@ -223,15 +223,6 @@ units and timezone. It is in the event, not in a table of its own.
 - This is simple: a day is read alone, and there is one table. The cost is about 0.3 to 0.5 KB a day for a site
   with a profile switch in force (an estimate).
 
-### Statistics
-
-`Stats` (`data/retention/grid.go`) is count, sum, sum of squares, minimum, maximum and a count for each 5 mg/dL.
-
-- Two `Stats` merge into one that is exact. A week is the merge of its days, a year the merge of its weeks.
-- The counts give the time in **any** range. If a person changes their target range, old periods are right for
-  the new range. `summary_period` stores `time_in_range` for the range of the day it was built, and cannot do this.
-- A day's `Stats` comes from its glucose series in microseconds, so it is not stored.
-
 ## Packaging
 
 Packaging runs for each site before its backup, where the truncation runs (`packageSite`, `data/db/package.go`).

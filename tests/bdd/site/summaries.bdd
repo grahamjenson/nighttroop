@@ -1,7 +1,7 @@
 INCLUDE steps/new_site_admin.steps
 ASSERT_PATH /
 
-// The Reports hub opens on the summaries, a table of each period's kept summaries, which a new site has none of
+// The Reports hub opens on the summaries, a table of each period's summaries, which a new site has none of
 CLICK #site--nav--reports
 ASSERT_STATUS 200
 ASSERT_PATH /reports
