@@ -1,8 +1,10 @@
 package retention
 
 import (
+	"encoding/json"
 	"math"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,7 +24,7 @@ func TestEveryTableHasAPolicy(t *testing.T) {
 		seen++
 		policy, ok := Policies[table.Name]
 		require.True(t, ok, "%s has no retention policy", table.Name)
-		if policy.Class == Signal || policy.Class == Telemetry {
+		if policy.Shape == Signal || policy.Shape == Telemetry {
 			require.NotEmpty(t, policy.Series, "%s is deleted when its day is sealed, so it must fold into a series", table.Name)
 			require.NotEmpty(t, policy.Lost, "%s must say what is lost", table.Name)
 		}
@@ -53,8 +55,9 @@ func TestPackGrid(t *testing.T) {
 	for i := range day {
 		require.True(t, day[i] == unpacked[i] || (math.IsNaN(day[i]) && math.IsNaN(unpacked[i])), "step %d: %v != %v", i, day[i], unpacked[i])
 	}
-	// 276 readings are 61 KB as rows (222 bytes each with their indexes, measured), and under 400 bytes packed
-	require.Less(t, len(packed), 400)
+	// 276 readings are 61 KB as rows (222 bytes each with their indexes, measured), and under 800 bytes packed
+	require.Less(t, len(packed), 800)
+	require.True(t, json.Valid([]byte(packed)))
 	t.Logf("a day of glucose: %d bytes packed, %d bytes as rows", len(packed), 276*222)
 
 	// IOB to 0.01 U
@@ -66,13 +69,14 @@ func TestPackGrid(t *testing.T) {
 	unpackedIOB, err := UnpackGrid(packedIOB, 100)
 	require.NoError(t, err)
 	require.InDeltaSlice(t, iob, unpackedIOB, 0.0001)
-	require.Less(t, len(packedIOB), 400)
+	require.Less(t, len(packedIOB), 900)
+	t.Logf("a day of IOB: %d bytes packed", len(packedIOB))
 
 	// An empty day, and bytes that are not a grid
 	empty, err := UnpackGrid(PackGrid(make([]float64, 0), 1), 1)
 	require.NoError(t, err)
 	require.Empty(t, empty)
-	for _, bad := range [][]byte{nil, {9, 1}, {gridVersion}, {gridVersion, 200, 2}, packed[:50]} {
+	for _, bad := range []string{"", "[]", `{"v":2,"d":[1]}`, `{"v":1,"d":"x"}`, packed[:50], `{"v":1,"d":[` + strings.Repeat("0,", maxSteps) + `0]}`} {
 		_, err := UnpackGrid(bad, 1)
 		require.Error(t, err)
 	}
