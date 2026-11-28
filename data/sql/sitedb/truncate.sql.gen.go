@@ -145,8 +145,8 @@ type ThinOldDeviceReportsParams struct {
 
 // A device report every few minutes is kept only for KeepAllMs before Now; then each device keeps, of its reports,
 // the newest in every SmallMs until WeekMs old, in every MediumMs until FortnightMs old, and in every LargeMs after
-// that, which is enough to chart its IOB, COB, battery and reservoir. The ages and buckets are utils/thin's, which a
-// backfill keeps to as well (db.ThinParams). Each device keeps its newest report, and the
+// that. Its IOB, COB, battery and reservoir of each 5 minutes are packaged before (packageSite). The ages and buckets
+// are utils/thin's (db.ThinParams). Each device keeps its newest report, and the
 // loop status on it, however old, until DeleteOldDeviceReports removes it. The buckets are aligned so each hour's
 // newest is also its 20 and 10 minutes' newest. A deleted report is neither kept nor removed, so clients syncing
 // deletions still see it. Only reports written since Since are looked at, as ClearOldLoopStatuses does, and those that
