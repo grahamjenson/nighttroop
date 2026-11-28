@@ -339,13 +339,15 @@ func TestTreatmentsOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	before := treatments(all)
 	require.Len(t, before, 5)
 
-	// The days are packaged, then the rows of the old day are deleted, as the server will once it deletes treatments
+	// The days are packaged, and the temp target, the site change and the note go at once, as they are only events.
+	// Then the rest of the old day is deleted, as the server will once the day has settled.
 	cfg.RetentionDeleteRows = true
 	_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)
 	groups, err := q.EventGroupsOfDay(ctx, sitedb.EventGroupsOfDayParams{From: old.UnixMilli(), To: old.Add(24 * time.Hour).UnixMilli()})
 	require.NoError(t, err)
-	require.Len(t, groups, 4)
+	require.Len(t, groups, 1)
+	require.Equal(t, "Meal Bolus", groups[0].GroupType)
 	for _, group := range groups {
 		_, err := q.HardDeleteEventGroup(ctx, sitedb.HardDeleteEventGroupParams{ID: group.ID})
 		require.NoError(t, err)

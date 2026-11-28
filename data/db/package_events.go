@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -170,10 +172,11 @@ func fitEvents(before, events []map[string]any) ([]byte, []map[string]any, error
 // packageEventsDay writes the events of the UTC day that starts at start, in ms, from its rows, the oldest first: each
 // row that is an event, with what its treatment says of it (who entered it, as what) where it has none, and each
 // treatment with no event, as a site change is, and before them what was in force when the day started (inForce).
-// They are built from the rows alone: a day whose rows are deleted is not packaged again (packageTreatmentDays). A day
-// with no event and nothing in force is written only to empty one that had some, or always, to say the day was
+// With merge, for a day whose rows the server deletes, it keeps the events of the day packaged before whose rows are
+// deleted at once (mergeEvents). A day whose other rows are deleted is not packaged again (packageTreatmentDays). A
+// day with no event and nothing in force is written only to empty one that had some, or always, to say the day was
 // packaged. Of a day whose events are more than a cold day holds, the most important are kept (fitEvents).
-func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, always bool) error {
+func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, always, merge bool) error {
 	groups, err := q.EventGroupsOfDay(ctx, sitedb.EventGroupsOfDayParams{From: start, To: start + dayMs})
 	if err != nil {
 		return err
@@ -210,12 +213,15 @@ func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, alway
 			events = append(events, eventOf("event_groups", group))
 		}
 	}
-	slices.SortStableFunc(events, func(a, b map[string]any) int { return int(a["occurred_at"].(int64) - b["occurred_at"].(int64)) })
 	date := time.UnixMilli(start).UTC().Format(time.DateOnly)
 	before, err := inForce(ctx, q, start)
+	if err == nil && merge {
+		events, before, err = mergeEvents(ctx, q, date, events, before)
+	}
 	if err != nil {
 		return err
 	}
+	slices.SortStableFunc(events, func(a, b map[string]any) int { return int(EventAt(a) - EventAt(b)) })
 	if len(events) == 0 && len(before) == 0 && !always {
 		if _, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: retention.EventsKind, Date: date}); err != nil {
 			return nil
@@ -233,4 +239,73 @@ func packageEventsDay(ctx context.Context, q *sitedb.Queries, start int64, alway
 		return fmt.Errorf("the packaged events do not read back as they were written: %v", err)
 	}
 	return upsertColdDay(ctx, q, retention.EventsKind, date, packed)
+}
+
+// atOnce are the tables whose rows older than the hot days are deleted as soon as their day is packaged, as what they
+// were is only in the day's events, which a day packaged again keeps (mergeEvents): each with whether a row of it,
+// deleted or not, has an ID. A treatment of them alone, or of none, as a site change, is too.
+var atOnce = map[string]func(ctx context.Context, q *sitedb.Queries, id string) error{
+	"activities": func(ctx context.Context, q *sitedb.Queries, id string) error {
+		_, err := q.GetActivity(ctx, sitedb.GetActivityParams{ID: id, IncludeDeleted: true})
+		return err
+	},
+	"temp_targets": func(ctx context.Context, q *sitedb.Queries, id string) error {
+		_, err := q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: id, IncludeDeleted: true})
+		return err
+	},
+	"notification_events": func(ctx context.Context, q *sitedb.Queries, id string) error {
+		_, err := q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: id, IncludeDeleted: true})
+		return err
+	},
+	"event_groups": func(ctx context.Context, q *sitedb.Queries, id string) error {
+		_, err := q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: id, IncludeDeleted: true})
+		return err
+	},
+}
+
+// mergeEvents are a day's events and what was in force when it started, built from its rows, with those of the day as
+// it was packaged before whose rows were deleted at once (atOnce): an event of such a table that no row has the ID of,
+// deleted or not, so one deleted by a person, or moved to another day, is not kept. Each event keeps its row's ID, so
+// it is merged by it.
+func mergeEvents(ctx context.Context, q *sitedb.Queries, date string, events, before []map[string]any) ([]map[string]any, []map[string]any, error) {
+	packaged, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: retention.EventsKind, Date: date})
+	if errors.Is(err, sql.ErrNoRows) {
+		return events, before, nil
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	_, day, err := retention.ReadEvents(packaged.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	// gone is whether an event packaged before is of a row deleted at once, and not one the day still has
+	gone := func(event map[string]any, now []map[string]any) (bool, error) {
+		exists, ok := atOnce[fmt.Sprint(event["k"])]
+		if !ok || slices.ContainsFunc(now, func(e map[string]any) bool { return e["id"] == event["id"] }) {
+			return false, nil
+		}
+		if err := exists(ctx, q, fmt.Sprint(event["id"])); !errors.Is(err, sql.ErrNoRows) {
+			return false, err
+		}
+		return true, nil
+	}
+	// What was in force is read from the rows of the days before, so a temp target deleted at once is kept from it
+	for _, merged := range []struct {
+		into *[]map[string]any
+		from []map[string]any
+	}{{&events, day.Events}, {&before, day.InForce}} {
+		now := *merged.into
+		for _, event := range merged.from {
+			keep, err := gone(event, now)
+			if err != nil {
+				return nil, nil, err
+			}
+			if keep {
+				*merged.into = append(*merged.into, event)
+			}
+		}
+	}
+	slices.SortStableFunc(before, func(a, b map[string]any) int { return int(EventAt(a) - EventAt(b)) })
+	return events, before, nil
 }

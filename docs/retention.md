@@ -188,7 +188,10 @@ Unless `RETENTION_DELETE_ROWS` is `false`, a run deletes the treatments and even
 |---|---|
 | A day's `events` cold day is written last, after its treatment series. | It is the mark that the day is packaged. |
 | A row is deleted only if its day's `events` cold day was written after the row was last written. | No row is deleted that its cold days do not have. |
-| A row is deleted only when that cold day is 24 hours old (`db.PackagedSettle`). | A backfill writes a day's rows over some runs. |
+| No row of the hot days is deleted, of any table. | The pages and the apps read them as rows. |
+| An activity, temp target or note older than the hot days is deleted with no 24-hour wait, when its day's `events` cold day has it, with a treatment of only those events or of none. | They are only events. A day packaged again starts from its `events` cold day and keeps them (`mergeEvents`), merged by ID. |
+| A merged event is kept only if no row has its ID, deleted or not. | An event that a person deleted, or moved to another day, is not brought back. |
+| Any other row is deleted only when that cold day is 24 hours old (`db.PackagedSettle`). | A backfill writes a day's rows over some runs, and the carbs, insulin and basal rate series are made from rows. |
 | A cold day packaged again with no change, and no row of its day written since, is not written again. | Its age stays, so a second Truncate does not make the wait start again. |
 | A day older than the hot days, with an `events` cold day 24 hours old, is not packaged again. | Its rows are not all there. |
 | A row written later for such a day stays a row. | The Nightscout API gives it with the day's made treatments. |

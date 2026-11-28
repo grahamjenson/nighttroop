@@ -1,6 +1,7 @@
 package sitedata
 
 import (
+	"database/sql"
 	"fmt"
 	"math"
 	"testing"
@@ -112,10 +113,20 @@ func TestDeletingPackagedTreatments(t *testing.T) {
 	packageDays()
 	require.Equal(t, all, rows())
 
-	// A server that deletes rows does not until a day has settled, a day here
+	// A server that deletes rows deletes the old day's activity, target and note at once, as they are only events, which
+	// the day packaged again keeps. The rest waits until the day has settled, a day here, as their series are built
+	// from rows: the treatments, a loop's dose, the meal, the temp basal and the switches.
 	cfg.RetentionDeleteRows = true
 	packageDays()
-	require.Equal(t, all, rows())
+	atOnce := map[string]int{}
+	for table, n := range all {
+		atOnce[table] = n
+	}
+	atOnce["activities"], atOnce["temp_targets"], atOnce["notification_events"] = 0, 0, 0
+	require.Equal(t, atOnce, rows())
+	packageDays()
+	require.Equal(t, atOnce, rows())
+	require.Subset(t, eventIDs(events(old)), []any{"target", "run", "note"}, "packaged again, the day keeps their events")
 
 	// Settled, the old day's treatments and events are deleted, each with its treatment. The recent meal is a hot row.
 	// Of the profile switches, the replaced one and the one long over go; the newest with no end and the one still
@@ -134,11 +145,7 @@ func TestDeletingPackagedTreatments(t *testing.T) {
 	require.Less(t, total("basal_rate", old)/12, 24*1.5)
 	require.Greater(t, total("basal_rate", old)/12, 24.0)
 	day := events(old)
-	ids := []any{}
-	for _, event := range day.Events {
-		ids = append(ids, event["id"])
-	}
-	require.ElementsMatch(t, []any{"over", "running", "meal", "bolus", "target", "run", "note"}, ids)
+	require.ElementsMatch(t, []any{"over", "running", "meal", "bolus", "target", "run", "note"}, eventIDs(day))
 	require.Equal(t, "in force", day.InForce[0]["id"])
 	// The recent day still reads the switch in force from its row
 	require.Equal(t, "running", events(recent).InForce[len(events(recent).InForce)-1]["id"])
@@ -177,6 +184,77 @@ func TestTruncatingAgainDoesNotHoldBackDeletingPackagedRows(t *testing.T) {
 	require.Equal(t, 1, doses(), "truncated again before it settled")
 	time.Sleep(120 * time.Millisecond)
 	require.Equal(t, 0, doses(), "settled since it was first packaged")
+}
+
+// eventIDs are the IDs of a day's events
+func eventIDs(day retention.EventsDay) []any {
+	ids := []any{}
+	for _, event := range day.Events {
+		ids = append(ids, event["id"])
+	}
+	return ids
+}
+
+// A day packaged again keeps the events of its rows deleted at once (activities, temp targets, notes and treatments of
+// only them, or of none, as a site change), merged by ID with those built from its rows that are left. One deleted by
+// a person before is not brought back, and a temp target still in force at the next day's start stays in force there.
+func TestEventsDeletedAtOnceStayInTheirDay(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	t.Cleanup(func() { cfg.RetentionDeleteRows = true })
+	cfg.RetentionDeleteRows = false
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	must := func(_ any, err error) { require.NoError(t, err) }
+	old := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -40)
+	next, at, by := old.AddDate(0, 0, 1), old.Add(5*time.Hour).UnixMilli(), "phone"
+	must(q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: "walk", ActivityType: "walk", OccurredAt: at, CreatedByIdentityName: by}))
+	must(q.CreateNotificationEvent(ctx, sitedb.CreateNotificationEventParams{ID: "memo", Title: "Memo", NotificationType: "note", OccurredAt: at, CreatedByIdentityName: by}))
+	must(q.CreateNotificationEvent(ctx, sitedb.CreateNotificationEventParams{ID: "mistake", Title: "Mistake", NotificationType: "note", OccurredAt: at, CreatedByIdentityName: by}))
+	must(q.CreateTempTarget(ctx, sitedb.CreateTempTargetParams{ID: "overnight", LowTargetMgdl: 140, HighTargetMgdl: 160, DurationMinutes: 10 * 60, OccurredAt: old.Add(20 * time.Hour).UnixMilli(), CreatedByIdentityName: by}))
+	must(q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "site", GroupType: "Site Change", OccurredAt: at, CreatedByIdentityName: by}))
+	must(q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: "bolus", Dose: 4, OccurredAt: at, CreatedByIdentityName: by}))
+	must(q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "bolus-group", GroupType: "Correction Bolus", InsulinDoseID: new("bolus"), OccurredAt: at, CreatedByIdentityName: by}))
+	must(q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "breakfast", Carbs: new(30.0), OccurredAt: next.Add(time.Hour).UnixMilli(), CreatedByIdentityName: by}))
+	truncate := func() {
+		_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+	}
+	day := func(of time.Time) retention.EventsDay {
+		row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "events", Date: of.Format(time.DateOnly)})
+		require.NoError(t, err)
+		_, events, err := retention.ReadEvents(row.Body)
+		require.NoError(t, err)
+		return events
+	}
+
+	// Packaged with every row, then a person deletes a note, as can happen before the server deletes rows
+	truncate()
+	require.Contains(t, eventIDs(day(old)), "mistake")
+	_, err := q.SoftDeleteNotificationEvent(ctx, sitedb.SoftDeleteNotificationEventParams{ID: "mistake", UpdatedByIdentityName: &by})
+	require.NoError(t, err)
+
+	// The server deletes rows: the events-only ones at once, while the bolus and its treatment wait for the day to settle
+	cfg.RetentionDeleteRows = true
+	truncate()
+	_, err = q.GetActivity(ctx, sitedb.GetActivityParams{ID: "walk", IncludeDeleted: true})
+	require.ErrorIs(t, err, sql.ErrNoRows)
+	_, err = q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: "site", IncludeDeleted: true})
+	require.ErrorIs(t, err, sql.ErrNoRows, "a treatment of no event")
+	_, err = q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: "bolus-group"})
+	require.NoError(t, err, "a treatment of a dose waits")
+	require.ElementsMatch(t, []any{"walk", "memo", "overnight", "site", "bolus"}, eventIDs(day(old)), "the deleted note is not brought back")
+
+	// A late row for each day packages them again: the old day keeps the events whose rows are gone, and the next day
+	// keeps the temp target in force at its start, though its row is gone
+	must(q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "late snack", Carbs: new(10.0), OccurredAt: old.Add(22 * time.Hour).UnixMilli(), CreatedByIdentityName: by}))
+	must(q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "late lunch", Carbs: new(50.0), OccurredAt: next.Add(12 * time.Hour).UnixMilli(), CreatedByIdentityName: by}))
+	truncate()
+	require.ElementsMatch(t, []any{"walk", "memo", "overnight", "site", "bolus", "late snack"}, eventIDs(day(old)))
+	inForce := []any{}
+	for _, event := range day(next).InForce {
+		inForce = append(inForce, event["id"])
+	}
+	require.Contains(t, inForce, "overnight")
+	require.ElementsMatch(t, []any{"breakfast", "late lunch"}, eventIDs(day(next)))
 }
 
 // A day with rows but no event, as one whose only meal was deleted, on a site with no profile, is packaged too, with
@@ -260,4 +338,39 @@ func TestADayWithTooManyEventsKeepsTheMostImportant(t *testing.T) {
 	food, err := q.AllFoodIntakes(ctx, sitedb.AllFoodIntakesParams{Limit: 10})
 	require.NoError(t, err)
 	require.Empty(t, food)
+}
+
+// "At once" is without the wait for a day to settle, not before the hot days are over: an activity, a note, a temp
+// target and a site change of today, of 2 days ago, and of the last of the hot days all stay rows, however many times
+// the site is packaged, and only those older than the hot days go
+func TestEventsOfTheHotDaysAreNotDeleted(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	must := func(_ any, err error) { require.NoError(t, err) }
+	now := time.Now().UTC()
+	today := now.Truncate(24 * time.Hour)
+	ages := map[string]time.Time{"today": now.Add(-time.Minute), "recent": today.AddDate(0, 0, -2).Add(5 * time.Hour),
+		"hot": today.AddDate(0, 0, -cfg.RetentionHotDays+1).Add(5 * time.Hour), "old": today.AddDate(0, 0, -cfg.RetentionHotDays-5).Add(5 * time.Hour)}
+	for age, when := range ages {
+		at, by := when.UnixMilli(), "phone"
+		must(q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: "walk-" + age, ActivityType: "walk", OccurredAt: at, CreatedByIdentityName: by}))
+		must(q.CreateNotificationEvent(ctx, sitedb.CreateNotificationEventParams{ID: "note-" + age, Title: "Note", NotificationType: "note", OccurredAt: at, CreatedByIdentityName: by}))
+		must(q.CreateTempTarget(ctx, sitedb.CreateTempTargetParams{ID: "target-" + age, LowTargetMgdl: 140, HighTargetMgdl: 160, DurationMinutes: 30, OccurredAt: at, CreatedByIdentityName: by}))
+		must(q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "site-" + age, GroupType: "Site Change", OccurredAt: at, CreatedByIdentityName: by}))
+	}
+	for range 3 {
+		_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+	}
+	for age := range ages {
+		kept := age != "old"
+		_, err := q.GetActivity(ctx, sitedb.GetActivityParams{ID: "walk-" + age})
+		require.Equal(t, kept, err == nil, "the activity of %s", age)
+		_, err = q.GetNotificationEvent(ctx, sitedb.GetNotificationEventParams{ID: "note-" + age})
+		require.Equal(t, kept, err == nil, "the note of %s", age)
+		_, err = q.GetTempTarget(ctx, sitedb.GetTempTargetParams{ID: "target-" + age})
+		require.Equal(t, kept, err == nil, "the temp target of %s", age)
+		_, err = q.GetEventGroup(ctx, sitedb.GetEventGroupParams{ID: "site-" + age})
+		require.Equal(t, kept, err == nil, "the site change of %s", age)
+	}
 }
