@@ -2552,6 +2552,29 @@ With `S3_URL`:
   - Loop's indefinite duration.
   - A device status's pump and uploader, for fields with no column that Nightguard shows (e.g. AAPS's extended).
 
+#### Sealing of old days
+
+Before it backs up a site written to, at most every hour, the server seals the site's days. See `docs/retention.md`.
+
+- Each UTC day that ended has one `cold_days` row for its CGM glucose: one value for each 5 minutes, in whole
+  mg/dL, or none.
+  - A 5-minute step holds its newest CGM reading. If two sources read the same glucose, the step holds the
+    reading of the best source (as the glucose page shows it).
+  - A deleted reading, and a meter reading, are not in it.
+  - Today is not sealed.
+- The body of a row is packed bytes. Its first bytes say its version (1) and its shape (series), and its step and
+  scale. A body with a version or a shape the server does not know is an error.
+- A run seals only the days that had a CGM reading written, changed or deleted since the run before. A site that
+  was never sealed has all its days sealed. The **Truncate** button seals all days.
+- If `RETENTION_DELETE_ROWS` is not `true` (the default), the server deletes no reading.
+- If `RETENTION_DELETE_ROWS` is `true`, the server deletes the CGM readings older than `RETENTION_HOT_DAYS` days
+  (default 31, minimum 3).
+  - Only a reading whose day was sealed after the reading was last written is deleted.
+  - Kept as rows: a meter reading, a reading with a note, and a reading a treatment refers to.
+  - If a reading is written late for a day whose rows are deleted, the day keeps its values and gets the new one.
+  - If a reading of such a day is deleted, its 5-minute step is cleared.
+- Each table of a site DB has a retention policy (`data/retention`). A table with no policy fails a test.
+
 #### Device status truncation
 
 Before it backs up a site written to, at most every hour, the server truncates it:

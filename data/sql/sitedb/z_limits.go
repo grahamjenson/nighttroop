@@ -26,6 +26,13 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"CreatedByIdentityID":   {Column: "created_by_identity_id"},
 		"CreatedByIdentityName": {Column: "created_by_identity_name", Required: true, MaxLength: 64},
 	},
+	"cold_days": {
+		"Kind":      {Column: "kind", Required: true, MaxLength: 32},
+		"Date":      {Column: "date", Required: true, MinLength: 10, MaxLength: 10},
+		"Body":      {Column: "body", Required: true, MaxLength: 16384},
+		"CreatedAt": {Column: "created_at", Required: true},
+		"UpdatedAt": {Column: "updated_at", Required: true},
+	},
 	"device_reports": {
 		"ID":                    {Column: "id", Required: true, MaxLength: 36},
 		"DeviceBatteryPercent":  {Column: "device_battery_percent", Min: new(0.0), Max: new(100.0)},

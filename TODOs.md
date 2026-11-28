@@ -3,6 +3,11 @@
 ## Before Beta Testing
 
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
+    1. P0: Retention step 2 (`docs/retention.md`): one reader for glucose over hot rows and cold days, for the
+       Nightscout API's `entries` and the glucose page. Until then `RETENTION_DELETE_ROWS` must stay off.
+    1. P1: Retention steps 3 to 6: device report series, events, reports from series (remove the summaries), hot
+       days by size (remove most of the truncation)
+    1. P2: The 31 hot days are about 11.5 MB of a looping site: no `event_groups` row for an automatic record
     1. P4: A site's DB size on its pages, and for its write limits (3 and 4 times its size limit), counts the free
        pages a truncate leaves, under 10% of it: measure it without them, as the truncate of a site far over its
        limit does

@@ -60,6 +60,9 @@ func TestSiteDataLimits(t *testing.T) {
 		"profile_switches": testutils.Recipe(func(i int) sitedb.CreateProfileSwitchParams {
 			return sitedb.CreateProfileSwitchParams{ID: id(i), Name: id(i), OccurredAt: now, CreatedByIdentityName: by}
 		}, testutils.NoResult(q.CreateProfileSwitch), updatedBy),
+		"cold_days": testutils.Recipe(func(i int) sitedb.UpsertColdDayParams {
+			return sitedb.UpsertColdDayParams{Kind: "glucose", Date: fmt.Sprintf("%010d", i), Body: []byte{1}}
+		}, q.UpsertColdDay),
 		"summary_period": testutils.Recipe(func(i int) sitedb.UpsertSummaryPeriodParams {
 			return sitedb.UpsertSummaryPeriodParams{Period: "day", Date: fmt.Sprintf("%010d", i), Timezone: "UTC", Days: 1,
 				GlucoseMgdlJson: "[]", LoopIobJson: "[]", LoopIobBasalJson: "[]", LoopIobTreatmentJson: "[]", LoopCobJson: "[]"}

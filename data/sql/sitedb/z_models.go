@@ -54,6 +54,14 @@ type Activity struct {
 	CreatedByIdentityName string
 }
 
+type ColdDay struct {
+	Kind      string
+	Date      string
+	Body      []byte
+	CreatedAt int64
+	UpdatedAt int64
+}
+
 type DeviceReport struct {
 	ID                    string
 	DeviceBatteryPercent  *float64

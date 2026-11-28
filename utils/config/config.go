@@ -16,6 +16,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"nighttroop.t1d.nz/data/events"
+	"nighttroop.t1d.nz/data/retention"
 	"nighttroop.t1d.nz/utils"
 	"nighttroop.t1d.nz/utils/authclients"
 	"nighttroop.t1d.nz/utils/consts"
@@ -224,6 +225,11 @@ type ServerConfig struct {
 	SiteCreateGlobalPerMinuteBurst int
 	SiteCreateIPPerMinuteLimit     float64
 	SiteCreateIPPerMinuteBurst     int
+
+	// RetentionHotDays is how many days of a site are kept as rows, RETENTION_HOT_DAYS, and RetentionDeleteRows whether
+	// the rows of older days are deleted once their cold day has them, RETENTION_DELETE_ROWS (see docs/retention.md)
+	RetentionHotDays    int
+	RetentionDeleteRows bool
 
 	//
 	// Site Limits
@@ -477,6 +483,9 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		// Site Limits
 		MaxSites:             configIntSelect(dotenv, "MAX_SITES", 10000),
 		MaxIdentitiesPerSite: configIntSelect(dotenv, "MAX_IDENTITIES_PER_USER", 100),
+
+		RetentionHotDays:    max(configIntSelect(dotenv, "RETENTION_HOT_DAYS", retention.DefaultHotDays), retention.MinHotDays),
+		RetentionDeleteRows: configStringSelect(dotenv, "RETENTION_DELETE_ROWS", "") == "true",
 
 		// Truncate Config
 		TruncateIntervalInSeconds: configIntSelect(dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),

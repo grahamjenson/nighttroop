@@ -236,6 +236,31 @@ func (m *Activity) SetCreatedByIdentityName(v string) {
 	m.CreatedByIdentityName = v
 }
 
+// GetDate returns the Date value.
+func (m ColdDay) GetDate() string {
+	return m.Date
+}
+
+// GetCreatedAt returns the CreatedAt value.
+func (m ColdDay) GetCreatedAt() int64 {
+	return m.CreatedAt
+}
+
+// SetCreatedAt sets the CreatedAt value and returns the updated ColdDay.
+func (m *ColdDay) SetCreatedAt(v int64) {
+	m.CreatedAt = v
+}
+
+// GetUpdatedAt returns the UpdatedAt value.
+func (m ColdDay) GetUpdatedAt() int64 {
+	return m.UpdatedAt
+}
+
+// SetUpdatedAt sets the UpdatedAt value and returns the updated ColdDay.
+func (m *ColdDay) SetUpdatedAt(v int64) {
+	m.UpdatedAt = v
+}
+
 // GetID returns the ID value.
 func (m DeviceReport) GetID() string {
 	return m.ID
@@ -2464,6 +2489,16 @@ func (m TempTargetsVw) GetCreatedByIdentityName() *string {
 // SetCreatedByIdentityName sets the CreatedByIdentityName value and returns the updated TempTargetsVw.
 func (m *TempTargetsVw) SetCreatedByIdentityName(v *string) {
 	m.CreatedByIdentityName = v
+}
+
+// GetDate returns the Date value.
+func (m GetColdDayParams) GetDate() string {
+	return m.Date
+}
+
+// GetDate returns the Date value.
+func (m UpsertColdDayParams) GetDate() string {
+	return m.Date
 }
 
 // SetLimit sets the Limit value and returns the updated AllDeviceReportsParams.
