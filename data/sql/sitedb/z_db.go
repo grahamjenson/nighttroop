@@ -225,6 +225,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deviceReportsLoopBetweenStmt, err = db.PrepareContext(ctx, deviceReportsLoopBetween); err != nil {
 		return nil, fmt.Errorf("error preparing query DeviceReportsLoopBetween: %w", err)
 	}
+	if q.eventDaysWrittenSinceStmt, err = db.PrepareContext(ctx, eventDaysWrittenSince); err != nil {
+		return nil, fmt.Errorf("error preparing query EventDaysWrittenSince: %w", err)
+	}
 	if q.eventGroupAscendingIDsStmt, err = db.PrepareContext(ctx, eventGroupAscendingIDs); err != nil {
 		return nil, fmt.Errorf("error preparing query EventGroupAscendingIDs: %w", err)
 	}
@@ -236,6 +239,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.eventGroupTotalsStmt, err = db.PrepareContext(ctx, eventGroupTotals); err != nil {
 		return nil, fmt.Errorf("error preparing query EventGroupTotals: %w", err)
+	}
+	if q.eventGroupsOfDayStmt, err = db.PrepareContext(ctx, eventGroupsOfDay); err != nil {
+		return nil, fmt.Errorf("error preparing query EventGroupsOfDay: %w", err)
 	}
 	if q.eventsToGroupStmt, err = db.PrepareContext(ctx, eventsToGroup); err != nil {
 		return nil, fmt.Errorf("error preparing query EventsToGroup: %w", err)
@@ -982,6 +988,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deviceReportsLoopBetweenStmt: %w", cerr)
 		}
 	}
+	if q.eventDaysWrittenSinceStmt != nil {
+		if cerr := q.eventDaysWrittenSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing eventDaysWrittenSinceStmt: %w", cerr)
+		}
+	}
 	if q.eventGroupAscendingIDsStmt != nil {
 		if cerr := q.eventGroupAscendingIDsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing eventGroupAscendingIDsStmt: %w", cerr)
@@ -1000,6 +1011,11 @@ func (q *Queries) Close() error {
 	if q.eventGroupTotalsStmt != nil {
 		if cerr := q.eventGroupTotalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing eventGroupTotalsStmt: %w", cerr)
+		}
+	}
+	if q.eventGroupsOfDayStmt != nil {
+		if cerr := q.eventGroupsOfDayStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing eventGroupsOfDayStmt: %w", cerr)
 		}
 	}
 	if q.eventsToGroupStmt != nil {
@@ -1783,10 +1799,12 @@ type Queries struct {
 	deviceReportTotalsStmt                      *sql.Stmt
 	deviceReportsForDeviceStmt                  *sql.Stmt
 	deviceReportsLoopBetweenStmt                *sql.Stmt
+	eventDaysWrittenSinceStmt                   *sql.Stmt
 	eventGroupAscendingIDsStmt                  *sql.Stmt
 	eventGroupHistoryIDsStmt                    *sql.Stmt
 	eventGroupSortedIDsStmt                     *sql.Stmt
 	eventGroupTotalsStmt                        *sql.Stmt
+	eventGroupsOfDayStmt                        *sql.Stmt
 	eventsToGroupStmt                           *sql.Stmt
 	foodIntakeDurationsStmt                     *sql.Stmt
 	foodIntakeTotalsStmt                        *sql.Stmt
@@ -1995,10 +2013,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deviceReportTotalsStmt:                      q.deviceReportTotalsStmt,
 		deviceReportsForDeviceStmt:                  q.deviceReportsForDeviceStmt,
 		deviceReportsLoopBetweenStmt:                q.deviceReportsLoopBetweenStmt,
+		eventDaysWrittenSinceStmt:                   q.eventDaysWrittenSinceStmt,
 		eventGroupAscendingIDsStmt:                  q.eventGroupAscendingIDsStmt,
 		eventGroupHistoryIDsStmt:                    q.eventGroupHistoryIDsStmt,
 		eventGroupSortedIDsStmt:                     q.eventGroupSortedIDsStmt,
 		eventGroupTotalsStmt:                        q.eventGroupTotalsStmt,
+		eventGroupsOfDayStmt:                        q.eventGroupsOfDayStmt,
 		eventsToGroupStmt:                           q.eventsToGroupStmt,
 		foodIntakeDurationsStmt:                     q.foodIntakeDurationsStmt,
 		foodIntakeTotalsStmt:                        q.foodIntakeTotalsStmt,

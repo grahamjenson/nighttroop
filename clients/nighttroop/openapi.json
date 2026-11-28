@@ -1070,7 +1070,7 @@
           "bytes": { "type": "integer", "format": "int64", "description": "The size of its packed body" },
           "sealed_at": { "type": "integer", "format": "int64", "description": "When it was last sealed, in ms" },
           "version": { "type": "integer", "description": "The version its first byte says" },
-          "shape": { "type": "string", "description": "The shape its second byte says, e.g. series" },
+          "shape": { "type": "string", "description": "The shape its second byte says: series or events. For events, steps and values are how many there are, and step_seconds and scale are 0." },
           "second_order": { "type": "boolean", "description": "Whether each value is kept as the change of its change" },
           "deflated": { "type": "boolean", "description": "Whether its values are DEFLATE compressed" },
           "step_seconds": { "type": "integer", "format": "int64", "description": "The step of its grid" },
@@ -1080,7 +1080,8 @@
           "min": { "type": "number", "nullable": true },
           "max": { "type": "number", "nullable": true },
           "error": { "type": "string", "nullable": true, "description": "Why its bytes could not be read, e.g. a version this server does not know" },
-          "points": { "type": "array", "description": "Each value with the time its step starts; only for one day", "items": { "$ref": "#/components/schemas/ColdPoint" } }
+          "points": { "type": "array", "description": "Each value with the time its step starts; only for one day of a series", "items": { "$ref": "#/components/schemas/ColdPoint" } },
+          "events": { "type": "array", "description": "A day's events, the oldest first; only for one day of events. Each is the columns kept of its row, by their names, with k, its table.", "items": { "type": "object", "additionalProperties": true } }
         }
       },
       "ColdPoint": {

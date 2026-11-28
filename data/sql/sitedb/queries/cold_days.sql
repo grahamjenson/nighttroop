@@ -69,3 +69,25 @@ SELECT DISTINCT day FROM (
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) FROM food_intakes WHERE food_intakes.updated_at >= sqlc.arg('Since') AND food_intakes.occurred_at < sqlc.arg('Before')
     UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) FROM temp_basals WHERE temp_basals.updated_at >= sqlc.arg('Since') AND temp_basals.occurred_at < sqlc.arg('Before')
 ) ORDER BY 1 LIMIT 5000;
+
+-- name: EventDaysWrittenSince :many
+-- The UTC days, as days since 1970, that ended before Before and had an event written, changed or deleted since
+-- Since: a meal, a dose, a meter's reading or one with a note, an activity, a temp target, a profile switch, a
+-- notification, or a treatment of them. The days whose events are sealed again.
+SELECT DISTINCT day FROM (
+    SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM food_intakes WHERE food_intakes.updated_at >= sqlc.arg('Since') AND food_intakes.occurred_at < sqlc.arg('Before')
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM insulin_doses WHERE insulin_doses.updated_at >= sqlc.arg('Since') AND insulin_doses.occurred_at < sqlc.arg('Before')
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM glucose_readings WHERE glucose_readings.updated_at >= sqlc.arg('Since') AND glucose_readings.occurred_at < sqlc.arg('Before') AND (glucose_readings.reading_type = 'mbg' OR glucose_readings.notes IS NOT NULL)
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM activities WHERE activities.updated_at >= sqlc.arg('Since') AND activities.occurred_at < sqlc.arg('Before')
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM temp_targets WHERE temp_targets.updated_at >= sqlc.arg('Since') AND temp_targets.occurred_at < sqlc.arg('Before')
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM profile_switches WHERE profile_switches.updated_at >= sqlc.arg('Since') AND profile_switches.occurred_at < sqlc.arg('Before')
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM notification_events WHERE notification_events.updated_at >= sqlc.arg('Since') AND notification_events.occurred_at < sqlc.arg('Before')
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM event_groups WHERE event_groups.updated_at >= sqlc.arg('Since') AND event_groups.occurred_at < sqlc.arg('Before') AND event_groups.temp_basal_id IS NULL
+) ORDER BY 1 LIMIT 5000;
+
+-- name: EventGroupsOfDay :many
+-- A day's treatments, without their events, but those of temp basals, which are not events: a loop writes one every
+-- 5 minutes, and their rate is sealed as a series
+SELECT * FROM event_groups
+WHERE occurred_at >= sqlc.arg('From') AND occurred_at < sqlc.arg('To') AND temp_basal_id IS NULL AND deleted_at IS NULL
+ORDER BY occurred_at LIMIT 5000;

@@ -145,12 +145,15 @@ type ColdDay struct {
 	// Error Why its bytes could not be read, e.g. a version this server does not know
 	Error *string `json:"error"`
 
+	// Events A day's events, the oldest first; only for one day of events. Each is the columns kept of its row, by their names, with k, its table.
+	Events *[]map[string]interface{} `json:"events,omitempty"`
+
 	// Kind The series, e.g. glucose
 	Kind string   `json:"kind"`
 	Max  *float32 `json:"max"`
 	Min  *float32 `json:"min"`
 
-	// Points Each value with the time its step starts; only for one day
+	// Points Each value with the time its step starts; only for one day of a series
 	Points *[]ColdPoint `json:"points,omitempty"`
 
 	// Scale What each value was multiplied by to be kept as a whole number
@@ -162,7 +165,7 @@ type ColdDay struct {
 	// SecondOrder Whether each value is kept as the change of its change
 	SecondOrder bool `json:"second_order"`
 
-	// Shape The shape its second byte says, e.g. series
+	// Shape The shape its second byte says: series or events. For events, steps and values are how many there are, and step_seconds and scale are 0.
 	Shape string `json:"shape"`
 
 	// StepSeconds The step of its grid

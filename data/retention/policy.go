@@ -100,6 +100,9 @@ const (
 	hour        = time.Hour
 )
 
+// EventsKind is the kind of the cold day that holds a day's events
+const EventsKind = "events"
+
 // who, when and why are what every event keeps
 var common = []string{"id", "occurred_at", "utc_offset_minutes", "notes", "reason", "created_by_identity_name"}
 
@@ -122,10 +125,10 @@ var Policies = map[string]Policy{
 	"food_intakes":     {Shape: EventsShape, Series: []Series{Carbs}, Keep: keep("carbs", "name", "food_type", "absorption_time_minutes", "fat", "protein", "fibre", "energy")},
 	"activities":       {Shape: EventsShape, Keep: keep("name", "activity_type", "duration_minutes", "calories", "steps", "heart_rate")},
 	"temp_targets":     {Shape: EventsShape, Keep: keep("low_target_mgdl", "high_target_mgdl", "duration_minutes")},
-	"profile_switches": {Shape: EventsShape, Keep: keep("name", "multiplier", "timeshift", "duration_minutes", "profile_id"), Lost: "A switch to the profile already in force. profile_id is new: the hash of the profile, kept once as a dictionary row."},
+	"profile_switches": {Shape: EventsShape, Keep: keep("name", "multiplier", "timeshift", "duration_minutes"), Lost: "The profile a switch was made with, until each profile is kept once (step 4c)."},
 	"notification_events": {Shape: EventsShape, Keep: keep("notification_type", "title", "severity", "content"), Where: "created_by_identity_id is a person's",
 		Lost: "What a device announced."},
-	"event_groups": {Shape: EventsShape, Keep: []string{"group_type", "entered_by", "duration_minutes", "sensor_code", "transmitter_id"},
+	"event_groups": {Shape: EventsShape, Keep: keep("group_type", "entered_by", "duration_minutes", "sensor_code", "transmitter_id"),
 		Lost: "The app's own IDs of a treatment (uuid, sent_hash, pump_id, sync_identifier) and its bolus calculator. A group's kept columns move onto its event; a group with no event (a site change) is an event."},
 	"device_reports": {Shape: SeriesShape,
 		Series: []Series{IOB, IOBBasal, COB, PumpReservoir, PumpBattery, PhoneBattery},

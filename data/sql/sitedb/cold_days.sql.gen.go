@@ -328,6 +328,129 @@ func (q *Queries) DeviceReportNumbersOfDay(ctx context.Context, arg DeviceReport
 	return items, nil
 }
 
+const eventDaysWrittenSince = `-- name: EventDaysWrittenSince :many
+SELECT DISTINCT day FROM (
+    SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM food_intakes WHERE food_intakes.updated_at >= ?1 AND food_intakes.occurred_at < ?2
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM insulin_doses WHERE insulin_doses.updated_at >= ?1 AND insulin_doses.occurred_at < ?2
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM glucose_readings WHERE glucose_readings.updated_at >= ?1 AND glucose_readings.occurred_at < ?2 AND (glucose_readings.reading_type = 'mbg' OR glucose_readings.notes IS NOT NULL)
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM activities WHERE activities.updated_at >= ?1 AND activities.occurred_at < ?2
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM temp_targets WHERE temp_targets.updated_at >= ?1 AND temp_targets.occurred_at < ?2
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM profile_switches WHERE profile_switches.updated_at >= ?1 AND profile_switches.occurred_at < ?2
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM notification_events WHERE notification_events.updated_at >= ?1 AND notification_events.occurred_at < ?2
+    UNION SELECT CAST(occurred_at / 86400000 AS INTEGER) AS day FROM event_groups WHERE event_groups.updated_at >= ?1 AND event_groups.occurred_at < ?2 AND event_groups.temp_basal_id IS NULL
+) ORDER BY 1 LIMIT 5000
+`
+
+type EventDaysWrittenSinceParams struct {
+	Since  int64
+	Before int64
+}
+
+// The UTC days, as days since 1970, that ended before Before and had an event written, changed or deleted since
+// Since: a meal, a dose, a meter's reading or one with a note, an activity, a temp target, a profile switch, a
+// notification, or a treatment of them. The days whose events are sealed again.
+func (q *Queries) EventDaysWrittenSince(ctx context.Context, arg EventDaysWrittenSinceParams) ([]int64, error) {
+	rows, err := q.query(ctx, q.eventDaysWrittenSinceStmt, eventDaysWrittenSince, arg.Since, arg.Before)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var day int64
+		if err := rows.Scan(&day); err != nil {
+			return nil, err
+		}
+		items = append(items, day)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const eventGroupsOfDay = `-- name: EventGroupsOfDay :many
+SELECT id, group_type, glucose_reading_id, insulin_dose_id, food_intake_id, temp_basal_id, temp_target_id, profile_switch_id, activity_id, notification_event_id, entered_by, uuid, mode, auto_forced, reasons, original_duration_ms, sent_hash, pump_id, pump_serial, pump_type, ending_pump_id, sensor_code, transmitter_id, bolus_calculator_result_json, sync_identifier, client_created_at, emulated_treatment_json, notes, reason, duration_minutes, duration_ms, deleted_at, utc_offset_minutes, occurred_at, created_at, updated_at, created_by_app_name, created_by_device_name, updated_by_identity_id, updated_by_identity_name, created_by_identity_id, created_by_identity_name FROM event_groups
+WHERE occurred_at >= ?1 AND occurred_at < ?2 AND temp_basal_id IS NULL AND deleted_at IS NULL
+ORDER BY occurred_at LIMIT 5000
+`
+
+type EventGroupsOfDayParams struct {
+	From int64
+	To   int64
+}
+
+// A day's treatments, without their events, but those of temp basals, which are not events: a loop writes one every
+// 5 minutes, and their rate is sealed as a series
+func (q *Queries) EventGroupsOfDay(ctx context.Context, arg EventGroupsOfDayParams) ([]*EventGroup, error) {
+	rows, err := q.query(ctx, q.eventGroupsOfDayStmt, eventGroupsOfDay, arg.From, arg.To)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []*EventGroup
+	for rows.Next() {
+		var i EventGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupType,
+			&i.GlucoseReadingID,
+			&i.InsulinDoseID,
+			&i.FoodIntakeID,
+			&i.TempBasalID,
+			&i.TempTargetID,
+			&i.ProfileSwitchID,
+			&i.ActivityID,
+			&i.NotificationEventID,
+			&i.EnteredBy,
+			&i.Uuid,
+			&i.Mode,
+			&i.AutoForced,
+			&i.Reasons,
+			&i.OriginalDurationMs,
+			&i.SentHash,
+			&i.PumpID,
+			&i.PumpSerial,
+			&i.PumpType,
+			&i.EndingPumpID,
+			&i.SensorCode,
+			&i.TransmitterID,
+			&i.BolusCalculatorResultJson,
+			&i.SyncIdentifier,
+			&i.ClientCreatedAt,
+			&i.EmulatedTreatmentJson,
+			&i.Notes,
+			&i.Reason,
+			&i.DurationMinutes,
+			&i.DurationMs,
+			&i.DeletedAt,
+			&i.UtcOffsetMinutes,
+			&i.OccurredAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedByAppName,
+			&i.CreatedByDeviceName,
+			&i.UpdatedByIdentityID,
+			&i.UpdatedByIdentityName,
+			&i.CreatedByIdentityID,
+			&i.CreatedByIdentityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getColdDay = `-- name: GetColdDay :one
 SELECT kind, date, body, created_at, updated_at FROM cold_days WHERE kind = ?1 AND date = ?2
 `

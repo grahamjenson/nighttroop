@@ -1,7 +1,8 @@
 # Retention: hot rows and cold days
 
-**Status:** steps 1 to 4a are built. The server seals the CGM glucose of each day, what a loop's phone reports
-(IOB, COB, reservoir, batteries), and the treatments (basal rate, insulin, carbs) into `cold_days`. The Nightscout API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
+**Status:** steps 1 to 4b are built. The server seals the CGM glucose of each day, what a loop's phone reports
+(IOB, COB, reservoir, batteries), the treatments (basal rate, insulin, carbs), and the day's events into
+`cold_days`. The Nightscout API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
 `true`. The other steps are the plan. See [Build order](#build-order).
 
 ## The problem, measured
@@ -162,8 +163,17 @@ table. It needs no column and no migration.
 profile switches, site and sensor changes. Each event keeps its ID, its time, its values, its notes and who made it.
 A treatment and its `event_groups` row become one entry.
 
-- Automatic records (temp basals, automatic boluses) are not in the list. Their totals are in the series.
-- Its packing is to decide in step 4. It has shape `2`.
+- Automatic records (temp basals, a loop's boluses) are not in the list. They are in the series. A CGM reading is
+  in the list only if it has a note.
+- **Built** (`sealEventsDay`, `data/db/seal_events.go`). The body has shape `2`: the events as a JSON list, with
+  DEFLATE when that is smaller. JSON, as an event has other columns for each table.
+- An event is `k`, its table, and each column of its row that its table's policy keeps (`Keep` in `policy.go`) and
+  that has a value. So the policy table is what decides what is kept. A test checks each `Keep` column is real.
+- The columns of an event's treatment (`group_type`, `entered_by`) are added where the event has none of that
+  name.
+- A day with more events than a cold day holds (16 KB packed, some thousands of events) is not sealed.
+- **Not yet:** the profile of a profile switch (step 4c), what is in force at the start of a day (4c), and the
+  delete of event rows (4d). So no event row is deleted, and a day's events are built from its rows alone.
 
 ### Statistics
 
@@ -320,7 +330,9 @@ Each step is one PR, and the site works after each one.
 | 2b | The site's glucose page says that older readings are in Reports; a made entry by its `_id`; searches oldest first | Glucose page | |
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
-| 4b | Events: the day's list, with what is in force at its start; each profile kept one time; then the delete of treatment rows | Data pages, `treatments` | |
+| 4b | Events: the day's list | The Cold Days page | **Built** |
+| 4c | Each profile kept one time, by its hash (a new table); what is in force at the start of a day | | |
+| 4d | The Nightscout API makes `treatments` from sealed days; then the delete of treatment and event rows | Data pages, `treatments` | |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |

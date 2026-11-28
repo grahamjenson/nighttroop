@@ -25,6 +25,9 @@ const dayMs = int64(24 * time.Hour / time.Millisecond)
 // rows (RETENTION_DELETE_ROWS), the CGM readings older than its hot days are then deleted, but only those their cold
 // day has.
 //
+// Events (what a person did: a meal, a dose, a meter's reading, a note, a target, a switch): each day that ended, as
+// one list, see sealEventsDay.
+//
 // Treatments (the basal rate, insulin and carbs every 5 minutes): each day that ended, see sealTreatmentDays.
 //
 // What a loop's phone reports (its IOB and COB, the pump's reservoir, the batteries): each day up to now, today too,
@@ -61,6 +64,14 @@ func (db *ControlDB) sealSite(ctx context.Context, site *SiteDB, since int64, no
 	}
 	for _, day := range days {
 		if err := sealed(day, sealDeviceDay(ctx, q, day*dayMs)); err != nil {
+			return err
+		}
+	}
+	if days, err = q.EventDaysWrittenSince(ctx, sitedb.EventDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()}); err != nil {
+		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
+	}
+	for _, day := range days {
+		if err := sealed(day, sealEventsDay(ctx, q, day*dayMs)); err != nil {
 			return err
 		}
 	}
