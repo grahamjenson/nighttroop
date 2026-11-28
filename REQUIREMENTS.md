@@ -3056,7 +3056,9 @@ device statuses harder:
   - In a device's Manage menu the reset is **New token & setup steps**. In a person's it is **Reset password**.
   - If the device was added for an app, its new credentials show that app's setup steps again, with the new token
     in them.
-- An identity resets its own password on the settings page, the admin its own TOTP. Both sign it out.
+- An admin or a user resets its own password on the settings page, the admin its own TOTP. Both sign it out.
+- If a device or a read only user resets its own password on the site API, the answer is 403 and its token still
+  works. Only an admin gives it a new token.
 - Each reset is an event, with who made it.
 - The site's backup key, on the recover page, recovers a lost admin password or TOTP.
 

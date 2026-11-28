@@ -22,7 +22,7 @@
 // A check takes the role. A check takes the whole identity only when it must refuse a missing identity (signed out).
 //
 // The files group the rules by context:
-//   - login.go: who signs in to the website, and who must use TOTP.
+//   - login.go: who signs in to the website, who must use TOTP, and who gives themselves new credentials.
 //   - site_stores.go: who may search, get, create, update and delete each store of the site API.
 //   - site_admin.go: what only a site admin may do outside the stores, and the role a device for a loop must have.
 //   - site_report.go: the clinician, who sees only the printable report.

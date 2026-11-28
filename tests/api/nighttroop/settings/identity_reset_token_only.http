@@ -1,0 +1,95 @@
+// An identity that only has a Nightscout token (a device or a read only user) cannot give itself new credentials.
+// Its token is shared with its followers' apps, so one holder of it would lock the others out and keep the new one.
+INCLUDE steps/new_site_admin.steps
+
+// The site's read only device signs in with its token, as a follower's app does
+NAME reader_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 200
+
+// It learns its own ID from a push registration of its own, which any identity may add
+NAME reader_registers
+POST http://{{ site }}/settings/push-registrations
+H Authorization: Bearer {{ .reader_jwt.token }}
+H Accept: application/json
+B {"app": "loopfollow", "provider": "apns", "bundle_id": "com.TEAM123456.LoopFollow", "production": true, "token": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"}
+ASSERT_STATUS 201
+SET reader_id {{ .reader_registers.result.identity_id }}
+
+NAME reader_resets_own_password_refused
+POST http://{{ site }}/settings/identities/{{ .reader_id }}/password
+H Authorization: Bearer {{ .reader_jwt.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// So the token its other followers have still works, here as its SHA1, as xDrip+ sends it
+NAME reader_token_still_works
+GET http://{{ .ns_site }}/api/v1/entries.json
+H api-secret: {{ sha1 .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 200
+
+// Nor can the loop's phone, a Caregiver device or a read only user
+NAME phone_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ token }}
+ASSERT_STATUS 200
+
+NAME list_identities
+GET http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS "pwd_phone" "@result.items.1.name"
+
+NAME phone_resets_own_password_refused
+POST http://{{ site }}/settings/identities/{{ dig "list_identities.result.items.1.id" }}/password
+H Authorization: Bearer {{ .phone_jwt.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME create_caregiver
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "kitchen", "role": "device_read_write"}
+ASSERT_STATUS 201
+
+NAME caregiver_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .create_caregiver.result.ns_token }}
+ASSERT_STATUS 200
+
+NAME caregiver_resets_own_password_refused
+POST http://{{ site }}/settings/identities/{{ .create_caregiver.result.id }}/password
+H Authorization: Bearer {{ .caregiver_jwt.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+NAME create_viewer
+POST http://{{ site }}/settings/identities
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+B {"name": "viewer", "role": "user_readonly"}
+ASSERT_STATUS 201
+
+NAME viewer_jwt
+GET http://{{ .ns_site }}/api/v2/authorization/request/token={{ .create_viewer.result.ns_token }}
+ASSERT_STATUS 200
+
+NAME viewer_resets_own_password_refused
+POST http://{{ site }}/settings/identities/{{ .create_viewer.result.id }}/password
+H Authorization: Bearer {{ .viewer_jwt.token }}
+H Accept: application/json
+ASSERT_STATUS 403
+
+// A refused reset spends none of the site's limit on new credentials, so its admin still gives the device a new token,
+// which ends the old one
+NAME admin_resets_reader
+POST http://{{ site }}/settings/identities/{{ .reader_id }}/password
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EXISTS "@result.ns_token"
+
+NAME old_reader_token_refused
+GET http://{{ .ns_site }}/api/v1/entries.json
+H api-secret: {{ sha1 .create_new_site.read_only_nstoken }}
+ASSERT_STATUS 401
