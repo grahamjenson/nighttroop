@@ -192,8 +192,32 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteOldTempTargetsStmt, err = db.PrepareContext(ctx, deleteOldTempTargets); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOldTempTargets: %w", err)
 	}
+	if q.deletePackagedActivitiesStmt, err = db.PrepareContext(ctx, deletePackagedActivities); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedActivities: %w", err)
+	}
 	if q.deletePackagedCGMReadingsStmt, err = db.PrepareContext(ctx, deletePackagedCGMReadings); err != nil {
 		return nil, fmt.Errorf("error preparing query DeletePackagedCGMReadings: %w", err)
+	}
+	if q.deletePackagedEventGroupsStmt, err = db.PrepareContext(ctx, deletePackagedEventGroups); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedEventGroups: %w", err)
+	}
+	if q.deletePackagedFoodIntakesStmt, err = db.PrepareContext(ctx, deletePackagedFoodIntakes); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedFoodIntakes: %w", err)
+	}
+	if q.deletePackagedInsulinDosesStmt, err = db.PrepareContext(ctx, deletePackagedInsulinDoses); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedInsulinDoses: %w", err)
+	}
+	if q.deletePackagedNotificationEventsStmt, err = db.PrepareContext(ctx, deletePackagedNotificationEvents); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedNotificationEvents: %w", err)
+	}
+	if q.deletePackagedProfileSwitchesStmt, err = db.PrepareContext(ctx, deletePackagedProfileSwitches); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedProfileSwitches: %w", err)
+	}
+	if q.deletePackagedTempBasalsStmt, err = db.PrepareContext(ctx, deletePackagedTempBasals); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedTempBasals: %w", err)
+	}
+	if q.deletePackagedTempTargetsStmt, err = db.PrepareContext(ctx, deletePackagedTempTargets); err != nil {
+		return nil, fmt.Errorf("error preparing query DeletePackagedTempTargets: %w", err)
 	}
 	if q.deleteSummaryPeriodsStmt, err = db.PrepareContext(ctx, deleteSummaryPeriods); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSummaryPeriods: %w", err)
@@ -933,9 +957,49 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteOldTempTargetsStmt: %w", cerr)
 		}
 	}
+	if q.deletePackagedActivitiesStmt != nil {
+		if cerr := q.deletePackagedActivitiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedActivitiesStmt: %w", cerr)
+		}
+	}
 	if q.deletePackagedCGMReadingsStmt != nil {
 		if cerr := q.deletePackagedCGMReadingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deletePackagedCGMReadingsStmt: %w", cerr)
+		}
+	}
+	if q.deletePackagedEventGroupsStmt != nil {
+		if cerr := q.deletePackagedEventGroupsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedEventGroupsStmt: %w", cerr)
+		}
+	}
+	if q.deletePackagedFoodIntakesStmt != nil {
+		if cerr := q.deletePackagedFoodIntakesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedFoodIntakesStmt: %w", cerr)
+		}
+	}
+	if q.deletePackagedInsulinDosesStmt != nil {
+		if cerr := q.deletePackagedInsulinDosesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedInsulinDosesStmt: %w", cerr)
+		}
+	}
+	if q.deletePackagedNotificationEventsStmt != nil {
+		if cerr := q.deletePackagedNotificationEventsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedNotificationEventsStmt: %w", cerr)
+		}
+	}
+	if q.deletePackagedProfileSwitchesStmt != nil {
+		if cerr := q.deletePackagedProfileSwitchesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedProfileSwitchesStmt: %w", cerr)
+		}
+	}
+	if q.deletePackagedTempBasalsStmt != nil {
+		if cerr := q.deletePackagedTempBasalsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedTempBasalsStmt: %w", cerr)
+		}
+	}
+	if q.deletePackagedTempTargetsStmt != nil {
+		if cerr := q.deletePackagedTempTargetsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deletePackagedTempTargetsStmt: %w", cerr)
 		}
 	}
 	if q.deleteSummaryPeriodsStmt != nil {
@@ -1788,7 +1852,15 @@ type Queries struct {
 	deleteOldProfileSwitchesStmt                *sql.Stmt
 	deleteOldTempBasalsStmt                     *sql.Stmt
 	deleteOldTempTargetsStmt                    *sql.Stmt
+	deletePackagedActivitiesStmt                *sql.Stmt
 	deletePackagedCGMReadingsStmt               *sql.Stmt
+	deletePackagedEventGroupsStmt               *sql.Stmt
+	deletePackagedFoodIntakesStmt               *sql.Stmt
+	deletePackagedInsulinDosesStmt              *sql.Stmt
+	deletePackagedNotificationEventsStmt        *sql.Stmt
+	deletePackagedProfileSwitchesStmt           *sql.Stmt
+	deletePackagedTempBasalsStmt                *sql.Stmt
+	deletePackagedTempTargetsStmt               *sql.Stmt
 	deleteSummaryPeriodsStmt                    *sql.Stmt
 	deleteUnreferencedLoopSettingsStmt          *sql.Stmt
 	deviceReportAscendingIDsStmt                *sql.Stmt
@@ -2002,7 +2074,15 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteOldProfileSwitchesStmt:                q.deleteOldProfileSwitchesStmt,
 		deleteOldTempBasalsStmt:                     q.deleteOldTempBasalsStmt,
 		deleteOldTempTargetsStmt:                    q.deleteOldTempTargetsStmt,
+		deletePackagedActivitiesStmt:                q.deletePackagedActivitiesStmt,
 		deletePackagedCGMReadingsStmt:               q.deletePackagedCGMReadingsStmt,
+		deletePackagedEventGroupsStmt:               q.deletePackagedEventGroupsStmt,
+		deletePackagedFoodIntakesStmt:               q.deletePackagedFoodIntakesStmt,
+		deletePackagedInsulinDosesStmt:              q.deletePackagedInsulinDosesStmt,
+		deletePackagedNotificationEventsStmt:        q.deletePackagedNotificationEventsStmt,
+		deletePackagedProfileSwitchesStmt:           q.deletePackagedProfileSwitchesStmt,
+		deletePackagedTempBasalsStmt:                q.deletePackagedTempBasalsStmt,
+		deletePackagedTempTargetsStmt:               q.deletePackagedTempTargetsStmt,
 		deleteSummaryPeriodsStmt:                    q.deleteSummaryPeriodsStmt,
 		deleteUnreferencedLoopSettingsStmt:          q.deleteUnreferencedLoopSettingsStmt,
 		deviceReportAscendingIDsStmt:                q.deviceReportAscendingIDsStmt,

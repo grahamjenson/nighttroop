@@ -2657,11 +2657,25 @@ If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries`
 - A made entry is not found by its `_id` (404).
 - If `RETENTION_DELETE_ROWS` is not `true`, a search reads rows only.
 
+#### Delete of packaged treatments
+
+If `RETENTION_DELETE_ROWS` is `true`, the server deletes the treatments and events older than `RETENTION_HOT_DAYS`
+days: insulin doses, food intakes, temp basals, temp targets, activities, notes and profile switches.
+
+- If `RETENTION_DELETE_ROWS` is not `true` (the default), the server deletes none.
+- Only a row whose day's `events` cold day was written after the row was last written is deleted.
+- A row is deleted only when that cold day is 24 hours old.
+- The day's cold days keep the carbs, the insulin, the basal rate and the events of the deleted rows.
+- A treatment is deleted with its events. An event of a treatment that is not deleted is not deleted.
+- The newest profile switch with no end is not deleted. A profile switch that ends in the hot days is not deleted.
+- A treatment of the hot days is not deleted.
+- A day with deleted rows is not packaged again. A treatment written later for that day stays a row, and the day's
+  cold days do not change.
+
 #### Treatments of packaged days
 
 If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the `treatments` of the days older than
-`RETENTION_HOT_DAYS` from the days' cold events. No treatment row is deleted yet, so this shows only when a
-treatment row is gone.
+`RETENTION_HOT_DAYS` from the days' cold events.
 
 - A search of `treatments`, newest first, gives the made treatments with the treatments that are rows, in order
   of date. `count` and `skip` page through them as one list.
