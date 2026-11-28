@@ -597,6 +597,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.thinOldDeviceReportsStmt, err = db.PrepareContext(ctx, thinOldDeviceReports); err != nil {
 		return nil, fmt.Errorf("error preparing query ThinOldDeviceReports: %w", err)
 	}
+	if q.treatmentDaysWrittenSinceStmt, err = db.PrepareContext(ctx, treatmentDaysWrittenSince); err != nil {
+		return nil, fmt.Errorf("error preparing query TreatmentDaysWrittenSince: %w", err)
+	}
 	if q.updateActivityStmt, err = db.PrepareContext(ctx, updateActivity); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateActivity: %w", err)
 	}
@@ -1599,6 +1602,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing thinOldDeviceReportsStmt: %w", cerr)
 		}
 	}
+	if q.treatmentDaysWrittenSinceStmt != nil {
+		if cerr := q.treatmentDaysWrittenSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing treatmentDaysWrittenSinceStmt: %w", cerr)
+		}
+	}
 	if q.updateActivityStmt != nil {
 		if cerr := q.updateActivityStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateActivityStmt: %w", cerr)
@@ -1899,6 +1907,7 @@ type Queries struct {
 	tempBasalTotalsStmt                         *sql.Stmt
 	tempTargetTotalsStmt                        *sql.Stmt
 	thinOldDeviceReportsStmt                    *sql.Stmt
+	treatmentDaysWrittenSinceStmt               *sql.Stmt
 	updateActivityStmt                          *sql.Stmt
 	updateFoodIntakeStmt                        *sql.Stmt
 	updateFoodPresetStmt                        *sql.Stmt
@@ -2110,6 +2119,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tempBasalTotalsStmt:                         q.tempBasalTotalsStmt,
 		tempTargetTotalsStmt:                        q.tempTargetTotalsStmt,
 		thinOldDeviceReportsStmt:                    q.thinOldDeviceReportsStmt,
+		treatmentDaysWrittenSinceStmt:               q.treatmentDaysWrittenSinceStmt,
 		updateActivityStmt:                          q.updateActivityStmt,
 		updateFoodIntakeStmt:                        q.updateFoodIntakeStmt,
 		updateFoodPresetStmt:                        q.updateFoodPresetStmt,

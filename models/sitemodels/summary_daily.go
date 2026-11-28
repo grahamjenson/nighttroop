@@ -166,10 +166,10 @@ func (d summaryDay) addGlucoseSlots(readings []*glucose.Clean) {
 func (d summaryDay) addInsulin(doses []*sitedb.InsulinDose, until, minutesSince int64, minutes []SummaryMinute) {
 	for _, dose := range doses {
 		if dose.IsBasalInsulin != nil && *dose.IsBasalInsulin {
-			d.row.TotalDailyBasal += insulinWithin(dose, d.start, min(d.end, until))
+			d.row.TotalDailyBasal += InsulinWithin(dose, d.start, min(d.end, until))
 			continue
 		}
-		d.row.TotalDailyDose += insulinWithin(dose, d.start, min(d.end, until))
+		d.row.TotalDailyDose += InsulinWithin(dose, d.start, min(d.end, until))
 	}
 	for i, m := range minutes {
 		if d.within(minutesSince+int64(i)*60_000) && m.Basal != nil {
@@ -402,10 +402,10 @@ func (b agpBins) json() string {
 	return string(agpJSON)
 }
 
-// insulinWithin is a dose's units given from start until end: its dose given at once, when it is then, and the share
+// InsulinWithin is a dose's units given from start until end: its dose given at once, when it is then, and the share
 // of its extended dose, spread evenly over its extended duration, that is then, so one over midnight is split between
 // the days, and a day not yet over has what is due in it. An extended dose with no duration is given at once.
-func insulinWithin(d *sitedb.InsulinDose, start, end int64) float64 {
+func InsulinWithin(d *sitedb.InsulinDose, start, end int64) float64 {
 	units := 0.0
 	if d.OccurredAt >= start && d.OccurredAt < end {
 		units = d.Dose

@@ -1,7 +1,7 @@
 # Retention: hot rows and cold days
 
-**Status:** steps 1 to 3 are built. The server seals the CGM glucose of each day, and what a loop's phone reports
-(IOB, COB, reservoir, batteries), into `cold_days`. The Nightscout API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
+**Status:** steps 1 to 4a are built. The server seals the CGM glucose of each day, what a loop's phone reports
+(IOB, COB, reservoir, batteries), and the treatments (basal rate, insulin, carbs) into `cold_days`. The Nightscout API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
 `true`. The other steps are the plan. See [Build order](#build-order).
 
 ## The problem, measured
@@ -122,14 +122,20 @@ A series is one number through the day on a grid: one value for each step, or no
 | --- | --- | --- | --- | --- |
 | `glucose` | `glucose_readings` (CGM) | 5 min | 1 mg/dL | The newest reading of the best source |
 | `iob`, `iob_basal`, `cob` | `device_reports` | 5 min | 0.01 U, 0.1 g | The newest report |
-| `insulin_automatic`, `insulin_manual` | `insulin_doses` | 15 min | 0.001 U | The total |
-| `basal_delivered`, `basal_suspended_minutes` | `temp_basals` and the profile | 15 min | 0.001 U | The total |
-| `carbs` | `food_intakes` | 15 min | 0.1 g | The total |
+| `basal_rate` | The profile, its switches, and `temp_basals` | 5 min | 0.001 U/hr | The mean rate in force |
+| `insulin_bolus` | `insulin_doses` | 5 min | 0.001 U | The total: a loop's and a person's boluses, an extended one as it is given |
+| `insulin_basal` | `insulin_doses` of basal insulin | 5 min | 0.001 U | The total of long acting insulin injected |
+| `carbs` | `food_intakes` | 5 min | 0.1 g | The total |
 | `pump_reservoir`, `pump_battery`, `phone_battery` | `device_reports` | 1 hour | | The newest report |
 
-Totals are for each 15 minutes, not each hour. A day in India (+5:30) or Nepal (+5:45) starts in the middle of a
-UTC hour, so its daily dose is exact only from 15-minute totals. (`policy.go` still says 1 hour for these: to
-change in step 4.)
+Treatments are on the 5-minute grid, not each hour:
+
+- A day in India (+5:30) or Nepal (+5:45) starts in the middle of a UTC hour. Its daily dose is exact from
+  5-minute values.
+- `basal_rate` keeps what the loop did, not only how much. The basal given in a day is the sum of its values
+  divided by 12, with `insulin_basal`.
+- A step with no insulin or carbs has no value, so these series are a few bytes on most days.
+- The manual boluses are also events (step 4b), so a loop's boluses are `insulin_bolus` less those.
 
 `PackGrid` (`data/retention/grid.go`) packs a day:
 
@@ -189,6 +195,11 @@ Sealing runs for each site before its backup, where the truncation runs (`sealSi
 - **Device reports are sealed each run, today too, before they are thinned.** They are thinned from 1 hour old, so
   a day that waits for its end has only each 10 minutes. Their day always starts from the cold day as it is, so
   it keeps each 5 minutes after the rows are thinned and deleted.
+- **Treatments are built where the summaries are built** (`sitedata`), with the same code: the profile in force,
+  the temp basals, and an extended bolus split over its time and over midnight. `data/db` cannot import that
+  package, so it sets `db.TreatmentDaySeries` when the server starts.
+- A day's treatment series are sealed when it ends, for the last 2 days, and again for a day with a treatment
+  written. They are built from the rows alone, as no treatment row is deleted yet.
 - The phone's battery is the loop's phone's. A carer's phone reports its own battery, which is not sealed.
 
 ### Late data and edits
@@ -262,7 +273,7 @@ page".
 | --- | --- | --- |
 | A CGM reading's exact second, raw signal, and app | When its row is deleted | The 5-minute value is what all reports and standards use |
 | The readings of a second source of the same glucose | When deleted | One reading for each 5 minutes is kept |
-| Each temp basal and automatic bolus | When deleted | The 15-minute totals are exact |
+| Each temp basal and automatic bolus | When deleted | The rate and the insulin of each 5 minutes are kept |
 | The loop's reasons and predictions | After 1 day (as today) | Only useful to look at the last hours |
 | Each device report | By its schedule | IOB, COB, reservoir and batteries are series |
 | The app's own IDs of a treatment | When deleted | No app we know uploads again after a month |
@@ -308,7 +319,8 @@ Each step is one PR, and the site works after each one.
 | 2 | The reader of sealed glucose; the Nightscout API makes `entries` from sealed days | `entries` | **Built** |
 | 2b | The site's glucose page says that older readings are in Reports; a made entry by its `_id`; searches oldest first | Glucose page | |
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
-| 4 | Events: the day's list, and the 15-minute insulin, basal and carbs totals; checks of totals | Data pages, `treatments`, daily dose | |
+| 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
+| 4b | Events: the day's list, with what is in force at its start; each profile kept one time; then the delete of treatment rows | Data pages, `treatments` | |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
@@ -326,7 +338,7 @@ Each field of `summary_period` can be built from cold days:
 | Field | From |
 | --- | --- |
 | The day's glucose line; AGP; time in range and the bands; mean, SD, GMI; counts | The `glucose` series |
-| Total daily dose, basal and carbs | The 15-minute totals |
+| Total daily dose, basal and carbs | `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` |
 | IOB and COB lines | The `iob` and `cob` series |
 | Finger prick count | The day's events |
 

@@ -390,7 +390,7 @@ func TestInsulinWithin(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			require.InDelta(t, test.units, insulinWithin(test.dose, start, end), 1e-9)
+			require.InDelta(t, test.units, InsulinWithin(test.dose, start, end), 1e-9)
 		})
 	}
 }
