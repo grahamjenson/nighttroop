@@ -298,8 +298,8 @@ func (s *SitesCollection) NewEmptyDBHandler(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-// TruncateHandler truncates all of a site's device reports, as each backup does its newest, then shrinks
-// its DB, while its DB is here. Only admins can.
+// TruncateHandler runs the job's truncate of a site now, as each backup does before it copies the site, while its DB
+// is here. Only admins can.
 func (s *SitesCollection) TruncateHandler(w http.ResponseWriter, r *http.Request) {
 	s.siteAction(w, r, control_sites_templ.SiteTruncated, func(controlContext *httputils.ControlContext, site *controlmodels.Site) *apiutils.HTTPError {
 		if site.State != "live" && site.State != "disabled" {

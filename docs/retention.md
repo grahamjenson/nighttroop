@@ -442,8 +442,8 @@ Each field of `summary_period` can be built from cold days:
 | Device reports thinned (10 min, 20 min, hourly) and deleted after 30 days; `utils/thin` | **Remove.** Their numbers are series. Device reports get short hot days of their own (2 days). |
 | A site over 1.5 times its limit: clear old JSON, delete device reports over 7 days old | **Remove.** The site gets fewer hot days. |
 | The same site, if still over: delete readings and treatments over 90 days old | **Remove.** This loses data. Packaging does not. |
-| The **Truncate** button | **Keep.** It packages now, with the fewest hot days, and vacuums. It packages now already. |
-| Delete loop settings no record refers to | **Keep**, in the package run. |
+| The **Truncate** button | **Removed from the site.** The control site's Truncate runs the job's truncate for one site now, for all its data. It does nothing that the job does not do. |
+| Delete loop settings no record refers to | **Kept**, in the job's truncate. |
 | Vacuum | **Keep.** |
 | The size limit, writes refused at 4 times the limit, the abuse score | **Keep.** Packaging does not help a site that writes too many rows today. |
 

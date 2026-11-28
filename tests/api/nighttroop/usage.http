@@ -1,6 +1,6 @@
 INCLUDE steps/new_site.steps
 
-// The site's admin reads its storage and truncates it, as on its Usage page
+// The site's admin reads its storage, as on its Usage page
 NAME login_admin
 POST http://{{ site }}/login
 H Accept: application/json
@@ -23,18 +23,13 @@ H Accept: application/json
 ASSERT_STATUS 200
 ASSERT_CONTAINS "size_kb" "@result"
 ASSERT_EQUALS 20480 "@result.limit_kb"
-ASSERT_EQUALS null "@result.before_size_kb"
 ASSERT_EXISTS "@result.tables.0.name"
 ASSERT_EXISTS "@result.tables.0.bytes"
 ASSERT_EXISTS "@result.tables.0.records"
 
-// A truncate gives the size after it, the size before it, and the tables again
-NAME truncate
+// A site cannot truncate itself: the server's job does, and the control site's admins
+NAME truncate_is_gone
 POST http://{{ site }}/usage/truncate
 H Authorization: Bearer {{ .admin_jwt }}
 H Accept: application/json
-ASSERT_STATUS 200
-ASSERT_CONTAINS "size_kb" "@result"
-ASSERT_CONTAINS "before_size_kb" "@result"
-ASSERT_EQUALS 20480 "@result.limit_kb"
-ASSERT_EXISTS "@result.tables.0.name"
+ASSERT_STATUS 404

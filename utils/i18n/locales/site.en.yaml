@@ -104,7 +104,6 @@ site:
       delete_site: "Delete Site"
       db_size: "DB Size"
       storage: "Storage"
-      truncate: "Truncate"
       download_data: "Download Data"
       low_alarm: "Low Alarm"
       urgent_low_alarm: "Urgent Low Alarm"

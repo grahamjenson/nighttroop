@@ -106,7 +106,7 @@ SCREENSHOT site_backup
 ASSERT_VISIBLE #control--site--identities--table td >> text=pwd_phone
 // Its actions are a grid, each saying what it does: one not disabled cannot be archived, which says when it is offered,
 // but one no one has used can be disabled, and one whose DB is here, however small, can be truncated
-ASSERT_VISIBLE #control--site--action-truncate >> text=then shrinks its DB.
+ASSERT_VISIBLE #control--site--action-truncate >> text=Runs the site job for this site now
 ASSERT_VISIBLE #control--site--truncate
 // Each action is a row, and its button is as wide as its words, not the page
 ASSERT_COUNT #control--site--actions .w-full 0
