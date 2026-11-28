@@ -343,11 +343,20 @@ var deviceSeries = []struct {
 		}
 		return row.DeviceBatteryPercent
 	}},
+	{retention.PumpSuspended, func(row *sitedb.DeviceReportNumbersOfDayRow) *float64 {
+		if row.PumpState == nil {
+			return nil
+		}
+		if *row.PumpState == "suspended" {
+			return new(1.0)
+		}
+		return new(0.0)
+	}},
 }
 
 // packageDeviceDay writes the device series of the UTC day that starts at start, in ms, from its device reports: each
 // series a step's newest report with that number. A day keeps the values it has, as its reports are thinned as they
-// age and deleted after a month, and a series no report has a number for is not written.
+// age and deleted after a week, and a series no report has a number for is not written.
 func packageDeviceDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 	rows, err := q.DeviceReportNumbersOfDay(ctx, sitedb.DeviceReportNumbersOfDayParams{From: start, To: start + dayMs})
 	if err != nil {

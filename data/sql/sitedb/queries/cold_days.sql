@@ -96,7 +96,7 @@ ORDER BY 1 LIMIT 5000;
 -- name: DeviceReportNumbersOfDay :many
 -- The numbers of a day's device reports that are packaged as series, the oldest first, without the JSON, which is
 -- most of a report; the deleted too, as a deleted one clears its step
-SELECT occurred_at, deleted_at, loop_name, loop_iob, loop_iob_basal, loop_cob, pump_reservoir, pump_battery_percent, device_battery_percent
+SELECT occurred_at, deleted_at, loop_name, loop_iob, loop_iob_basal, loop_cob, pump_reservoir, pump_battery_percent, device_battery_percent, pump_state
 FROM device_reports
 WHERE occurred_at >= sqlc.arg('From') AND occurred_at < sqlc.arg('To')
 ORDER BY occurred_at LIMIT 5000;

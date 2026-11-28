@@ -129,6 +129,7 @@ A series is one number through the day on a grid: one value for each step, or no
 | `insulin_basal` | `insulin_doses` of basal insulin | 5 min | 0.001 U | The total of long acting insulin injected |
 | `carbs` | `food_intakes` | 5 min | 0.1 g | The total |
 | `pump_reservoir`, `pump_battery`, `phone_battery` | `device_reports` | 1 hour | | The newest report |
+| `pump_suspended` | `device_reports` | 5 min | 1 | 1 if the newest report says the pump is suspended, 0 if it says it is not |
 
 Treatments are on the 5-minute grid, not each hour:
 
@@ -438,8 +439,8 @@ Each field of `summary_period` can be built from cold days:
 
 | Today | With cold days |
 | --- | --- |
-| Device reports thinned (10 min, 20 min, hourly) and deleted after 30 days; `utils/thin` | **Kept.** Their numbers are also series. |
-| A site over 1.5 times its limit: clear old JSON, delete device reports over 7 days old | **Kept for device reports only.** The JSON of treatments, doses and profile switches is not cleared. |
+| Device reports thinned (10 min, 20 min, hourly) and deleted after 30 days; `utils/thin` | **Kept, shorter.** A report is thinned to one each 10 minutes after an hour, and deleted after 7 days. Its numbers are series, packaged before. |
+| A site over 1.5 times its limit: clear the JSON of device reports over a day old | **Kept for device reports only.** The JSON of treatments, doses and profile switches is not cleared. |
 | The same site, if still over: delete readings and treatments over 90 days old | **Removed.** It lost data. A row is deleted only once its day is packaged, and that is for all sites. |
 | The **Truncate** button | **Removed from the site.** The control site's Truncate runs the job's truncate for one site now, for all its data. It does nothing that the job does not do. |
 | Delete loop settings no record refers to | **Kept**, in the job's truncate. |

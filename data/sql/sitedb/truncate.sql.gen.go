@@ -98,7 +98,7 @@ type DeleteOldDeviceReportsParams struct {
 	Before int64
 }
 
-// Every device report that occurred before Before, 30 days ago, or 7 for a site far over its size limit, is deleted, a
+// Every device report that occurred before Before, as old as a site keeps them (db.DeviceReportsKeptFor), is deleted, a
 // deleted one too, by the occurred_at index
 func (q *Queries) DeleteOldDeviceReports(ctx context.Context, arg DeleteOldDeviceReportsParams) (int64, error) {
 	result, err := q.exec(ctx, q.deleteOldDeviceReportsStmt, deleteOldDeviceReports, arg.Before)
@@ -110,57 +110,38 @@ func (q *Queries) DeleteOldDeviceReports(ctx context.Context, arg DeleteOldDevic
 
 const thinOldDeviceReports = `-- name: ThinOldDeviceReports :exec
 DELETE FROM device_reports WHERE device_reports.id IN (
-    SELECT report.id FROM (
-        SELECT thinned.id, thinned.created_by_device_name, thinned.occurred_at,
-            CASE WHEN thinned.occurred_at < CAST(?1 AS INTEGER) - CAST(?2 AS INTEGER) THEN CAST(?3 AS INTEGER)
-                WHEN thinned.occurred_at < CAST(?1 AS INTEGER) - CAST(?4 AS INTEGER) THEN CAST(?5 AS INTEGER)
-                ELSE CAST(?6 AS INTEGER) END AS bucket
-        FROM device_reports AS thinned
-        WHERE thinned.occurred_at < CAST(?1 AS INTEGER) - CAST(?7 AS INTEGER) AND thinned.deleted_at IS NULL AND (
-            thinned.updated_at >= CAST(?8 AS INTEGER)
-            OR thinned.occurred_at BETWEEN CAST(?8 AS INTEGER) - CAST(?4 AS INTEGER) AND CAST(?1 AS INTEGER) - CAST(?4 AS INTEGER)
-            OR thinned.occurred_at BETWEEN CAST(?8 AS INTEGER) - CAST(?2 AS INTEGER) AND CAST(?1 AS INTEGER) - CAST(?2 AS INTEGER)
+    SELECT thinned.id FROM device_reports AS thinned
+    WHERE thinned.occurred_at < CAST(?1 AS INTEGER) - CAST(?2 AS INTEGER) AND thinned.deleted_at IS NULL
+        AND thinned.updated_at >= CAST(?3 AS INTEGER)
+        AND EXISTS (
+            SELECT 1 FROM device_reports AS kept
+            WHERE kept.created_by_device_name IS thinned.created_by_device_name AND kept.deleted_at IS NULL
+                AND kept.occurred_at >= thinned.occurred_at
+                AND kept.occurred_at < (thinned.occurred_at / CAST(?4 AS INTEGER) + 1) * CAST(?4 AS INTEGER)
+                AND (kept.occurred_at > thinned.occurred_at OR kept.id > thinned.id)
         )
-    ) AS report
-    WHERE EXISTS (
-        SELECT 1 FROM device_reports AS kept
-        WHERE kept.created_by_device_name IS report.created_by_device_name AND kept.deleted_at IS NULL
-            AND kept.occurred_at >= report.occurred_at
-            AND kept.occurred_at < (report.occurred_at / report.bucket + 1) * report.bucket
-            AND (kept.occurred_at > report.occurred_at OR kept.id > report.id)
-    )
 )
 `
 
 type ThinOldDeviceReportsParams struct {
-	Now         int64
-	FortnightMs int64
-	LargeMs     int64
-	WeekMs      int64
-	MediumMs    int64
-	SmallMs     int64
-	KeepAllMs   int64
-	Since       int64
+	Now       int64
+	KeepAllMs int64
+	Since     int64
+	BucketMs  int64
 }
 
 // A device report every few minutes is kept only for KeepAllMs before Now; then each device keeps, of its reports,
-// the newest in every SmallMs until WeekMs old, in every MediumMs until FortnightMs old, and in every LargeMs after
-// that. Its IOB, COB, battery and reservoir of each 5 minutes are packaged before (packageSite). The ages and buckets
-// are utils/thin's (db.ThinParams). Each device keeps its newest report, and the
-// loop status on it, however old, until DeleteOldDeviceReports removes it. The buckets are aligned so each hour's
-// newest is also its 20 and 10 minutes' newest. A deleted report is neither kept nor removed, so clients syncing
-// deletions still see it. Only reports written since Since are looked at, as ClearOldLoopStatuses does, and those that
-// passed a week or two weeks old since then, as those are thinned again; 0 looks at them all.
+// the newest in every BucketMs. Its IOB, COB, battery, reservoir and whether its pump was suspended, of each 5
+// minutes, are packaged before (packageSite). The age and the bucket are utils/thin's (db.ThinParams). Each device
+// keeps its newest report, and the loop status on it, until DeleteOldDeviceReports removes it. A deleted report is
+// neither kept nor removed, so clients syncing deletions still see it. Only reports written since Since are looked
+// at, as ClearOldLoopStatuses does; 0 looks at them all.
 func (q *Queries) ThinOldDeviceReports(ctx context.Context, arg ThinOldDeviceReportsParams) error {
 	_, err := q.exec(ctx, q.thinOldDeviceReportsStmt, thinOldDeviceReports,
 		arg.Now,
-		arg.FortnightMs,
-		arg.LargeMs,
-		arg.WeekMs,
-		arg.MediumMs,
-		arg.SmallMs,
 		arg.KeepAllMs,
 		arg.Since,
+		arg.BucketMs,
 	)
 	return err
 }

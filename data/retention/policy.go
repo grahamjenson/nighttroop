@@ -82,6 +82,8 @@ var (
 	PumpReservoir = Series{Name: "pump_reservoir", Step: hour, Scale: 10}
 	PumpBattery   = Series{Name: "pump_battery", Step: hour, Scale: 1}
 	PhoneBattery  = Series{Name: "phone_battery", Step: hour, Scale: 1}
+	// PumpSuspended is 1 while the pump says it is suspended, and 0 while it says it is not
+	PumpSuspended = Series{Name: "pump_suspended", Step: fiveMinutes, Scale: 1}
 )
 
 // Treatments, each 5 minutes: the basal rate in force, in U/hr to 0.001, the mean of its minutes, from the profile,
@@ -132,7 +134,7 @@ var Policies = map[string]Policy{
 	"event_groups": {Shape: EventsShape, Keep: keep("group_type", "entered_by", "duration_minutes", "sensor_code", "transmitter_id"),
 		Lost: "The app's own IDs of a treatment (uuid, sent_hash, pump_id, sync_identifier) and its bolus calculator. A group's kept columns move onto its event; a group with no event (a site change) is an event."},
 	"device_reports": {Shape: SeriesShape,
-		Series: []Series{IOB, IOBBasal, COB, PumpReservoir, PumpBattery, PhoneBattery},
+		Series: []Series{IOB, IOBBasal, COB, PumpReservoir, PumpBattery, PhoneBattery, PumpSuspended},
 		Lost:   "The loop's reasons and predictions, and each report."},
 	"loop_settings":    {Shape: DictionaryShape},
 	"profile_presets":  {Shape: ConfigShape},

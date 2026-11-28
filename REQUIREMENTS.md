@@ -1514,7 +1514,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   and the pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and `bolusing`. Existing ones
   are not changed.
 - A Nightscout backfill copies each device status of the last 30 days. Then the site job packages their IOB, COB,
-  reservoir and batteries of each 5 minutes, and thins the statuses (see Device status truncation). Thus a backfilled
+  reservoir and batteries of each 5 minutes, thins the statuses and deletes those over 7 days old (see Device status
+  truncation). Thus a backfilled
   day has its IOB and COB each 5 minutes.
 
 #### Connectors page status
@@ -2570,6 +2571,7 @@ Before it backs up a site written to, at most every hour, the server packages th
   | `pump_reservoir` | 1 hour | 0.1 U | The pump's reservoir |
   | `pump_battery` | 1 hour | 1 % | The pump's battery |
   | `phone_battery` | 1 hour | 1 % | The battery of the loop's phone, not of a phone with no loop |
+  | `pump_suspended` | 5 minutes | 1 | 1 if the pump says it is suspended, 0 if it says it is not |
 
   - A step holds the number of its newest device status.
   - Today is packaged too, as far as it is.
@@ -2730,13 +2732,13 @@ Before it backs up a site written to, at most every hour, the server truncates i
   - The others keep their pump's battery, reservoir, clock, manufacturer, model, `pumpID`, `suspended` and
     `bolusing`.
   - The Nightscout API returns them as `pump`.
-- Statuses kept for each device: all of the last hour, then the newest in each 10 minutes to 1 week old, each 20
-  minutes to 2 weeks, and each hour to 30 days.
+- Statuses kept for each device: all of the last hour, then the newest in each 10 minutes to 7 days old.
   - The device's newest and deleted statuses are kept.
-  - All statuses over 30 days old are deleted, also newest and deleted ones.
+  - All statuses over 7 days old are deleted, also newest and deleted ones.
+  - Before a status is thinned or deleted, its IOB, COB, pump reservoir, batteries and whether its pump was
+    suspended are packaged into its day's cold days (see Packaging of old days). Those are kept.
 - The job reads statuses written since the last backup of the site, or in the last day if that is longer.
   - It also reads statuses that became 1 day old in that time.
-  - It thins again those that became 1 or 2 weeks old.
 - The control site's **Truncate** reads all statuses.
   - It also clears those older than a day (e.g. a device's newest from before it stopped reports for a day).
 - Then the job deletes loop settings that no profile or device status refers to, except each app's last seen.
@@ -2750,7 +2752,6 @@ device statuses harder:
 
 - It clears the JSON of device statuses over 1 day old: loop status, override, pump and uploader.
   - Each device's newest status keeps its JSON.
-- It deletes device statuses over 7 days old.
 - It changes no other record. A reading, a treatment or an event is deleted only after its day is packaged (see
   Packaging of old days), so no data is lost.
 - The job measures the DB without its free pages, to find if the site is over 1.5 times its limit.

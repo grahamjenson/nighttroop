@@ -623,7 +623,7 @@ func (q *Queries) DeviceReportDaysWrittenSince(ctx context.Context, arg DeviceRe
 }
 
 const deviceReportNumbersOfDay = `-- name: DeviceReportNumbersOfDay :many
-SELECT occurred_at, deleted_at, loop_name, loop_iob, loop_iob_basal, loop_cob, pump_reservoir, pump_battery_percent, device_battery_percent
+SELECT occurred_at, deleted_at, loop_name, loop_iob, loop_iob_basal, loop_cob, pump_reservoir, pump_battery_percent, device_battery_percent, pump_state
 FROM device_reports
 WHERE occurred_at >= ?1 AND occurred_at < ?2
 ORDER BY occurred_at LIMIT 5000
@@ -644,6 +644,7 @@ type DeviceReportNumbersOfDayRow struct {
 	PumpReservoir        *float64
 	PumpBatteryPercent   *float64
 	DeviceBatteryPercent *float64
+	PumpState            *string
 }
 
 // The numbers of a day's device reports that are packaged as series, the oldest first, without the JSON, which is
@@ -667,6 +668,7 @@ func (q *Queries) DeviceReportNumbersOfDay(ctx context.Context, arg DeviceReport
 			&i.PumpReservoir,
 			&i.PumpBatteryPercent,
 			&i.DeviceBatteryPercent,
+			&i.PumpState,
 		); err != nil {
 			return nil, err
 		}
