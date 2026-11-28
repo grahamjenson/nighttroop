@@ -307,7 +307,12 @@ type AssertNotVisible struct {
 // a moment. Several can match until the swap, such as the rows a filter is about to remove, which a strict WaitFor
 // refused at once rather than waiting for.
 func (r *AssertNotVisible) Execute(t *testing.T, ctx map[string]any, page playwright.Page, resps []playwright.Response) error {
-	locator := getLocator(r.Locator, page)
+	// Its locator can use the template, as ASSERT_VISIBLE's can
+	rendered, err := Render(r.Locator, ctx)
+	if err != nil {
+		t.Fatalf("\n\n%s\n failed to render the locator: %v\n\n", r.ToErrorLine(), err)
+	}
+	locator := getLocator(rendered, page)
 	if locator == nil {
 		t.Fatalf("\n\n%s\n getLocator returned nil for rawLocator: %v\n\n", r.ToErrorLine(), r.Locator)
 	}

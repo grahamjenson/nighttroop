@@ -32,7 +32,7 @@ type PeriodReport struct {
 	Previous *sitemodels.SiteSummaryPeriod
 }
 
-// Printable is the report to print of months, newest first: each month's overview and AGP on a page of its own, laid
+// Printable is the report to print of months, newest first, or that none has data: each month's overview and AGP on a page of its own, laid
 // out as Dexcom Clarity's are, flat under ruled headings, each page saying Nighttroop generated it and, at its foot, its
 // number and when. On a screen the pages are sheets on grey, with a button to print them that is not printed.
 func Printable(generated time.Time, months []*PeriodReport) templ.Component {
@@ -140,8 +140,27 @@ func Printable(generated time.Time, months []*PeriodReport) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			if len(months) == 0 {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p id=\"site--print--none\" class=\"mx-auto max-w-4xl px-4 text-gray-600\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var7 string
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.print.none", i18n.Data{"Months": PrintMonths - 1}))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 50, Col: 153}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
 			for i, month := range months {
-				templ_7745c5c3_Var7 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 					if !templ_7745c5c3_IsBuffer {
@@ -159,11 +178,11 @@ func Printable(generated time.Time, months []*PeriodReport) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = sheet(sheetProps{ID: "site--print--overview-" + month.Period.Date, Name: i18n.T(ctx, "site.reports.overview.title"), Generated: generated, Period: month.Period, Page: 2*i + 1, Pages: 2 * len(months)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = sheet(sheetProps{ID: "site--print--overview-" + month.Period.Date, Name: i18n.T(ctx, "site.reports.overview.title"), Generated: generated, Period: month.Period, Page: 2*i + 1, Pages: 2 * len(months)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Var8 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+				templ_7745c5c3_Var9 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 					if !templ_7745c5c3_IsBuffer {
@@ -181,12 +200,12 @@ func Printable(generated time.Time, months []*PeriodReport) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = sheet(sheetProps{ID: "site--print--agp-" + month.Period.Date, Name: "AGP", Generated: generated, Period: month.Period, Page: 2*i + 2, Pages: 2 * len(months)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = sheet(sheetProps{ID: "site--print--agp-" + month.Period.Date, Name: "AGP", Generated: generated, Period: month.Period, Page: 2*i + 2, Pages: 2 * len(months)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -227,44 +246,44 @@ func sheet(p sheetProps) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var9 := templ.GetChildren(ctx)
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
 		ctx = templ.ClearChildren(ctx)
 		{
 			templ_7745c5c3_ElementWriter := templ_7745c5c3_Buffer
 			templ_7745c5c3_Buffer := templ.GetBuffer()
 			var templ_7745c5c3_ElementScripts []templ.ComponentScript
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<section id=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<section id=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templruntime.NewAttributeExpression(p.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 73, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 76, Col: 19}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" class=\"")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var11 = []any{"mx-auto mb-6 flex min-h-[297mm] max-w-[210mm] flex-col bg-white p-[10mm] text-gray-900 shadow print:m-0 print:min-h-[270mm] print:max-w-none print:p-0 print:shadow-none", templ.KV("break-before-page", p.Page > 1)}
-			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var11...)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var11).String()).Resolve(ctx)
+			var templ_7745c5c3_Var12 = []any{"mx-auto mb-6 flex min-h-[297mm] max-w-[210mm] flex-col bg-white p-[10mm] text-gray-900 shadow print:m-0 print:min-h-[270mm] print:max-w-none print:p-0 print:shadow-none", templ.KV("break-before-page", p.Page > 1)}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_ElementWriter, templ_7745c5c3_Var12...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templruntime.NewAttributeExpression(templ.CSSClasses(templ_7745c5c3_Var12).String()).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 1, Col: 0}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -278,80 +297,80 @@ func sheet(p sheetProps) templ.Component {
 			}
 			templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "><header class=\"flex items-start justify-between gap-3\"><div><h1 class=\"text-3xl font-bold\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 76, Col: 43}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</h1><p class=\"site--print--dates text-xs font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "><header class=\"flex items-start justify-between gap-3\"><div><h1 class=\"text-3xl font-bold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(sheetDates(ctx, p.Period))
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 77, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 79, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p></div><span class=\"flex items-center gap-1.5 text-sm font-semibold text-primary\"><img src=\"/logo.svg\" alt=\"\" class=\"size-6\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</h1><p class=\"site--print--dates text-xs font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.print.generated_by"))
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(sheetDates(ctx, p.Period))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 79, Col: 170}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 80, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></header><div class=\"mt-4 flex-1 space-y-5 print:[&_section]:break-inside-avoid [&_section]:rounded-none [&_section]:border-0 [&_section]:p-0 [&_section]:shadow-none [&_section>div:first-child:not(:last-child)]:border-b-2 [&_section>div:first-child:not(:last-child)]:border-gray-900 [&_section>div:first-child:not(:last-child)]:pb-1 [&_section_h2]:text-lg [&_section_h2]:font-bold [&_section_h2]:normal-case [&_section_h2]:tracking-normal [&_section_h2]:text-gray-900\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templ_7745c5c3_Var9.Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div><footer class=\"mt-6 flex justify-between gap-3 border-t border-gray-300 pt-1 text-[0.65rem] text-gray-600\"><span class=\"font-semibold\">Nighttroop</span> <span class=\"text-right\"><span class=\"site--print--page\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</p></div><span class=\"flex items-center gap-1.5 text-sm font-semibold text-primary\"><img src=\"/logo.svg\" alt=\"\" class=\"size-6\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.print.page", i18n.Data{"Page": p.Page, "Pages": p.Pages}))
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.print.generated_by"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 87, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 82, Col: 170}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span><br><span class=\"site--print--generated\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span></header><div class=\"mt-4 flex-1 space-y-5 print:[&_section]:break-inside-avoid [&_section]:rounded-none [&_section]:border-0 [&_section]:p-0 [&_section]:shadow-none [&_section>div:first-child:not(:last-child)]:border-b-2 [&_section>div:first-child:not(:last-child)]:border-gray-900 [&_section>div:first-child:not(:last-child)]:pb-1 [&_section_h2]:text-lg [&_section_h2]:font-bold [&_section_h2]:normal-case [&_section_h2]:tracking-normal [&_section_h2]:text-gray-900\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ_7745c5c3_Var10.Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div><footer class=\"mt-6 flex justify-between gap-3 border-t border-gray-300 pt-1 text-[0.65rem] text-gray-600\"><span class=\"font-semibold\">Nighttroop</span> <span class=\"text-right\"><span class=\"site--print--page\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.print.generated_at", i18n.Data{"At": p.Generated.In(reportLocation(ctx)).Format(display.DayLayout + " 15:04")}))
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.print.page", i18n.Data{"Page": p.Page, "Pages": p.Pages}))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 89, Col: 180}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 90, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</span></span></footer></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</span><br><span class=\"site--print--generated\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var18 string
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.reports.print.generated_at", i18n.Data{"At": p.Generated.In(reportLocation(ctx)).Format(display.DayLayout + " 15:04")}))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_reports_templ/print.templ`, Line: 92, Col: 180}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</span></span></footer></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
