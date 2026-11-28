@@ -90,8 +90,6 @@
        about 5 MB and 170 files a run): give the test config a data folder of the test's own
     1. Steps of the test scripts (`tests/dsl/flow`) that pass when they cannot check, none of which hides a failure in
        a test file now:
-        1. P3: `GOTO` ignores the error of an assert after it, so `ASSERT_HELD` with nothing held, or a `SCREENSHOT`
-           over its size limit, passes there: fail the step, as the other steps do
         1. P4: `ASSERT_EQUALS ".a.id" "@result.id"` passes when neither value is there, as both are then null: refuse
            an expected value that is looked up and not there
         1. P4: `ASSERT_NOT_VISIBLE` and `ASSERT_COUNT` do not fill in `{{ }}`, so one with a value in its locator finds
