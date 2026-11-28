@@ -93,7 +93,7 @@ func (c EntriesCollection) FallbackKey() FallbackKey[nightscoutmodels.Entry, sit
 	return FallbackKey[nightscoutmodels.Entry, sitedb.GlucoseReading]{
 		search: func(q *sitedb.Queries, ctx context.Context, nsModel nightscoutmodels.Entry, limit int64) ([]*sitedb.GlucoseReading, error) {
 			readingType := nightscoutmodels.SetReadingType(nsModel)
-			return q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, Limit: limit})
+			return q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateEQ: nsModel.Date.Int64p(), TypeEq: &readingType, EntriesOnly: true, Limit: limit})
 		},
 		fields: []KeyField[nightscoutmodels.Entry, sitedb.GlucoseReading]{
 			sameDate[nightscoutmodels.Entry, sitedb.GlucoseReading](),
@@ -113,7 +113,7 @@ func (c EntriesCollection) Refreshes(nsModel nightscoutmodels.Entry, stored *sit
 }
 
 func (c EntriesCollection) GetModel(q *sitedb.Queries, ctx context.Context, identifier string, includeDeleted bool) (*sitedb.GlucoseReading, error) {
-	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted})
+	return q.GetGlucoseReading(ctx, sitedb.GetGlucoseReadingParams{ID: identifier, IncludeDeleted: includeDeleted, EntriesOnly: true})
 }
 
 func (c EntriesCollection) GetModels(q *sitedb.Queries, ctx context.Context, ids []string, includeDeleted bool) ([]*sitedb.GlucoseReading, error) {
@@ -156,9 +156,15 @@ func (c EntriesCollection) HistoryIDs(q *sitedb.Queries, ctx context.Context, si
 	return q.GlucoseReadingHistoryIDs(ctx, sitedb.GlucoseReadingHistoryIDsParams{Since: since, Limit: limit})
 }
 
+// SearchModels are the entries: a treatment's glucose is the treatment's, as Nightscout keeps it, not an entry a loop
+// would take for a CGM reading
 func (c EntriesCollection) SearchModels(q *sitedb.Queries, ctx context.Context, query nsquery.Query) ([]*sitedb.GlucoseReading, error) {
 	if !query.HasFilters {
-		return q.AllGlucoseReadings(ctx, nsquery.GlucoseAll(query))
+		params := nsquery.GlucoseAll(query)
+		params.EntriesOnly = true
+		return q.AllGlucoseReadings(ctx, params)
 	}
-	return q.SearchGlucoseReadings(ctx, nsquery.GlucoseSearch(query))
+	params := nsquery.GlucoseSearch(query)
+	params.EntriesOnly = true
+	return q.SearchGlucoseReadings(ctx, params)
 }

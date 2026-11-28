@@ -21,7 +21,8 @@ func TestPackagingEvents(t *testing.T) {
 	must := func(_ any, err error) { require.NoError(t, err) }
 	by := "phone"
 	// Events: a meter's reading, a CGM reading with a note, a meal with its treatment, a person's dose, a temp target,
-	// a profile switch, an activity, a note, and a site change, which is a treatment with no event
+	// a profile switch, an activity, a note, a site change, which is a treatment with no event, and the glucose of a
+	// treatment, though it says it is a CGM's, as AAPS's Bolus Wizard sends it with no glucoseType
 	must(q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "meter", Mgdl: 101, ReadingType: "mbg", OccurredAt: at(1), CreatedByIdentityName: by}))
 	must(q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "noted", Mgdl: 64, ReadingType: "sgv", Notes: new("felt low"), OccurredAt: at(2), CreatedByIdentityName: by}))
 	must(q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "lunch", Carbs: new(40.0), Name: new("Pasta"), OccurredAt: at(3), CreatedByIdentityName: by, CreatedByAppName: new("AAPS")}))
@@ -33,6 +34,8 @@ func TestPackagingEvents(t *testing.T) {
 	must(q.CreateActivity(ctx, sitedb.CreateActivityParams{ID: "run", ActivityType: "run", DurationMinutes: new(int64(30)), OccurredAt: at(7), CreatedByIdentityName: by}))
 	must(q.CreateNotificationEvent(ctx, sitedb.CreateNotificationEventParams{ID: "note", Title: "Announcement", NotificationType: "note", OccurredAt: at(8), CreatedByIdentityName: by}))
 	must(q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "site-change", GroupType: "Site Change", EnteredBy: new("xDrip"), OccurredAt: at(9), CreatedByIdentityName: by}))
+	must(q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "wizard-bg", Mgdl: 222, ReadingType: "sgv", OccurredAt: at(14), CreatedByIdentityName: by}))
+	must(q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "wizard", GroupType: "Bolus Wizard", GlucoseReadingID: new("wizard-bg"), OccurredAt: at(14), CreatedByIdentityName: by}))
 	// Not events: a CGM reading, a loop's dose and its treatment, a temp basal and its treatment, and a deleted meal
 	must(q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: "cgm", Mgdl: 120, ReadingType: "sgv", OccurredAt: at(10), CreatedByIdentityName: by}))
 	must(q.CreateInsulinDose(ctx, sitedb.CreateInsulinDoseParams{ID: "smb", Dose: 0.2, Automatic: new(true), OccurredAt: at(11), CreatedByIdentityName: by}))
@@ -62,7 +65,8 @@ func TestPackagingEvents(t *testing.T) {
 	for _, event := range packaged {
 		ids = append(ids, event["id"])
 	}
-	require.Equal(t, []any{"meter", "noted", "lunch", "bolus", "target", "switch", "run", "note", "site-change"}, ids)
+	require.Equal(t, []any{"meter", "noted", "lunch", "bolus", "target", "switch", "run", "note", "site-change", "wizard-bg"}, ids)
+	require.Equal(t, []any{"wizard", 222.0}, []any{packaged[9]["group_id"], packaged[9]["mgdl"]})
 
 	// An event has its table, and the columns kept that have a value: not the app that sent it, or a column with none
 	ms := func(hour int) float64 { return float64(at(hour)) }
@@ -89,7 +93,7 @@ func TestPackagingEvents(t *testing.T) {
 	// An event deleted is gone when its day is packaged again, and a day left with none is emptied
 	must(q.SoftDeleteInsulinDose(ctx, sitedb.SoftDeleteInsulinDoseParams{ID: "bolus"}))
 	packageDays()
-	require.Len(t, events(), 8)
+	require.Len(t, events(), 9)
 
 	// A switch with an end takes the place of the one with none until it is over, and a temp target not over is in
 	// force too: the newest of each

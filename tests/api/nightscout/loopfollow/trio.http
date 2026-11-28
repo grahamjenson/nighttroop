@@ -91,13 +91,12 @@ ASSERT_STATUS 200
 NAME bg
 GET http://{{ site }}/api/v1/entries.json?token={{ token }}&count=1152&find[date][$gte]={{ itime 1440 }}&find[type][$ne]=cal
 ASSERT_STATUS 200
-ASSERT_LENGTH 3 "@"
+# As on Nightscout, the BG Check's glucose is the treatment's, not an entry
+ASSERT_LENGTH 2 "@"
 ASSERT_EQUALS 132 "@0.sgv"
 ASSERT_EQUALS "FortyFiveUp" "@0.direction"
 ASSERT_EXISTS "@0.date"
-# Nighttroop keeps the BG Check's glucose as a meter reading, so it is an mbg entry too, unlike Nightscout
-ASSERT_EQUALS "mbg" "@2.type"
-ASSERT_EQUALS 135 "@2.mbg"
+ASSERT_EQUALS "sgv" "@1.type"
 
 NAME treatments
 GET http://{{ site }}/api/v1/treatments.json?token={{ token }}&find[created_at][$gte]={{ utctime 1440 }}&find[created_at][$lte]={{ utctime -360 }}&count=5000

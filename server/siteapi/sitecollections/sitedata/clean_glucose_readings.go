@@ -2,6 +2,7 @@ package sitedata
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/a-h/templ"
@@ -108,7 +109,7 @@ func (s *CleanGlucoseReadingsCollection) GetHTMXResponse(model *sitemodels.SiteC
 // cleanGlucoseReadings is the site's readings from since, until when given, cleaned, newest first. It reads from
 // trendLookback before since, so the first has a change, and keeps only those from since.
 func cleanGlucoseReadings(ctx context.Context, q *sitedb.Queries, since int64, until *int64, siteContext *httputils.SiteContext) ([]*sitemodels.SiteCleanGlucoseReading, error) {
-	rows, err := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateGTE: new(since - trendLookback.Milliseconds()), DateLTE: until, Limit: maxRawReadings})
+	rows, err := treatmentGlucoseAsMeter(ctx, q)(q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateGTE: new(since - trendLookback.Milliseconds()), DateLTE: until, Limit: maxRawReadings}))
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +120,23 @@ func cleanGlucoseReadings(ctx context.Context, q *sitedb.Queries, since int64, u
 		}
 	}
 	return readings, nil
+}
+
+// treatmentGlucoseAsMeter marks the readings searched, newest first, that a treatment refers to as a meter's: a
+// treatment's glucose is typed in or read for it, so it is not counted or kept as a CGM's reading
+func treatmentGlucoseAsMeter(ctx context.Context, q *sitedb.Queries) func([]*sitedb.GlucoseReading, error) ([]*sitedb.GlucoseReading, error) {
+	return func(rows []*sitedb.GlucoseReading, err error) ([]*sitedb.GlucoseReading, error) {
+		if err != nil || len(rows) == 0 {
+			return rows, err
+		}
+		ids, err := q.TreatmentGlucoseReadingIDs(ctx, sitedb.TreatmentGlucoseReadingIDsParams{From: rows[len(rows)-1].OccurredAt, To: rows[0].OccurredAt, Limit: maxRawReadings})
+		for _, row := range rows {
+			if slices.Contains(ids, row.ID) {
+				row.ReadingType = "mbg"
+			}
+		}
+		return rows, err
+	}
 }
 
 // cleanGlucoseReadingFromDB is the site model of a cleaned reading, in the site context's units

@@ -3486,6 +3486,11 @@ func (m *SoftDeleteGlucoseReadingsByTypeParams) SetLimit(v int64) {
 	m.Limit = v
 }
 
+// SetLimit sets the Limit value and returns the updated TreatmentGlucoseReadingIDsParams.
+func (m *TreatmentGlucoseReadingIDsParams) SetLimit(v int64) {
+	m.Limit = v
+}
+
 // GetDelta returns the Delta value.
 func (m UpdateGlucoseReadingParams) GetDelta() *float64 {
 	return m.Delta

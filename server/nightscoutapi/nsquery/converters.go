@@ -32,8 +32,10 @@ type ToSearchParams interface {
 	// GLUCOSE READINGS
 	//////
 
-	// goverter:ignore Before BeforeID
+	// The entries collection sets EntriesOnly
+	// goverter:ignore Before BeforeID EntriesOnly
 	GlucoseAll(source Query) sitedb.AllGlucoseReadingsParams
+	// goverter:ignore EntriesOnly
 	GlucoseSearch(source Query) sitedb.SearchGlucoseReadingsParams
 	GlucoseAscending(source Query) sitedb.GlucoseReadingAscendingIDsParams
 	GlucoseSorted(source Query) sitedb.GlucoseReadingSortedIDsParams

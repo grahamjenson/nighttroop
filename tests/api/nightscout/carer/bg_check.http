@@ -1,6 +1,7 @@
 # A Caregiver device (device_read_write), such as LoopFollow or T1D Carer, cannot add glucose readings. Its careportal
-# BG Check is still kept, but as a meter reading (mbg), never as a CGM reading (sgv): a loop that reads its CGM from
-# Nightscout, and the alarms, would take a CGM reading for the PWD's glucose. The PWD phone's is a CGM reading still.
+# BG Check is still kept, but its glucose as a meter reading (mbg), never as a CGM reading (sgv): the site's views would
+# take a CGM reading for the PWD's glucose. The PWD phone's is a CGM reading still. As on Nightscout, a treatment's
+# glucose is not an entry, so a loop that reads its CGM from Nightscout does not get any of them.
 
 INCLUDE steps/new_site_admin.steps
 
@@ -38,17 +39,19 @@ ASSERT_EQUALS 39 "@0.glucose"
 ASSERT_EQUALS "Sensor" "@0.glucoseType"
 ASSERT_EQUALS 40 "@1.glucose"
 
-NAME no_cgm_readings
-GET http://{{ .ns_site }}/api/v1/entries/sgv.json?token={{ token }}
+NAME no_entries
+GET http://{{ .ns_site }}/api/v1/entries.json?token={{ token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 0 "@"
 
 NAME meter_readings
-GET http://{{ .ns_site }}/api/v1/entries/mbg.json?token={{ token }}
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 2 "@"
-ASSERT_EQUALS 39 "@0.mbg"
-ASSERT_EQUALS 40 "@1.mbg"
+ASSERT_LENGTH 2 "@result.items"
+ASSERT_EQUALS "mbg" "@result.items.0.reading_type"
+ASSERT_EQUALS "mbg" "@result.items.1.reading_type"
 
 // The PWD phone's BG Check with no glucoseType is a CGM reading
 NAME pwd_bg_check
@@ -57,7 +60,9 @@ B [{"eventType": "BG Check", "glucose": 120, "units": "mg/dl", "created_at": "{{
 ASSERT_STATUS 200
 
 NAME pwd_cgm_reading
-GET http://{{ .ns_site }}/api/v1/entries/sgv.json?token={{ token }}
+GET http://{{ site }}/data/glucose
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@"
-ASSERT_EQUALS 120 "@0.sgv"
+ASSERT_LENGTH 3 "@result.items"
+ASSERT_EQUALS "sgv" "@result.items.0.reading_type"

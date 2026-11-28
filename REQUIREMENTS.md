@@ -880,6 +880,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - If there is no CGM reading in the hours, the newest finger stick shows.
   - `GET /summary` gives it as `current_glucose`. Its `diff_per_5m` is from the CGM reading before it.
   - Finger sticks stay in `glucose_readings` and the graph.
+  - A treatment's glucose is a meter reading, also with no `glucoseType` (an AAPS Bolus Wizard). It is never the latest
+    glucose, and the alarms do not read it.
 - The devices are under a **Devices** title with a link to the Device Status page. With no device, neither shows.
 - If a device's pump is suspended, its card shows an amber **Suspended** badge. `GET /summary` gives `pump_state`
   `suspended` in `device_statuses` and `loop`.
@@ -2015,7 +2017,7 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
   - Followers get it as changed. Same values: no change, last modified too.
   - A reading Trio downloads (Nightscout as its CGM) and uploads with its own id, or xDrip+ sends again: one reading.
 - Meter reading (`mbg`) with the date of a stored one, from any device: the same finger prick. A careportal BG Check
-  that xDrip+ downloads and uploads again is stored once, with the values and `device` of xDrip+'s copy.
+  that xDrip+ downloads and uploads again is one entry, xDrip+'s copy. The BG Check keeps its own glucose.
 
 ### Nightscout API: fields kept as sent
 
@@ -2058,6 +2060,10 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
   for example a Question from AAPS or a Sensor Start from xDrip+.
 - A treatment `glucose` of 0 or less, or over 1000 mg/dL, is left out. The treatment is kept without a reading, and the
   site's client errors show it. AAPS sends 0 with a Bolus Wizard that used no BG.
+- A treatment's `glucose` is not an entry, as on Nightscout. API v1, API v3 (search, read, history, `lastModified`) and
+  the sockets do not give it as an `sgv` or `mbg`. AAPS reads each `sgv` entry as a CGM reading.
+  - This is also true of a reading that the site puts in a treatment: it is the treatment's glucose.
+  - A delete of the entries of a type does not delete it.
 
 ### Nightscout API: entries
 
@@ -2560,7 +2566,8 @@ Before it backs up a site written to, at most every hour, the server packages th
   mg/dL, or none.
   - A 5-minute step holds its newest CGM reading. If two sources read the same glucose, the step holds the
     reading of the best source (as the glucose page shows it).
-  - A deleted reading, and a meter reading, are not in it.
+  - A deleted reading, a meter reading, and a treatment's glucose are not in it. A treatment's glucose does not take
+    the step of a CGM reading near it.
   - Today is not packaged.
 - Each UTC day with a device status has one `cold_days` row for each number its statuses have:
 
@@ -2595,8 +2602,9 @@ Before it backs up a site written to, at most every hour, the server packages th
   - The last 2 days that ended are packaged in each run, and each day with a treatment written since the run before.
   - If a treatment is deleted, its day is packaged again without it.
 - Each UTC day that ended and has events has one `cold_days` row of kind `events`: a list, oldest first.
-  - Events are: a meter reading; a CGM reading with a note; a food intake; an insulin dose a loop did not give;
-    a temp target; a profile switch; an activity; a notification; a treatment with no event (example: a site change).
+  - Events are: a meter reading; a CGM reading with a note; a treatment's glucose; a food intake; an insulin dose a
+    loop did not give; a temp target; a profile switch; an activity; a notification; a treatment with no event
+    (example: a site change).
   - Not events: a CGM reading with no note, a loop's insulin dose, a temp basal, and a deleted record.
   - An event has `k`, its table, and each column its table's policy keeps that has a value. It always has its
     `id` and `occurred_at`. It does not have the app or device that sent it.

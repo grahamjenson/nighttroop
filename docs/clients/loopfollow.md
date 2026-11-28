@@ -168,7 +168,6 @@ Nighttroop keeps each status's `loop` or `openaps` as sent for 1 day, also when 
 ## Quirks
 
 - LoopFollow reads any zone in `created_at` as UTC. Nighttroop always sends `created_at` in UTC.
-- Nighttroop also keeps a BG Check as an `mbg` entry. LoopFollow draws it in the BG line.
 - A treatment's `timestamp` is its `created_at`, a string, as LoopFollow needs.
 - Nighttroop returns `enteredBy` and a bolus's `automatic` as sent (the identity's name if no `enteredBy` was sent).
   It drops a treatment's sent `timestamp` and `durationType`.

@@ -74,8 +74,8 @@ from one table of policies.
 | `derived` | Built from the other tables | A cache. Built again when needed. | `summary_period` |
 | `cold` | The cold days | Already small | `cold_days` |
 
-- A table can give two shapes. `glucose_readings` gives the `glucose` series, and its finger pricks and its
-  readings with a note are events.
+- A table can give two shapes. `glucose_readings` gives the `glucose` series, and its finger pricks, its readings
+  with a note and the glucose of its treatments are events.
 - `data/retention/policy.go` has the policy of each table: its shape, its series, the columns its events keep,
   and what is lost.
 
@@ -122,7 +122,7 @@ A series is one number through the day on a grid: one value for each step, or no
 
 | Series | From | Step | Kept to | A step holds |
 | --- | --- | --- | --- | --- |
-| `glucose` | `glucose_readings` (CGM) | 5 min | 1 mg/dL | The newest reading of the best source |
+| `glucose` | `glucose_readings` (CGM, not a treatment's glucose) | 5 min | 1 mg/dL | The newest reading of the best source |
 | `iob`, `iob_basal`, `cob` | `device_reports` | 5 min | 0.01 U, 0.1 g | The newest report |
 | `basal_rate` | The profile, its switches, and `temp_basals` | 5 min | 0.001 U/hr | The mean rate in force |
 | `insulin_bolus` | `insulin_doses` | 5 min | 0.001 U | The total: a loop's and a person's boluses, an extended one as it is given |
@@ -167,6 +167,8 @@ A treatment and its `event_groups` row become one entry.
 
 - Automatic records (temp basals, a loop's boluses) are not in the list. They are in the series. A CGM reading is
   in the list only if it has a note.
+- A treatment's glucose is in the list, not in the `glucose` series, also if it is an `sgv` (an AAPS Bolus Wizard
+  with no `glucoseType`). Thus it is not merged with a CGM reading near it, and the CGM reading is not deleted.
 - **Built** (`packageEventsDay`, `data/db/package_events.go`). The body has shape `2`: the events as a JSON list, with
   DEFLATE when that is smaller. JSON, as an event has other columns for each table.
 - An event is `k`, its table, and each column of its row that its table's policy keeps (`Keep` in `policy.go`) and

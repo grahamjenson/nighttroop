@@ -388,17 +388,18 @@ B {"eventType": "BG Check", "glucose": 118, "glucoseType": "Finger", "units": "m
    "enteredBy": "careportal"}
 ASSERT_STATUS 200
 
+// As on Nightscout, the BG Check's glucose is the treatment's, not an entry
 NAME xdrip_bg_check_reading
 GET http://{{ site }}/api/v1/entries.json?find[type]=mbg&find[mbg]=118
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
-ASSERT_LENGTH 1 "@"
+ASSERT_LENGTH 0 "@"
 
-// The same finger prick sent back with xDrip+'s device is not stored twice
+// The same finger prick sent back with xDrip+'s device is one entry, as on Nightscout
 NAME xdrip_upload_bg_check_back
 POST http://{{ site }}/api/v1/entries
 H api-secret: {{ sha1 token }}
-B [{"device": "careportal via Nightscout", "type": "mbg", "date": {{ dig "xdrip_bg_check_reading.0.date" }},
+B [{"device": "careportal via Nightscout", "type": "mbg", "date": {{ dig "xdrip_careportal_bg_check.0.date" }},
     "mbg": 118.0}]
 ASSERT_STATUS 200
 
@@ -407,6 +408,6 @@ GET http://{{ site }}/api/v1/entries.json?find[type]=mbg&find[mbg]=118
 H api-secret: {{ sha1 token }}
 ASSERT_STATUS 200
 ASSERT_LENGTH 1 "@"
-// It is the same finger prick, with the values and device of xDrip+'s copy, as Nightscout sets the fields sent
+// It is xDrip+'s copy, with its values and device, and the BG Check keeps its own glucose
 ASSERT_EQUALS 118 "@0.mbg"
 ASSERT_EQUALS "careportal via Nightscout" "@0.device"

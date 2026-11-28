@@ -13,7 +13,9 @@ const lastModifiedCollections = `-- name: LastModifiedCollections :one
 SELECT 
      CAST(COALESCE((SELECT updated_at FROM device_reports                             ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS device_report_updated_at,
      CAST(COALESCE((SELECT updated_at FROM activities                                 ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS activity_updated_at,
-     CAST(COALESCE((SELECT updated_at FROM glucose_readings                           ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS glucose_reading_updated_at,
+     -- the entries', not a treatment's glucose (see GetGlucoseReading)
+     CAST(COALESCE((SELECT updated_at FROM glucose_readings WHERE NOT EXISTS (SELECT 1 FROM event_groups AS treatment WHERE treatment.glucose_reading_id = glucose_readings.id)
+                                                                                      ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS glucose_reading_updated_at,
      CAST(COALESCE((SELECT updated_at FROM event_groups                               ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS event_group_updated_at,
      CAST(COALESCE((SELECT updated_at FROM food_presets                               ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS food_preset_updated_at,
      CAST(COALESCE((SELECT updated_at FROM profile_presets                            ORDER BY updated_at DESC                   LIMIT 1),0) AS INTEGER) AS profile_preset_updated_at,

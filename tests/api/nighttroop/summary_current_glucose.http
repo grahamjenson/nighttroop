@@ -28,6 +28,24 @@ ASSERT_EQUALS 7.2 "@result.items.0.glucose_readings.0.reading"
 ASSERT_EQUALS "mbg" "@result.items.0.glucose_readings.0.reading_type"
 ASSERT_EQUALS 5.106 "@result.items.0.glucose_readings.1.reading"
 
+// AAPS sends a BG typed into its Bolus Wizard with no glucoseType. It is a meter's reading, 178 mg/dL (9.879 mmol/L):
+// the current glucose is still the CGM's, and the summary lists the wizard's glucose as a meter's
+NAME bolus_wizard
+POST http://{{ .ns_site }}/api/v1/treatments?token={{ token }}
+B [{"eventType": "Bolus Wizard", "glucose": 178, "units": "mg/dl", "created_at": "{{ time 2 }}", "enteredBy": "openaps://AAPS"}]
+ASSERT_STATUS 200
+
+NAME summary_bolus_wizard_is_meter
+GET http://{{ site }}/summary
+H Authorization: Bearer {{ jwt }}
+H Accept: application/json
+ASSERT_STATUS 200
+ASSERT_EQUALS 5.106 "@result.items.0.current_glucose.reading"
+ASSERT_EQUALS "sgv" "@result.items.0.current_glucose.reading_type"
+ASSERT_LENGTH 5 "@result.items.0.glucose_readings"
+ASSERT_EQUALS 9.879 "@result.items.0.glucose_readings.1.reading"
+ASSERT_EQUALS "mbg" "@result.items.0.glucose_readings.1.reading_type"
+
 // A site with only finger sticks shows its newest one, as it has no CGM
 NAME meter_site
 POST http://localhost/site

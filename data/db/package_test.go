@@ -34,8 +34,8 @@ func TestPackagingASitesGlucose(t *testing.T) {
 		require.NoError(t, err)
 	}
 	// 40 days ago: a reading at 00:00, two in the 5 minutes from 01:00 (the newest is kept), one at 02:00 that a sync
-	// also read (the phone's is kept), one at 03:00 that was deleted, one with a note, one a treatment refers to, and
-	// a meter's, which is not CGM glucose
+	// also read (the phone's is kept), one at 03:00 that was deleted, one with a note, one a treatment refers to with a
+	// CGM reading 30 seconds after it, and a meter's. The treatment's and the meter's are not CGM glucose.
 	reading("midnight", old, 100.4, nil)
 	reading("first", old.Add(time.Hour), 110, nil)
 	reading("newest", old.Add(time.Hour+4*time.Minute), 114, nil)
@@ -48,6 +48,7 @@ func TestPackagingASitesGlucose(t *testing.T) {
 	reading("treated", old.Add(5*time.Hour), 150, nil)
 	_, err = q.CreateEventGroup(ctx, sitedb.CreateEventGroupParams{ID: "check", GroupType: "BG Check", GlucoseReadingID: new("treated"), OccurredAt: old.Add(5 * time.Hour).UnixMilli(), CreatedByIdentityName: "phone"})
 	require.NoError(t, err)
+	reading("cgm", old.Add(5*time.Hour+30*time.Second), 141, nil)
 	reading("meter", old.Add(6*time.Hour), 160, func(p *sitedb.CreateGlucoseReadingParams) { p.ReadingType = "mbg" })
 	// 2 days ago, the last 5 minutes of the day, and today, which has not ended
 	reading("recent", recent.Add(24*time.Hour-time.Second), 180, nil)
@@ -85,10 +86,11 @@ func TestPackagingASitesGlucose(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// Packaging writes each ended day, in whole mg/dL, and deletes no row
+	// Packaging writes each ended day, in whole mg/dL, and deletes no row. The treatment's glucose is not merged with
+	// the CGM reading near it, or kept in its place: the step is the CGM's.
 	before := rows()
 	packageDays()
-	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 48: 140, 60: 150}, packaged(old))
+	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 48: 140, 60: 141}, packaged(old))
 	require.Equal(t, map[int]float64{287: 180}, packaged(recent))
 	require.Nil(t, packaged(today), "today has not ended")
 	require.Equal(t, before, rows())
@@ -98,7 +100,7 @@ func TestPackagingASitesGlucose(t *testing.T) {
 	cfg.RetentionDeleteRows = true
 	packageDays()
 	require.ElementsMatch(t, []string{"noted", "treated", "meter", "recent", "today"}, rows())
-	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 48: 140, 60: 150}, packaged(old), "the day is as it was packaged")
+	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 48: 140, 60: 141}, packaged(old), "the day is as it was packaged")
 
 	// A reading written late for that day, as a backfill does, is added to it, and the day keeps what it had. A
 	// reading of it then deleted clears its step.
@@ -106,7 +108,7 @@ func TestPackagingASitesGlucose(t *testing.T) {
 	_, err = q.SoftDeleteGlucoseReading(ctx, sitedb.SoftDeleteGlucoseReadingParams{ID: "noted"})
 	require.NoError(t, err)
 	packageDays()
-	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 60: 150, 84: 170}, packaged(old))
+	require.Equal(t, map[int]float64{0: 100, 12: 114, 24: 120, 60: 141, 84: 170}, packaged(old))
 	require.NotContains(t, rows(), "late")
 
 	// Fewer hot days delete the readings of 2 days ago too, and their day is as it was
