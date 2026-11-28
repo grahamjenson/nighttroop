@@ -177,3 +177,38 @@ func TestTruncatingAgainDoesNotHoldBackDeletingPackagedRows(t *testing.T) {
 	time.Sleep(120 * time.Millisecond)
 	require.Equal(t, 0, doses(), "settled since it was first packaged")
 }
+
+// A day with rows but no event, as one whose only meal was deleted, on a site with no profile, is packaged too, with
+// no events, so its rows are deleted: a day with no cold day of events kept its rows for ever
+func TestADayWithNoEventsIsPackagedAndItsRowsDeleted(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	settle := db.PackagedSettle
+	db.PackagedSettle = 0
+	t.Cleanup(func() { db.PackagedSettle = settle })
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	old := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -40)
+	at := old.Add(5 * time.Hour).UnixMilli()
+	_, err := q.CreateFoodIntake(ctx, sitedb.CreateFoodIntakeParams{ID: "meal", Carbs: new(40.0), OccurredAt: at, CreatedByIdentityName: "phone"})
+	require.NoError(t, err)
+	_, err = q.SoftDeleteFoodIntake(ctx, sitedb.SoftDeleteFoodIntakeParams{ID: "meal"})
+	require.NoError(t, err)
+	// And a temp basal, which is a series and not an event, with no profile to make a basal rate of
+	_, err = q.CreateTempBasal(ctx, sitedb.CreateTempBasalParams{ID: "temp", DurationMinutes: 30, Multiplier: new(0.5), OccurredAt: at, CreatedByIdentityName: "loop"})
+	require.NoError(t, err)
+
+	for range 2 {
+		_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+	}
+	row, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "events", Date: old.Format(time.DateOnly)})
+	require.NoError(t, err, "the day is packaged, though it has no event")
+	_, day, err := retention.ReadEvents(row.Body)
+	require.NoError(t, err)
+	require.Empty(t, day.Events)
+	food, err := q.AllFoodIntakes(ctx, sitedb.AllFoodIntakesParams{IncludeDeleted: true, Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, food, "the deleted meal's row is deleted")
+	basals, err := q.AllTempBasals(ctx, sitedb.AllTempBasalsParams{IncludeDeleted: true, Limit: 10})
+	require.NoError(t, err)
+	require.Empty(t, basals, "the temp basal's row is deleted")
+}

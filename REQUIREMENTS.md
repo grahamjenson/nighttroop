@@ -2685,6 +2685,8 @@ days: insulin doses, food intakes, temp basals, temp targets, activities, notes 
 - A treatment is deleted with its events. An event of a treatment that is not deleted is not deleted.
 - The newest profile switch with no end is not deleted. A profile switch that ends in the hot days is not deleted.
 - A treatment of the hot days is not deleted.
+- A day with a row written, but no event, is packaged with no events, so its rows are deleted. Examples: a day
+  whose only meal was deleted; a day with only temp basals, on a site with no profile.
 - A day with deleted rows is not packaged again. A treatment written later for that day stays a row, and the day's
   cold days do not change.
 
