@@ -67,16 +67,7 @@ func (db *ControlDB) packageSite(ctx context.Context, site *SiteDB, since int64,
 			return err
 		}
 	}
-	if days, err = q.EventDaysWrittenSince(ctx, sitedb.EventDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()}); err != nil {
-		return fmt.Errorf("cannot package site %s: %w", site.Subdomain, err)
-	}
-	// The days that just ended too, as a day with no event of its own still has what was in force at its start
-	for _, day := range lastDays(days, today) {
-		if err := packaged(day, packageEventsDay(ctx, q, day*dayMs)); err != nil {
-			return err
-		}
-	}
-	if err := db.packageTreatmentDays(ctx, site, since, today); err != nil {
+	if err := db.packageTreatmentDays(ctx, site, since, now); err != nil {
 		return fmt.Errorf("cannot package the treatments of site %s: %w", site.Subdomain, err)
 	}
 	if db.ServerConfig.RetentionDeleteRows {
@@ -112,41 +103,112 @@ func lastDays(days []int64, today time.Time) []int64 {
 	return days
 }
 
-// packageTreatmentDays packages the treatment series of the days that ended and had a treatment written since since, and of
-// the last days that ended, from their rows alone, as none of their rows is deleted yet. A series with no value in a
-// day is written only to empty a day that had some.
-func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, since int64, today time.Time) error {
-	if TreatmentDaySeries == nil {
-		return nil
-	}
-	q := site.Queries()
-	days, err := q.TreatmentDaysWrittenSince(ctx, sitedb.TreatmentDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()})
+// PackagedSettle is how long a day older than the hot days must go without being packaged again before its treatment
+// rows are deleted, and from when the day is no longer packaged again: a backfill writes a day's rows over some runs,
+// and a day is packaged again while they come. It is a variable for a test to set.
+var PackagedSettle = 24 * time.Hour
+
+// packageTreatmentDays packages the treatment series and then the events of the days that ended and had a treatment or
+// an event written since since, and of the last days that ended, from their rows alone. The events are written last,
+// as a day's events say the day was packaged: when the server deletes rows, the rows of a day older than the hot days
+// are deleted once its events were packaged after them and have then settled (see deletePackagedTreatments), and such
+// a day is never packaged again, as its rows are not all there. A row written for it later stays a row.
+//
+// A series with no value in a day is written only to empty a day that had some.
+func (db *ControlDB) packageTreatmentDays(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
+	q, today := site.Queries(), now.UTC().Truncate(24*time.Hour)
+	hot, settled := retention.HotSince(now, db.ServerConfig.RetentionHotDays).UnixMilli(), now.Add(-PackagedSettle).UnixMilli()
+	days, err := q.EventDaysWrittenSince(ctx, sitedb.EventDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()})
 	if err != nil {
 		return err
 	}
-	days = lastDays(days, today)
-	model, err := db.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
+	treatmentDays, err := q.TreatmentDaysWrittenSince(ctx, sitedb.TreatmentDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()})
 	if err != nil {
 		return err
 	}
-	for _, day := range days {
-		built, err := TreatmentDaySeries(ctx, q, model, day*dayMs)
-		if err != nil {
+	for _, day := range treatmentDays {
+		if !slices.Contains(days, day) {
+			days = append(days, day)
+		}
+	}
+	var model *controldb.Site
+	if TreatmentDaySeries != nil {
+		if model, err = db.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain}); err != nil {
 			return err
 		}
+	}
+	for _, day := range lastDays(days, today) {
 		date := time.UnixMilli(day * dayMs).UTC().Format(time.DateOnly)
-		for _, series := range built {
-			if !slices.ContainsFunc(series.Values, func(value float64) bool { return !math.IsNaN(value) }) {
-				if _, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: series.Series.Name, Date: date}); err != nil {
-					continue
-				}
-			}
-			if err := writeSeriesDay(ctx, q, series.Series, date, series.Values); err != nil {
-				return err
+		if db.ServerConfig.RetentionDeleteRows && day*dayMs < hot {
+			if events, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: retention.EventsKind, Date: date}); err == nil && events.UpdatedAt <= settled {
+				continue
 			}
 		}
+		treated := false
+		if TreatmentDaySeries != nil {
+			built, err := TreatmentDaySeries(ctx, q, model, day*dayMs)
+			if err != nil {
+				return fmt.Errorf("%s: %w", date, err)
+			}
+			for _, series := range built {
+				if !slices.ContainsFunc(series.Values, func(value float64) bool { return !math.IsNaN(value) }) {
+					if _, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: series.Series.Name, Date: date}); err != nil {
+						continue
+					}
+				}
+				treated = true
+				if err := writeSeriesDay(ctx, q, series.Series, date, series.Values); err != nil {
+					return fmt.Errorf("%s: %w", date, err)
+				}
+			}
+		}
+		// A day with a treatment series has its events written though it has none, to say it was packaged
+		if err := packageEventsDay(ctx, q, day*dayMs, treated); err != nil {
+			return fmt.Errorf("%s: %w", date, err)
+		}
 	}
-	return nil
+	if !db.ServerConfig.RetentionDeleteRows || TreatmentDaySeries == nil {
+		return nil
+	}
+	return deletePackagedTreatments(ctx, q, hot, settled)
+}
+
+// deletePackagedTreatments deletes the treatments and events from before before, in ms, whose day's events were
+// packaged after they were last written, and not since settled, so none is deleted that its cold days do not have:
+// the treatments first, then the events no treatment still refers to. A profile switch that may still be in force is
+// kept, as the basal of the days that are rows is read from it. A meter's reading is kept (see
+// DeletePackagedCGMReadings).
+func deletePackagedTreatments(ctx context.Context, q *sitedb.Queries, before, settled int64) error {
+	_, err := q.DeletePackagedEventGroups(ctx, sitedb.DeletePackagedEventGroupsParams{Before: before, SettledBefore: settled})
+	deletes := []func() (int64, error){
+		func() (int64, error) {
+			return q.DeletePackagedInsulinDoses(ctx, sitedb.DeletePackagedInsulinDosesParams{Before: before, SettledBefore: settled})
+		},
+		func() (int64, error) {
+			return q.DeletePackagedFoodIntakes(ctx, sitedb.DeletePackagedFoodIntakesParams{Before: before, SettledBefore: settled})
+		},
+		func() (int64, error) {
+			return q.DeletePackagedTempBasals(ctx, sitedb.DeletePackagedTempBasalsParams{Before: before, SettledBefore: settled})
+		},
+		func() (int64, error) {
+			return q.DeletePackagedTempTargets(ctx, sitedb.DeletePackagedTempTargetsParams{Before: before, SettledBefore: settled})
+		},
+		func() (int64, error) {
+			return q.DeletePackagedActivities(ctx, sitedb.DeletePackagedActivitiesParams{Before: before, SettledBefore: settled})
+		},
+		func() (int64, error) {
+			return q.DeletePackagedNotificationEvents(ctx, sitedb.DeletePackagedNotificationEventsParams{Before: before, SettledBefore: settled})
+		},
+		func() (int64, error) {
+			return q.DeletePackagedProfileSwitches(ctx, sitedb.DeletePackagedProfileSwitchesParams{Before: before, SettledBefore: settled})
+		},
+	}
+	for _, deleteRows := range deletes {
+		if err == nil {
+			_, err = deleteRows()
+		}
+	}
+	return err
 }
 
 // point is a value of a series at a time, in ms
