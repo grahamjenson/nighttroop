@@ -1080,7 +1080,7 @@ The reports (overview, AGP, TDD, print), the summary's yesterday, last week, las
 - A later day, and today so far, are built from the site's rows.
 - If a day has data written since the site was last packaged, the day is built from the site's rows. Thus a day
   shows a backfill, an edit or a delete at once.
-  - If `RETENTION_DELETE_ROWS` is `true`, this applies only to the days of `RETENTION_HOT_DAYS`.
+  - Unless `RETENTION_DELETE_ROWS` is `false`, this applies only to the days of `RETENTION_HOT_DAYS`.
 - A day is from midnight in the site's time zone. A new time zone, or a new week start day, shows at once.
 - A day with no data is not one of the days. `GET /data/summary-daily/{date}` gives 404 for it, and for an id that is
   not a date.
@@ -1092,7 +1092,7 @@ The reports (overview, AGP, TDD, print), the summary's yesterday, last week, las
   - The server marks the cold days of that day when it writes the change.
   - A report builds a marked day from the site's rows.
   - The next package run packages the marked days again and clears the marks.
-  - If `RETENTION_DELETE_ROWS` is `true`, this applies only to the days of `RETENTION_HOT_DAYS`.
+  - Unless `RETENTION_DELETE_ROWS` is `false`, this applies only to the days of `RETENTION_HOT_DAYS`.
 
 #### TDD report
 
@@ -1222,6 +1222,9 @@ The reports (overview, AGP, TDD, print), the summary's yesterday, last week, las
     with the range shaded and time in range.
     - The last is today so far, from clean readings.
     - Title: "Last N days", or "Today" on a new site's first day.
+  - Each data page of records that are packaged (not Device Status) says, under its totals, that only the last
+    `RETENTION_HOT_DAYS` days are listed, with a link to Reports. It does not say so if `RETENTION_DELETE_ROWS` is
+    `false`.
   - A day with no readings shows "No readings" in place of its graph, and no time in range.
   - Click a day to open its AGP report. A note under the title says so.
 - **Insulin doses**
@@ -2607,8 +2610,8 @@ Before it backs up a site written to, at most every hour, the server packages th
   scale. A body with a version or a shape the server does not know is an error.
 - A run packages only the days that had a CGM reading written, changed or deleted since the run before. A site that
   was never packaged has all its days packaged. The control site's **Truncate** packages all days.
-- If `RETENTION_DELETE_ROWS` is not `true` (the default), the server deletes no reading.
-- If `RETENTION_DELETE_ROWS` is `true`, the server deletes the CGM readings older than `RETENTION_HOT_DAYS` days
+- If `RETENTION_DELETE_ROWS` is `false`, the server deletes no reading. The default is that it deletes.
+- Unless `RETENTION_DELETE_ROWS` is `false`, the server deletes the CGM readings older than `RETENTION_HOT_DAYS` days
   (default 31, minimum 3).
   - Only a reading whose day was packaged after the reading was last written is deleted.
   - Kept as rows: a meter reading, a reading with a note, and a reading a treatment refers to.
@@ -2649,7 +2652,7 @@ Before it backs up a site written to, at most every hour, the server packages th
 
 #### Entries of packaged days
 
-If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries` of the days older than
+Unless `RETENTION_DELETE_ROWS` is `false`, the Nightscout API makes the CGM `entries` of the days older than
 `RETENTION_HOT_DAYS` from `cold_days`.
 
 - A search of `entries`, newest first or oldest first, gives the made entries with the entries that are rows, in
@@ -2665,14 +2668,14 @@ If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries`
   report, and its `_id` gives 404.
 - A made entry cannot be changed by its `_id`.
 - A made treatment is not read or deleted by its `_id` (404).
-- If `RETENTION_DELETE_ROWS` is not `true`, a search reads rows only.
+- If `RETENTION_DELETE_ROWS` is `false`, a search reads rows only.
 
 #### Delete of packaged treatments
 
-If `RETENTION_DELETE_ROWS` is `true`, the server deletes the treatments and events older than `RETENTION_HOT_DAYS`
+Unless `RETENTION_DELETE_ROWS` is `false`, the server deletes the treatments and events older than `RETENTION_HOT_DAYS`
 days: insulin doses, food intakes, temp basals, temp targets, activities, notes and profile switches.
 
-- If `RETENTION_DELETE_ROWS` is not `true` (the default), the server deletes none.
+- If `RETENTION_DELETE_ROWS` is `false`, the server deletes none.
 - Only a row whose day's `events` cold day was written after the row was last written is deleted.
 - A row is deleted only when that cold day is 24 hours old.
 - The day's cold days keep the carbs, the insulin, the basal rate and the events of the deleted rows.
@@ -2684,7 +2687,7 @@ days: insulin doses, food intakes, temp basals, temp targets, activities, notes 
 
 #### Treatments of packaged days
 
-If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the `treatments` of the days older than
+Unless `RETENTION_DELETE_ROWS` is `false`, the Nightscout API makes the `treatments` of the days older than
 `RETENTION_HOT_DAYS` from the days' cold events.
 
 - A search of `treatments`, newest first or oldest first, gives the made treatments with the treatments that are rows, in order

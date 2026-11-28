@@ -35,7 +35,10 @@ PRESS Escape
 ASSERT_NOT_VISIBLE #site--glucose--create--modal
 ASSERT_VISIBLE #site--glucose--add:focus
 
-// Tab goes on through the days card's link, today, then to the newest reading's row, outlined as focused
+// Tab goes on through the link of the note on older days, then the days card's link, today, then to the newest
+// reading's row, outlined as focused
+PRESS Tab
+ASSERT_VISIBLE #site--glucose--older-link:focus
 PRESS Tab
 ASSERT_VISIBLE #site--glucose--days li:last-child a:focus
 PRESS Tab

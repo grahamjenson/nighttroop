@@ -24,7 +24,9 @@ import (
 // days' cold glucose: an app that reads months back gets each 5 minutes, with the rows that are left, each once.
 func TestEntriesOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	t.Cleanup(func() { cfg.RetentionDeleteRows, cfg.RetentionHotDays = false, retention.DefaultHotDays })
+	t.Cleanup(func() { cfg.RetentionDeleteRows, cfg.RetentionHotDays = true, retention.DefaultHotDays })
+	// The server deletes rows unless it is told not to: this starts as one that does not
+	cfg.RetentionDeleteRows = false
 	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
 	today := time.Now().UTC().Truncate(24 * time.Hour)
 	old, recent := today.AddDate(0, 0, -40), today.AddDate(0, 0, -2)
@@ -291,7 +293,9 @@ func TestColdStorageIsLookedAtByAnAdmin(t *testing.T) {
 // cold events: each with its own ID, type, time and values, the newest first with the treatments that are rows.
 func TestTreatmentsOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	t.Cleanup(func() { cfg.RetentionDeleteRows = false })
+	t.Cleanup(func() { cfg.RetentionDeleteRows = true })
+	// The server deletes rows unless it is told not to: this starts as one that does not
+	cfg.RetentionDeleteRows = false
 	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
 	nsHost := "http://" + site.SiteDB.Subdomain + ".ns.localhost"
 	today := time.Now().UTC().Truncate(24 * time.Hour)

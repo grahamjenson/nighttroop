@@ -63,7 +63,7 @@ func FoodIntakesTable(foodIntakes []*sitemodels.SiteFoodIntake, skip int64, limi
 			Title:       i18n.T(ctx, "site.data.food_intakes.title"),
 			Description: i18n.T(ctx, "site.data.food_intakes.about"),
 			Action:      addmodal.Open("site--food--add", "/data/food/new", i18n.T(ctx, "site.data.food_intakes.add")),
-			Above:       searchTotals("site--food", "site.data.food_intakes.noun"),
+			Above:       searchTotals("site--food", "site.data.food_intakes.noun", true),
 			Modal:       true,
 			Table: listpage.TableProps{
 				EmptyHint: newSiteHint(),

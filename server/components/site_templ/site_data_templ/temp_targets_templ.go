@@ -66,7 +66,7 @@ func TempTargetsTable(tempTargets []*sitemodels.SiteTempTarget, skip int64, limi
 			Title:       i18n.T(ctx, "site.data.temp_targets.title"),
 			Description: i18n.T(ctx, "site.data.temp_targets.about"),
 			Action:      addmodal.Open("site--temp-target--add", "/data/temp-targets/new", i18n.T(ctx, "site.data.temp_targets.add")),
-			Above:       searchTotals("site--temp-target", "site.data.temp_targets.noun"),
+			Above:       searchTotals("site--temp-target", "site.data.temp_targets.noun", true),
 			Modal:       true,
 			Table: listpage.TableProps{
 				EmptyHint: newSiteHint(),

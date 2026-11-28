@@ -64,7 +64,7 @@ func ProfileSwitchesTable(profileSwitches []*sitemodels.SiteProfileSwitch, skip 
 			Title:       i18n.T(ctx, "site.data.profile_switches.title"),
 			Description: i18n.T(ctx, "site.data.profile_switches.about"),
 			Action:      addmodal.Open("site--profile-switch--add", "/data/profile-switches/new", i18n.T(ctx, "site.data.profile_switches.add")),
-			Above:       searchTotals("site--profile-switch", "site.data.profile_switches.noun"),
+			Above:       searchTotals("site--profile-switch", "site.data.profile_switches.noun", true),
 			Modal:       true,
 			Table: listpage.TableProps{
 				EmptyHint: newSiteHint(),

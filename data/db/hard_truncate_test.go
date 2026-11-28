@@ -32,7 +32,10 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, controlDB, site := testutils.NewControlDBWithSite(t)
+			cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+			// A server that does not delete packaged rows, so only the size limit deletes here
+			cfg.RetentionDeleteRows = false
+			t.Cleanup(func() { cfg.RetentionDeleteRows = true })
 			ctx, q, siteID := t.Context(), site.SiteDB.Queries(), site.SiteDB.Subdomain
 			now, day := time.Now(), 24*time.Hour
 			ago := func(age time.Duration) int64 { return now.Add(-age).UnixMilli() }

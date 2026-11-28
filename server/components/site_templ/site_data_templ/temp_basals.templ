@@ -21,7 +21,7 @@ templ TempBasalsTable(tempBasals []*sitemodels.SiteTempBasal, skip int64, limit 
 		Title:       i18n.T(ctx, "site.data.temp_basals.title"),
 		Description: i18n.T(ctx, "site.data.temp_basals.about"),
 		Action:      addmodal.Open("site--temp-basal--add", "/data/temp-basals/new", i18n.T(ctx, "site.data.temp_basals.add")),
-		Above:       searchTotals("site--temp-basal", "site.data.temp_basals.noun"),
+		Above:       searchTotals("site--temp-basal", "site.data.temp_basals.noun", true),
 		Modal:       true,
 		Table: listpage.TableProps{
 			EmptyHint: newSiteHint(),

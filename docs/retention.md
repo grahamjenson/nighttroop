@@ -2,8 +2,8 @@
 
 **Status:** steps 1 to 4e are built. The server packages the CGM glucose of each day, what a loop's phone reports
 (IOB, COB, reservoir, batteries), the treatments (basal rate, insulin, carbs), and the day's events into
-`cold_days`. The Nightscout API makes `entries` and `treatments` from packaged days. It deletes no row unless `RETENTION_DELETE_ROWS` is
-`true`. The other steps are the plan. See [Build order](#build-order).
+`cold_days`. The Nightscout API makes `entries` and `treatments` from packaged days. It deletes the packaged rows older than the hot days, unless
+`RETENTION_DELETE_ROWS` is `false`. The other steps are the plan. See [Build order](#build-order).
 
 ## The problem, measured
 
@@ -177,7 +177,7 @@ A treatment and its `event_groups` row become one entry.
 
 ### The delete of treatments and events
 
-If `RETENTION_DELETE_ROWS` is `true`, a run deletes the treatments and events older than the hot days.
+Unless `RETENTION_DELETE_ROWS` is `false`, a run deletes the treatments and events older than the hot days.
 
 | Rule | Why |
 |---|---|
@@ -242,7 +242,7 @@ Packaging runs for each site before its backup, where the truncation runs (`pack
    written since takes its step, and a deleted row clears its step. If not, build the day from its rows only.
 4. **Check.** Read the new cold day back. It must be equal to what was built. If not, write nothing.
 5. Write the cold day.
-6. If `RETENTION_DELETE_ROWS` is `true`, delete the rows older than the hot days. Only a row whose cold day was
+6. Unless `RETENTION_DELETE_ROWS` is `false`, delete the rows older than the hot days. Only a row whose cold day was
    written after the row was last written is deleted. Thus no row is deleted that its cold day does not have.
 
 - Each day is one write, so a run can stop after a day and continue later.
@@ -299,7 +299,7 @@ Apps read through the Nightscout API. Most read the last hours or days, which ar
 **Built: `entries`.** `ColdGlucoseReadings` (`data/db/cold_glucose.go`) is the reader of packaged glucose. The
 API's search uses it (`SearchWithCold`):
 
-- Only if `RETENTION_DELETE_ROWS` is `true`, and only for the part of a search before the hot days.
+- Unless `RETENTION_DELETE_ROWS` is `false`, and only for the part of a search before the hot days.
 - A made entry is at the start of its 5-minute step. Its `_id` is the 8 hex digits of its time and
   `c01dc01dc01dc01d`: the shape of a Nightscout ID, and the same each time.
 - A step that still has a row (a reading with a note) is given as the row, not made again.
@@ -387,7 +387,7 @@ Each step is one PR, and the site works after each one.
 | 2b | A made entry is read and deleted by its `_id` | `entries` | **Built** |
 | 2c | A search of `entries` oldest first has made entries | `entries` | **Built** |
 | 2d | A search of `treatments` oldest first has made treatments | `treatments` | **Built** |
-| 2e | The site's data pages say that older records are in Reports | Data pages | |
+| 2e | The site's data pages say that older records are in Reports; the delete of rows is the default | Data pages | **Built** |
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
 | 4b | Events: the day's list | The Cold Storage page | **Built** |
@@ -401,9 +401,9 @@ Each step is one PR, and the site works after each one.
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
 
-`RETENTION_DELETE_ROWS` can now be `true` on staging: apps get the glucose and the treatments of packaged days. The
-site's data pages show only rows, and Reports show old days from the summaries, as before. It becomes the default when each
-table's reader is built.
+`RETENTION_DELETE_ROWS` is `true` by default: the server deletes the packaged rows older than the hot days. Apps get
+the glucose and the treatments of those days from the Nightscout API, the reports read them, and the site's data
+pages say that only the hot days are listed.
 
 ## What this takes the place of
 
@@ -430,7 +430,7 @@ Each field of `summary_period` can be built from cold days:
   A later day is built from rows.
 - **A day is never behind its data.** A day with data written since the site was last backed up (less one hour),
   which is when it was last packaged, is built from rows. One query finds those days.
-- If `RETENTION_DELETE_ROWS` is `true`, a day older than the hot days is always built from cold days.
+- Unless `RETENTION_DELETE_ROWS` is `false`, a day older than the hot days is always built from cold days.
 - A site's day is not a UTC day. `db.ColdSeries` reads a time range of a series from the UTC days it is in.
 - What a day built from series does not have: a meter reading in its glucose line. Its count is from the rows.
 - **A change a person can see:** the mean and SD are of the 5-minute values, not of each reading. A site with a

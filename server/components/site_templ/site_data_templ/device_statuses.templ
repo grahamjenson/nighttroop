@@ -103,7 +103,7 @@ templ DeviceStatusHistory(device string, statuses []*sitemodels.SiteDeviceStatus
 				{ i18n.T(ctx, "site.data.device_statuses.all_devices") }
 			}
 		</div>
-		@searchTotals("site--device-status", "site.data.device_statuses.noun")
+		@searchTotals("site--device-status", "site.data.device_statuses.noun", false)
 		<section class="panel p-4">
 			@deviceStatusTable("deviceStatusTable", statuses)
 			@pager.Pager(*pager.Dated(pager.Props{ID: "site--device-status", Path: "/data/device-status?device=" + url.QueryEscape(device), Count: len(statuses), Skip: skip, Limit: limit}, before, statuses, func(row *sitemodels.SiteDeviceStatus) (int64, string) { return row.OccurredAt, row.ID }))

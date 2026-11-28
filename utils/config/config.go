@@ -485,7 +485,7 @@ func readServerConfig(mode consts.ServerMode, dotenv map[string]string) (ServerC
 		MaxIdentitiesPerSite: configIntSelect(dotenv, "MAX_IDENTITIES_PER_USER", 100),
 
 		RetentionHotDays:    max(configIntSelect(dotenv, "RETENTION_HOT_DAYS", retention.DefaultHotDays), retention.MinHotDays),
-		RetentionDeleteRows: configStringSelect(dotenv, "RETENTION_DELETE_ROWS", "") == "true",
+		RetentionDeleteRows: configStringSelect(dotenv, "RETENTION_DELETE_ROWS", "true") != "false",
 
 		// Truncate Config
 		TruncateIntervalInSeconds: configIntSelect(dotenv, "TRUNCATE_INTERVAL_IN_SECONDS", 60),
