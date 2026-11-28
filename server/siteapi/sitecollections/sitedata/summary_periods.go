@@ -3,8 +3,6 @@ package sitedata
 import (
 	"cmp"
 	"context"
-	"database/sql"
-	"errors"
 	"net/http"
 	"slices"
 	"strings"
@@ -117,12 +115,8 @@ func SummaryReport(ctx context.Context, q *sitedb.Queries, siteContext *httputil
 	}
 	location := siteContext.GetSiteTimezone()
 	first, end := time.UnixMilli(row.StartAt).In(location), time.UnixMilli(row.EndAt).In(location)
-	days, err := SummaryDays(ctx, q, first.Format(time.DateOnly), end.AddDate(0, 0, -1).Format(time.DateOnly))
-	if err != nil || !now.Before(end) {
-		return row, days, err
-	}
-	today, err := buildSummaryDaily(ctx, q, siteContext, LocalDate(now, location, 0), now.UnixMilli())
-	return row, append(days, today), err
+	days, err := builtSummaryDays(ctx, q, siteContext, first.Format(time.DateOnly), end.AddDate(0, 0, -1).Format(time.DateOnly), now, false)
+	return row, days, err
 }
 
 // SummaryPeriodAt is the site's day, week, fortnight or month with at in it. A day not kept, as today is not, is built
@@ -131,31 +125,22 @@ func SummaryPeriodAt(ctx context.Context, q *sitedb.Queries, siteContext *httput
 	location := siteContext.GetSiteTimezone()
 	start := PeriodStart(period, at, location, siteContext.GetSiteWeekStartDay())
 	if period != "day" {
-		var today []*sitedb.SummaryPeriod
-		if now.Before(PeriodEnd(period, start)) {
-			day, err := buildSummaryDaily(ctx, q, siteContext, LocalDate(now, location, 0), now.UnixMilli())
-			if err != nil {
-				return nil, err
-			}
-			today = append(today, day)
+		return builtSummaryPeriod(ctx, q, siteContext, period, start, now)
+	}
+	date, weekStart := start.Format(time.DateOnly), start.AddDate(0, 0, -6).Format(time.DateOnly)
+	days, err := builtSummaryDays(ctx, q, siteContext, weekStart, date, now, false)
+	if err != nil {
+		return nil, err
+	}
+	// A day with no data is not one of the days, and is built with none
+	if len(days) == 0 || days[len(days)-1].Date != date {
+		empty, err := buildSummaryDaily(ctx, q, siteContext, date, now.UnixMilli())
+		if err != nil {
+			return nil, err
 		}
-		row, _, err := summaryPeriodFrom(ctx, q, period, start, now, today...)
-		return row, err
+		days = append(days, empty)
 	}
-	date := start.Format(time.DateOnly)
-	day, err := q.GetSummaryPeriod(ctx, sitedb.GetSummaryPeriodParams{Period: "day", Date: date})
-	if errors.Is(err, sql.ErrNoRows) {
-		day, err = buildSummaryDaily(ctx, q, siteContext, date, now.UnixMilli())
-	}
-	if err != nil {
-		return nil, err
-	}
-	weekStart := start.AddDate(0, 0, -6).Format(time.DateOnly)
-	days, err := q.SearchSummaryPeriods(ctx, sitedb.SearchSummaryPeriodsParams{Period: "day", DateGTE: &weekStart, DateLTE: &date, Limit: 7})
-	if err != nil {
-		return nil, err
-	}
-	days = append(slices.DeleteFunc(days, func(d *sitedb.SummaryPeriod) bool { return d.Date == date }), day)
+	day := days[len(days)-1]
 	day.AgpMgdlJson = sitemodels.NewSummaryPeriod("week", weekStart, day.Timezone, 0, 0, now.UnixMilli(), days).AgpMgdlJson
 	return day, nil
 }

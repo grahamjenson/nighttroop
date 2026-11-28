@@ -55,8 +55,15 @@ func TestSummaryDayFromColdDays(t *testing.T) {
 	require.NoError(t, err)
 	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
 	require.NoError(t, err)
-	cold, err := coldSummaryDaily(ctx, q, siteContext, date)
+	// Before the site is packaged, and where it has data written since, the day is built from its rows
+	days, err := builtSummaryDays(ctx, q, siteContext, date, date, time.Now(), false)
 	require.NoError(t, err)
+	require.Equal(t, rows.GlucoseMgdlJson, days[0].GlucoseMgdlJson)
+	siteContext.SiteModel.BackedUpAt = new(time.Now().Add(2 * time.Hour).UnixMilli())
+	days, err = builtSummaryDays(ctx, q, siteContext, date, date, time.Now(), false)
+	require.NoError(t, err)
+	require.Len(t, days, 1)
+	cold := days[0]
 
 	// The meter's reading is not in the glucose line, and counts as a reading but not in the mean: the rest is the same
 	require.Equal(t, int64(277), rows.GlucoseReadings)
@@ -82,10 +89,8 @@ func TestSummaryDayFromColdDays(t *testing.T) {
 	require.Len(t, cold.GlucoseMgdlJson, len(rows.GlucoseMgdlJson)+len("null")-len("111"))
 	require.Equal(t, rows.GlucoseMgdlJson[:400], cold.GlucoseMgdlJson[:400])
 
-	// A day that is not packaged has no values, and is not a day with data
-	before, err := coldSummaryDaily(ctx, q, siteContext, day.AddDate(0, 0, -20).Format(time.DateOnly))
+	// A day with no data is left out
+	none, err := builtSummaryDays(ctx, q, siteContext, day.AddDate(0, 0, -20).Format(time.DateOnly), day.AddDate(0, 0, -19).Format(time.DateOnly), time.Now(), false)
 	require.NoError(t, err)
-	require.Zero(t, before.Days)
-	require.Nil(t, before.TimeInRange)
-	require.Zero(t, before.TotalDailyDose)
+	require.Empty(t, none)
 }

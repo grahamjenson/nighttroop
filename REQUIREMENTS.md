@@ -1077,7 +1077,28 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
   - Recorded as an event. A repeat before it runs gives one job.
   - Shares the site's few downloads a minute with Truncate and Download Data. Over it, the site refuses it (429).
 
+#### Days built when read
+
+The reports (overview, AGP, TDD, print), the summary's yesterday, last week, last fortnight and last month,
+`/data/summary-daily` and `/data/summary-periods` build each day when they read it. They do not read a kept summary.
+
+- A day that ended before the UTC day before today is built from its cold days (see Packaging of old days).
+  - Its mean, SD and times in range are of the CGM value of each 5 minutes.
+  - Its glucose line has no meter reading. Its `meter_readings` counts them.
+- A later day, and today so far, are built from the site's rows.
+- If a day has data written since the site was last packaged, the day is built from the site's rows. Thus a day
+  shows a backfill, an edit or a delete at once.
+  - If `RETENTION_DELETE_ROWS` is `true`, this applies only to the days of `RETENTION_HOT_DAYS`.
+- A day is from midnight in the site's time zone. A new time zone, or a new week start day, shows at once.
+- A day with no data is not one of the days. `GET /data/summary-daily/{date}` gives 404 for it, and for an id that is
+  not a date.
+- `GET /data/summary-daily` gives the days from today back to the first day with data, newest first. `limit` and
+  `skip` count dates.
+- `POST` and `DELETE` of `/data/summary-daily` change only the kept summaries, which the Summaries page shows.
+
 #### Summary builds
+
+The kept summaries are what the Summaries page shows.
 
 - Data for a day before today written (backfill, late sync), changed or deleted rebuilds only that day, the day a
   record moved from, and the whole weeks, fortnights and months with them.
@@ -1223,8 +1244,8 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 - **Glucose**: CGM and meter readings with trend arrows, in the settings' units (mmol/L or mg/dL).
   - Lows and highs: the summary's colours, and L or H. Screen readers read "Low" or "High".
   - Add: type (Meter or Sensor), trend as arrow and name (`↗ FortyFiveUp`), as in table and details.
-  - Above page one: small graphs of the last 10 days, same scale, oldest first, each with the range shaded and time in
-    range.
+  - Above page one: small graphs of the last 10 days, from the first day with data, same scale, oldest first, each
+    with the range shaded and time in range.
     - The last is today so far, from clean readings.
     - Title: "Last N days", or "Today" on a new site's first day.
   - A day with no readings shows "No readings" in place of its graph, and no time in range.
@@ -2366,8 +2387,8 @@ v1 and v3 return these as sent. For the fields marked \*, an update without them
 - `GET /data/summary-periods/{period}-{date}` reads the day, week, fortnight or month that contains the date.
   - Dates from today back one year, in the site's time zone and week start day.
   - Other ids and dates out of range: not found.
-  - A period not kept is built from its kept days, plus today so far while it is not over. A day not kept is built
-    from its data. Neither result is kept.
+  - A period is built from its days when it is read, with today so far while it is not over. It is not kept.
+  - A day is built when it is read (see Days built when read).
 - Contents:
   - Days with data, time in range, daily dose, carbs, and glucose every 5 minutes.
   - AGP: the 5th, 25th, 50th, 75th and 95th percentiles of the 15 minutes around each 5 minutes from midnight. A day's

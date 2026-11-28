@@ -2,6 +2,7 @@ package sitedata
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"nighttroop.t1d.nz/data/db"
@@ -11,17 +12,39 @@ import (
 	"nighttroop.t1d.nz/utils/httputils"
 )
 
-// coldSummaryDaily is the site's day named date, from midnight in its timezone, built from its cold days and not from
-// its rows, so a day whose rows are deleted has its summary: what buildSummaryDaily builds (see
-// sitemodels.NewSummaryDailyFromSeries for what differs). The meter's readings are counted from their rows, which are
-// never deleted. A day that is not packaged, as today, has no values.
-func coldSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, date string) (*sitedb.SummaryPeriod, error) {
+// coldBefore is the time, in ms, that a day must end by for its summary to be built from its cold days: the start of
+// the UTC day before now's, as a UTC day is packaged in the run after it ends. A later day is built from its rows.
+func coldBefore(now time.Time) int64 {
+	return now.UTC().Truncate(24 * time.Hour).Add(-24 * time.Hour).UnixMilli()
+}
+
+// packagedMargin is how long before a site was last backed up, which packages it first, its data may have been
+// written and not be packaged: longer than a backup of it takes
+const packagedMargin = time.Hour
+
+// builtSummaryDays are the site's days from the date first to last, as 2026-01-31, up to today, at most a year of them,
+// oldest first, from midnight in its timezone, each built as it is read and not kept. A day that ended before
+// coldBefore is built from its cold days, which are there when its rows are deleted. A later day, and today so far,
+// is built from its rows up to now, as is a day with data written since the site was last packaged while its rows
+// are all there, so a day is never behind its data. A day with no data is left out, but, with gaps, one after
+// a day with data, so the days read on with none missing.
+func builtSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, last string, now time.Time, gaps bool) ([]*sitedb.SummaryPeriod, error) {
 	location := siteContext.GetSiteTimezone()
-	midnight, err := time.ParseInLocation(time.DateOnly, date, location)
+	from, err := time.ParseInLocation(time.DateOnly, first, location)
 	if err != nil {
 		return nil, err
 	}
-	start, end := midnight.UnixMilli(), midnight.AddDate(0, 0, 1).UnixMilli()
+	// midnights are the starts of the days, and of the day after the last
+	midnights, cold := []time.Time{from}, 0
+	for day := from; len(midnights) <= summaryDailyMaxDays && day.Format(time.DateOnly) <= last && !day.After(now); {
+		day = time.Date(day.Year(), day.Month(), day.Day()+1, 0, 0, 0, 0, location)
+		midnights = append(midnights, day)
+		if day.UnixMilli() <= coldBefore(now) {
+			cold = len(midnights) - 1
+		}
+	}
+	start, end := from.UnixMilli(), midnights[cold].UnixMilli()
+	// The series of all the cold days, read once
 	var series sitemodels.DaySeries
 	for of, into := range map[retention.Series]*[]float64{retention.Glucose: &series.Glucose, retention.IOB: &series.IOB, retention.IOBBasal: &series.IOBBasal,
 		retention.COB: &series.COB, retention.BasalRate: &series.BasalRate, retention.InsulinBolus: &series.Bolus,
@@ -30,10 +53,49 @@ func coldSummaryDaily(ctx context.Context, q *sitedb.Queries, siteContext *httpu
 			return nil, err
 		}
 	}
+	// The meter's readings are counted from their rows, which are never deleted
 	meter, err := q.SearchGlucoseReadings(ctx, sitedb.SearchGlucoseReadingsParams{DateGTE: &start, DateLT: &end, TypeEq: new("mbg"), Limit: maxRows})
 	if err != nil {
 		return nil, err
 	}
+	// The days with data that may not be packaged yet, which are built from rows while the rows are there: all of them
+	// where the server deletes none, and else those of the hot days
+	since, rowsFrom := int64(0), int64(0)
+	if siteContext.SiteModel != nil && siteContext.SiteModel.BackedUpAt != nil {
+		since = *siteContext.SiteModel.BackedUpAt - packagedMargin.Milliseconds()
+	}
+	if siteContext.ControlDB != nil && siteContext.ControlDB.ServerConfig.RetentionDeleteRows {
+		rowsFrom = retention.HotSince(now, siteContext.ControlDB.ServerConfig.RetentionHotDays).UnixMilli()
+	}
+	written, err := q.SummaryDataWrittenSince(ctx, sitedb.SummaryDataWrittenSinceParams{Since: since, Before: end})
+	if err != nil {
+		return nil, err
+	}
 	low, high := siteContext.GetSiteRangeMgdl()
-	return sitemodels.NewSummaryDailyFromSeries(date, location.String(), start, end, float64(low), float64(high), series, int64(len(meter))), nil
+	var days []*sitedb.SummaryPeriod
+	for i, midnight := range midnights[:len(midnights)-1] {
+		dayStart, dayEnd := midnight.UnixMilli(), midnights[i+1].UnixMilli()
+		var day *sitedb.SummaryPeriod
+		notPackaged := dayStart >= rowsFrom && slices.ContainsFunc(written, func(at int64) bool { return at >= dayStart && at < dayEnd })
+		if i >= cold || notPackaged {
+			if day, err = buildSummaryDaily(ctx, q, siteContext, midnight.Format(time.DateOnly), now.UnixMilli()); err != nil {
+				return nil, err
+			}
+		} else {
+			a, b := (dayStart-start)/sitemodels.SummaryDailySlotMs, (dayEnd-start)/sitemodels.SummaryDailySlotMs
+			readings := 0
+			for _, reading := range meter {
+				if reading.OccurredAt >= dayStart && reading.OccurredAt < dayEnd {
+					readings++
+				}
+			}
+			day = sitemodels.NewSummaryDailyFromSeries(midnight.Format(time.DateOnly), location.String(), dayStart, dayEnd, float64(low), float64(high), sitemodels.DaySeries{
+				Glucose: series.Glucose[a:b], IOB: series.IOB[a:b], IOBBasal: series.IOBBasal[a:b], COB: series.COB[a:b],
+				BasalRate: series.BasalRate[a:b], Bolus: series.Bolus[a:b], Injected: series.Injected[a:b], Carbs: series.Carbs[a:b]}, int64(readings))
+		}
+		if day.Days > 0 || gaps && len(days) > 0 || i == len(midnights)-2 && midnights[i+1].After(now) {
+			days = append(days, day)
+		}
+	}
+	return days, nil
 }
