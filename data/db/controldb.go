@@ -515,8 +515,9 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 	return sizeKB, db.RecordSiteTableSizes(ctx, []*SiteDB{site})
 }
 
-// TruncateSites truncates sites, as the backup job does before copying each, without shrinking their DBs, as SQLite
-// uses the space again for what comes next. It looks back truncateLooksBack, or to when a site was last truncated in
+// TruncateSites truncates sites, as the backup job does before copying each. It shrinks a site's DB only when a tenth
+// or more of it is free pages (vacuumFreePart), as after its old rows are deleted; with less free, SQLite uses the
+// space again for what comes next. It looks back truncateLooksBack, or to when a site was last truncated in
 // truncatedAt when that is longer ago, 0 for all of it. It truncates harder the device reports of a site far over its
 // DB size limit. It goes
 // on past a site it cannot truncate, returning each one's error.
@@ -539,6 +540,9 @@ func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB, truncat
 		}
 		if limitKB, ok := limitsKB[site.Subdomain]; ok && err == nil {
 			err = db.hardTruncateSite(siteCtx, site, limitKB)
+		}
+		if err == nil {
+			err = vacuumIfMostlyFree(siteCtx, site)
 		}
 		errs = append(errs, err)
 	}
