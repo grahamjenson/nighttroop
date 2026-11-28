@@ -1,6 +1,7 @@
 package sitecollections
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -73,7 +74,9 @@ func SaveSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if wait := emailLinks.Wait(siteContext.SiteID); wait > 0 {
+	// The hour is taken before the email is kept and sent, so requests at once keep and send one email
+	wait, notSent := emailLinks.Claim(siteContext.SiteID)
+	if wait > 0 {
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrRateLimitExceeded(int(wait.Seconds())+1))
 		return
 	}
@@ -84,6 +87,7 @@ func SaveSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 		err = siteContext.ControlDB.Queries.UpdateSiteEmail(r.Context(), controldb.UpdateSiteEmailParams{ID: siteContext.SiteID, EmailEnc: &emailEnc})
 	}
 	if err != nil {
+		notSent()
 		slog.ErrorContext(r.Context(), "cannot keep a site's email", "error", err)
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrInternalServerError)
 		return
@@ -92,10 +96,12 @@ func SaveSiteEmailHandler(w http.ResponseWriter, r *http.Request) {
 
 	link := siteContext.SiteDB.URL() + "/settings/account/email/verify?key=" + key
 	mailer := sendmail.New(siteContext.Config.ResendAPIKey, siteContext.Config.ResendFrom, siteContext.Config.ResendAPIURL)
-	err = mailer.Send(r.Context(), email, i18n.T(r.Context(), "site.settings.account.email.verify_subject"),
+	// A client that goes away does not stop its email, so it cannot drop requests to send emails that do not count
+	err = mailer.Send(context.WithoutCancel(r.Context()), email, i18n.T(r.Context(), "site.settings.account.email.verify_subject"),
 		i18n.T(r.Context(), "site.settings.account.email.verify_text", i18n.Data{"Site": siteContext.SiteDB.URL(), "Link": link}))
 	if err != nil {
 		// The address is not logged. The email stays, not verified, and the link can be sent again at once.
+		notSent()
 		slog.ErrorContext(r.Context(), "cannot send a site's verification email", "error", err)
 		writeError(w, r, siteContext.AcceptType, apiutils.ErrConstraintCheckFailedWithHint(i18n.NewError("errors.site.email_not_sent")))
 		return

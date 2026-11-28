@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -8,7 +9,9 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"nighttroop.t1d.nz/data/sql/controldb"
@@ -25,18 +28,33 @@ func TestSiteEmailIsVerifiedByItsLink(t *testing.T) {
 	}
 	var sent []email
 	var lock sync.Mutex
+	var refuse atomic.Bool
+	// The first email waits at Resend until release, and sending says it is there, so more requests come while it is sent
+	sending, held := make(chan struct{}, 1), make(chan struct{})
+	release := sync.OnceFunc(func() { close(held) })
 	resend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if refuse.Load() {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		var e email
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&e))
 		lock.Lock()
 		sent = append(sent, e)
+		first := len(sent) == 1
 		lock.Unlock()
+		if first {
+			sending <- struct{}{}
+			<-held
+		}
 	}))
 	t.Cleanup(resend.Close)
+	t.Cleanup(release)
 
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	t.Cleanup(func() { cfg.ResendAPIKey, cfg.ResendFrom, cfg.ResendAPIURL = "", "", "" })
-	ts := httptest.NewServer(server.GetMainHandler(controlDB, cfg))
+	router := server.GetMainHandler(controlDB, cfg)
+	ts := httptest.NewServer(router)
 	t.Cleanup(ts.Close)
 	host, nsHost := site.SiteDB.Subdomain+".localhost", site.SiteDB.Subdomain+".ns.localhost"
 
@@ -86,9 +104,42 @@ func TestSiteEmailIsVerifiedByItsLink(t *testing.T) {
 	}
 	require.Empty(t, sent)
 
+	// An email Resend did not take does not count, so the link can be sent again at once
+	refuse.Store(true)
+	status, _ = call("POST", host, "/settings/account/email", admin, `{"email": "sam@example.com"}`)
+	require.Equal(t, http.StatusBadRequest, status)
+	refuse.Store(false)
+
+	// Requests at once send one email: a save that comes while an email is being sent is refused, and keeps nothing
+	ctx, goAway := context.WithCancel(t.Context())
+	req := httptest.NewRequest("POST", "http://"+host+"/settings/account/email", strings.NewReader(`{"email": "sam@example.com"}`)).WithContext(ctx)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+admin)
+	first, answered := httptest.NewRecorder(), make(chan struct{})
+	go func() {
+		defer close(answered)
+		router.ServeHTTP(first, req)
+	}()
+	select {
+	case <-sending:
+	case <-time.After(10 * time.Second):
+		require.Fail(t, "the first email did not get to Resend")
+	}
+	for _, other := range []string{"pat@example.com", "kim@example.com"} {
+		status, _ = call("POST", host, "/settings/account/email", admin, `{"email": "`+other+`"}`)
+		require.Equal(t, http.StatusTooManyRequests, status, other)
+	}
+
+	// A client that goes away while its email is being sent does not stop the email, so the email counts
+	goAway()
+	release()
+	<-answered
+
 	// The email is kept encrypted and not verified, and a link is sent to it
-	status, saved := call("POST", host, "/settings/account/email", admin, `{"email": "sam@example.com"}`)
-	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, http.StatusOK, first.Code)
+	var saved map[string]any
+	require.NoError(t, json.Unmarshal(first.Body.Bytes(), &saved))
 	require.Equal(t, map[string]any{"email": "sam@example.com", "verified": false}, saved["result"])
 	require.Len(t, sent, 1)
 	require.Equal(t, []string{"sam@example.com"}, sent[0].To)

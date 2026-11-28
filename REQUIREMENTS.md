@@ -3076,7 +3076,10 @@ device statuses harder:
 - **Save and send link** keeps the email, encrypted, as **Not verified**, and sends it a link.
   - The email is one address of at most 254 characters. Other text is refused (400).
   - A site is sent one link each hour. Another save in that hour is refused (429), also after the email is removed.
-  - If the email cannot be sent, the email is kept as not verified, and the page says to try again.
+  - The hour starts before the email is sent. Saves at the same time send one link, and the others are refused (429).
+  - If the client drops its request while the email is sent, the email is sent and the hour starts.
+  - If the email cannot be sent, the email is kept as not verified, and the page says to try again. The hour does not
+    start.
 - The link verifies the email it was sent to, and opens My Account, which shows **Verified**.
   - It needs no sign in. It works one time, for 24 hours.
   - If the server restarts, a link sent before no longer works. Send a new one.
