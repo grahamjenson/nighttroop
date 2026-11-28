@@ -176,3 +176,14 @@ func CheckColumnLimits(t *testing.T, limits map[string]map[string]sitedb.ColumnL
 	}
 	t.Logf("checked %d bounds of %d columns", bounds, columns)
 }
+
+// ColumnsOf are those of names that are columns of the table whose row row is
+func ColumnsOf(table string, row any, names []string) []string {
+	var columns []string
+	for i := range reflect.TypeOf(row).NumField() {
+		if limit, ok := sitedb.ColumnLimitOf(table, reflect.TypeOf(row).Field(i).Name); ok && slices.Contains(names, limit.Column) {
+			columns = append(columns, limit.Column)
+		}
+	}
+	return columns
+}

@@ -8,11 +8,15 @@ ASSERT_TITLE Cold Days · Nighttroop
 ASSERT_VISIBLE #site--cold-days--none >> text=No day is sealed yet.
 ASSERT_VISIBLE #site--cold-days--totals >> text=Cold days: 0.
 
-// A CGM sends a reading for a day that has ended
+// A CGM sends a reading for a day that has ended, and a person entered a meal in it
 HTTP
 NAME entries
 POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/entries?token={{ .create_new_site.pwd_nstoken }}
 B [{"type": "sgv", "sgv": 131, "date": {{ itime 2880 }}}]
+ASSERT_STATUS 200
+NAME meal
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Carb Correction", "carbs": 45, "notes": "Pasta", "enteredBy": "xDrip", "created_at": "{{ time 2880 }}"}]
 ASSERT_STATUS 200
 
 // Truncate, on the Usage page, seals the site's ended days now
@@ -23,23 +27,24 @@ CLICK #confirm--ok
 ASSERT_TEXT_VISIBLE Site Truncated
 
 // The day's glucose is one row: a series, version 1, every 5 minutes, with how many of its steps have a value and
-// how few bytes it is
+// how few bytes it is. Its events are another, and its carbs, and its basal rate if it has a profile.
 CLICK #site--cold-days-button
 ASSERT_PATH /usage/cold-days
-ASSERT_COUNT #site--cold-days--table tbody tr 1
-ASSERT_VISIBLE #site--cold-days--table tbody tr >> text=glucose
-ASSERT_VISIBLE #site--cold-days--table tbody tr >> text=series v1
-ASSERT_VISIBLE #site--cold-days--table tbody tr >> text=5m0s
-ASSERT_VISIBLE #site--cold-days--table tbody tr >> text="1 / 288"
-ASSERT_VISIBLE #site--cold-days--table tbody tr >> text=/^\d+ bytes$/
-ASSERT_VISIBLE #site--cold-days--totals >> text=/^Cold days: 1\. Total size: [\d.]+ B\.$/
+ASSERT_COUNT #site--cold-days--table tbody tr[id^="site--cold-day--glucose--"] 1
+ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--glucose--"] >> text=series v1
+ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--glucose--"] >> text=5m0s
+ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--glucose--"] >> text="1 / 288"
+ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--glucose--"] >> text=/^\d+ bytes$/
+ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--carbs--"] >> text="45 – 45"
+ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--events--"] >> text=events v1
+ASSERT_VISIBLE #site--cold-days--totals >> text=/^Cold days: \d+\. Total size: [\d.]+ B\.$/
 // It is only looked at: the page has no form and no button
 ASSERT_NOT_VISIBLE #site--cold-days button
 ASSERT_NOT_VISIBLE #site--cold-days input
 SCREENSHOT cold_days
 
 // Opened, the day says what its bytes are, and each value at the time its step starts
-CLICK #site--cold-days--table tbody tr a
+CLICK #site--cold-days--table tr[id^="site--cold-day--glucose--"] a
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--cold-day--version >> text="1"
 ASSERT_VISIBLE #site--cold-day--shape >> text="series"
@@ -52,8 +57,21 @@ ASSERT_VISIBLE #site--cold-day--points li >> text=131
 ASSERT_NOT_VISIBLE #site--cold-day button
 SCREENSHOT cold_day
 
-// Back to the list, and a day there is not is not found
+// Back to the list. The day's events, opened, are each event with its table and the columns kept of it.
 CLICK #site--cold-day--back
 ASSERT_PATH /usage/cold-days
+CLICK #site--cold-days--table tr[id^="site--cold-day--events--"] a
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--cold-day--shape >> text="events"
+ASSERT_VISIBLE #site--cold-day--packing >> text=JSON
+ASSERT_NOT_VISIBLE #site--cold-day--step
+ASSERT_COUNT #site--cold-day--events li 1
+ASSERT_VISIBLE #site--cold-day--events li >> text=food_intakes
+ASSERT_VISIBLE #site--cold-day--events li >> text=/"carbs":45/
+ASSERT_VISIBLE #site--cold-day--events li >> text=/"notes":"Pasta"/
+ASSERT_VISIBLE #site--cold-day--events li >> text=/"entered_by":"xDrip"/
+SCREENSHOT cold_day_events
+
+// A day there is not is not found
 GOTO {{ .site_url }}/usage/cold-days/glucose/1999-01-01
 ASSERT_STATUS 404

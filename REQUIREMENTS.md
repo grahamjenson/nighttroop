@@ -2593,6 +2593,15 @@ Before it backs up a site written to, at most every hour, the server seals the s
     `insulin_bolus` is its boluses.
   - The last 2 days that ended are sealed in each run, and each day with a treatment written since the run before.
   - If a treatment is deleted, its day is sealed again without it.
+- Each UTC day that ended and has events has one `cold_days` row of kind `events`: a list, oldest first.
+  - Events are: a meter reading; a CGM reading with a note; a food intake; an insulin dose a loop did not give;
+    a temp target; a profile switch; an activity; a notification; a treatment with no event (example: a site change).
+  - Not events: a CGM reading with no note, a loop's insulin dose, a temp basal, and a deleted record.
+  - An event has `k`, its table, and each column its table's policy keeps that has a value. It always has its
+    `id` and `occurred_at`. It does not have the app or device that sent it.
+  - An event has the `group_type`, `entered_by` and notes of its treatment, if the event has none of that name.
+  - A profile switch has its name, percent, timeshift and duration. It does not have its profile.
+  - If an event is deleted, its day is sealed again without it.
 - The body of a row is packed bytes. Its first bytes say its version (1) and its shape (series), and its step and
   scale. A body with a version or a shape the server does not know is an error.
 - A run seals only the days that had a CGM reading written, changed or deleted since the run before. A site that
@@ -2615,6 +2624,8 @@ Before it backs up a site written to, at most every hour, the server seals the s
 - It shows how many cold days the site has and their total size.
 - If no day is sealed, it says so and says when a day is sealed.
 - It shows 100 cold days. **Older** and **Newer** move through them (`limit`, at most 1000, and `skip`).
+- A day of kind `events` shows shape `events`, how many events it has, and no step.
+  - Opened, it shows each event: its UTC time, its table, and its kept columns as JSON.
 - A date opens the day: its version, shape, packing (change or change of change, with DEFLATE or not), step,
   scale, values, size and sealed time, then each value with the UTC time its step starts.
   - A value shows as the number that is kept. Glucose is in mg/dL, whatever the units of the site.

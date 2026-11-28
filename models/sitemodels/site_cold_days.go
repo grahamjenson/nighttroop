@@ -40,8 +40,11 @@ type ColdDay struct {
 	Max *float64 `json:"max"`
 	// Error is why its bytes could not be read, as a day of a version or shape this server does not know
 	Error *string `json:"error"`
-	// Points are its values, each with the time its step starts, for one day opened, and nil in a list
+	// Points are its values, each with the time its step starts, for one day of a series opened, and nil in a list
 	Points []ColdPoint `json:"points,omitempty"`
+	// Events are a day's events, the oldest first, each the columns kept of its row, with "k", its table, for one day
+	// of events opened, and nil in a list. For a day of events, Steps and Values are how many there are.
+	Events []map[string]any `json:"events,omitempty"`
 }
 
 // ColdPoint is one step of a series that has a value: the time the step starts, in ms, and the value, as it is kept
@@ -53,6 +56,18 @@ type ColdPoint struct {
 // ColdDayFromDB is a cold day as it is shown, with its points when asked for
 func ColdDayFromDB(row *sitedb.ColdDay, points bool) *ColdDay {
 	day := &ColdDay{Kind: row.Kind, Date: row.Date, Bytes: int64(len(row.Body)), SealedAt: row.UpdatedAt}
+	if retention.ShapeOf(row.Body) == retention.EventsShape {
+		header, events, err := retention.ReadEvents(row.Body)
+		if err != nil {
+			day.Error = new(err.Error())
+			return day
+		}
+		day.Version, day.Shape, day.Deflated, day.Steps, day.Values = header.Version, string(header.Shape), header.Deflated, len(events), len(events)
+		if points {
+			day.Events = events
+		}
+		return day
+	}
 	header, values, err := retention.ReadGrid(row.Body)
 	if err != nil {
 		day.Error = new(err.Error())

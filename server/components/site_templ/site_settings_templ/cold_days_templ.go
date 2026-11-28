@@ -9,7 +9,9 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"maps"
 	"strconv"
 	"time"
 
@@ -26,9 +28,35 @@ func coldDayPath(day *sitemodels.ColdDay) string {
 	return "/usage/cold-days/" + day.Kind + "/" + day.Date
 }
 
-// coldStep says a series' step: 5 min, 1 h
+// coldStep says a series' step: 5m0s, 1h0m0s, and nothing for a day of events, which has none
 func coldStep(seconds int64) string {
+	if seconds == 0 {
+		return "–"
+	}
 	return (time.Duration(seconds) * time.Second).String()
+}
+
+// coldCount says how many of a series' steps have a value, or how many events a day has
+func coldCount(day *sitemodels.ColdDay) string {
+	if day.StepSeconds == 0 {
+		return fmt.Sprint(day.Values)
+	}
+	return fmt.Sprintf("%d / %d", day.Values, day.Steps)
+}
+
+// coldEvent is an event without its table and time, which are shown beside it, as JSON, its keys in order
+func coldEvent(event map[string]any) string {
+	rest := maps.Clone(event)
+	delete(rest, "k")
+	delete(rest, "occurred_at")
+	text, _ := json.Marshal(rest)
+	return string(text)
+}
+
+// coldEventTime is an event's time of day, in UTC
+func coldEventTime(event map[string]any) string {
+	at, _ := event["occurred_at"].(float64)
+	return time.UnixMilli(int64(at)).UTC().Format("15:04")
 }
 
 // coldNumber is a value as it is kept, with no more digits than it has
@@ -38,6 +66,12 @@ func coldNumber(value float64) string {
 
 // coldPacking says how a series' values were packed
 func coldPacking(ctx context.Context, day *sitemodels.ColdDay) string {
+	if day.Shape == "events" {
+		if day.Deflated {
+			return "JSON, DEFLATE"
+		}
+		return "JSON"
+	}
 	packing := i18n.T(ctx, "site.settings.cold_days.packing_change")
 	if day.SecondOrder {
 		packing = i18n.T(ctx, "site.settings.cold_days.packing_second")
@@ -86,7 +120,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.about"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 49, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 83, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -105,7 +139,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.totals", i18n.Data{"Days": page.Total, "Size": display.Bytes(float64(page.TotalBytes))}))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 52, Col: 130}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 86, Col: 130}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -123,7 +157,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.none"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 55, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 89, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -187,7 +221,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 								var templ_7745c5c3_Var10 string
 								templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, head))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 63, Col: 27}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 97, Col: 27}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 								if templ_7745c5c3_Err != nil {
@@ -264,7 +298,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 									var templ_7745c5c3_Var15 string
 									templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(day.Date)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 73, Col: 19}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 107, Col: 19}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 									if templ_7745c5c3_Err != nil {
@@ -297,7 +331,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 								var templ_7745c5c3_Var17 string
 								templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(day.Kind)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 77, Col: 18}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 111, Col: 18}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 								if templ_7745c5c3_Err != nil {
@@ -325,7 +359,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 									var templ_7745c5c3_Var19 string
 									templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.unreadable"))
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 81, Col: 60}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 115, Col: 60}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 									if templ_7745c5c3_Err != nil {
@@ -353,7 +387,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 									var templ_7745c5c3_Var21 string
 									templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(day.Shape)
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 85, Col: 20}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 119, Col: 20}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 									if templ_7745c5c3_Err != nil {
@@ -366,7 +400,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 									var templ_7745c5c3_Var22 string
 									templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(day.Version))
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 85, Col: 49}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 119, Col: 49}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 									if templ_7745c5c3_Err != nil {
@@ -393,7 +427,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 									var templ_7745c5c3_Var24 string
 									templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(coldStep(day.StepSeconds))
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 88, Col: 36}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 122, Col: 36}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 									if templ_7745c5c3_Err != nil {
@@ -418,9 +452,9 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 									}
 									ctx = templ.InitializeContext(ctx)
 									var templ_7745c5c3_Var26 string
-									templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d / %d", day.Values, day.Steps))
+									templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(coldCount(day))
 									if templ_7745c5c3_Err != nil {
-										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 91, Col: 56}
+										return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 125, Col: 25}
 									}
 									_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 									if templ_7745c5c3_Err != nil {
@@ -448,7 +482,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 										var templ_7745c5c3_Var28 string
 										templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(coldNumber(*day.Min))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 95, Col: 32}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 129, Col: 32}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 										if templ_7745c5c3_Err != nil {
@@ -461,7 +495,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 										var templ_7745c5c3_Var29 string
 										templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(coldNumber(*day.Max))
 										if templ_7745c5c3_Err != nil {
-											return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 95, Col: 61}
+											return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 129, Col: 61}
 										}
 										_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 										if templ_7745c5c3_Err != nil {
@@ -494,7 +528,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 								var templ_7745c5c3_Var31 string
 								templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.bytes", i18n.Data{"Bytes": day.Bytes}))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 100, Col: 85}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 134, Col: 85}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 								if templ_7745c5c3_Err != nil {
@@ -525,7 +559,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 								var templ_7745c5c3_Var33 string
 								templ_7745c5c3_Var33, templ_7745c5c3_Err = templruntime.NewAttributeExpression(display.DateTime(&day.SealedAt)).Resolve(ctx)
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 103, Col: 53}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 137, Col: 53}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 								if templ_7745c5c3_Err != nil {
@@ -538,7 +572,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 								var templ_7745c5c3_Var34 string
 								templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(display.Ago(ctx, &day.SealedAt, time.Now()))
 								if templ_7745c5c3_Err != nil {
-									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 103, Col: 101}
+									return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 137, Col: 101}
 								}
 								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 								if templ_7745c5c3_Err != nil {
@@ -593,7 +627,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 					var templ_7745c5c3_Var36 string
 					templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.newer"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 112, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 146, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 					if templ_7745c5c3_Err != nil {
@@ -627,7 +661,7 @@ func ColdDays(page *sitemodels.ColdDays, skip, limit int64) templ.Component {
 					var templ_7745c5c3_Var38 string
 					templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.older"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 119, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 153, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 					if templ_7745c5c3_Err != nil {
@@ -678,7 +712,7 @@ func coldFact(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 130, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 164, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
@@ -691,7 +725,7 @@ func coldFact(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templruntime.NewAttributeExpression(id).Resolve(ctx)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 131, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 165, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 		if templ_7745c5c3_Err != nil {
@@ -704,7 +738,7 @@ func coldFact(id, label, value string) templ.Component {
 		var templ_7745c5c3_Var42 string
 		templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 131, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 165, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 		if templ_7745c5c3_Err != nil {
@@ -768,7 +802,7 @@ func ColdDay(day *sitemodels.ColdDay) templ.Component {
 				var templ_7745c5c3_Var46 string
 				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.back"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 141, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 175, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 				if templ_7745c5c3_Err != nil {
@@ -794,7 +828,7 @@ func ColdDay(day *sitemodels.ColdDay) templ.Component {
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.unreadable"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 146, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 180, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {
@@ -807,7 +841,7 @@ func ColdDay(day *sitemodels.ColdDay) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(*day.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 146, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 180, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -834,15 +868,17 @@ func ColdDay(day *sitemodels.ColdDay) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = coldFact("site--cold-day--step", i18n.T(ctx, "site.settings.cold_days.step"), coldStep(day.StepSeconds)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			if day.Shape != "events" {
+				templ_7745c5c3_Err = coldFact("site--cold-day--step", i18n.T(ctx, "site.settings.cold_days.step"), coldStep(day.StepSeconds)).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = coldFact("site--cold-day--scale", i18n.T(ctx, "site.settings.cold_days.scale"), coldNumber(day.Scale)).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
-			templ_7745c5c3_Err = coldFact("site--cold-day--scale", i18n.T(ctx, "site.settings.cold_days.scale"), coldNumber(day.Scale)).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = coldFact("site--cold-day--values", i18n.T(ctx, "site.settings.cold_days.values"), fmt.Sprintf("%d / %d", day.Values, day.Steps)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = coldFact("site--cold-day--values", i18n.T(ctx, "site.settings.cold_days.values"), coldCount(day)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -854,61 +890,134 @@ func ColdDay(day *sitemodels.ColdDay) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</dl><p class=\"text-sm text-muted-foreground\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</dl>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var49 string
-			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.points_note"))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 159, Col: 96}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</p><ol id=\"site--cold-day--points\" class=\"columns-2 gap-6 font-mono text-sm sm:columns-4 lg:columns-6\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			for _, point := range day.Points {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<li class=\"flex justify-between border-b border-gray-100 py-0.5\"><span class=\"text-muted-foreground\">")
+			if day.Shape == "events" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<p class=\"text-sm text-muted-foreground\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var50 string
-				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(point.At).UTC().Format("15:04"))
+				var templ_7745c5c3_Var49 string
+				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.events_note"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 163, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 196, Col: 97}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</span> <span>")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var51 string
-				templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(coldNumber(point.Value))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 164, Col: 37}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</p><ol id=\"site--cold-day--events\" class=\"space-y-1 font-mono text-sm\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</span></li>")
+				for _, event := range day.Events {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<li class=\"flex gap-4 border-b border-gray-100 py-0.5\"><span class=\"text-muted-foreground\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var50 string
+					templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(coldEventTime(event))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 200, Col: 65}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</span> <span class=\"w-40 shrink-0\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var51 string
+					templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(event["k"]))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 201, Col: 59}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</span> <span class=\"break-all\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var52 string
+					templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(coldEvent(event))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 202, Col: 49}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</span></li>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</ol>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</ol>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
+			} else {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"text-sm text-muted-foreground\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var53 string
+				templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.settings.cold_days.points_note"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 207, Col: 97}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</p><ol id=\"site--cold-day--points\" class=\"columns-2 gap-6 font-mono text-sm sm:columns-4 lg:columns-6\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				for _, point := range day.Points {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<li class=\"flex justify-between border-b border-gray-100 py-0.5\"><span class=\"text-muted-foreground\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var54 string
+					templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(time.UnixMilli(point.At).UTC().Format("15:04"))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 211, Col: 91}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</span> <span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var55 string
+					templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(coldNumber(point.Value))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/site_settings_templ/cold_days.templ`, Line: 212, Col: 38}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</span></li>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</ol>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
