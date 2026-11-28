@@ -22,8 +22,8 @@ func coldBefore(now time.Time) int64 {
 // written and not be packaged: longer than a backup of it takes
 const packagedMargin = time.Hour
 
-// builtSummaryDays are the site's days from the date first to last, as 2026-01-31, up to today, at most a year of them,
-// oldest first, from midnight in its timezone, each built as it is read and not kept. A day that ended before
+// builtSummaryDays are the site's days from the date first to last, as 2026-01-31, up to today, at most a year and a fortnight of
+// them, oldest first, from midnight in its timezone, each built as it is read and not kept. A day that ended before
 // coldBefore is built from its cold days, which are there when its rows are deleted. A later day, and today so far,
 // is built from its rows up to now, as is a day with data written since the site was last packaged while its rows
 // are all there, so a day is never behind its data. A day with no data is left out, but, with gaps, one after
@@ -36,7 +36,7 @@ func builtSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httpu
 	}
 	// midnights are the starts of the days, and of the day after the last
 	midnights, cold := []time.Time{from}, 0
-	for day := from; len(midnights) <= summaryDailyMaxDays && day.Format(time.DateOnly) <= last && !day.After(now); {
+	for day := from; len(midnights) <= summaryDailyMaxDays+14 && day.Format(time.DateOnly) <= last && !day.After(now); {
 		day = time.Date(day.Year(), day.Month(), day.Day()+1, 0, 0, 0, 0, location)
 		midnights = append(midnights, day)
 		if day.UnixMilli() <= coldBefore(now) {
@@ -98,4 +98,48 @@ func builtSummaryDays(ctx context.Context, q *sitedb.Queries, siteContext *httpu
 		}
 	}
 	return days, nil
+}
+
+// BuiltSummaries are what the Summaries page of the month starting first shows, each built as it is read from the
+// site's days and newest first: by "day", the month's days with data that are over; by "week" and "fortnight", those
+// that are over with a day in the month and a day with data; and by "month", the months of its year that are over
+// and have a day with data.
+func BuiltSummaries(ctx context.Context, q *sitedb.Queries, siteContext *httputils.SiteContext, first, now time.Time) (map[string][]*sitedb.SummaryPeriod, error) {
+	location, weekStart := siteContext.GetSiteTimezone(), siteContext.GetSiteWeekStartDay()
+	year, monthEnd := time.Date(first.Year(), 1, 1, 0, 0, 0, 0, location), first.AddDate(0, 1, 0)
+	// All the days the page's periods are of, read once: from the fortnight the year starts in to the year's end
+	from := PeriodStart("fortnight", year, location, weekStart)
+	days, err := builtSummaryDays(ctx, q, siteContext, from.Format(time.DateOnly), year.AddDate(1, 0, -1).Format(time.DateOnly), now, false)
+	if err != nil {
+		return nil, err
+	}
+	days = slices.DeleteFunc(days, func(day *sitedb.SummaryPeriod) bool { return day.EndAt > now.UnixMilli() })
+	within := func(start, end time.Time) []*sitedb.SummaryPeriod {
+		var of []*sitedb.SummaryPeriod
+		for _, day := range days {
+			if day.StartAt >= start.UnixMilli() && day.StartAt < end.UnixMilli() {
+				of = append(of, day)
+			}
+		}
+		return of
+	}
+	built := map[string][]*sitedb.SummaryPeriod{"day": within(first, monthEnd)}
+	slices.Reverse(built["day"])
+	// add is the period from start, when it is over and has a day with data
+	add := func(period string, start time.Time) {
+		end := PeriodEnd(period, start)
+		if of := within(start, end); len(of) > 0 && !end.After(now) {
+			row := sitemodels.NewSummaryPeriod(period, start.Format(time.DateOnly), location.String(), start.UnixMilli(), end.UnixMilli(), now.UnixMilli(), of)
+			built[period] = append([]*sitedb.SummaryPeriod{row}, built[period]...)
+		}
+	}
+	for _, period := range []string{"week", "fortnight"} {
+		for start := PeriodStart(period, first, location, weekStart); start.Before(monthEnd); start = PeriodEnd(period, start) {
+			add(period, start)
+		}
+	}
+	for month := year; month.Year() == year.Year(); month = month.AddDate(0, 1, 0) {
+		add("month", month)
+	}
+	return built, nil
 }

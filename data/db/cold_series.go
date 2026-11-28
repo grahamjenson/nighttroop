@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"math"
@@ -21,18 +20,21 @@ func ColdSeries(ctx context.Context, q *sitedb.Queries, series retention.Series,
 	for i := range values {
 		values[i] = math.NaN()
 	}
-	for start := from - from%dayMs; start < to; start += dayMs {
-		day, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: series.Name, Date: time.UnixMilli(start).UTC().Format(time.DateOnly)})
-		if errors.Is(err, sql.ErrNoRows) {
-			continue
-		}
-		if err != nil {
-			return nil, err
-		}
-		of, err := retention.UnpackGrid(day.Body)
-		if err != nil {
+	if from >= to {
+		return values, nil
+	}
+	date := func(at int64) string { return time.UnixMilli(at).UTC().Format(time.DateOnly) }
+	days, err := q.ColdDaysNewestFirst(ctx, sitedb.ColdDaysNewestFirstParams{Kind: series.Name, FromDate: date(from), ToDate: date(to - 1), Limit: (to-from)/dayMs + 2})
+	if err != nil {
+		return nil, err
+	}
+	for _, day := range days {
+		at, err := time.Parse(time.DateOnly, day.Date)
+		of, unpackErr := retention.UnpackGrid(day.Body)
+		if err = errors.Join(err, unpackErr); err != nil {
 			return nil, fmt.Errorf("cannot read the cold day %s of %s: %w", day.Date, series.Name, err)
 		}
+		start := at.UnixMilli()
 		for i, value := range of {
 			if at := start + int64(i)*step; at >= from && at < to {
 				values[(at-from)/step] = value

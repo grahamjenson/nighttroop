@@ -1062,7 +1062,9 @@ Keep this file up to date. A PR that adds, changes or removes a feature must cha
 #### Summaries page
 
 - One month: this month, or `?month=2026-10`.
-- Tables, longest first: kept months of its year, fortnights and weeks with a day in it, its days.
+- Tables, longest first: months of its year, fortnights and weeks with a day in it, its days.
+  - Each is built when the page is read (see Days built when read). A day, week, fortnight or month shows when it
+    is over and has a day with data.
   - Columns: days with data, time below range (low, very low), time in range, time above range (high, very high), daily
     dose, daily carbs.
   - Newest first, each opening its AGP report.
@@ -1094,11 +1096,11 @@ The reports (overview, AGP, TDD, print), the summary's yesterday, last week, las
   not a date.
 - `GET /data/summary-daily` gives the days from today back to the first day with data, newest first. `limit` and
   `skip` count dates.
-- `POST` and `DELETE` of `/data/summary-daily` change only the kept summaries, which the Summaries page shows.
+- `POST` and `DELETE` of `/data/summary-daily` change only the kept summaries, which no page reads.
 
 #### Summary builds
 
-The kept summaries are what the Summaries page shows.
+No page reads the kept summaries. The builds stay until they are removed (`docs/retention.md`, step 5c).
 
 - Data for a day before today written (backfill, late sync), changed or deleted rebuilds only that day, the day a
   record moved from, and the whole weeks, fortnights and months with them.

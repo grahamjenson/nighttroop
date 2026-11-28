@@ -394,7 +394,7 @@ Each step is one PR, and the site works after each one.
 | 4e | The delete of treatment and event rows older than the hot days; a packaged day keeps what it has when its rows are gone | Data pages | **Built** |
 | 5a | A summary day built from the series of its cold days (`coldSummaryDaily`), for a day in any timezone | None yet | **Built** |
 | 5b | Reports (AGP, time in range, daily dose) read the days built from series; a week or a month is built when read | Reports | **Built** |
-| 5b2 | The Summaries page lists days, weeks and months built when read | The Summaries page | |
+| 5b2 | The Summaries page lists days, weeks and months built when read | The Summaries page | **Built** |
 | 5c | **Remove the summaries:** the `summary_period` table, the freeze, the stale marks, the builds | | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |

@@ -12,13 +12,12 @@ import (
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"nighttroop.t1d.nz/data/events"
-	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/models/sitemodels"
 	"nighttroop.t1d.nz/server/components/site_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_reports_templ"
 	"nighttroop.t1d.nz/server/components/site_templ/site_summary_templ"
-	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 	"nighttroop.t1d.nz/server/siteapi/siteapiutils"
+	"nighttroop.t1d.nz/server/siteapi/sitecollections/sitedata"
 
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/can"
@@ -581,7 +580,7 @@ func TDDReportHandler(w http.ResponseWriter, r *http.Request) {
 	WriteResponse(w, r, siteContext, http.StatusOK, nil, site_reports_templ.TDDReport(last, days), true)
 }
 
-// SummariesReportHandler is the report of the site's kept summaries as tables of their numbers, a page for people, so
+// SummariesReportHandler is the report of the site's summaries, built as it is read, as tables of their numbers, a page for people, so
 // it has no JSON
 func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 	siteContext := SiteContextFor(w, r, (&sitedata.SummaryPeriodsCollection{}).GetName(), can.ActionSearch)
@@ -597,11 +596,10 @@ func SummariesReportHandler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, siteContext.AcceptType, &apiutils.HTTPError{Status: http.StatusBadRequest, Message: "month is this month or one of the past year's, as 2026-01"})
 		return
 	}
+	built, err := sitedata.BuiltSummaries(r.Context(), siteContext.SiteDB.Queries(), siteContext, first, time.Now())
 	summaries := map[string][]*sitemodels.SiteSummaryPeriod{}
-	for period, dates := range site_reports_templ.SummariesDates(first) {
-		rows, err := siteContext.SiteDB.Queries().SearchSummaryPeriods(r.Context(), sitedb.SearchSummaryPeriodsParams{Period: period,
-			DateGTE: &dates[0], DateLTE: &dates[1], Limit: 31})
-		models, herr := apiutils.Searched(rows, err, "summary_periods", apiutils.WithContext(sitemodels.SummaryPeriodFromDB, siteContext))
+	for _, period := range []string{"day", "week", "fortnight", "month"} {
+		models, herr := apiutils.Searched(built[period], err, "summary_periods", apiutils.WithContext(sitemodels.SummaryPeriodFromDB, siteContext))
 		if herr != nil {
 			writeError(w, r, siteContext.AcceptType, herr)
 			return
