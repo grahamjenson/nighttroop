@@ -1,7 +1,8 @@
 # Retention: hot rows and cold days
 
-**Status:** step 1 is built. The server seals the CGM glucose of each day into `cold_days`. It deletes no row
-unless `RETENTION_DELETE_ROWS` is `true`. The other steps are the plan. See [Build order](#build-order).
+**Status:** steps 1 and 2 are built for the Nightscout API. The server seals the CGM glucose of each day into
+`cold_days`, and the API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
+`true`. The other steps are the plan. See [Build order](#build-order).
 
 ## The problem, measured
 
@@ -223,8 +224,18 @@ Apps read through the Nightscout API. Most read the last hours or days, which ar
   bolus, as today. It does not get each temp basal.
 - A request that makes entries from many sealed days costs CPU. It needs a limit for each request, and the
   existing rate limits.
-- **None of this is built.** Until step 2, a deleted row is not in the API. That is why `RETENTION_DELETE_ROWS`
-  is off.
+**Built: `entries`.** `ColdGlucoseReadings` (`data/db/cold_glucose.go`) is the reader of sealed glucose. The
+API's search uses it (`SearchWithCold`):
+
+- Only if `RETENTION_DELETE_ROWS` is `true`, and only for the part of a search before the hot days.
+- A made entry is at the start of its 5-minute step. Its `_id` is the 8 hex digits of its time and
+  `c01dc01dc01dc01d`: the shape of a Nightscout ID, and the same each time.
+- A step that still has a row (a reading with a note) is given as the row, not made again.
+- A search by date, type or glucose, newest first, has made entries. A search by device, app, ID, or the time a
+  record was written has rows only. So has a search sorted oldest first, or by `srvModified`.
+- A made entry cannot be read, changed or deleted by its `_id` (404). To do, with the delete of a step.
+
+The other rows of this table are not built.
 
 ## What a person sees (when all steps are built)
 
@@ -284,15 +295,17 @@ Each step is one PR, and the site works after each one.
 | Step | What | Reads change | State |
 | --- | --- | --- | --- |
 | 1 | `cold_days`, the versioned body, sealing of **glucose**, the delete rule | None | **Built** |
-| 2 | One reader for glucose (hot rows and cold days); the Nightscout API makes `entries` from sealed days; the site's glucose page reads it | `entries`, glucose page | |
+| 2 | The reader of sealed glucose; the Nightscout API makes `entries` from sealed days | `entries` | **Built** |
+| 2b | The site's glucose page says that older readings are in Reports; a made entry by its `_id`; searches oldest first | Glucose page | |
 | 3 | Device reports fold into `iob`, `cob`, reservoir and battery series | The day view | |
 | 4 | Events: the day's list, and the 15-minute insulin, basal and carbs totals; checks of totals | Data pages, `treatments`, daily dose | |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
 
-`RETENTION_DELETE_ROWS` can be `true` after step 2 for glucose, and becomes the default when each table's reader
-is built.
+`RETENTION_DELETE_ROWS` can now be `true` on staging: apps get the glucose of sealed days. The site's glucose page
+shows only rows, and Reports show old days from the summaries, as before. It becomes the default when each
+table's reader is built.
 
 ## What this takes the place of
 

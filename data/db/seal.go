@@ -24,7 +24,7 @@ const dayMs = int64(24 * time.Hour / time.Millisecond)
 // docs/retention.md for the other tables, the summaries and the truncation this is to take the place of.
 func (db *ControlDB) sealSite(ctx context.Context, site *SiteDB, since int64, now time.Time) error {
 	q, today := site.Queries(), now.UTC().Truncate(24*time.Hour)
-	hot := today.AddDate(0, 0, -db.ServerConfig.RetentionHotDays)
+	hot := retention.HotSince(now, db.ServerConfig.RetentionHotDays)
 	if sealed, err := q.HasColdDays(ctx); err != nil {
 		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
 	} else if !sealed {

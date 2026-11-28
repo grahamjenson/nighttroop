@@ -2575,6 +2575,22 @@ Before it backs up a site written to, at most every hour, the server seals the s
   - If a reading of such a day is deleted, its 5-minute step is cleared.
 - Each table of a site DB has a retention policy (`data/retention`). A table with no policy fails a test.
 
+#### Entries of sealed days
+
+If `RETENTION_DELETE_ROWS` is `true`, the Nightscout API makes the CGM `entries` of the days older than
+`RETENTION_HOT_DAYS` from `cold_days`.
+
+- A search of `entries`, newest first, gives the made entries with the entries that are rows, in order of date.
+  `count` and `skip` page through them as one list.
+- A made entry has `type` `sgv`, the glucose of its 5-minute step, and the start of the step as its `date`.
+- Its `_id` is 24 hex digits: 8 of its time in seconds, then `c01dc01dc01dc01d`. It is the same in each search.
+- A 5-minute step that has a row (example: a reading with a note) is given one time, as the row.
+- Searches that have made entries: by `date`, by `type` (if `sgv` matches), by `sgv`.
+- Searches that have rows only: by `device`, app, `_id`, the time a record was written or changed; a search of
+  deleted records; a search sorted oldest first or by `srvModified`; API v3 `history`.
+- A made entry is not found by its `_id` (404).
+- If `RETENTION_DELETE_ROWS` is not `true`, a search reads rows only.
+
 #### Device status truncation
 
 Before it backs up a site written to, at most every hour, the server truncates it:

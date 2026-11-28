@@ -1,11 +1,14 @@
 package db_test
 
 import (
+	"fmt"
 	"math"
+	"slices"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"nighttroop.t1d.nz/data/db"
 	"nighttroop.t1d.nz/data/retention"
 	"nighttroop.t1d.nz/data/sql/sitedb"
 	"nighttroop.t1d.nz/utils/testutils"
@@ -138,4 +141,48 @@ func TestSealingOnlyTheDaysWritten(t *testing.T) {
 	require.False(t, isSealed(5))
 	require.NoError(t, controlDB.SealSite(ctx, site.SiteDB, time.Now().Add(-time.Hour).UnixMilli(), time.Now()))
 	require.True(t, isSealed(5))
+}
+
+// The readings of sealed days are read back the newest first, across as many days as are asked for, within the times
+// asked, and only those the caller keeps
+func TestColdGlucoseReadings(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	first := today.AddDate(0, 0, -600)
+	// 500 days with 3 readings each, at 00:00, 12:00 and 23:55, each day's 1 mg/dL more than the day before's
+	for dayOf := range 500 {
+		for i, at := range []time.Duration{0, 12 * time.Hour, 24*time.Hour - 5*time.Minute} {
+			_, err := q.CreateGlucoseReading(ctx, sitedb.CreateGlucoseReadingParams{ID: fmt.Sprint(dayOf, "-", i), Mgdl: float64(100 + dayOf%200), ReadingType: "sgv",
+				OccurredAt: first.AddDate(0, 0, dayOf).Add(at).UnixMilli(), CreatedByIdentityName: "phone"})
+			require.NoError(t, err)
+		}
+	}
+	require.NoError(t, controlDB.SealSite(ctx, site.SiteDB, 0, time.Now()))
+	every := func(int64, float64) bool { return true }
+	read := func(from, to time.Time, limit int, keep func(int64, float64) bool) []*sitedb.GlucoseReading {
+		readings, err := db.ColdGlucoseReadings(ctx, q, from.UnixMilli(), to.UnixMilli(), limit, keep)
+		require.NoError(t, err)
+		return readings
+	}
+
+	// All of them, however many days that is, the newest first, each at the start of its step
+	all := read(first, today, 5000, every)
+	require.Len(t, all, 1500)
+	require.Equal(t, first.AddDate(0, 0, 499).Add(24*time.Hour-5*time.Minute).UnixMilli(), all[0].OccurredAt)
+	require.Equal(t, first.UnixMilli(), all[1499].OccurredAt)
+	require.True(t, slices.IsSortedFunc(all, func(a, b *sitedb.GlucoseReading) int { return int(b.OccurredAt - a.OccurredAt) }))
+	require.Equal(t, db.ColdReadingID(all[0].OccurredAt), all[0].ID)
+	require.Equal(t, "sgv", all[0].ReadingType)
+
+	// The newest few of many days read only a few days, and are the same readings
+	require.Equal(t, all[:7], read(first, today, 7, every))
+	// From a time, up to and not including another, and only those kept
+	day := first.AddDate(0, 0, 10)
+	require.Len(t, read(day, day.Add(12*time.Hour), 100, every), 1)
+	require.Len(t, read(day, day.Add(12*time.Hour+time.Millisecond), 100, every), 2)
+	require.Len(t, read(day.Add(time.Millisecond), day.AddDate(0, 0, 2), 100, every), 5)
+	require.Len(t, read(first, today, 5000, func(_ int64, mgdl float64) bool { return mgdl == 150 }), 9)
+	require.Empty(t, read(today, first, 100, every))
+	require.Empty(t, read(first.AddDate(-1, 0, 0), first, 100, every))
 }

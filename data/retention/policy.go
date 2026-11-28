@@ -17,6 +17,12 @@ const (
 	MinHotDays = 3
 )
 
+// HotSince is the start of the oldest UTC day that is hot at now: days before it are read from cold days once their
+// rows are deleted
+func HotSince(now time.Time, hotDays int) time.Time {
+	return now.UTC().Truncate(24*time.Hour).AddDate(0, 0, -hotDays)
+}
+
 // Shape is the form a table's rows take in a cold day. A cold day's JSON says its shape, so it is read by what it
 // is, not by what its table's policy has since become.
 type Shape string
