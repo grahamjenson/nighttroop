@@ -52,7 +52,8 @@ templ Alarms() {
 }
 
 // AlarmBanner is the identity's alerting alarms, each with a snooze. When none is alerting it shows the ones that
-// are snoozed, quietly, and when none is active it is empty.
+// are snoozed, quietly, and when none is active it is empty. An alarm a louder one quiets has no row: the louder one
+// says all it would, alerting or snoozed.
 templ AlarmBanner(models []*sitemodels.SiteAlarm) {
 	{{ alerting := slices.ContainsFunc(models, func(alarm *sitemodels.SiteAlarm) bool { return alarm.Alerting }) }}
 	for _, alarm := range models {
@@ -63,7 +64,8 @@ templ AlarmBanner(models []*sitemodels.SiteAlarm) {
 }
 
 // AlarmRow is one alarm in the banner: alerting, red when urgent and amber otherwise, with a button that deletes it
-// to snooze it for 30 minutes, or snoozed, with when its snooze ends
+// to snooze it for 30 minutes, or snoozed, with when its snooze ends. An alarm that is neither is quieted by a louder
+// one, and has no row.
 templ AlarmRow(alarm *sitemodels.SiteAlarm) {
 	if alarm.Alerting {
 		<div
@@ -88,13 +90,9 @@ templ AlarmRow(alarm *sitemodels.SiteAlarm) {
 				{ i18n.T(ctx, "site.alarms.snooze") }
 			}
 		</div>
-	} else {
+	} else if alarm.SnoozedUntil != nil {
 		<div id={ "site--alarms--alarm-" + alarm.ID } class="bg-gray-100 px-4 py-1 text-xs text-gray-600 sm:px-6 lg:px-8">
-			if alarm.SnoozedUntil != nil {
-				{ i18n.T(ctx, "site.alarms.snoozed_until", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID), "Until": snoozeEnd(ctx, *alarm.SnoozedUntil)}) }
-			} else {
-				{ i18n.T(ctx, "site.alarms.snoozed", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID)}) }
-			}
+			{ i18n.T(ctx, "site.alarms.snoozed_until", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID), "Until": snoozeEnd(ctx, *alarm.SnoozedUntil)}) }
 		</div>
 	}
 }

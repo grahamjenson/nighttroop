@@ -1562,6 +1562,8 @@ another **Nightscout** site, or the **virtual connector** (realistic test data).
 - An active alarm shows live in a banner below the header on all pages, and can be snoozed.
 - A snoozed alarm's row in the banner says when the snooze ends, as "Snoozed: Urgent high until 14:35": in the
   settings' timezone and time format, with no seconds.
+- The banner has no row for an alarm that a louder alarm quiets, as a high under its urgent high. This is the same
+  while the louder alarm is snoozed.
 - Impossible settings are refused (for example a high below the low).
 - The alarms page says that every alarm is off until it is turned on, and that an alarm that goes off shows in a
   banner at the top of every page, where it can be snoozed for 30 minutes.

@@ -72,8 +72,6 @@
     1. P3: Control Page to verify backup_key, and regenerate a backup_key
 
 1. Site usability:
-    1. P4: While an urgent alarm is snoozed, the banner shows the alarm it quiets (a high under its urgent high) as
-       "Snoozed: High", though that one has no snooze: leave it out, or say what quiets it
     1. P5: The dose and carbs boxes of the add and details forms open a phone's full keyboard, as they take a
        negative value and a phone's number keys have no minus sign: decide a way to take back a value with number keys
 

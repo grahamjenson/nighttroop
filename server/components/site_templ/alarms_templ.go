@@ -73,7 +73,8 @@ func Alarms() templ.Component {
 }
 
 // AlarmBanner is the identity's alerting alarms, each with a snooze. When none is alerting it shows the ones that
-// are snoozed, quietly, and when none is active it is empty.
+// are snoozed, quietly, and when none is active it is empty. An alarm a louder one quiets has no row: the louder one
+// says all it would, alerting or snoozed.
 func AlarmBanner(models []*sitemodels.SiteAlarm) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -105,7 +106,8 @@ func AlarmBanner(models []*sitemodels.SiteAlarm) templ.Component {
 }
 
 // AlarmRow is one alarm in the banner: alerting, red when urgent and amber otherwise, with a button that deletes it
-// to snooze it for 30 minutes, or snoozed, with when its snooze ends
+// to snooze it for 30 minutes, or snoozed, with when its snooze ends. An alarm that is neither is quieted by a louder
+// one, and has no row.
 func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -135,7 +137,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--alarms--alarm-" + alarm.ID).Resolve(ctx)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 70, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 72, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 				if templ_7745c5c3_Err != nil {
@@ -181,7 +183,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.alarm", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID)}))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 75, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 77, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -206,7 +208,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.snooze"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 88, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 90, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -233,7 +235,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else {
+		} else if alarm.SnoozedUntil != nil {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div id=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -241,7 +243,7 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templruntime.NewAttributeExpression("site--alarms--alarm-" + alarm.ID).Resolve(ctx)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 92, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 94, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {
@@ -251,26 +253,14 @@ func AlarmRow(alarm *sitemodels.SiteAlarm) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if alarm.SnoozedUntil != nil {
-				var templ_7745c5c3_Var11 string
-				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.snoozed_until", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID), "Until": snoozeEnd(ctx, *alarm.SnoozedUntil)}))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 94, Col: 142}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			} else {
-				var templ_7745c5c3_Var12 string
-				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.snoozed", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID)}))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 96, Col: 90}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "site.alarms.snoozed_until", i18n.Data{"AlarmName": alarmName(ctx, alarm.ID), "Until": snoozeEnd(ctx, *alarm.SnoozedUntil)}))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `site_templ/alarms.templ`, Line: 95, Col: 141}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div>")
 			if templ_7745c5c3_Err != nil {
