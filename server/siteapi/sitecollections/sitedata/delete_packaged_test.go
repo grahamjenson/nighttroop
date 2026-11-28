@@ -374,3 +374,73 @@ func TestEventsOfTheHotDaysAreNotDeleted(t *testing.T) {
 		require.Equal(t, kept, err == nil, "the site change of %s", age)
 	}
 }
+
+// An AAPS running mode (an OpenAPS Offline) is kept as a row while it may still be in force, as a profile switch is:
+// the newest with no end before the hot days, and one whose end is not reached. Its length is originalDuration, else
+// its duration, as AAPS reads it, and 0 is no end. One replaced, one over, and one deleted are deleted once packaged,
+// and the day's events keep each with its mode, length and reasons.
+func TestRunningModesInForceAreKept(t *testing.T) {
+	_, controlDB, site := testutils.NewControlDBWithSite(t)
+	ctx, q := t.Context(), site.SiteDB.Queries()
+	old := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -40)
+	running := func(id string, hour int, mode string, originalMs, minutes *int64) sitedb.CreateEventGroupParams {
+		return sitedb.CreateEventGroupParams{ID: id, GroupType: "OpenAPS Offline", Mode: new(mode), AutoForced: new(false), OriginalDurationMs: originalMs,
+			DurationMinutes: minutes, DurationMs: new(int64(0)), Reason: new("OTHER"), UtcOffsetMinutes: new(int64(720)), EnteredBy: new("openaps://AndroidAPS"),
+			OccurredAt: old.Add(time.Duration(hour) * time.Hour).UnixMilli(), CreatedByIdentityName: "phone"}
+	}
+	modes := []sitedb.CreateEventGroupParams{
+		running("replaced", 1, "OPEN_LOOP", new(int64(0)), new(int64(0))),
+		running("over", 2, "CLOSED_LOOP_LGS", new(int64(3_600_000)), new(int64(0))),
+		// AAPS 3 sends no originalDuration, only its duration
+		running("over, of AAPS 3", 3, "DISCONNECTED_PUMP", nil, new(int64(30))),
+		running("newest", 4, "CLOSED_LOOP", new(int64(0)), new(int64(0))),
+		running("for 60 days", 5, "SUSPENDED_BY_USER", new(int64(60*24*time.Hour/time.Millisecond)), new(int64(0))),
+		running("deleted", 6, "OPEN_LOOP", new(int64(0)), new(int64(0))),
+	}
+	modes[3].Reasons = new("Set by the user")
+	for _, mode := range modes {
+		_, err := q.CreateEventGroup(ctx, mode)
+		require.NoError(t, err)
+	}
+	_, err := q.SoftDeleteEventGroup(ctx, sitedb.SoftDeleteEventGroupParams{ID: "deleted"})
+	require.NoError(t, err)
+
+	for range 2 {
+		_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+		require.NoError(t, err)
+	}
+	groups, err := q.AllEventGroups(ctx, sitedb.AllEventGroupsParams{IncludeDeleted: true, Limit: 100})
+	require.NoError(t, err)
+	kept := []string{}
+	for _, group := range groups {
+		kept = append(kept, group.EventGroup.ID)
+	}
+	require.ElementsMatch(t, []string{"newest", "for 60 days"}, kept)
+
+	// The day's events have each that was not deleted, and each is made back as it was written
+	events, err := db.ColdEvents(ctx, q, old.UnixMilli(), old.AddDate(0, 0, 1).UnixMilli(), 100, true, func(map[string]any) bool { return true })
+	require.NoError(t, err)
+	require.Len(t, events, 5)
+	for i, event := range events {
+		var made sitedb.EventGroup
+		db.RowOf("event_groups", event, &made)
+		mode := modes[i]
+		require.Equal(t, []any{mode.ID, mode.GroupType, mode.OccurredAt, mode.UtcOffsetMinutes, mode.Mode, mode.AutoForced, mode.Reasons, mode.OriginalDurationMs, mode.DurationMinutes, mode.DurationMs, mode.Reason, mode.EnteredBy},
+			[]any{made.ID, made.GroupType, made.OccurredAt, made.UtcOffsetMinutes, made.Mode, made.AutoForced, made.Reasons, made.OriginalDurationMs, made.DurationMinutes, made.DurationMs, made.Reason, made.EnteredBy}, mode.ID)
+	}
+
+	// A newer running mode with no end takes the place of the newest, which is then deleted too
+	newer := running("newer", 7, "OPEN_LOOP", new(int64(0)), new(int64(0)))
+	newer.OccurredAt = old.AddDate(0, 0, 1).UnixMilli()
+	_, err = q.CreateEventGroup(ctx, newer)
+	require.NoError(t, err)
+	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	groups, err = q.AllEventGroups(ctx, sitedb.AllEventGroupsParams{Limit: 100})
+	require.NoError(t, err)
+	kept = []string{}
+	for _, group := range groups {
+		kept = append(kept, group.EventGroup.ID)
+	}
+	require.ElementsMatch(t, []string{"newer", "for 60 days"}, kept)
+}

@@ -131,7 +131,10 @@ var Policies = map[string]Policy{
 		"carb_ratios_json", "insulin_sensitivities_json", "basal_rates_json", "targets_high_json", "targets_low_json"), Lost: "Nothing of the profile: each switch keeps the profile it was made with, though a loop sends the same one with each."},
 	"notification_events": {Shape: EventsShape, Keep: keep("notification_type", "title", "severity", "content"), Where: "created_by_identity_id is a person's",
 		Lost: "What a device announced."},
-	"event_groups": {Shape: EventsShape, Keep: keep("group_type", "entered_by", "duration_minutes", "sensor_code", "transmitter_id"),
+	// An AAPS running mode (an OpenAPS Offline) keeps its mode and how long it lasts, as AAPS reads one without them
+	// as a loop disabled for ever
+	"event_groups": {Shape: EventsShape, Keep: keep("group_type", "entered_by", "duration_minutes", "duration_ms", "sensor_code", "transmitter_id",
+		"mode", "auto_forced", "reasons", "original_duration_ms"),
 		Lost: "The app's own IDs of a treatment (uuid, sent_hash, pump_id, sync_identifier) and its bolus calculator. A group's kept columns move onto its event; a group with no event (a site change) is an event."},
 	"device_reports": {Shape: SeriesShape,
 		Series: []Series{IOB, IOBBasal, COB, PumpReservoir, PumpBattery, PhoneBattery, PumpSuspended},

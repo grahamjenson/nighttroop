@@ -398,3 +398,78 @@ func TestTreatmentsOfPackagedDaysAreMadeFromColdDays(t *testing.T) {
 	cfg.RetentionDeleteRows = false
 	require.Len(t, treatments(all), 1)
 }
+
+// AAPS 4.0 sends each running mode as an OpenAPS Offline, with its length in originalDuration, 0 for no end. Where
+// the server deletes the rows of old days, a running mode of a packaged day comes back with its mode, length and
+// reasons, as AAPS reads one without them as the loop disabled for ever. The newest with no end stays a row, as it is
+// still the loop's mode; one it took the place of, and one that is over, do not.
+func TestRunningModesOfPackagedDaysAreKept(t *testing.T) {
+	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
+	t.Cleanup(func() { cfg.RetentionDeleteRows = true })
+	cfg.RetentionDeleteRows = false
+	router, q, ctx := server.GetMainHandler(controlDB, cfg), site.SiteDB.Queries(), t.Context()
+	old := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -40)
+	do := func(method, path, body string) []byte {
+		req := httptest.NewRequest(method, "http://"+site.SiteDB.Subdomain+".ns.localhost"+path, strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		router.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+		return rr.Body.Bytes()
+	}
+	mode := func(hour int, mode string, originalMs int64, reasons string) string {
+		return fmt.Sprintf(`{"eventType": "OpenAPS Offline", "date": %d, "utcOffset": 720, "isValid": true, "duration": 0, "durationInMilliseconds": 0,
+			"mode": %q, "originalDuration": %d, "autoForced": %v, "reasons": %q, "reason": "OTHER", "enteredBy": "openaps://AndroidAPS", "app": "AAPS"}`,
+			old.Add(time.Duration(hour)*time.Hour).UnixMilli(), mode, originalMs, reasons != "", reasons)
+	}
+	// Open loop with no end, an hour of low glucose suspend that the loop forced, then closed loop with no end
+	do("POST", "/api/v1/treatments?token="+site.PwdNSToken, "["+mode(1, "OPEN_LOOP", 0, "")+","+mode(2, "CLOSED_LOOP_LGS", 3_600_000, "Low glucose")+","+mode(3, "CLOSED_LOOP", 0, "")+"]")
+
+	// kept is what of each running mode AAPS reads, the newest first, from API v1 and v3
+	kept := func() [][]any {
+		var v1 []map[string]any
+		require.NoError(t, json.Unmarshal(do("GET", "/api/v1/treatments.json?count=100&token="+site.PwdNSToken, ""), &v1))
+		var v3 struct {
+			Result []map[string]any `json:"result"`
+		}
+		require.NoError(t, json.Unmarshal(do("GET", "/api/v3/treatments?sort$desc=date&limit=100&token="+site.PwdNSToken, ""), &v3))
+		require.Len(t, v3.Result, len(v1))
+		modes := [][]any{}
+		for i, treatment := range v1 {
+			require.Equal(t, treatment["_id"], v3.Result[i]["identifier"])
+			for _, field := range []string{"eventType", "date", "utcOffset", "mode", "originalDuration", "autoForced", "reasons", "duration", "durationInMilliseconds", "reason", "enteredBy"} {
+				require.Equal(t, treatment[field], v3.Result[i][field], field)
+			}
+			modes = append(modes, []any{treatment["_id"], treatment["eventType"], treatment["created_at"], treatment["utcOffset"], treatment["mode"], treatment["originalDuration"],
+				treatment["autoForced"], treatment["reasons"], treatment["duration"], treatment["durationInMilliseconds"], treatment["reason"], treatment["enteredBy"]})
+		}
+		return modes
+	}
+	before := kept()
+	require.Len(t, before, 3)
+	require.Equal(t, []any{"CLOSED_LOOP", 0.0, false, nil}, before[0][4:8])
+	require.Equal(t, []any{"CLOSED_LOOP_LGS", 3_600_000.0, true, "Low glucose"}, before[1][4:8])
+
+	// Packaged, the running modes that are over or replaced are deleted at once, as they are only events. Closed loop
+	// stays a row.
+	cfg.RetentionDeleteRows = true
+	_, err := controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	groups, err := q.AllEventGroups(ctx, sitedb.AllEventGroupsParams{Limit: 100})
+	require.NoError(t, err)
+	require.Len(t, groups, 1)
+	require.Equal(t, "CLOSED_LOOP", *groups[0].EventGroup.Mode)
+	require.Equal(t, before, kept(), "each comes back as it was sent")
+
+	// Once a newer running mode with no end takes its place, it is deleted too, and still comes back from its day
+	do("POST", "/api/v1/treatments?token="+site.PwdNSToken, "["+mode(5, "OPEN_LOOP", 0, "")+"]")
+	_, err = controlDB.TruncateSite(ctx, site.SiteDB.Subdomain)
+	require.NoError(t, err)
+	groups, err = q.AllEventGroups(ctx, sitedb.AllEventGroupsParams{Limit: 100})
+	require.NoError(t, err)
+	require.Len(t, groups, 1)
+	require.Equal(t, "OPEN_LOOP", *groups[0].EventGroup.Mode)
+	after := kept()
+	require.Len(t, after, 4)
+	require.Equal(t, before, after[1:])
+}

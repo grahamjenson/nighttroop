@@ -2604,6 +2604,8 @@ Before it backs up a site written to, at most every hour, the server packages th
     and `group_id`, the ID of its treatment.
   - A profile switch has its name, percent, timeshift and duration, and its profile: its basal rates, ratios,
     sensitivities, targets, DIA, units and timezone.
+  - An AAPS running mode (`OpenAPS Offline`) has its `mode`, `autoForced`, `reasons`, `originalDuration`,
+    `duration`, `durationInMilliseconds` and `reason`.
   - Before its own events, the day has `in_force`: the events from before the day that were in force when it
     started. These are the newest profile switch with no end, each newer profile switch that is not over, and
     the newest temp target if it is not over.
@@ -2692,6 +2694,11 @@ days: insulin doses, food intakes, temp basals, temp targets, activities, notes 
 - The day's cold days keep the carbs, the insulin, the basal rate and the events of the deleted rows.
 - A treatment is deleted with its events. An event of a treatment that is not deleted is not deleted.
 - The newest profile switch with no end is not deleted. A profile switch that ends in the hot days is not deleted.
+- The newest AAPS running mode (`OpenAPS Offline`) with no end is not deleted. A running mode that ends in the hot
+  days is not deleted.
+  - Its length is `originalDuration`. If it has no `originalDuration`, its length is its `duration`. A length of 0 is
+    no end.
+  - A running mode that a newer one with no end replaced, that is over, or that is deleted, is deleted.
 - A treatment of the hot days is not deleted.
 - If a day has more events than a cold day holds (16 KB packed), the cold day keeps the most important, as many as
   fit, and says how many it does not have (`dropped`). The server logs a warning, and deletes the rows of all.
@@ -2712,6 +2719,8 @@ Unless `RETENTION_DELETE_ROWS` is `false`, the Nightscout API makes the `treatme
   of date. `count` and `skip` page through them as one list.
 - A made treatment has the `_id`, `eventType`, `created_at`, `enteredBy` and notes it had, and what its events
   kept (example: `carbs`, `insulin`, `duration`, `targetTop`, `targetBottom`, `reason`).
+- A made AAPS running mode has its `mode`, `autoForced`, `reasons` and `originalDuration`. If it does not, AAPS
+  shows the loop as disabled.
 - A treatment with two events (example: a meal with its bolus) is one made treatment.
 - A treatment that is a row is given one time, as the row.
 - Searches that have made treatments: by date (`created_at`, `date`), by `eventType`.
