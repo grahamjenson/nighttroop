@@ -84,20 +84,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.clearDeviceReportStatusesStmt, err = db.PrepareContext(ctx, clearDeviceReportStatuses); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearDeviceReportStatuses: %w", err)
 	}
-	if q.clearOldBolusCalculatorJSONStmt, err = db.PrepareContext(ctx, clearOldBolusCalculatorJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearOldBolusCalculatorJSON: %w", err)
-	}
 	if q.clearOldDeviceReportJSONStmt, err = db.PrepareContext(ctx, clearOldDeviceReportJSON); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearOldDeviceReportJSON: %w", err)
 	}
-	if q.clearOldInsulinDoseJSONStmt, err = db.PrepareContext(ctx, clearOldInsulinDoseJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearOldInsulinDoseJSON: %w", err)
-	}
 	if q.clearOldLoopStatusesStmt, err = db.PrepareContext(ctx, clearOldLoopStatuses); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearOldLoopStatuses: %w", err)
-	}
-	if q.clearOldProfileSwitchJSONStmt, err = db.PrepareContext(ctx, clearOldProfileSwitchJSON); err != nil {
-		return nil, fmt.Errorf("error preparing query ClearOldProfileSwitchJSON: %w", err)
 	}
 	if q.clearOldPumpsStmt, err = db.PrepareContext(ctx, clearOldPumps); err != nil {
 		return nil, fmt.Errorf("error preparing query ClearOldPumps: %w", err)
@@ -171,35 +162,8 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteLoopSettingsStmt, err = db.PrepareContext(ctx, deleteLoopSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteLoopSettings: %w", err)
 	}
-	if q.deleteOldActivitiesStmt, err = db.PrepareContext(ctx, deleteOldActivities); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldActivities: %w", err)
-	}
 	if q.deleteOldDeviceReportsStmt, err = db.PrepareContext(ctx, deleteOldDeviceReports); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOldDeviceReports: %w", err)
-	}
-	if q.deleteOldEventGroupsStmt, err = db.PrepareContext(ctx, deleteOldEventGroups); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldEventGroups: %w", err)
-	}
-	if q.deleteOldFoodIntakesStmt, err = db.PrepareContext(ctx, deleteOldFoodIntakes); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldFoodIntakes: %w", err)
-	}
-	if q.deleteOldGlucoseReadingsStmt, err = db.PrepareContext(ctx, deleteOldGlucoseReadings); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldGlucoseReadings: %w", err)
-	}
-	if q.deleteOldInsulinDosesStmt, err = db.PrepareContext(ctx, deleteOldInsulinDoses); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldInsulinDoses: %w", err)
-	}
-	if q.deleteOldNotificationEventsStmt, err = db.PrepareContext(ctx, deleteOldNotificationEvents); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldNotificationEvents: %w", err)
-	}
-	if q.deleteOldProfileSwitchesStmt, err = db.PrepareContext(ctx, deleteOldProfileSwitches); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldProfileSwitches: %w", err)
-	}
-	if q.deleteOldTempBasalsStmt, err = db.PrepareContext(ctx, deleteOldTempBasals); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldTempBasals: %w", err)
-	}
-	if q.deleteOldTempTargetsStmt, err = db.PrepareContext(ctx, deleteOldTempTargets); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteOldTempTargets: %w", err)
 	}
 	if q.deletePackagedActivitiesStmt, err = db.PrepareContext(ctx, deletePackagedActivities); err != nil {
 		return nil, fmt.Errorf("error preparing query DeletePackagedActivities: %w", err)
@@ -768,29 +732,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing clearDeviceReportStatusesStmt: %w", cerr)
 		}
 	}
-	if q.clearOldBolusCalculatorJSONStmt != nil {
-		if cerr := q.clearOldBolusCalculatorJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearOldBolusCalculatorJSONStmt: %w", cerr)
-		}
-	}
 	if q.clearOldDeviceReportJSONStmt != nil {
 		if cerr := q.clearOldDeviceReportJSONStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing clearOldDeviceReportJSONStmt: %w", cerr)
 		}
 	}
-	if q.clearOldInsulinDoseJSONStmt != nil {
-		if cerr := q.clearOldInsulinDoseJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearOldInsulinDoseJSONStmt: %w", cerr)
-		}
-	}
 	if q.clearOldLoopStatusesStmt != nil {
 		if cerr := q.clearOldLoopStatusesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing clearOldLoopStatusesStmt: %w", cerr)
-		}
-	}
-	if q.clearOldProfileSwitchJSONStmt != nil {
-		if cerr := q.clearOldProfileSwitchJSONStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing clearOldProfileSwitchJSONStmt: %w", cerr)
 		}
 	}
 	if q.clearOldPumpsStmt != nil {
@@ -913,54 +862,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteLoopSettingsStmt: %w", cerr)
 		}
 	}
-	if q.deleteOldActivitiesStmt != nil {
-		if cerr := q.deleteOldActivitiesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldActivitiesStmt: %w", cerr)
-		}
-	}
 	if q.deleteOldDeviceReportsStmt != nil {
 		if cerr := q.deleteOldDeviceReportsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteOldDeviceReportsStmt: %w", cerr)
-		}
-	}
-	if q.deleteOldEventGroupsStmt != nil {
-		if cerr := q.deleteOldEventGroupsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldEventGroupsStmt: %w", cerr)
-		}
-	}
-	if q.deleteOldFoodIntakesStmt != nil {
-		if cerr := q.deleteOldFoodIntakesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldFoodIntakesStmt: %w", cerr)
-		}
-	}
-	if q.deleteOldGlucoseReadingsStmt != nil {
-		if cerr := q.deleteOldGlucoseReadingsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldGlucoseReadingsStmt: %w", cerr)
-		}
-	}
-	if q.deleteOldInsulinDosesStmt != nil {
-		if cerr := q.deleteOldInsulinDosesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldInsulinDosesStmt: %w", cerr)
-		}
-	}
-	if q.deleteOldNotificationEventsStmt != nil {
-		if cerr := q.deleteOldNotificationEventsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldNotificationEventsStmt: %w", cerr)
-		}
-	}
-	if q.deleteOldProfileSwitchesStmt != nil {
-		if cerr := q.deleteOldProfileSwitchesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldProfileSwitchesStmt: %w", cerr)
-		}
-	}
-	if q.deleteOldTempBasalsStmt != nil {
-		if cerr := q.deleteOldTempBasalsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldTempBasalsStmt: %w", cerr)
-		}
-	}
-	if q.deleteOldTempTargetsStmt != nil {
-		if cerr := q.deleteOldTempTargetsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteOldTempTargetsStmt: %w", cerr)
 		}
 	}
 	if q.deletePackagedActivitiesStmt != nil {
@@ -1792,11 +1696,8 @@ type Queries struct {
 	cGMDaysWrittenSinceStmt                     *sql.Stmt
 	cGMReadingsOfDayStmt                        *sql.Stmt
 	clearDeviceReportStatusesStmt               *sql.Stmt
-	clearOldBolusCalculatorJSONStmt             *sql.Stmt
 	clearOldDeviceReportJSONStmt                *sql.Stmt
-	clearOldInsulinDoseJSONStmt                 *sql.Stmt
 	clearOldLoopStatusesStmt                    *sql.Stmt
-	clearOldProfileSwitchJSONStmt               *sql.Stmt
 	clearOldPumpsStmt                           *sql.Stmt
 	clearStaleColdDaysStmt                      *sql.Stmt
 	coldDayKindsStmt                            *sql.Stmt
@@ -1821,16 +1722,7 @@ type Queries struct {
 	deleteGeneralSettingStmt                    *sql.Stmt
 	deleteGeneralSettingsBeforeStmt             *sql.Stmt
 	deleteLoopSettingsStmt                      *sql.Stmt
-	deleteOldActivitiesStmt                     *sql.Stmt
 	deleteOldDeviceReportsStmt                  *sql.Stmt
-	deleteOldEventGroupsStmt                    *sql.Stmt
-	deleteOldFoodIntakesStmt                    *sql.Stmt
-	deleteOldGlucoseReadingsStmt                *sql.Stmt
-	deleteOldInsulinDosesStmt                   *sql.Stmt
-	deleteOldNotificationEventsStmt             *sql.Stmt
-	deleteOldProfileSwitchesStmt                *sql.Stmt
-	deleteOldTempBasalsStmt                     *sql.Stmt
-	deleteOldTempTargetsStmt                    *sql.Stmt
 	deletePackagedActivitiesStmt                *sql.Stmt
 	deletePackagedCGMReadingsStmt               *sql.Stmt
 	deletePackagedEventGroupsStmt               *sql.Stmt
@@ -2011,11 +1903,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		cGMDaysWrittenSinceStmt:                     q.cGMDaysWrittenSinceStmt,
 		cGMReadingsOfDayStmt:                        q.cGMReadingsOfDayStmt,
 		clearDeviceReportStatusesStmt:               q.clearDeviceReportStatusesStmt,
-		clearOldBolusCalculatorJSONStmt:             q.clearOldBolusCalculatorJSONStmt,
 		clearOldDeviceReportJSONStmt:                q.clearOldDeviceReportJSONStmt,
-		clearOldInsulinDoseJSONStmt:                 q.clearOldInsulinDoseJSONStmt,
 		clearOldLoopStatusesStmt:                    q.clearOldLoopStatusesStmt,
-		clearOldProfileSwitchJSONStmt:               q.clearOldProfileSwitchJSONStmt,
 		clearOldPumpsStmt:                           q.clearOldPumpsStmt,
 		clearStaleColdDaysStmt:                      q.clearStaleColdDaysStmt,
 		coldDayKindsStmt:                            q.coldDayKindsStmt,
@@ -2040,16 +1929,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteGeneralSettingStmt:                    q.deleteGeneralSettingStmt,
 		deleteGeneralSettingsBeforeStmt:             q.deleteGeneralSettingsBeforeStmt,
 		deleteLoopSettingsStmt:                      q.deleteLoopSettingsStmt,
-		deleteOldActivitiesStmt:                     q.deleteOldActivitiesStmt,
 		deleteOldDeviceReportsStmt:                  q.deleteOldDeviceReportsStmt,
-		deleteOldEventGroupsStmt:                    q.deleteOldEventGroupsStmt,
-		deleteOldFoodIntakesStmt:                    q.deleteOldFoodIntakesStmt,
-		deleteOldGlucoseReadingsStmt:                q.deleteOldGlucoseReadingsStmt,
-		deleteOldInsulinDosesStmt:                   q.deleteOldInsulinDosesStmt,
-		deleteOldNotificationEventsStmt:             q.deleteOldNotificationEventsStmt,
-		deleteOldProfileSwitchesStmt:                q.deleteOldProfileSwitchesStmt,
-		deleteOldTempBasalsStmt:                     q.deleteOldTempBasalsStmt,
-		deleteOldTempTargetsStmt:                    q.deleteOldTempTargetsStmt,
 		deletePackagedActivitiesStmt:                q.deletePackagedActivitiesStmt,
 		deletePackagedCGMReadingsStmt:               q.deletePackagedCGMReadingsStmt,
 		deletePackagedEventGroupsStmt:               q.deletePackagedEventGroupsStmt,

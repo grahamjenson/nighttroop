@@ -24,7 +24,7 @@ const (
 	generalClientControl = "aaps_clientcontrol"
 	// maxGeneralSettings is the most a site keeps, maxGeneralSettingBytes the largest one's JSON, and
 	// maxGeneralSettingsBytes the most JSON of them all, so a device cannot fill a site's DB with them: its size
-	// limit's truncate deletes old readings and treatments but never these. A running config is a few KiB.
+	// limit's truncate never deletes these. A running config is a few KiB.
 	maxGeneralSettings      = 100
 	maxGeneralSettingBytes  = 64 * 1024
 	maxGeneralSettingsBytes = 512 * 1024

@@ -517,7 +517,8 @@ func (db *ControlDB) TruncateSite(ctx context.Context, subdomain string) (*int64
 
 // TruncateSites truncates sites, as the backup job does before copying each, without shrinking their DBs, as SQLite
 // uses the space again for what comes next. It looks back truncateLooksBack, or to when a site was last truncated in
-// truncatedAt when that is longer ago, 0 for all of it. It truncates harder a site far over its DB size limit. It goes
+// truncatedAt when that is longer ago, 0 for all of it. It truncates harder the device reports of a site far over its
+// DB size limit. It goes
 // on past a site it cannot truncate, returning each one's error.
 func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB, truncatedAt map[string]int64) error {
 	limits, err := db.Queries.GetSiteDBSizeLimits(ctx)
@@ -550,11 +551,10 @@ func (db *ControlDB) TruncateSites(ctx context.Context, sites []*SiteDB, truncat
 const hardTruncateSizeFactor = 1.5
 
 const (
-	// hardTruncateJSONKeptFor is how long a site over hardTruncateSizeFactor keeps JSON that matters only while
-	// recent, hardTruncateReportsKeptFor its device reports, and hardTruncateRecordsKeptFor its readings and treatments
+	// hardTruncateJSONKeptFor is how long a site over hardTruncateSizeFactor keeps the JSON of its device reports,
+	// which matters only while recent, and hardTruncateReportsKeptFor its device reports
 	hardTruncateJSONKeptFor    = 24 * time.Hour
 	hardTruncateReportsKeptFor = 7 * 24 * time.Hour
-	hardTruncateRecordsKeptFor = 90 * 24 * time.Hour
 	// hardTruncatedBy is who the "Site truncated" event of a hard truncate says truncated the site
 	hardTruncatedBy = "size limit"
 )
@@ -573,64 +573,30 @@ func vacuumIfMostlyFree(ctx context.Context, site *SiteDB) error {
 	return site.Vacuum(ctx)
 }
 
-// hardTruncateSite truncates the site harder while its DB is over hardTruncateSizeFactor times its limit, limitKB.
-// First it clears the JSON that matters only while recent, and deletes device reports over 7 days old and the loop
-// settings no record refers to. If the site is still over, it deletes its readings and treatments over 90 days old,
-// but the newest of each type. After each step that changed records it shrinks the DB if enough of it is free. If any
-// changed, it records the new size and logs a "Site truncated" event.
+// hardTruncateSite truncates the device reports of the site harder while its DB is over hardTruncateSizeFactor times
+// its limit, limitKB: it clears the JSON of those over a day old, and deletes those over 7 days old. It deletes no
+// other record: readings, treatments and events are deleted only once their day is packaged (see packageSite). If it
+// changed any, it shrinks the DB if enough of it is free, records the new size and logs a "Site truncated" event.
 func (db *ControlDB) hardTruncateSite(ctx context.Context, site *SiteDB, limitKB int64) error {
-	// A DB is measured without its free pages, as a DB left unshrunk keeps them and the next writes fill them
-	over := func(sizeKB *int64) (bool, error) {
-		if sizeKB == nil {
-			return false, nil
-		}
-		free, err := site.FreePart(ctx)
-		return float64(*sizeKB)*(1-free) > hardTruncateSizeFactor*float64(limitKB), err
-	}
 	beforeKB := site.EstimatedSizeKB()
-	if isOver, err := over(beforeKB); err != nil || !isOver {
+	if beforeKB == nil {
+		return nil
+	}
+	// A DB is measured without its free pages, as a DB left unshrunk keeps them and the next writes fill them
+	free, err := site.FreePart(ctx)
+	if err != nil || float64(*beforeKB)*(1-free) <= hardTruncateSizeFactor*float64(limitKB) {
 		return err
 	}
 	started, q := time.Now(), site.Queries()
-	var changed int64
-	count := func(rows int64, err error) error { changed += rows; return err }
-	dayAgo := sitedb.ClearOldDeviceReportJSONParams{Before: started.Add(-hardTruncateJSONKeptFor).UnixMilli()}
-	weekAgo := sitedb.DeleteOldDeviceReportsParams{Before: started.Add(-hardTruncateReportsKeptFor).UnixMilli()}
-	err := errors.Join(
-		count(q.ClearOldDeviceReportJSON(ctx, dayAgo)),
-		count(q.ClearOldBolusCalculatorJSON(ctx, sitedb.ClearOldBolusCalculatorJSONParams(dayAgo))),
-		count(q.ClearOldInsulinDoseJSON(ctx, sitedb.ClearOldInsulinDoseJSONParams(dayAgo))),
-		count(q.ClearOldProfileSwitchJSON(ctx, sitedb.ClearOldProfileSwitchJSONParams(dayAgo))),
-		count(q.DeleteOldDeviceReports(ctx, weekAgo)),
-		count(q.DeleteUnreferencedLoopSettings(ctx)),
-	)
-	if err == nil && changed > 0 {
+	cleared, err := q.ClearOldDeviceReportJSON(ctx, sitedb.ClearOldDeviceReportJSONParams{Before: started.Add(-hardTruncateJSONKeptFor).UnixMilli()})
+	deleted, deleteErr := q.DeleteOldDeviceReports(ctx, sitedb.DeleteOldDeviceReportsParams{Before: started.Add(-hardTruncateReportsKeptFor).UnixMilli()})
+	if err = errors.Join(err, deleteErr); err == nil && cleared+deleted > 0 {
 		err = vacuumIfMostlyFree(ctx, site)
-	}
-	stillOver, overErr := over(site.EstimatedSizeKB())
-	if err = errors.Join(err, overErr); err == nil && stillOver {
-		// The groups go first, as the events they refer to are kept
-		old := sitedb.DeleteOldEventGroupsParams{Before: started.Add(-hardTruncateRecordsKeptFor).UnixMilli()}
-		step1 := changed
-		err = errors.Join(
-			count(q.DeleteOldEventGroups(ctx, old)),
-			count(q.DeleteOldGlucoseReadings(ctx, sitedb.DeleteOldGlucoseReadingsParams(old))),
-			count(q.DeleteOldInsulinDoses(ctx, sitedb.DeleteOldInsulinDosesParams(old))),
-			count(q.DeleteOldFoodIntakes(ctx, sitedb.DeleteOldFoodIntakesParams(old))),
-			count(q.DeleteOldTempBasals(ctx, sitedb.DeleteOldTempBasalsParams(old))),
-			count(q.DeleteOldTempTargets(ctx, sitedb.DeleteOldTempTargetsParams(old))),
-			count(q.DeleteOldProfileSwitches(ctx, sitedb.DeleteOldProfileSwitchesParams(old))),
-			count(q.DeleteOldActivities(ctx, sitedb.DeleteOldActivitiesParams(old))),
-			count(q.DeleteOldNotificationEvents(ctx, sitedb.DeleteOldNotificationEventsParams(old))),
-		)
-		if err == nil && changed > step1 {
-			err = vacuumIfMostlyFree(ctx, site)
-		}
 	}
 	if err != nil {
 		return fmt.Errorf("cannot truncate site %s harder: %w", site.Subdomain, err)
 	}
-	if changed == 0 {
+	if cleared+deleted == 0 {
 		return nil
 	}
 	afterKB := site.EstimatedSizeKB()

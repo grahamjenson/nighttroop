@@ -15,20 +15,19 @@ import (
 	"nighttroop.t1d.nz/utils/testutils"
 )
 
-// A site over 1.5 times its DB size limit (20 MB, so over 30720 KB) is truncated harder by each backup:
-// first the JSON that matters only while recent is cleared and device reports over 7 days old are deleted; then, only
-// if it is still over, readings and treatments over 90 days old are deleted, but the newest of each type, and its
-// cold days are kept. A site under 1.5 times its limit gets only the job's usual truncate.
+// A site over 1.5 times its DB size limit (20 MB, so over 30720 KB) has its device reports truncated harder by each
+// backup: the JSON of those over a day old is cleared, and those over 7 days old are deleted. No other record is
+// touched, however old: a reading or a treatment is deleted only once its day is packaged. A site under 1.5 times its
+// limit gets only the job's usual truncate.
 func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 	tests := []struct {
 		name string
-		// sizesKB are the site's sizes, as measured before, after the first step and at the end
-		sizesKB                       []int64
-		clearsJSON, deletesOldRecords bool
+		// sizesKB are the site's sizes, as measured before and after
+		sizesKB    []int64
+		clearsJSON bool
 	}{
 		{name: "under 1.5 times its limit", sizesKB: []int64{30_000}},
-		{name: "over, and under after the first step", sizesKB: []int64{40_000, 30_000, 30_000}, clearsJSON: true},
-		{name: "over, and still over after the first step", sizesKB: []int64{40_000, 35_000, 25_000}, clearsJSON: true, deletesOldRecords: true},
+		{name: "over 1.5 times its limit", sizesKB: []int64{40_000, 35_000}, clearsJSON: true},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -115,7 +114,7 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 				return gone(err)
 			}
 
-			// The first step
+			// Its device reports
 			require.Equal(t, test.clearsJSON, getReport("report-2d").LoopStatusJson == nil, "a report over a day old has its loop status cleared")
 			require.Equal(t, test.clearsJSON, getReport("report-2d").UploaderJson == nil, "and its uploader")
 			require.Equal(t, new(1.2), getReport("report-2d").LoopIob, "its IOB is kept")
@@ -124,35 +123,27 @@ func TestTruncateSitesTruncatesSitesFarOverTheirLimitHarder(t *testing.T) {
 			require.Equal(t, test.clearsJSON, gone(err), "a report over 7 days old is deleted")
 			recent, err := getDose("dose-recent")
 			require.NoError(t, err)
-			require.Equal(t, test.clearsJSON, recent.IcfgJson == nil, "a dose over a day old has its insulin cleared")
+			require.NotNil(t, recent.IcfgJson, "a dose keeps its insulin")
 			bolus, err := getGroup("bolus-recent")
 			require.NoError(t, err)
-			require.Equal(t, test.clearsJSON, bolus.EventGroup.BolusCalculatorResultJson == nil, "a group over a day old has its bolus calculation cleared")
+			require.NotNil(t, bolus.EventGroup.BolusCalculatorResultJson, "a group keeps its bolus calculation")
 			newestSwitch, err := q.GetProfileSwitch(ctx, sitedb.GetProfileSwitchParams{ID: "switch-old"})
 			require.NoError(t, err)
 			require.NotNil(t, newestSwitch.IcfgJson, "the newest profile switch keeps its insulin")
 			require.NotNil(t, newestSwitch.BasalRatesJson, "a profile switch keeps its profile")
 
-			// The second step
-			for _, id := range []string{"bolus-old", "bolus-deleted"} {
+			// No other record is deleted, however old, as this server does not delete packaged rows
+			for _, id := range []string{"bolus-old", "bolus-deleted", "sensor-old", "profile-old", "bolus-recent"} {
 				_, err := getGroup(id)
-				require.Equal(t, test.deletesOldRecords, gone(err), "%s, a group over 90 days old, is deleted", id)
+				require.False(t, gone(err), "%s is kept", id)
 			}
 			for _, id := range []string{"dose-old", "dose-ungrouped-old"} {
 				_, err := getDose(id)
-				require.Equal(t, test.deletesOldRecords, gone(err), "%s, a dose over 90 days old, is deleted", id)
+				require.False(t, gone(err), "%s is kept", id)
 			}
-			require.Equal(t, test.deletesOldRecords, readingGone("sgv-old"), "a reading over 90 days old is deleted")
-			require.Equal(t, test.deletesOldRecords, readingGone("sgv-deleted"), "a deleted one too")
-			require.False(t, readingGone("mbg-old"), "the newest of its reading type is kept")
-			for _, id := range []string{"sensor-old", "profile-old", "bolus-recent"} {
-				_, err := getGroup(id)
-				require.False(t, gone(err), "%s, the newest of its type, is kept", id)
+			for _, id := range []string{"sgv-old", "sgv-deleted", "mbg-old"} {
+				require.False(t, readingGone(id), "%s is kept", id)
 			}
-			// The old day was packaged before its rows were deleted, so its cold day is kept
-			oldDay, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: "glucose", Date: now.Add(-100 * day).UTC().Format(time.DateOnly)})
-			require.NoError(t, err, "the cold days are kept")
-			require.NotZero(t, oldDay.UpdatedAt, "and are not marked to be packaged again from no data")
 
 			// What changed is recorded, with the size after, in a "Site truncated" event
 			truncated, err := controlDB.Logs.Queries.SearchEvents(ctx, logsdb.SearchEventsParams{SiteID: &siteID, Type: new("site_truncated"), Limit: 10})

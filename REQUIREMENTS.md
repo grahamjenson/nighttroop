@@ -2727,25 +2727,18 @@ Before it backs up a site written to, at most every hour, the server truncates i
 
 #### Truncation of a site far over its size limit
 
-If a site's DB is over 1.5 times its DB size limit (30 MB at the 20 MB default), the backup also truncates it
-harder:
+If a site's DB is over 1.5 times its DB size limit (30 MB at the 20 MB default), the backup also truncates its
+device statuses harder:
 
-1. Step 1:
-   - It clears JSON that is necessary only for recent records, from records over 1 day old:
-     - device status: loop status, override, pump and uploader;
-     - treatment: AAPS's bolus calculator result;
-     - insulin and profile switch: the insulin configuration (`icfg`).
-   - Each device's newest status and the newest profile switch keep their JSON.
-   - It deletes device statuses over 7 days old, and the loop settings no record refers to.
-2. Step 2, only if the site is still over 1.5 times its limit:
-   - It deletes readings and treatments over 90 days old, deleted ones too.
-   - It keeps the newest of each treatment type, of each reading type, and of each event table. The current
-     profile, and sensor, site and insulin ages, read the newest however old.
-   - It keeps the cold days of those days, so the reports still show them.
-- After each step that changed records, the job shrinks the DB only if 10% or more of it is free pages. If less is
-  free, the next records fill the free pages.
+- It clears the JSON of device statuses over 1 day old: loop status, override, pump and uploader.
+  - Each device's newest status keeps its JSON.
+- It deletes device statuses over 7 days old.
+- It changes no other record. A reading, a treatment or an event is deleted only after its day is packaged (see
+  Packaging of old days), so no data is lost.
+- If it changed records, the job shrinks the DB only if 10% or more of it is free pages. If less is free, the next
+  records fill the free pages.
 - The job measures the DB without its free pages, to find if the site is over 1.5 times its limit.
-- If a step changed records, the job records the new DB size. A "Site truncated" event by "size limit" shows the size
+- If it changed records, the job records the new DB size. A "Site truncated" event by "size limit" shows the size
   before and after.
 - If the DB is not on disk (in memory), or the site has no limit, the job does not do this.
 - Records keep their `updated_at`, so clients do not read them again.

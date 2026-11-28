@@ -398,7 +398,7 @@ Each step is one PR, and the site works after each one.
 | 5b | Reports (AGP, time in range, daily dose) read the days built from series; a week or a month is built when read | Reports | **Built** |
 | 5b2 | The Summaries page lists days, weeks and months built when read | The Summaries page | **Built** |
 | 5c | **Remove the summaries:** the `summary_period` table, the freeze, the builds, **Regenerate summaries**. The stale marks are of cold days | Reports | **Built** |
-| 6 | Hot days by size pressure. **Remove most of the truncation.** | | |
+| 6 | The delete of packaged rows is for all sites, with one number of hot days. The size limit's truncate deletes only device reports. The site has no Truncate button. | Usage page | **Built** |
 | 7 | The Storage page; Download Data as CSV; cheaper hot rows | | |
 
 `RETENTION_DELETE_ROWS` is `true` by default: the server deletes the packaged rows older than the hot days. Apps get
@@ -440,15 +440,14 @@ Each field of `summary_period` can be built from cold days:
 
 | Today | With cold days |
 | --- | --- |
-| Device reports thinned (10 min, 20 min, hourly) and deleted after 30 days; `utils/thin` | **Remove.** Their numbers are series. Device reports get short hot days of their own (2 days). |
-| A site over 1.5 times its limit: clear old JSON, delete device reports over 7 days old | **Remove.** The site gets fewer hot days. |
-| The same site, if still over: delete readings and treatments over 90 days old | **Remove.** This loses data. Packaging does not. |
+| Device reports thinned (10 min, 20 min, hourly) and deleted after 30 days; `utils/thin` | **Kept.** Their numbers are also series. |
+| A site over 1.5 times its limit: clear old JSON, delete device reports over 7 days old | **Kept for device reports only.** The JSON of treatments, doses and profile switches is not cleared. |
+| The same site, if still over: delete readings and treatments over 90 days old | **Removed.** It lost data. A row is deleted only once its day is packaged, and that is for all sites. |
 | The **Truncate** button | **Removed from the site.** The control site's Truncate runs the job's truncate for one site now, for all its data. It does nothing that the job does not do. |
 | Delete loop settings no record refers to | **Kept**, in the job's truncate. |
 | Vacuum | **Keep.** |
 | The size limit, writes refused at 4 times the limit, the abuse score | **Keep.** Packaging does not help a site that writes too many rows today. |
 
-To check before the thinning goes: does a page or an app read a device report over 2 days old?
 
 ## Open questions
 
