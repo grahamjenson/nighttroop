@@ -5,10 +5,10 @@
 1. Entry/Treatments Compression/truncation. Not holding onto years of full data, keep only the necessary stuff.
     1. P1: Retention step 2b (`docs/retention.md`): the glucose page says older readings are in Reports; a made
        entry can be read and deleted by its `_id`; a search oldest first has made entries
-    1. P1: Retention steps 5 and 6: reports from series (remove the summaries), hot days by size (remove most of
-       the truncation)
+    1. P1: Retention steps 5b, 5c and 6: reports read the days built from series, remove the summaries, hot days by
+       size (remove most of the truncation)
     1. P1: With `RETENTION_DELETE_ROWS`, a summary that is not frozen (hot days below 31, or a late backfill) is
-       built again without the deleted rows. Step 5 removes it; until then keep hot days at 31 or more
+       built again without the deleted rows. Step 5c removes it; until then keep hot days at 31 or more
     1. P2: A treatment written late for a day whose rows are deleted stays a row for ever: add it to the day's
        cold days and delete it
     1. P2: The Nightscout API makes no temp basal or loop's bolus of a packaged day: make them from the series

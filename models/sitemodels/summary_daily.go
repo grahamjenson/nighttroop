@@ -424,3 +424,69 @@ func InsulinWithin(d *sitedb.InsulinDose, start, end int64) float64 {
 	}
 	return units
 }
+
+// DaySeries are a day's series from its cold days, each with a value every SummaryDailySlotMs from the day's start,
+// NaN where there is none: its CGM glucose in mg/dL, its loop's IOB, basal IOB and COB, its basal rate in U/hr, the
+// insulin of its boluses, the basal insulin injected, and its carbs
+type DaySeries struct {
+	Glucose, IOB, IOBBasal, COB, BasalRate, Bolus, Injected, Carbs []float64
+}
+
+// NewSummaryDailyFromSeries is the day named date from start until end, built from its series and not from its rows,
+// with the meterReadings it had: what NewSummaryDaily builds, but its glucose is the CGM's value of each 5 minutes,
+// so its mean, standard deviation and times in each range are of those, each counting once, and a meter's reading is
+// not in its glucose line. The loop's treatment IOB is its IOB less its basal IOB.
+func NewSummaryDailyFromSeries(date, timezone string, start, end int64, low, high float64, series DaySeries, meterReadings int64) *sitedb.SummaryPeriod {
+	row := &sitedb.SummaryPeriod{Period: "day", Date: date, Timezone: timezone, StartAt: start, EndAt: end, MeterReadings: meterReadings}
+	slots := func(values []float64, decimals int, into *string) {
+		rounded := make([]*float64, len(values))
+		for i, value := range values {
+			if !math.IsNaN(value) {
+				rounded[i] = new(consts.Round(value, decimals))
+			}
+		}
+		slotsJSON, _ := json.Marshal(rounded)
+		*into = string(slotsJSON)
+	}
+	total := func(values []float64, scale float64) (sum float64) {
+		for _, value := range values {
+			if !math.IsNaN(value) {
+				sum += value * scale
+			}
+		}
+		return sum
+	}
+	bands, sum, squares := [5]int{}, 0.0, 0.0
+	for _, mgdl := range series.Glucose {
+		if !math.IsNaN(mgdl) {
+			bands[rangeBand(mgdl, low, high)]++
+			sum, squares, row.CgmSlots = sum+mgdl, squares+mgdl*mgdl, row.CgmSlots+1
+		}
+	}
+	if count := float64(row.CgmSlots); count > 0 {
+		for i, column := range timeColumns(row) {
+			*column = new(consts.Round(100*float64(bands[i])/count, 1))
+		}
+		mean := sum / count
+		row.GlucoseMeanMgdl, row.GlucoseSdMgdl = new(consts.Round(mean, 1)), new(consts.Round(math.Sqrt(max(squares/count-mean*mean, 0)), 1))
+	}
+	row.GlucoseReadings = row.CgmSlots + meterReadings
+	slots(series.Glucose, 0, &row.GlucoseMgdlJson)
+	treatment := make([]float64, len(series.IOB))
+	for i := range treatment {
+		treatment[i] = math.NaN()
+		if i < len(series.IOBBasal) {
+			treatment[i] = series.IOB[i] - series.IOBBasal[i]
+		}
+	}
+	for i, values := range [][]float64{series.IOB, series.IOBBasal, treatment, series.COB} {
+		slots(values, 2, loopColumns(row)[i])
+	}
+	basal := total(series.BasalRate, float64(SummaryDailySlotMs)/3_600_000) + total(series.Injected, 1)
+	row.TotalDailyBasal, row.TotalDailyDose = consts.Round(basal, 2), consts.Round(basal+total(series.Bolus, 1), 2)
+	row.TotalDailyCarbs = consts.Round(total(series.Carbs, 1), 1)
+	if row.GlucoseReadings > 0 || row.TotalDailyDose > 0 || row.TotalDailyCarbs > 0 {
+		row.Days = 1
+	}
+	return row
+}
