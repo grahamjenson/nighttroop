@@ -64,7 +64,7 @@ func InsulinDosesTable(insulinDoses []*sitemodels.SiteInsulinDose, skip int64, l
 			Title:       i18n.T(ctx, "site.data.insulin_doses.title"),
 			Description: i18n.T(ctx, "site.data.insulin_doses.about"),
 			Action:      addmodal.Open("site--insulin--add", "/data/insulin/new", i18n.T(ctx, "site.data.insulin_doses.add")),
-			Above:       searchTotals("site--insulin", "site.data.insulin_doses.noun"),
+			Above:       searchTotals("site--insulin", "site.data.insulin_doses.noun", true),
 			Modal:       true,
 			Table: listpage.TableProps{
 				EmptyHint: newSiteHint(),

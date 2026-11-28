@@ -75,6 +75,18 @@ ASSERT_STATUS 200
 ASSERT_VISIBLE #glucoseReadingsTable
 ASSERT_NOT_VISIBLE #site--glucose--days
 
+// The server keeps only the last days as records, so the page says that older days are not listed here, and where they
+// are. Device statuses are not packaged, so their page does not say so.
+GOTO /data/glucose
+ASSERT_STATUS 200
+ASSERT_VISIBLE #site--glucose--older >> text=Only the last 31 days are listed here.
+SCREENSHOT older_days_note
+CLICK #site--glucose--older-link
+ASSERT_PATH /reports
+GOTO /data/device-status
+ASSERT_STATUS 200
+ASSERT_NOT_VISIBLE "Only the last 31 days are listed here."
+
 // Without a limit the readings are paged 50 at a time, under a box of how many there are over every page, and when
 // the earliest and latest of them were
 GOTO /data/glucose

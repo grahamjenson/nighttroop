@@ -64,7 +64,7 @@ func ActivitiesTable(activities []*sitemodels.SiteActivity, skip int64, limit in
 			Title:       i18n.T(ctx, "site.data.activities.title"),
 			Description: i18n.T(ctx, "site.data.activities.about"),
 			Action:      addmodal.Open("site--activity--add", "/data/activities/new", i18n.T(ctx, "site.data.activities.add")),
-			Above:       searchTotals("site--activity", "site.data.activities.noun"),
+			Above:       searchTotals("site--activity", "site.data.activities.noun", true),
 			Modal:       true,
 			Table: listpage.TableProps{
 				EmptyHint: newSiteHint(),

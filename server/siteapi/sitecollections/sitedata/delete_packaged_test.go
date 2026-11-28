@@ -19,7 +19,9 @@ import (
 func TestDeletingPackagedTreatments(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
 	settle := db.PackagedSettle
-	t.Cleanup(func() { cfg.RetentionDeleteRows, db.PackagedSettle = false, settle })
+	t.Cleanup(func() { cfg.RetentionDeleteRows, db.PackagedSettle = true, settle })
+	// The server deletes rows unless it is told not to: this starts as one that does not
+	cfg.RetentionDeleteRows = false
 	ctx, q := t.Context(), site.SiteDB.Queries()
 	today := time.Now().UTC().Truncate(24 * time.Hour)
 	old, recent := today.AddDate(0, 0, -40), today.AddDate(0, 0, -2)

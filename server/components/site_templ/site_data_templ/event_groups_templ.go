@@ -109,7 +109,7 @@ func EventGroupsTable(eventGroups []*sitemodels.SiteEventGroup, skip int64, limi
 			Title:       i18n.T(ctx, "site.data.event_groups.title"),
 			Description: i18n.T(ctx, "site.data.event_groups.about"),
 			Action:      eventGroupAdd(),
-			Above:       searchTotals("site--event-group", "site.data.event_groups.noun"),
+			Above:       searchTotals("site--event-group", "site.data.event_groups.noun", true),
 			Modal:       true,
 			Table: listpage.TableProps{
 				EmptyHint: newSiteHint(),

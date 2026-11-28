@@ -35,6 +35,8 @@ site:
       earliest: "Earliest"
       latest: "Latest"
       yesterday: "Yesterday"
+      older: "Only the last {{.Days}} days are listed here. Older days are kept as each day's readings, insulin, carbs and events."
+      older_link: "See them in Reports."
     glucose_readings:
       title: "Glucose Readings"
       about: "Each glucose value from a sensor or a finger prick. Newest first. Click a reading to see all its details."

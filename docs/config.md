@@ -138,7 +138,7 @@ AAPS, Trio) send.
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `RETENTION_HOT_DAYS` | `31` | How many days of a site are kept as rows. Older days are read from `cold_days`. The minimum is `3`. See `docs/retention.md`. |
-| `RETENTION_DELETE_ROWS` | not set | If `true`, the server deletes the CGM readings, treatments and events older than `RETENTION_HOT_DAYS` after their day is packaged. The Nightscout API then makes the `entries` and `treatments` of those days from `cold_days`. The site's data pages show only rows. Reports read those days from `cold_days`. |
+| `RETENTION_DELETE_ROWS` | `true` | Unless `false`, the server deletes the CGM readings, treatments and events older than `RETENTION_HOT_DAYS` after their day is packaged. The Nightscout API then makes the `entries` and `treatments` of those days from `cold_days`. The site's data pages show only rows. Reports read those days from `cold_days`. |
 | `TRUNCATE_INTERVAL_IN_SECONDS` | `60` | How often the logs DB is trimmed and the jobs are summarised. |
 | `LOGS_DB_MAX_ROWS_PER_TABLE` | `100000` | The newest logs, events and errors each logs DB table keeps. |
 | `SLOW_QUERY_MS` | `100` | Milliseconds before a DB query (or a transaction that waits for the write lock) is logged as a `Slow query`, with its DB, sqlc name, duration and rows, never its values. `0` logs none. |

@@ -19,7 +19,9 @@ import (
 // day has. A day whose rows are gone still takes a late reading, and loses a deleted one.
 func TestPackagingASitesGlucose(t *testing.T) {
 	cfg, controlDB, site := testutils.NewControlDBWithSite(t)
-	t.Cleanup(func() { cfg.RetentionDeleteRows, cfg.RetentionHotDays = false, retention.DefaultHotDays })
+	t.Cleanup(func() { cfg.RetentionDeleteRows, cfg.RetentionHotDays = true, retention.DefaultHotDays })
+	// The server deletes rows unless it is told not to: this starts as one that does not
+	cfg.RetentionDeleteRows = false
 	ctx, q, siteID := t.Context(), site.SiteDB.Queries(), site.SiteDB.Subdomain
 	today := time.Now().UTC().Truncate(24 * time.Hour)
 	old, recent := today.AddDate(0, 0, -40), today.AddDate(0, 0, -2)

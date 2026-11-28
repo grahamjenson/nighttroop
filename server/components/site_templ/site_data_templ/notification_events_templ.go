@@ -64,7 +64,7 @@ func NotificationEventsTable(events []*sitemodels.SiteNotificationEvent, skip in
 			Title:       i18n.T(ctx, "site.data.notification_events.title"),
 			Description: i18n.T(ctx, "site.data.notification_events.about"),
 			Action:      addmodal.Open("site--notification--add", "/data/notifications/new", i18n.T(ctx, "site.data.notification_events.add")),
-			Above:       searchTotals("site--notification", "site.data.notification_events.noun"),
+			Above:       searchTotals("site--notification", "site.data.notification_events.noun", true),
 			Modal:       true,
 			Table: listpage.TableProps{
 				EmptyHint: newSiteHint(),

@@ -10,12 +10,14 @@ import (
 	"nighttroop.t1d.nz/server/components/ui/icon"
 	"nighttroop.t1d.nz/utils/apiutils"
 	"nighttroop.t1d.nz/utils/display"
+	"nighttroop.t1d.nz/utils/httputils"
 	"nighttroop.t1d.nz/utils/i18n"
 )
 
 // searchTotals is the box at the top of a data page, for a collection that counts what its search matches: how many
-// there are over every page, by the noun message's plural form for them, and the days of the earliest and latest
-templ searchTotals(id, noun string) {
+// there are over every page, by the noun message's plural form for them, and the days of the earliest and latest. For
+// records that are packaged, it says under them that the older ones are not listed, and where they are.
+templ searchTotals(id, noun string, packaged bool) {
 	if totals := apiutils.TotalsFrom(ctx); totals != nil {
 		<section id={ id + "--totals" } aria-label={ i18n.T(ctx, "site.data.totals.label") } class="grid grid-cols-3 divide-x divide-gray-200 panel">
 			@totalsCell(i18n.T(ctx, "site.data.totals.records"), icon.Database) {
@@ -33,7 +35,26 @@ templ searchTotals(id, noun string) {
 				@totalsDay(id+"--latest", totals.LatestAt)
 			}
 		</section>
+		if days := hotDays(ctx); packaged && days > 0 {
+			<p id={ id + "--older" } class="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+				@icon.Info(icon.Props{Class: "size-4 shrink-0"})
+				<span>
+					{ i18n.T(ctx, "site.data.totals.older", i18n.Data{"Days": days}) + " " }
+					@nav.Link(id+"--older-link", "/reports", "font-medium underline") {
+						{ i18n.T(ctx, "site.data.totals.older_link") }
+					}
+				</span>
+			</p>
+		}
 	}
+}
+
+// hotDays is how many days of records the server keeps as rows, which the data pages list, or 0 when it keeps them all
+func hotDays(ctx context.Context) int {
+	if siteContext := httputils.GetSiteContext(ctx); siteContext != nil && siteContext.Config != nil && siteContext.Config.RetentionDeleteRows {
+		return siteContext.Config.RetentionHotDays
+	}
+	return 0
 }
 
 // totalsCell is one of the box's figures under its label and icon
