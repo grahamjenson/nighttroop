@@ -1,6 +1,6 @@
 # Retention: hot rows and cold days
 
-**Status:** steps 1 to 4b are built. The server seals the CGM glucose of each day, what a loop's phone reports
+**Status:** steps 1 to 4c are built. The server seals the CGM glucose of each day, what a loop's phone reports
 (IOB, COB, reservoir, batteries), the treatments (basal rate, insulin, carbs), and the day's events into
 `cold_days`. The Nightscout API makes `entries` from sealed days. It deletes no row unless `RETENTION_DELETE_ROWS` is
 `true`. The other steps are the plan. See [Build order](#build-order).
@@ -172,8 +172,42 @@ A treatment and its `event_groups` row become one entry.
 - The columns of an event's treatment (`group_type`, `entered_by`) are added where the event has none of that
   name.
 - A day with more events than a cold day holds (16 KB packed, some thousands of events) is not sealed.
-- **Not yet:** the profile of a profile switch (step 4c), what is in force at the start of a day (4c), and the
-  delete of event rows (4d). So no event row is deleted, and a day's events are built from its rows alone.
+- **Not yet:** the delete of event rows (4d). So a day's events are built from its rows alone.
+
+### What is in force when a day starts
+
+A profile set in March is in force in June, and a temp target can go past midnight. If the rows of the days
+before are gone, a day cannot look back for them. So a day's events have two lists (version 2 of the body):
+
+```json
+{"in_force":[{"k":"profile_switches","id":"…","name":"Sick day","profile":"9f2c…"}],
+ "events":[{"k":"food_intakes","id":"…","carbs":45}]}
+```
+
+- `in_force` is: the newest profile switch with no end; each newer profile switch with an end not yet reached;
+  and the newest temp target, if it is not over.
+- So each cold day is read alone.
+- A day with no event of its own is sealed if something is in force. The last 2 days that ended are sealed in
+  each run for this.
+- Version 1 of the body, the list of events alone, is still read.
+
+### A profile is kept one time
+
+A profile switch has its profile (basal rates, ratios, sensitivities, targets: about 2 KB), and AAPS sends the
+same profile with each switch. `cold_values` keeps each distinct profile one time:
+
+```sql
+CREATE TABLE cold_values (
+    id TEXT PRIMARY KEY CHECK(length(id) = 64),    -- the SHA-256 of its kind and its JSON
+    kind TEXT NOT NULL CHECK(length(kind) <= 32),  -- 'profile'
+    body BLOB NOT NULL CHECK(length(body) <= 16384),
+    created_at INTEGER NOT NULL
+) STRICT;
+```
+
+- A profile switch event has `profile`, the `id` of its profile.
+- The body has a version and a shape (`3`, a value) as a cold day has, then the profile's columns as JSON.
+- A row is never changed. It is not deleted: a site has few distinct profiles.
 
 ### Statistics
 
@@ -331,7 +365,7 @@ Each step is one PR, and the site works after each one.
 | 3 | Device reports fold into `iob`, `iob_basal`, `cob`, reservoir and battery series | None yet: the day view reads them in step 5 | **Built** |
 | 4a | The treatment series: `basal_rate`, `insulin_bolus`, `insulin_basal`, `carbs` | None yet | **Built** |
 | 4b | Events: the day's list | The Cold Days page | **Built** |
-| 4c | Each profile kept one time, by its hash (a new table); what is in force at the start of a day | | |
+| 4c | Each profile kept one time, by its hash (`cold_values`); what is in force at the start of a day | The Cold Days page | **Built** |
 | 4d | The Nightscout API makes `treatments` from sealed days; then the delete of treatment and event rows | Data pages, `treatments` | |
 | 5 | Reports (AGP, time in range, daily dose) read series and `Stats`. **Remove the summaries.** | Reports | |
 | 6 | Hot days by size pressure. **Remove most of the truncation.** | | |

@@ -374,6 +374,7 @@ site:
       older: "Older"
       back: "All cold days"
       day_title: "{{.Kind}}, {{.Date}}"
+      in_force_note: "In force when the day started: the profile switch and the temp target from before the day that were not over."
       events_note: "Each event at its UTC time, with the table it is from and the columns that are kept of it."
       points_note: "Each value at the UTC time its step starts, as the number that is kept. Glucose is in mg/dL."
     account:

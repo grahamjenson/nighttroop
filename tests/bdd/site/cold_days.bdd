@@ -18,6 +18,11 @@ NAME meal
 POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
 B [{"eventType": "Carb Correction", "carbs": 45, "notes": "Pasta", "enteredBy": "xDrip", "created_at": "{{ time 2880 }}"}]
 ASSERT_STATUS 200
+// A temp target from the day before the meal, for 2 days, so it is in force when the meal's day starts
+NAME target
+POST {{ replace ".localhost" ".ns.localhost" .site_url }}/api/v1/treatments?token={{ .create_new_site.pwd_nstoken }}
+B [{"eventType": "Temporary Target", "targetTop": 120, "targetBottom": 110, "units": "mg/dl", "duration": 2880, "reason": "Illness", "created_at": "{{ time 4320 }}"}]
+ASSERT_STATUS 200
 
 // Truncate, on the Usage page, seals the site's ended days now
 BROWSE
@@ -36,7 +41,10 @@ ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--glucose--"] >> te
 ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--glucose--"] >> text="1 / 288"
 ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--glucose--"] >> text=/^\d+ bytes$/
 ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--carbs--"] >> text="45 – 45"
-ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--events--"] >> text=events v1
+// Three days have events: the day the target was set, the meal's day, and the day after, which has only the target
+// in force
+ASSERT_COUNT #site--cold-days--table tr[id^="site--cold-day--events--"] 3
+ASSERT_VISIBLE #site--cold-days--table tr[id^="site--cold-day--events--"] >> nth=1 >> text=events v2
 ASSERT_VISIBLE #site--cold-days--totals >> text=/^Cold days: \d+\. Total size: [\d.]+ B\.$/
 // It is only looked at: the page has no form and no button
 ASSERT_NOT_VISIBLE #site--cold-days button
@@ -60,7 +68,7 @@ SCREENSHOT cold_day
 // Back to the list. The day's events, opened, are each event with its table and the columns kept of it.
 CLICK #site--cold-day--back
 ASSERT_PATH /usage/cold-days
-CLICK #site--cold-days--table tr[id^="site--cold-day--events--"] a
+CLICK #site--cold-days--table tr[id^="site--cold-day--events--"] >> nth=1 >> a
 ASSERT_STATUS 200
 ASSERT_VISIBLE #site--cold-day--shape >> text="events"
 ASSERT_VISIBLE #site--cold-day--packing >> text=JSON
@@ -70,6 +78,10 @@ ASSERT_VISIBLE #site--cold-day--events li >> text=food_intakes
 ASSERT_VISIBLE #site--cold-day--events li >> text=/"carbs":45/
 ASSERT_VISIBLE #site--cold-day--events li >> text=/"notes":"Pasta"/
 ASSERT_VISIBLE #site--cold-day--events li >> text=/"entered_by":"xDrip"/
+// Before them is what was in force when the day started: the temp target of the day before, with its date
+ASSERT_COUNT #site--cold-day--in-force li 1
+ASSERT_VISIBLE #site--cold-day--in-force li >> text=temp_targets
+ASSERT_VISIBLE #site--cold-day--in-force li >> text=/"reason":"Illness"/
 SCREENSHOT cold_day_events
 
 // A day there is not is not found

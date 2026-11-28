@@ -145,8 +145,11 @@ type ColdDay struct {
 	// Error Why its bytes could not be read, e.g. a version this server does not know
 	Error *string `json:"error"`
 
-	// Events A day's events, the oldest first; only for one day of events. Each is the columns kept of its row, by their names, with k, its table.
+	// Events A day's events, the oldest first; only for one day of events. Each is the columns kept of its row, by their names, with k, its table. A profile switch has profile, the ID of the profile it was made with.
 	Events *[]map[string]interface{} `json:"events,omitempty"`
+
+	// InForce The events from before a day of events that were still in force when it started: a profile switch, a temp target; only for one day of events
+	InForce *[]map[string]interface{} `json:"in_force,omitempty"`
 
 	// Kind The series, e.g. glucose
 	Kind string   `json:"kind"`

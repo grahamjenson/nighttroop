@@ -1081,7 +1081,8 @@
           "max": { "type": "number", "nullable": true },
           "error": { "type": "string", "nullable": true, "description": "Why its bytes could not be read, e.g. a version this server does not know" },
           "points": { "type": "array", "description": "Each value with the time its step starts; only for one day of a series", "items": { "$ref": "#/components/schemas/ColdPoint" } },
-          "events": { "type": "array", "description": "A day's events, the oldest first; only for one day of events. Each is the columns kept of its row, by their names, with k, its table.", "items": { "type": "object", "additionalProperties": true } }
+          "events": { "type": "array", "description": "A day's events, the oldest first; only for one day of events. Each is the columns kept of its row, by their names, with k, its table. A profile switch has profile, the ID of the profile it was made with.", "items": { "type": "object", "additionalProperties": true } },
+          "in_force": { "type": "array", "description": "The events from before a day of events that were still in force when it started: a profile switch, a temp target; only for one day of events", "items": { "type": "object", "additionalProperties": true } }
         }
       },
       "ColdPoint": {

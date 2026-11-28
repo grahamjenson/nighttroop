@@ -33,6 +33,12 @@ var columnLimits = map[string]map[string]ColumnLimit{
 		"CreatedAt": {Column: "created_at", Required: true},
 		"UpdatedAt": {Column: "updated_at", Required: true},
 	},
+	"cold_values": {
+		"ID":        {Column: "id", Required: true, MinLength: 64, MaxLength: 64},
+		"Kind":      {Column: "kind", Required: true, MaxLength: 32},
+		"Body":      {Column: "body", Required: true, MaxLength: 16384},
+		"CreatedAt": {Column: "created_at", Required: true},
+	},
 	"device_reports": {
 		"ID":                    {Column: "id", Required: true, MaxLength: 36},
 		"DeviceBatteryPercent":  {Column: "device_battery_percent", Min: new(0.0), Max: new(100.0)},

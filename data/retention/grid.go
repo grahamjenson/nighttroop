@@ -17,7 +17,7 @@ import (
 const Version = 1
 
 // shapeBytes are the shapes a cold day can say it is, as its second byte
-var shapeBytes = map[Shape]byte{SeriesShape: 1, EventsShape: 2}
+var shapeBytes = map[Shape]byte{SeriesShape: 1, EventsShape: 2, DictionaryShape: 3}
 
 // The third byte of a series says how its values were packed, as each day is packed the way that makes it smallest
 const (

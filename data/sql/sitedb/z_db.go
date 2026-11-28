@@ -276,6 +276,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getColdDayStmt, err = db.PrepareContext(ctx, getColdDay); err != nil {
 		return nil, fmt.Errorf("error preparing query GetColdDay: %w", err)
 	}
+	if q.getColdValueStmt, err = db.PrepareContext(ctx, getColdValue); err != nil {
+		return nil, fmt.Errorf("error preparing query GetColdValue: %w", err)
+	}
 	if q.getDeviceReportStmt, err = db.PrepareContext(ctx, getDeviceReport); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDeviceReport: %w", err)
 	}
@@ -638,6 +641,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.upsertColdDayStmt, err = db.PrepareContext(ctx, upsertColdDay); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertColdDay: %w", err)
+	}
+	if q.upsertColdValueStmt, err = db.PrepareContext(ctx, upsertColdValue); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertColdValue: %w", err)
 	}
 	if q.upsertGeneralSettingStmt, err = db.PrepareContext(ctx, upsertGeneralSetting); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertGeneralSetting: %w", err)
@@ -1071,6 +1077,11 @@ func (q *Queries) Close() error {
 	if q.getColdDayStmt != nil {
 		if cerr := q.getColdDayStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getColdDayStmt: %w", cerr)
+		}
+	}
+	if q.getColdValueStmt != nil {
+		if cerr := q.getColdValueStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getColdValueStmt: %w", cerr)
 		}
 	}
 	if q.getDeviceReportStmt != nil {
@@ -1678,6 +1689,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing upsertColdDayStmt: %w", cerr)
 		}
 	}
+	if q.upsertColdValueStmt != nil {
+		if cerr := q.upsertColdValueStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertColdValueStmt: %w", cerr)
+		}
+	}
 	if q.upsertGeneralSettingStmt != nil {
 		if cerr := q.upsertGeneralSettingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertGeneralSettingStmt: %w", cerr)
@@ -1816,6 +1832,7 @@ type Queries struct {
 	generalSettingsBytesStmt                    *sql.Stmt
 	getActivityStmt                             *sql.Stmt
 	getColdDayStmt                              *sql.Stmt
+	getColdValueStmt                            *sql.Stmt
 	getDeviceReportStmt                         *sql.Stmt
 	getDeviceReportsByIDsStmt                   *sql.Stmt
 	getEventGroupStmt                           *sql.Stmt
@@ -1937,6 +1954,7 @@ type Queries struct {
 	updateTempBasalStmt                         *sql.Stmt
 	updateTempTargetStmt                        *sql.Stmt
 	upsertColdDayStmt                           *sql.Stmt
+	upsertColdValueStmt                         *sql.Stmt
 	upsertGeneralSettingStmt                    *sql.Stmt
 	upsertLoopSettingsStmt                      *sql.Stmt
 	upsertSummaryPeriodStmt                     *sql.Stmt
@@ -2030,6 +2048,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		generalSettingsBytesStmt:                    q.generalSettingsBytesStmt,
 		getActivityStmt:                             q.getActivityStmt,
 		getColdDayStmt:                              q.getColdDayStmt,
+		getColdValueStmt:                            q.getColdValueStmt,
 		getDeviceReportStmt:                         q.getDeviceReportStmt,
 		getDeviceReportsByIDsStmt:                   q.getDeviceReportsByIDsStmt,
 		getEventGroupStmt:                           q.getEventGroupStmt,
@@ -2151,6 +2170,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateTempBasalStmt:                         q.updateTempBasalStmt,
 		updateTempTargetStmt:                        q.updateTempTargetStmt,
 		upsertColdDayStmt:                           q.upsertColdDayStmt,
+		upsertColdValueStmt:                         q.upsertColdValueStmt,
 		upsertGeneralSettingStmt:                    q.upsertGeneralSettingStmt,
 		upsertLoopSettingsStmt:                      q.upsertLoopSettingsStmt,
 		upsertSummaryPeriodStmt:                     q.upsertSummaryPeriodStmt,

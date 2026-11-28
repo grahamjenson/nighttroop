@@ -67,7 +67,14 @@ var eventSources = []eventSource{
 // eventOf is a row as an event: "k", its table, and each column its table's policy keeps that has a value, by the
 // column's name
 func eventOf(table string, row any) map[string]any {
-	event, keep := map[string]any{"k": table}, retention.Policies[table].Keep
+	event := columnsOf(table, row, retention.Policies[table].Keep)
+	event["k"] = table
+	return event
+}
+
+// columnsOf are those of a row's columns in keep that have a value, by the column's name
+func columnsOf(table string, row any, keep []string) map[string]any {
+	event := map[string]any{}
 	value := reflect.Indirect(reflect.ValueOf(row))
 	for i := range value.NumField() {
 		limit, ok := sitedb.ColumnLimitOf(table, value.Type().Field(i).Name)
@@ -80,11 +87,74 @@ func eventOf(table string, row any) map[string]any {
 	return event
 }
 
+// switchEvent is a profile switch as an event, with "profile", the ID of the profile it was made with, which is kept
+// once as a cold value, as a loop sends the same profile with each of its switches
+func switchEvent(ctx context.Context, q *sitedb.Queries, row *sitedb.ProfileSwitch) (map[string]any, error) {
+	event := eventOf("profile_switches", row)
+	profile := columnsOf("profile_switches", row, retention.ProfileColumns)
+	if len(profile) == 0 {
+		return event, nil
+	}
+	id, packed, err := retention.PackValue(retention.ProfileKind, profile)
+	if err != nil {
+		return nil, err
+	}
+	if len(packed) > maxEventsBody {
+		return event, nil
+	}
+	event["profile"] = id
+	return event, q.UpsertColdValue(ctx, sitedb.UpsertColdValueParams{ID: id, Kind: retention.ProfileKind, Body: packed})
+}
+
+const (
+	// inForceLookback is how far before a day a temp target that is still in force at its start can have started,
+	// the longest one lasts, and inForceRows how many of the newest rows before a day are looked through
+	inForceLookback = 7 * 24 * time.Hour
+	inForceRows     = 100
+)
+
+// inForce are the events from before the UTC day that starts at start, in ms, that were still in force then, the
+// oldest first: the newest profile switch with no end, a newer one with an end not yet reached, and the newest temp
+// target not yet over. They are read from the rows, as no event row is deleted yet.
+func inForce(ctx context.Context, q *sitedb.Queries, start int64) ([]map[string]any, error) {
+	var events []map[string]any
+	switches, err := q.SearchProfileSwitches(ctx, sitedb.SearchProfileSwitchesParams{DateLT: &start, IncludeDeleted: new(false), Limit: inForceRows})
+	if err != nil {
+		return nil, err
+	}
+	// Newest first: each with an end not yet reached, down to the newest with no end
+	for _, row := range switches {
+		forever := row.DurationMinutes == 0
+		if !forever && row.OccurredAt+row.DurationMinutes*time.Minute.Milliseconds() <= start {
+			continue
+		}
+		event, err := switchEvent(ctx, q, row)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+		if forever {
+			break
+		}
+	}
+	since := start - inForceLookback.Milliseconds()
+	targets, err := q.SearchTempTargets(ctx, sitedb.SearchTempTargetsParams{DateGTE: &since, DateLT: &start, IncludeDeleted: new(false), Limit: 1})
+	if err != nil {
+		return nil, err
+	}
+	// Only the newest, as it took the place of those before it
+	if len(targets) > 0 && targets[0].OccurredAt+targets[0].DurationMinutes*time.Minute.Milliseconds() > start {
+		events = append(events, eventOf("temp_targets", targets[0]))
+	}
+	slices.SortStableFunc(events, func(a, b map[string]any) int { return int(a["occurred_at"].(int64) - b["occurred_at"].(int64)) })
+	return events, nil
+}
+
 // sealEventsDay writes the events of the UTC day that starts at start, in ms, from its rows, the oldest first: each
 // row that is an event, with what its treatment says of it (who entered it, as what) where it has none, and each
-// treatment with no event, as a site change is. They are built from the rows alone, as no event row is deleted yet. A
-// day with no event is written only to empty one that had some, and a day whose events are more than a cold day
-// holds is not sealed.
+// treatment with no event, as a site change is, and before them what was in force when the day started (inForce).
+// They are built from the rows alone, as no event row is deleted yet. A day with no event and nothing in force is
+// written only to empty one that had some, and a day whose events are more than a cold day holds is not sealed.
 func sealEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 	groups, err := q.EventGroupsOfDay(ctx, sitedb.EventGroupsOfDayParams{From: start, To: start + dayMs})
 	if err != nil {
@@ -101,6 +171,11 @@ func sealEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 				continue
 			}
 			event := eventOf(source.table, row)
+			if profileSwitch, ok := row.(*sitedb.ProfileSwitch); ok {
+				if event, err = switchEvent(ctx, q, profileSwitch); err != nil {
+					return err
+				}
+			}
 			for _, group := range groups {
 				if member := source.member(group); member != nil && *member == event["id"] {
 					used[group.ID] = true
@@ -122,12 +197,16 @@ func sealEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 	}
 	slices.SortStableFunc(events, func(a, b map[string]any) int { return int(a["occurred_at"].(int64) - b["occurred_at"].(int64)) })
 	date := time.UnixMilli(start).UTC().Format(time.DateOnly)
-	if len(events) == 0 {
+	before, err := inForce(ctx, q, start)
+	if err != nil {
+		return err
+	}
+	if len(events) == 0 && len(before) == 0 {
 		if _, err := q.GetColdDay(ctx, sitedb.GetColdDayParams{Kind: retention.EventsKind, Date: date}); err != nil {
 			return nil
 		}
 	}
-	packed, err := retention.PackEvents(events)
+	packed, err := retention.PackEvents(retention.EventsDay{InForce: before, Events: events})
 	if err != nil {
 		return err
 	}
@@ -135,7 +214,7 @@ func sealEventsDay(ctx context.Context, q *sitedb.Queries, start int64) error {
 		slog.WarnContext(ctx, "A day has more events than a cold day holds, so it is not sealed", "date", date, "events", len(events), "bytes", len(packed))
 		return nil
 	}
-	if _, read, err := retention.ReadEvents(packed); err != nil || len(read) != len(events) {
+	if _, read, err := retention.ReadEvents(packed); err != nil || len(read.Events) != len(events) || len(read.InForce) != len(before) {
 		return fmt.Errorf("the sealed events do not read back as they were written: %v", err)
 	}
 	return q.UpsertColdDay(ctx, sitedb.UpsertColdDayParams{Kind: retention.EventsKind, Date: date, Body: packed})

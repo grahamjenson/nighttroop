@@ -91,3 +91,11 @@ SELECT DISTINCT day FROM (
 SELECT * FROM event_groups
 WHERE occurred_at >= sqlc.arg('From') AND occurred_at < sqlc.arg('To') AND temp_basal_id IS NULL AND deleted_at IS NULL
 ORDER BY occurred_at LIMIT 5000;
+
+-- name: UpsertColdValue :exec
+-- A value is kept once: one sent again is the row there is
+INSERT INTO cold_values (id, kind, body) VALUES (sqlc.arg('ID'), sqlc.arg('Kind'), sqlc.arg('Body'))
+ON CONFLICT(id) DO NOTHING;
+
+-- name: GetColdValue :one
+SELECT * FROM cold_values WHERE id = sqlc.arg('ID');

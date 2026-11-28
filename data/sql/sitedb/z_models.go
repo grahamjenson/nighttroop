@@ -62,6 +62,13 @@ type ColdDay struct {
 	UpdatedAt int64
 }
 
+type ColdValue struct {
+	ID        string
+	Kind      string
+	Body      []byte
+	CreatedAt int64
+}
+
 type DeviceReport struct {
 	ID                    string
 	DeviceBatteryPercent  *float64

@@ -103,6 +103,13 @@ const (
 // EventsKind is the kind of the cold day that holds a day's events
 const EventsKind = "events"
 
+// ProfileKind is the kind of a cold value that is a profile, and ProfileColumns the columns of a profile switch that
+// are its profile: what a profile switch of a day's events refers to, kept once
+const ProfileKind = "profile"
+
+var ProfileColumns = []string{"icfg_json", "dia", "units", "timezone", "carbs_hr", "delay", "carb_ratios_json", "insulin_sensitivities_json",
+	"basal_rates_json", "targets_high_json", "targets_low_json"}
+
 // who, when and why are what every event keeps
 var common = []string{"id", "occurred_at", "utc_offset_minutes", "notes", "reason", "created_by_identity_name"}
 
@@ -125,7 +132,7 @@ var Policies = map[string]Policy{
 	"food_intakes":     {Shape: EventsShape, Series: []Series{Carbs}, Keep: keep("carbs", "name", "food_type", "absorption_time_minutes", "fat", "protein", "fibre", "energy")},
 	"activities":       {Shape: EventsShape, Keep: keep("name", "activity_type", "duration_minutes", "calories", "steps", "heart_rate")},
 	"temp_targets":     {Shape: EventsShape, Keep: keep("low_target_mgdl", "high_target_mgdl", "duration_minutes")},
-	"profile_switches": {Shape: EventsShape, Keep: keep("name", "multiplier", "timeshift", "duration_minutes"), Lost: "The profile a switch was made with, until each profile is kept once (step 4c)."},
+	"profile_switches": {Shape: EventsShape, Keep: keep("name", "multiplier", "timeshift", "duration_minutes"), Lost: "Nothing: the profile a switch was made with is kept once, as a cold value, and the switch has its ID."},
 	"notification_events": {Shape: EventsShape, Keep: keep("notification_type", "title", "severity", "content"), Where: "created_by_identity_id is a person's",
 		Lost: "What a device announced."},
 	"event_groups": {Shape: EventsShape, Keep: keep("group_type", "entered_by", "duration_minutes", "sensor_code", "transmitter_id"),
@@ -139,4 +146,5 @@ var Policies = map[string]Policy{
 	"general_settings": {Shape: ConfigShape},
 	"summary_period":   {Shape: DerivedShape},
 	"cold_days":        {Shape: ColdShape},
+	"cold_values":      {Shape: ColdShape},
 }

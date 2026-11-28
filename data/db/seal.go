@@ -70,7 +70,8 @@ func (db *ControlDB) sealSite(ctx context.Context, site *SiteDB, since int64, no
 	if days, err = q.EventDaysWrittenSince(ctx, sitedb.EventDaysWrittenSinceParams{Since: since, Before: today.UnixMilli()}); err != nil {
 		return fmt.Errorf("cannot seal site %s: %w", site.Subdomain, err)
 	}
-	for _, day := range days {
+	// The days that just ended too, as a day with no event of its own still has what was in force at its start
+	for _, day := range lastDays(days, today) {
 		if err := sealed(day, sealEventsDay(ctx, q, day*dayMs)); err != nil {
 			return err
 		}
@@ -97,9 +98,19 @@ type DaySeries struct {
 // package cannot import, and nil in a program without it, which then seals no treatment series.
 var TreatmentDaySeries func(ctx context.Context, q *sitedb.Queries, site *controldb.Site, start int64) ([]DaySeries, error)
 
-// treatmentDaysBack is how many of the days that just ended have their treatment series sealed though no treatment
-// was written in them, as a day has a basal rate from its profile alone
-const treatmentDaysBack = 2
+// daysBack is how many of the days that just ended are sealed though nothing was written in them, as a day has a
+// basal rate from its profile alone, and what was in force when it started
+const daysBack = 2
+
+// lastDays are days, as days since 1970, with the last daysBack that ended before today
+func lastDays(days []int64, today time.Time) []int64 {
+	for back := int64(1); back <= daysBack; back++ {
+		if day := today.UnixMilli()/dayMs - back; !slices.Contains(days, day) {
+			days = append(days, day)
+		}
+	}
+	return days
+}
 
 // sealTreatmentDays seals the treatment series of the days that ended and had a treatment written since since, and of
 // the last days that ended, from their rows alone, as none of their rows is deleted yet. A series with no value in a
@@ -113,11 +124,7 @@ func (db *ControlDB) sealTreatmentDays(ctx context.Context, site *SiteDB, since 
 	if err != nil {
 		return err
 	}
-	for back := int64(1); back <= treatmentDaysBack; back++ {
-		if day := today.UnixMilli()/dayMs - back; !slices.Contains(days, day) {
-			days = append(days, day)
-		}
-	}
+	days = lastDays(days, today)
 	model, err := db.Queries.GetSiteInAnyState(ctx, controldb.GetSiteInAnyStateParams{ID: site.Subdomain})
 	if err != nil {
 		return err
